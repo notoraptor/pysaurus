@@ -1,12 +1,32 @@
-from typing import List, Tuple
+from typing import List, Self
 
-import pygame.freetype
-from pygame.freetype import Font as PFFont
-
+from pysaurus.core.unicode_utils import Unicode
 from videre import TextAlign
 
-# c, font, x, bounds
-CharTaskType = Tuple[str, PFFont, int, pygame.Rect]
+
+class CharTaskType:
+    __slots__ = ("font", "c", "width", "horizontal_shift", "x")
+
+    def __init__(self, c: str, size: int, fonts: "PygameFontFactory"):
+        font = fonts.get_font(c)
+        bounds = font.get_rect(c, size=size)
+        (metric,) = font.get_metrics(c, size=size)
+
+        self.font = font
+        self.c = c
+        self.width = bounds.x + bounds.width
+        self.horizontal_shift = metric[4] if metric else bounds.width
+        self.x = 0
+
+    def is_newline(self) -> bool:
+        return self.c == "\n"
+
+    def is_printable(self) -> bool:
+        return Unicode.printable(self.c)
+
+    def at(self, x: int) -> Self:
+        self.x = x
+        return self
 
 
 class CharsLine:
@@ -22,18 +42,62 @@ class CharsLine:
         return bool(self.tasks or self.newline)
 
     def limit(self) -> int:
-        _, _, x, bounds = self.tasks[-1]
-        return x + bounds.x + bounds.width
+        info = self.tasks[-1]
+        return info.x + info.width
 
 
 class WordTask:
-    __slots__ = ("w", "x", "tasks")
+    __slots__ = ("x", "width", "tasks")
+    x: int
+    width: int
+    tasks: List[CharTaskType]
 
-    def __init__(self, w: int, x: int, tasks: List[CharTaskType]):
-        self.w, self.x, self.tasks = w, x, tasks
+    def __init__(self, width: int, x: int, tasks: List[CharTaskType]):
+        self.width = width
+        self.tasks = tasks
+        self.x = x
 
     def __repr__(self):
-        return f"{self.x}:" + repr("".join(t[0] for t in self.tasks))
+        return f"{self.x}:" + repr("".join(t.c for t in self.tasks))
+
+
+class WordTaskType(WordTask):
+    __slots__ = ("height", "horizontal_shift")
+
+    width: int
+    height: int
+    tasks: List[CharTaskType]
+
+    def __init__(
+        self,
+        word: str,
+        size: int,
+        height_delta: int,
+        line_spacing: int,
+        space_width: int,
+        fonts: "PygameFontFactory",
+    ):
+        width, height, lines = fonts._get_render_tasks(
+            word, None, size, height_delta, False, line_spacing
+        )
+        if width:
+            (line,) = lines
+            tasks = line.tasks
+        else:
+            tasks = []
+        super().__init__(width, 0, tasks)
+        self.horizontal_shift = self.width + space_width
+        self.height = height
+
+    def is_newline(self) -> bool:
+        return self.height and not self.width
+
+    def is_printable(self) -> bool:
+        return bool(self.width)
+
+    def at(self, x: int) -> Self:
+        self.x = x
+        return self
 
 
 class WordsLine:
@@ -53,14 +117,14 @@ class WordsLine:
 
     def limit(self) -> int:
         word = self.words[-1]
-        return word.x + word.w
+        return word.x + word.width
 
     @classmethod
-    def from_chars_line(cls, chars_line: CharsLine):
-        words = []
-        word = []
+    def from_chars_line(cls, chars_line: CharsLine) -> Self:
+        words: List[List[CharTaskType]] = []
+        word: List[CharTaskType] = []
         for task in chars_line.tasks:
-            if task[0] == " ":
+            if task.c == " ":
                 if word:
                     words.append(word)
                     word = []
@@ -70,13 +134,13 @@ class WordsLine:
             words.append(word)
         words_line = cls(chars_line.y)
         if words:
-            x0 = words[0][0][-2]
+            x0 = words[0][0].x
             for word in words:
-                w_x = word[0][-2]
+                w_x = word[0].x
                 x = w_x - x0
-                tasks = [(c, font, cx - w_x, bounds) for c, font, cx, bounds in word]
-                _, _, last_x, last_bounds = tasks[-1]
-                w = last_x + last_bounds.x + last_bounds.width
+                tasks = [ch.at(ch.x - w_x) for ch in word]
+                last_ch = tasks[-1]
+                w = last_ch.x + last_ch.width
                 words_line.words.append(WordTask(w, x, tasks))
         return words_line
 
@@ -114,11 +178,11 @@ def justify_words(lines: List[WordsLine], width: int):
             line = paragraph[i]
             if len(line.words) > 1:
                 assert line.words[0].x == 0
-                remaining = width - sum(wt.w for wt in line.words)
+                remaining = width - sum(wt.width for wt in line.words)
                 if remaining:
                     interval = remaining / (len(line.words) - 1)
-                    x = line.words[0].w + interval
+                    x = line.words[0].width + interval
                     for j in range(1, len(line.words)):
                         wt = line.words[j]
                         wt.x = x
-                        x += wt.w + interval
+                        x += wt.width + interval
