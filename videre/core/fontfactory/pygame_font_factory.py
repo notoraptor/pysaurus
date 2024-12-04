@@ -18,7 +18,7 @@ from videre.core.pygame_utils import PygameUtils
 
 
 class PygameFontFactory(PygameUtils):
-    __slots__ = ("_prov", "_name_to_font", "_size", "_origin")
+    __slots__ = ("_prov", "_name_to_font", "_size", "_origin", "_base_font")
 
     def __init__(self, size=14, origin=True):
         super().__init__()
@@ -26,6 +26,7 @@ class PygameFontFactory(PygameUtils):
         self._name_to_font = {}
         self._size = size
         self._origin = origin
+        self._base_font = self.get_font(" ")
 
     @property
     def size(self) -> int:
@@ -33,7 +34,7 @@ class PygameFontFactory(PygameUtils):
 
     @property
     def font_height(self) -> int:
-        return self.get_font(" ").get_sized_height(self._size)
+        return self._base_font.get_sized_height(self._size)
 
     @property
     def symbol_size(self):
@@ -66,9 +67,8 @@ class PygameFontFactory(PygameUtils):
     ) -> Tuple[int, int, List[CharsLine]]:
         width = float("inf") if width is None else width
 
-        first_font = self.get_font(" ")
         line_spacing = line_spacing or (
-            first_font.get_sized_height(size) + height_delta
+            self._base_font.get_sized_height(size) + height_delta
         )
 
         lines: List[CharsLine] = []
@@ -94,8 +94,8 @@ class PygameFontFactory(PygameUtils):
         # Compute width, height and ys
         new_width, height = 0, 0
         if lines:
-            ascender = abs(first_font.get_sized_ascender(size)) + 1
-            descender = abs(first_font.get_sized_descender(size))
+            ascender = abs(self._base_font.get_sized_ascender(size)) + 1
+            descender = abs(self._base_font.get_sized_descender(size))
             first_line = lines[0]
             first_line.y = (
                 ascender + height_delta
@@ -164,6 +164,22 @@ class PygameFontFactory(PygameUtils):
                 align=align,
             )
 
+        new_width, height, lines = self._get_word_tasks(
+            text, width, size, height_delta=height_delta, compact=compact
+        )
+        background = pygame.Surface((new_width, height), flags=pygame.SRCALPHA)
+        _render_word_lines(background, lines, new_width, size, align, color)
+        return background
+
+    def _get_word_tasks(
+        self,
+        text: str,
+        width: int = None,
+        size: int = 0,
+        *,
+        height_delta=2,
+        compact=True,
+    ) -> Tuple[int, int, List[WordsLine]]:
         first_line, *next_lines = text.split("\n")
         words = [word for word in first_line.split(" ") if word]
         for line in next_lines:
@@ -172,9 +188,8 @@ class PygameFontFactory(PygameUtils):
 
         size = size or self._size
         # Use font for space character to get default spacings
-        first_font = self.get_font(" ")
-        line_spacing = first_font.get_sized_height(size) + height_delta
-        space_w = first_font.get_rect(" ", size=size).width
+        line_spacing = self._base_font.get_sized_height(size) + height_delta
+        space_w = self._base_font.get_rect(" ", size=size).width
 
         lines: List[WordsLine] = []
         task_line = WordsLine()
@@ -200,8 +215,8 @@ class PygameFontFactory(PygameUtils):
         # Compute width, height and ys
         new_width, height = 0, 0
         if lines:
-            ascender = abs(first_font.get_sized_ascender(size)) + 1
-            descender = abs(first_font.get_sized_descender(size))
+            ascender = abs(self._base_font.get_sized_ascender(size)) + 1
+            descender = abs(self._base_font.get_sized_descender(size))
             first_line = lines[0]
             first_line.y = (
                 ascender + height_delta
@@ -213,9 +228,7 @@ class PygameFontFactory(PygameUtils):
             height = lines[-1].y + descender
             new_width = max((line.limit() for line in lines if line.words), default=0)
 
-        background = pygame.Surface((new_width, height), flags=pygame.SRCALPHA)
-        _render_word_lines(background, lines, new_width, size, align, color)
-        return background
+        return new_width, height, lines
 
 
 def _render_word_lines(
