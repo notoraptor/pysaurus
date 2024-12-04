@@ -11,6 +11,7 @@ from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
 from videre.core.events import MotionEvent
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
+from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 from videre.core.pygame_utils import PygameUtils
 from videre.layouts.container import Container
 from videre.widgets.button import Button
@@ -71,6 +72,11 @@ class Window(PygameUtils, Clipboard):
     @controls.setter
     def controls(self, controls: Sequence[Widget]):
         self._controls = controls
+
+    def text_rendering(
+        self, size: int = None, height_delta: int = None
+    ) -> PygameTextRendering:
+        return PygameTextRendering(self.fonts, size=size, height_delta=height_delta)
 
     def __enter__(self):
         if self._closed:

@@ -65,7 +65,7 @@ class Text(Widget):
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
-        render_args = dict(text=self.text, size=self.size, color=self.color)
+        render_args = dict(text=self.text, color=self.color)
         if wrap == TextWrap.NONE:
             render_args["width"] = None
         elif wrap == TextWrap.CHAR:
@@ -75,4 +75,4 @@ class Text(Widget):
             render_args["width"] = width
             render_args["align"] = self.align
             render_args["wrap_words"] = True
-        return window.fonts.render_text(**render_args)
+        return window.text_rendering(size=self.size).render_text(**render_args)

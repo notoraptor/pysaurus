@@ -28,6 +28,6 @@ class AbstractCheckButton(AbstractButton):
         return self._TEXT_1 if self._get_checked() else self._TEXT_0
 
     def _get_text_surface(self, window, width: Optional[int] = None) -> pygame.Surface:
-        return window.fonts.render_char(
-            self._compute_checked_text(), size=window.fonts.symbol_size
+        return window.text_rendering(size=window.fonts.symbol_size).render_char(
+            self._compute_checked_text()
         )

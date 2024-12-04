@@ -3,13 +3,14 @@ import functools
 import pytest
 
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
+from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 
 
 @pytest.mark.parametrize("wrap_words", (False, True))
 def test_render_text(wrap_words):
     height_delta = 2
     ff = PygameFontFactory(size=24)
-    font = ff.get_font(" ")
+    font = ff.base_font
     line_height = ff.font_height + height_delta
     ascender = abs(font.get_sized_ascender(ff.size)) + 1
     descender = abs(font.get_sized_descender(ff.size))
@@ -18,11 +19,10 @@ def test_render_text(wrap_words):
     assert ascender == 27
     assert descender == 8
 
-    base_function = ff.render_text
-    function = functools.partial(base_function, wrap_words=wrap_words)
-    ff_render_text = functools.partial(
-        function, compact=True, height_delta=height_delta
-    )
+    tr = PygameTextRendering(ff, height_delta=height_delta)
+
+    function = functools.partial(tr.render_text, wrap_words=wrap_words)
+    ff_render_text = functools.partial(function, compact=True)
 
     s = ff_render_text("")
     assert s.get_width() == 0
@@ -40,23 +40,23 @@ def test_render_text(wrap_words):
     assert s.get_width() == 0
     assert s.get_height() == 4 * line_height + descender
 
-    s = function("a", height_delta=height_delta, compact=False)
+    s = function("a", compact=False)
     assert s.get_width() == 12
     assert s.get_height() == line_height + descender
 
-    s = function("a\na", height_delta=height_delta, compact=False)
+    s = function("a\na", compact=False)
     assert s.get_width() == 12
     assert s.get_height() == 2 * line_height + descender
 
-    s = function("a\na\na", height_delta=height_delta, compact=False)
+    s = function("a\na\na", compact=False)
     assert s.get_width() == 12
     assert s.get_height() == 3 * line_height + descender
 
-    s = function("a\n\na", height_delta=height_delta, compact=False)
+    s = function("a\n\na", compact=False)
     assert s.get_width() == 12
     assert s.get_height() == 3 * line_height + descender
 
-    s = function("a\n\na\n\n", height_delta=height_delta, compact=False)
+    s = function("a\n\na\n\n", compact=False)
     assert s.get_width() == 12
     assert s.get_height() == 5 * line_height + descender
 

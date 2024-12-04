@@ -1,93 +1,90 @@
+from abc import ABC, abstractmethod
 from typing import List, Self
 
 from pysaurus.core.unicode_utils import Unicode
 from videre import TextAlign
 
 
-class CharTaskType:
-    __slots__ = ("font", "c", "width", "horizontal_shift", "x")
+class AbstractTextElement(ABC):
+    __slots__ = ()
 
-    def __init__(self, c: str, size: int, fonts: "PygameFontFactory"):
-        font = fonts.get_font(c)
-        bounds = font.get_rect(c, size=size)
-        (metric,) = font.get_metrics(c, size=size)
+    @abstractmethod
+    def is_newline(self) -> bool:
+        raise NotImplementedError()
 
+    @abstractmethod
+    def is_printable(self) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def at(self, x: int) -> Self:
+        raise NotImplementedError()
+
+
+class CharTask(AbstractTextElement):
+    __slots__ = ("el", "font", "width", "horizontal_shift", "x")
+
+    def __init__(self, c: str, font, width: int, horizontal_shift: int):
+        self.el = c
         self.font = font
-        self.c = c
-        self.width = bounds.x + bounds.width
-        self.horizontal_shift = metric[4] if metric else bounds.width
+        self.width = width
+        self.horizontal_shift = horizontal_shift
         self.x = 0
 
     def is_newline(self) -> bool:
-        return self.c == "\n"
+        return self.el == "\n"
 
     def is_printable(self) -> bool:
-        return Unicode.printable(self.c)
+        return Unicode.printable(self.el)
 
     def at(self, x: int) -> Self:
         self.x = x
         return self
 
 
-class CharsLine:
-    __slots__ = ("y", "tasks", "newline")
-    y: int
-    tasks: List[CharTaskType]
-    newline: bool
+class Line[T](ABC):
+    __slots__ = ("y", "newline", "elements")
 
-    def __init__(self, newline=False):
-        self.y, self.tasks, self.newline = 0, [], newline
+    def __init__(self, y=0, newline=False):
+        self.y = y
+        self.newline = newline
+        self.elements: List[T] = []
+
+    def __repr__(self):
+        return f"({self.y}, {self.elements})"
 
     def __bool__(self):
-        return bool(self.tasks or self.newline)
+        return bool(self.elements or self.newline)
+
+    def add(self, element: T):
+        self.elements.append(element)
 
     def limit(self) -> int:
-        info = self.tasks[-1]
+        info = self.elements[-1]
         return info.x + info.width
 
 
+class CharsLine(Line[CharTask]):
+    __slots__ = ()
+
+
 class WordTask:
-    __slots__ = ("x", "width", "tasks")
+    __slots__ = ("x", "width", "tasks", "height", "horizontal_shift")
     x: int
     width: int
-    tasks: List[CharTaskType]
+    tasks: List[CharTask]
 
-    def __init__(self, width: int, x: int, tasks: List[CharTaskType]):
+    def __init__(
+        self, width: int, x: int, tasks: List[CharTask], height=0, horizontal_shift=0
+    ):
         self.width = width
         self.tasks = tasks
         self.x = x
+        self.height = height
+        self.horizontal_shift = horizontal_shift
 
     def __repr__(self):
-        return f"{self.x}:" + repr("".join(t.c for t in self.tasks))
-
-
-class WordTaskType(WordTask):
-    __slots__ = ("height", "horizontal_shift")
-
-    width: int
-    height: int
-    tasks: List[CharTaskType]
-
-    def __init__(
-        self,
-        word: str,
-        size: int,
-        height_delta: int,
-        line_spacing: int,
-        space_width: int,
-        fonts: "PygameFontFactory",
-    ):
-        width, height, lines = fonts._get_render_tasks(
-            word, None, size, height_delta, False, line_spacing
-        )
-        if width:
-            (line,) = lines
-            tasks = line.tasks
-        else:
-            tasks = []
-        super().__init__(width, 0, tasks)
-        self.horizontal_shift = self.width + space_width
-        self.height = height
+        return f"{self.x}:" + repr("".join(t.el for t in self.tasks))
 
     def is_newline(self) -> bool:
         return self.height and not self.width
@@ -100,31 +97,30 @@ class WordTaskType(WordTask):
         return self
 
 
-class WordsLine:
-    __slots__ = ("y", "words", "newline")
-    y: int
-    words: List[WordTask]
-    newline: bool
-
-    def __init__(self, y=0, newline=False):
-        self.y, self.words, self.newline = y, [], newline
-
-    def __bool__(self):
-        return bool(self.words or self.newline)
-
-    def __repr__(self):
-        return f"({self.y}, {self.words})"
-
-    def limit(self) -> int:
-        word = self.words[-1]
-        return word.x + word.width
+class WordsLine(Line[WordTask]):
+    __slots__ = ()
 
     @classmethod
-    def from_chars_line(cls, chars_line: CharsLine) -> Self:
-        words: List[List[CharTaskType]] = []
-        word: List[CharTaskType] = []
-        for task in chars_line.tasks:
-            if task.c == " ":
+    def from_chars(cls, lines: List[Line[CharTask]], keep_spaces=False):
+        if keep_spaces:
+            word_lines = [WordsLine._chars_to_word(line) for line in lines]
+        else:
+            word_lines = [WordsLine._split_words(line) for line in lines]
+        return word_lines
+
+    @classmethod
+    def _chars_to_word(cls, ch_line: Line[CharTask]) -> Self:
+        tasks = ch_line.elements
+        words_line = cls(ch_line.y)
+        words_line.add(WordTask(ch_line.limit() if tasks else 0, 0, tasks))
+        return words_line
+
+    @classmethod
+    def _split_words(cls, chars_line: Line[CharTask]) -> Self:
+        words: List[List[CharTask]] = []
+        word: List[CharTask] = []
+        for task in chars_line.elements:
+            if task.el == " ":
                 if word:
                     words.append(word)
                     word = []
@@ -141,31 +137,31 @@ class WordsLine:
                 tasks = [ch.at(ch.x - w_x) for ch in word]
                 last_ch = tasks[-1]
                 w = last_ch.x + last_ch.width
-                words_line.words.append(WordTask(w, x, tasks))
+                words_line.add(WordTask(w, x, tasks))
         return words_line
 
 
-def align_words(lines: List[WordsLine], width: int, align=TextAlign.LEFT):
+def align_words(lines: List[Line[WordTask]], width: int, align=TextAlign.LEFT):
     if align == TextAlign.NONE or align == TextAlign.LEFT:
         return
     if align == TextAlign.JUSTIFY:
         return justify_words(lines, width)
     for line in lines:
-        if line.words:
-            assert line.words[0].x == 0, line
+        if line.elements:
+            assert line.elements[0].x == 0, line
             remaining = width - line.limit()
             if remaining:
                 if align == TextAlign.CENTER:
                     remaining /= 2
-                for wt in line.words:
+                for wt in line.elements:
                     wt.x += remaining
 
 
-def justify_words(lines: List[WordsLine], width: int):
+def justify_words(lines: List[Line[WordTask]], width: int):
     paragraphs = []
     p = []
     for line in lines:
-        if line.words:
+        if line.elements:
             p.append(line)
         elif p:
             paragraphs.append(p)
@@ -176,13 +172,13 @@ def justify_words(lines: List[WordsLine], width: int):
     for paragraph in paragraphs:
         for i in range(len(paragraph) - 1):
             line = paragraph[i]
-            if len(line.words) > 1:
-                assert line.words[0].x == 0
-                remaining = width - sum(wt.width for wt in line.words)
+            if len(line.elements) > 1:
+                assert line.elements[0].x == 0
+                remaining = width - sum(wt.width for wt in line.elements)
                 if remaining:
-                    interval = remaining / (len(line.words) - 1)
-                    x = line.words[0].width + interval
-                    for j in range(1, len(line.words)):
-                        wt = line.words[j]
+                    interval = remaining / (len(line.elements) - 1)
+                    x = line.elements[0].width + interval
+                    for j in range(1, len(line.elements)):
+                        wt = line.elements[j]
                         wt.x = x
                         x += wt.width + interval
