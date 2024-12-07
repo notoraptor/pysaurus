@@ -5,7 +5,8 @@ from typing import Iterable, List, Optional, Tuple
 import pygame
 import pygame.transform
 
-from videre import Colors, TextAlign
+from videre.colors import Colors
+from videre.core.constants import TextAlign
 from videre.core.fontfactory.font_factory_utils import (
     CharTask,
     Line,
@@ -87,7 +88,7 @@ class PygameTextRendering:
         size = self._size
         out = pygame.Surface((width, height), flags=pygame.SRCALPHA)
         for line in lines:
-            self._draw_underline(line, out)
+            self._draw_underline(line, out, color)
             y = line.y
             for word in line.elements:
                 x = word.x
@@ -97,7 +98,7 @@ class PygameTextRendering:
                     )
         return out
 
-    def _draw_underline(self, line: Line[WordTask], out: pygame.Surface):
+    def _draw_underline(self, line: Line[WordTask], out: pygame.Surface, color):
         if self._underline and line:
             c = "_"
             x1 = line.elements[0].x + line.elements[0].tasks[0].bounds.x
@@ -105,7 +106,7 @@ class PygameTextRendering:
             font = self._get_font(c)
             font.antialiased = False
             surface, box = font.render(
-                c, size=self._size, fgcolor=Colors.black
+                c, size=self._size, fgcolor=color or Colors.black
             )
             font.antialiased = True
             us = surface.convert_alpha()

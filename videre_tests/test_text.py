@@ -86,6 +86,22 @@ def test_text_underline(image_testing):
         image_testing(window.snapshot())
 
 
+def test_text_underline_colored(image_testing):
+    with WindowSD() as window:
+        window.controls = [
+            videre.Column(
+                [
+                    videre.Text("hello world 1_.", size=30),
+                    videre.Text(
+                        "hello world 2_.", size=30, underline=True, color="red"
+                    ),
+                    videre.Text("hello world 3_.", size=30),
+                ]
+            )
+        ]
+        image_testing(window.snapshot())
+
+
 def test_text_styles(image_testing):
     with WindowSD() as window:
         window.controls = [

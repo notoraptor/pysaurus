@@ -16,14 +16,19 @@ _irrelevant_ = [
 ]
 
 _to_do_ = [
-    ft.Markdown,
     ft.MenuBar,
     ft.MenuItemButton,
     ft.SubmenuButton,
     ft.TextField,
     ft.Dropdown,  # <select>options...</select>
 ]
-_doing_ = []
+_doing_ = [
+    ft.Markdown,
+    # Notes:
+    # A Text can set color, strong, italic and underline.
+    # Markdown not yet parsed.
+    # Full rich text not yet available.
+]
 _done_ = [
     ft.AlertDialog,
     ft.Checkbox,
