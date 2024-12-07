@@ -7,7 +7,7 @@ def main():
     def fancy(*args):
         window.alert("You have an alert")
 
-    window.controls = [Button("Fancy!", on_click=fancy, square=True)]
+    window.controls = [Button("Fancy!", on_click=fancy)]
     fancy()
     window.run()
 

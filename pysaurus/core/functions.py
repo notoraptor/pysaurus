@@ -1,4 +1,5 @@
 import bisect
+import inspect
 import logging
 import re
 import sys
@@ -344,3 +345,20 @@ def if_else(x, y, z):
 
 def get_percent(a, b, decimals=2):
     return round(a * 100 / b, decimals)
+
+
+def get_tagged_methods(obj, key: str) -> Dict[Any, callable]:
+    """
+    Collect methods from given object which have an attribute named "key"
+    :param obj: object to inspect
+    :param key: attribute to lookup in object
+    :return: a dictionary mapping key value to method
+        for each matching method in given object.
+    """
+    tag_to_method = {}
+    for name, method in inspect.getmembers(obj, inspect.ismethod):
+        if hasattr(method, key):
+            value = getattr(method, key)
+            assert value not in tag_to_method
+            tag_to_method[value] = method
+    return tag_to_method

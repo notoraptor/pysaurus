@@ -1,4 +1,3 @@
-import inspect
 import io
 import logging
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -6,6 +5,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import pygame
 from pygame.event import Event
 
+from pysaurus.core.functions import get_tagged_methods
 from pysaurus.core.prettylogging import PrettyLogging
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
@@ -37,14 +37,13 @@ class Window(PygameUtils, Clipboard):
         self._title = str(title) or "Window"
         self._width = width
         self._height = height
-        self._bgc = background
+        self._screen_background = background
 
         self._step_mode = False
         self._running = True
         self._closed = False
         self._screen: Optional[pygame.Surface] = None
 
-        self._event_callbacks = {}
         self._down: Dict[MouseButton, Optional[Widget]] = {
             button: None for button in MouseButton
         }
@@ -56,7 +55,13 @@ class Window(PygameUtils, Clipboard):
         self._controls: List[Widget] = []
         self._fonts = PygameFontFactory(size=font_size)
 
-        self.__collect_event_callbacks()
+        self._event_callbacks = get_tagged_methods(self, "event_type")
+        PrettyLogging.debug(
+            {
+                pygame.event.event_name(t): c.__name__
+                for t, c in self._event_callbacks.items()
+            }
+        )
 
     def __repr__(self):
         return f"[{type(self).__name__}][{id(self)}]"
@@ -98,13 +103,13 @@ class Window(PygameUtils, Clipboard):
         return self
 
     def render(self):
-        assert self._step_mode
-        for event in pygame.event.get():
-            self.__on_event(event)
+        if not self._step_mode:
+            raise RuntimeError(f"render() requires step-mode (`with window`)")
         self._render()
 
     def screenshot(self) -> io.BytesIO:
-        assert self._step_mode
+        if not self._step_mode:
+            raise RuntimeError(f"screenshot() requires step-mode (`with window`)")
         data = io.BytesIO()
         pygame.image.save(self._screen, data)
         data.flush()
@@ -132,8 +137,6 @@ class Window(PygameUtils, Clipboard):
 
         clock = pygame.time.Clock()
         while self._running:
-            for event in pygame.event.get():
-                self.__on_event(event)
             self._render()
             clock.tick(WINDOW_FPS)
         pygame.quit()
@@ -144,7 +147,7 @@ class Window(PygameUtils, Clipboard):
             (self._width, self._height), flags=pygame.RESIZABLE
         )
         pygame.display.set_caption(self._title)
-        self._layout = WindowLayout(self._screen, background=self._bgc)
+        self._layout = WindowLayout(self._screen, background=self._screen_background)
 
         # NB: As set_mode has been called, we can now initialize pygame.scrap.
         # This needs to be done before calling Clipboard methods.
@@ -169,6 +172,9 @@ class Window(PygameUtils, Clipboard):
             self._manual_events.append(event)
 
     def _render(self):
+        for event in pygame.event.get():
+            self.__on_event(event)
+
         self._layout.controls = self.controls + (
             (self._fancybox,) if self._fancybox else ()
         )
@@ -209,19 +215,6 @@ class Window(PygameUtils, Clipboard):
                 vertical_alignment=Alignment.CENTER,
             ),
             title,
-        )
-
-    def __collect_event_callbacks(self):
-        for name, method in inspect.getmembers(self, inspect.ismethod):
-            if hasattr(method, "event_type"):
-                event_type = method.event_type
-                assert event_type not in self._event_callbacks
-                self._event_callbacks[event_type] = method
-        PrettyLogging.debug(
-            {
-                pygame.event.event_name(t): c.__name__
-                for t, c in self._event_callbacks.items()
-            }
         )
 
     def __on_event(self, event: Event):
