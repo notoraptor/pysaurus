@@ -16,7 +16,7 @@ class AbstractButton(Widget):
     _PAD_X = 6
     _PAD_Y = 4
     _BORDER_SIZE = 1
-    _COLOR_DEFAULT = Colors.white
+    _COLOR_DEFAULT = Colors.transparent
     _COLOR_HOVER = Colors.lightgray
     _COLOR_DOWN = Colors.gray
 
