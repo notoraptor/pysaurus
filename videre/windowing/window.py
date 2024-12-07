@@ -74,9 +74,21 @@ class Window(PygameUtils, Clipboard):
         self._controls = controls
 
     def text_rendering(
-        self, size: int = None, height_delta: int = None
+        self,
+        size: int = None,
+        strong: bool = False,
+        italic: bool = False,
+        underline: bool = False,
+        height_delta: int = None,
     ) -> PygameTextRendering:
-        return PygameTextRendering(self.fonts, size=size, height_delta=height_delta)
+        return PygameTextRendering(
+            self.fonts,
+            size=size,
+            strong=strong,
+            italic=italic,
+            underline=underline,
+            height_delta=height_delta,
+        )
 
     def __enter__(self):
         if self._closed:

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Self
 
+import pygame
+
 from pysaurus.core.unicode_utils import Unicode
 from videre import TextAlign
 
@@ -25,14 +27,17 @@ class AbstractTextElement(ABC):
 
 
 class CharTask(AbstractTextElement):
-    __slots__ = ("el", "font", "width", "horizontal_shift")
+    __slots__ = ("el", "font", "width", "horizontal_shift", "bounds")
 
-    def __init__(self, c: str, font, width: int, horizontal_shift: int):
+    def __init__(
+        self, c: str, font, width: int, horizontal_shift: int, bounds: pygame.Rect
+    ):
         super().__init__(0)
         self.el = c
         self.font = font
         self.width = width
         self.horizontal_shift = horizontal_shift
+        self.bounds = bounds
 
     def is_newline(self) -> bool:
         return self.el == "\n"

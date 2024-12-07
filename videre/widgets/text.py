@@ -8,7 +8,16 @@ from videre.widgets.widget import Widget
 
 
 class Text(Widget):
-    __wprops__ = {"text", "size", "wrap", "align", "color"}
+    __wprops__ = {
+        "text",
+        "size",
+        "wrap",
+        "align",
+        "color",
+        "strong",
+        "italic",
+        "underline",
+    }
     __slots__ = ()
 
     def __init__(
@@ -18,6 +27,9 @@ class Text(Widget):
         wrap=TextWrap.NONE,
         align=TextAlign.NONE,
         color: ColorDef = None,
+        strong: bool = False,
+        italic: bool = False,
+        underline: bool = False,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -26,6 +38,9 @@ class Text(Widget):
         self.wrap = wrap
         self.align = align
         self.color = color
+        self.strong = strong
+        self.italic = italic
+        self.underline = underline
 
     @property
     def text(self) -> str:
@@ -63,6 +78,30 @@ class Text(Widget):
     def color(self, color: ColorDef):
         self._set_wprop("color", None if color is None else parse_color(color))
 
+    @property
+    def strong(self) -> bool:
+        return self._get_wprop("strong")
+
+    @strong.setter
+    def strong(self, strong: bool):
+        self._set_wprop("strong", bool(strong))
+
+    @property
+    def italic(self) -> bool:
+        return self._get_wprop("italic")
+
+    @italic.setter
+    def italic(self, italic: bool):
+        self._set_wprop("italic", bool(italic))
+
+    @property
+    def underline(self) -> bool:
+        return self._get_wprop("underline")
+
+    @underline.setter
+    def underline(self, underline: bool):
+        self._set_wprop("underline", bool(underline))
+
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
         render_args = dict(text=self.text, color=self.color)
@@ -75,4 +114,9 @@ class Text(Widget):
             render_args["width"] = width
             render_args["align"] = self.align
             render_args["wrap_words"] = True
-        return window.text_rendering(size=self.size).render_text(**render_args)
+        return window.text_rendering(
+            size=self.size,
+            strong=self.strong,
+            italic=self.italic,
+            underline=self.underline,
+        ).render_text(**render_args)

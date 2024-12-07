@@ -42,3 +42,84 @@ def test_text_color(image_testing):
             )
         ]
         image_testing(window.snapshot())
+
+
+def test_text_strong(image_testing):
+    with WindowSD() as window:
+        window.controls = [
+            videre.Column(
+                [
+                    videre.Text("hello world 1.", size=30),
+                    videre.Text("hello world 2.", size=30, strong=True),
+                    videre.Text("hello world 3.", size=30),
+                ]
+            )
+        ]
+        image_testing(window.snapshot())
+
+
+def test_text_italic(image_testing):
+    with WindowSD() as window:
+        window.controls = [
+            videre.Column(
+                [
+                    videre.Text("hello world 1.", size=30),
+                    videre.Text("hello world 2.", size=30, italic=True),
+                    videre.Text("hello world 3.", size=30),
+                ]
+            )
+        ]
+        image_testing(window.snapshot())
+
+
+def test_text_underline(image_testing):
+    with WindowSD() as window:
+        window.controls = [
+            videre.Column(
+                [
+                    videre.Text("hello world 1_.", size=30),
+                    videre.Text("hello world 2_.", size=30, underline=True),
+                    videre.Text("hello world 3_.", size=30),
+                ]
+            )
+        ]
+        image_testing(window.snapshot())
+
+
+def test_text_styles(image_testing):
+    with WindowSD() as window:
+        window.controls = [
+            videre.Column(
+                [
+                    videre.Text("hello world 1_.", size=30),
+                    videre.Text(
+                        "hello world 2_. How are you ? I hope you are fine ! "
+                        "Thanks ! And you ?",
+                        size=30,
+                        strong=True,
+                        italic=True,
+                        underline=True,
+                    ),
+                    videre.Text(
+                        "hello world 2_. How are you ? I hope you are fine ! "
+                        "Thanks ! And you ?",
+                        size=30,
+                        strong=True,
+                        italic=True,
+                        underline=True,
+                        wrap=videre.TextWrap.CHAR,
+                    ),
+                    videre.Text(
+                        "hello world 2_. How are you ? I hope you are fine ! "
+                        "Thanks ! And you ?",
+                        size=30,
+                        strong=True,
+                        italic=True,
+                        underline=True,
+                        wrap=videre.TextWrap.WORD,
+                    ),
+                    videre.Text("hello world 3_.", size=30),
+                ]
+            )
+        ]
+        image_testing(window.snapshot())
