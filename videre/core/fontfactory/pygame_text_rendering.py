@@ -6,7 +6,6 @@ import pygame
 from videre import TextAlign
 from videre.core.fontfactory.font_factory_utils import (
     CharTask,
-    CharsLine,
     Line,
     WordTask,
     WordsLine,
@@ -47,14 +46,10 @@ class PygameTextRendering:
         wrap_words=False,
     ) -> pygame.Surface:
         if width is None or not wrap_words:
-            new_width, height, char_lines = self._get_char_tasks(
-                text, width, compact=compact
-            )
+            new_width, height, char_lines = self._get_char_tasks(text, width, compact)
             lines = WordsLine.from_chars(char_lines, align == TextAlign.NONE)
         else:
-            new_width, height, lines = self._get_word_tasks(
-                text, width, compact=compact
-            )
+            new_width, height, lines = self._get_word_tasks(text, width, compact)
         return self._render_word_lines(new_width, height, lines, align, color)
 
     def _render_word_lines(
@@ -79,40 +74,36 @@ class PygameTextRendering:
         return out
 
     def _get_char_tasks(
-        self, text: str, width: Optional[int], compact=False
+        self, text: str, width: Optional[int], compact: bool
     ) -> Tuple[int, int, List[Line[CharTask]]]:
         width = float("inf") if width is None else width
-        text_factory = CharElementFactory(self)
+        text_factory = Characters(self)
         return self._get_tasks(text_factory, text, width, compact)
 
     def _get_word_tasks(
-        self, text: str, width: int, *, compact=True
+        self, text: str, width: int, compact: bool
     ) -> Tuple[int, int, List[Line[WordTask]]]:
-        text_factory = WordElementFactory(self)
+        text_factory = Words(self)
         return self._get_tasks(text_factory, text, width, compact)
 
     def _get_tasks[
         T
-    ](
-        self,
-        text_factory: "TextElementFactory[T]",
-        text: str,
-        width: int,
-        compact: bool,
-    ) -> Tuple[int, int, List[Line[T]]]:
+    ](self, tel: "TextElements[T]", text: str, width: int, compact: bool) -> Tuple[
+        int, int, List[Line[T]]
+    ]:
         lines = []
-        task_line = text_factory.newline()
+        task_line = tel.newline()
         x = 0
-        for el in text_factory.text_to_elements(text):
-            info = text_factory.parse_element(el)
+        for el in tel.text_to_elements(text):
+            info = tel.parse_element(el)
             if info.is_newline():
                 lines.append(task_line)
-                task_line = text_factory.newline(newline=True)
+                task_line = tel.newline(newline=True)
                 x = 0
             elif info.is_printable():
                 if x and x + info.width > width:
                     lines.append(task_line)
-                    task_line = text_factory.newline()
+                    task_line = tel.newline()
                     x = 0
                 task_line.add(info.at(x))
                 x += info.horizontal_shift
@@ -127,17 +118,15 @@ class PygameTextRendering:
         # Compute width, height and ys
         new_width, height = 0, 0
         if lines:
-            ascender = self._ascender
-            descender = self._descender
             first_line = lines[0]
             first_line.y = (
-                ascender + self._height_delta
+                self._ascender + self._height_delta
                 if compact and first_line.elements
                 else self._line_spacing
             )
             for i in range(1, len(lines)):
                 lines[i].y = lines[i - 1].y + self._line_spacing
-            height = lines[-1].y + descender
+            height = lines[-1].y + self._descender
             new_width = max(
                 (line.limit() for line in lines if line.elements), default=0
             )
@@ -165,7 +154,7 @@ class PygameTextRendering:
         return WordTask(width, 0, tasks, height, horizontal_shift)
 
 
-class TextElementFactory[T](ABC):
+class TextElements[T](ABC):
     __slots__ = ("rendering",)
 
     def __init__(self, rendering: PygameTextRendering):
@@ -179,12 +168,11 @@ class TextElementFactory[T](ABC):
     def parse_element(self, element: str) -> T:
         raise NotImplementedError()
 
-    @abstractmethod
     def newline(self, newline=False) -> Line[T]:
-        raise NotImplementedError()
+        return Line[T](newline=newline)
 
 
-class CharElementFactory(TextElementFactory[CharTask]):
+class Characters(TextElements[CharTask]):
     __slots__ = ()
 
     def text_to_elements(self, text: str) -> Iterable[str]:
@@ -193,11 +181,8 @@ class CharElementFactory(TextElementFactory[CharTask]):
     def parse_element(self, c: str) -> CharTask:
         return self.rendering.parse_char(c)
 
-    def newline(self, newline=False) -> CharsLine:
-        return CharsLine(newline=newline)
 
-
-class WordElementFactory(TextElementFactory[WordTask]):
+class Words(TextElements[WordTask]):
     __slots__ = ()
 
     def text_to_elements(self, text: str) -> Iterable[str]:
@@ -210,6 +195,3 @@ class WordElementFactory(TextElementFactory[WordTask]):
 
     def parse_element(self, word: str) -> WordTask:
         return self.rendering.parse_word(word)
-
-    def newline(self, newline=False) -> WordsLine:
-        return WordsLine(newline=newline)

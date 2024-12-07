@@ -6,7 +6,10 @@ from videre import TextAlign
 
 
 class AbstractTextElement(ABC):
-    __slots__ = ()
+    __slots__ = ("x",)
+
+    def __init__(self, x=0):
+        self.x = x
 
     @abstractmethod
     def is_newline(self) -> bool:
@@ -16,20 +19,20 @@ class AbstractTextElement(ABC):
     def is_printable(self) -> bool:
         raise NotImplementedError()
 
-    @abstractmethod
     def at(self, x: int) -> Self:
-        raise NotImplementedError()
+        self.x = x
+        return self
 
 
 class CharTask(AbstractTextElement):
-    __slots__ = ("el", "font", "width", "horizontal_shift", "x")
+    __slots__ = ("el", "font", "width", "horizontal_shift")
 
     def __init__(self, c: str, font, width: int, horizontal_shift: int):
+        super().__init__(0)
         self.el = c
         self.font = font
         self.width = width
         self.horizontal_shift = horizontal_shift
-        self.x = 0
 
     def is_newline(self) -> bool:
         return self.el == "\n"
@@ -37,12 +40,30 @@ class CharTask(AbstractTextElement):
     def is_printable(self) -> bool:
         return Unicode.printable(self.el)
 
-    def at(self, x: int) -> Self:
-        self.x = x
-        return self
+
+class WordTask(AbstractTextElement):
+    __slots__ = ("width", "tasks", "height", "horizontal_shift")
+
+    def __init__(
+        self, width: int, x: int, tasks: List[CharTask], height=0, horizontal_shift=0
+    ):
+        super().__init__(x)
+        self.width = width
+        self.tasks = tasks
+        self.height = height
+        self.horizontal_shift = horizontal_shift
+
+    def __repr__(self):
+        return f"{self.x}:" + repr("".join(t.el for t in self.tasks))
+
+    def is_newline(self) -> bool:
+        return self.height and not self.width
+
+    def is_printable(self) -> bool:
+        return bool(self.width)
 
 
-class Line[T](ABC):
+class Line[T: AbstractTextElement]:
     __slots__ = ("y", "newline", "elements")
 
     def __init__(self, y=0, newline=False):
@@ -66,35 +87,6 @@ class Line[T](ABC):
 
 class CharsLine(Line[CharTask]):
     __slots__ = ()
-
-
-class WordTask:
-    __slots__ = ("x", "width", "tasks", "height", "horizontal_shift")
-    x: int
-    width: int
-    tasks: List[CharTask]
-
-    def __init__(
-        self, width: int, x: int, tasks: List[CharTask], height=0, horizontal_shift=0
-    ):
-        self.width = width
-        self.tasks = tasks
-        self.x = x
-        self.height = height
-        self.horizontal_shift = horizontal_shift
-
-    def __repr__(self):
-        return f"{self.x}:" + repr("".join(t.el for t in self.tasks))
-
-    def is_newline(self) -> bool:
-        return self.height and not self.width
-
-    def is_printable(self) -> bool:
-        return bool(self.width)
-
-    def at(self, x: int) -> Self:
-        self.x = x
-        return self
 
 
 class WordsLine(Line[WordTask]):
