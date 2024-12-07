@@ -48,7 +48,8 @@ class Window(PygameUtils, Clipboard):
             button: None for button in MouseButton
         }
         self._motion: Optional[Widget] = None
-        self._manual_events: List[Event] = []
+        self._manual_events_before: List[Event] = []
+        self._manual_events_after: List[Event] = []
         self._layout: Optional[WindowLayout] = None
         self._fancybox: Optional[Fancybox] = None
 
@@ -153,7 +154,7 @@ class Window(PygameUtils, Clipboard):
         # This needs to be done before calling Clipboard methods.
         pygame.scrap.init()
 
-    def _register_initial_events(self):
+    def _register_initial_events(self, before=False):
         # Post an initial mouse motion if mouse is over the window.
         if pygame.mouse.get_focused():
             self._post_manual_event(
@@ -165,27 +166,45 @@ class Window(PygameUtils, Clipboard):
                     touch=False,
                 ),
                 unique=True,
+                before=before,
             )
 
-    def _post_manual_event(self, event, unique=False):
-        if not unique or event not in self._manual_events:
-            self._manual_events.append(event)
+    def _post_manual_event(self, event, unique=False, before=False):
+        events_collection = (
+            self._manual_events_before if before else self._manual_events_after
+        )
+        if not unique or event not in events_collection:
+            events_collection.append(event)
 
     def _render(self):
+        # Handle interface events.
         for event in pygame.event.get():
             self.__on_event(event)
 
+        # Refresh controls.
         self._layout.controls = self.controls + (
             (self._fancybox,) if self._fancybox else ()
         )
+
+        # Clear [pre - manual events -> updated controls] cycle.
+        while self._manual_events_before:
+            events = self._manual_events_before
+            self._manual_events_before = []
+            for event in events:
+                self.__on_event(event)
+            self._layout.controls = self.controls + (
+                (self._fancybox,) if self._fancybox else ()
+            )
+
+        # Refresh screen.
         self._layout.render(self)
         pygame.display.flip()
 
         # Post manual events.
-        if self._manual_events:
-            for event in self._manual_events:
+        if self._manual_events_after:
+            for event in self._manual_events_after:
                 pygame.event.post(event)
-            self._manual_events.clear()
+            self._manual_events_after.clear()
 
     def set_fancybox(
         self,
@@ -200,7 +219,7 @@ class Window(PygameUtils, Clipboard):
 
     def clear_fancybox(self):
         self._fancybox = None
-        self._register_initial_events()
+        self._register_initial_events(before=True)
 
     def has_fancybox(self) -> bool:
         return self._fancybox is not None
