@@ -48,6 +48,7 @@ class Window(PygameUtils, Clipboard):
             button: None for button in MouseButton
         }
         self._motion: Optional[Widget] = None
+        self._focus: Optional[Widget] = None
         self._manual_events_before: List[Event] = []
         self._manual_events_after: List[Event] = []
         self._layout: Optional[WindowLayout] = None
@@ -274,6 +275,7 @@ class Window(PygameUtils, Clipboard):
             owner.widget.handle_mouse_up(button, owner.rel_x, owner.rel_y)
             if self._down[button] == owner.widget:
                 owner.widget.handle_click(button)
+                self._focus = owner.widget
             elif self._down[button]:
                 self._down[button].handle_mouse_down_canceled(button)
         elif self._down[button]:
