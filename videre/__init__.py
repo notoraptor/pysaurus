@@ -18,3 +18,4 @@ from .widgets.progressing import Progressing
 from .widgets.radio import Radio
 from .widgets.text import Text
 from .windowing.window import Window
+from .widgets.textinput import TextInput

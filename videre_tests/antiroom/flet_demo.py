@@ -19,10 +19,10 @@ _to_do_ = [
     ft.MenuBar,
     ft.MenuItemButton,
     ft.SubmenuButton,
-    ft.TextField,
     ft.Dropdown,  # <select>options...</select>
 ]
 _doing_ = [
+    ft.TextField,
     ft.Markdown,
     # Notes:
     # A Text can set color, strong, italic and underline.

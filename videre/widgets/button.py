@@ -53,6 +53,8 @@ class Button(AbstractButton):
             on_click(self)
 
     def _get_text_surface(self, window, width: Optional[int] = None) -> pygame.Surface:
-        return window.text_rendering(size=self._text_size, height_delta=0).render_text(
-            self.text, width
+        return (
+            window.text_rendering(size=self._text_size, height_delta=0)
+            .render_text(self.text, width)
+            .surface
         )

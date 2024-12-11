@@ -9,7 +9,7 @@ from pysaurus.core.functions import get_tagged_methods
 from pysaurus.core.prettylogging import PrettyLogging
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
-from videre.core.events import MotionEvent
+from videre.core.events import KeyboardEntry, MotionEvent
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 from videre.core.pygame_utils import PygameUtils
@@ -17,6 +17,7 @@ from videre.layouts.container import Container
 from videre.widgets.button import Button
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
+from videre.windowing.event_propagator import EventPropagator
 from videre.windowing.fancybox import Fancybox
 from videre.windowing.windowlayout import WindowLayout
 from videre.windowing.windowutils import on_event
@@ -155,6 +156,14 @@ class Window(PygameUtils, Clipboard):
         # This needs to be done before calling Clipboard methods.
         pygame.scrap.init()
 
+        # Initialize keyboard repeat.
+        # NB: TEXTINPUT events already handle repeat,
+        # but we still need manual initialization for KEYDOWN/KEYUP events.
+        # I don't know how to get default delay and interval values for TEXTINPUT,
+        # so I tried here to set empiric values so that key repeat
+        # is the most like textinput repeat.
+        pygame.key.set_repeat(500, 35)
+
     def _register_initial_events(self, before=False):
         # Post an initial mouse motion if mouse is over the window.
         if pygame.mouse.get_focused():
@@ -266,6 +275,11 @@ class Window(PygameUtils, Clipboard):
             button = MouseButton(event.button)
             self._down[button] = owner.widget
             owner.widget.handle_mouse_down(button, owner.rel_x, owner.rel_y)
+            # Handle focus
+            focus = EventPropagator.handle_focus_in(owner.widget)
+            if self._focus and self._focus != focus:
+                self._focus.handle_focus_out()
+            self._focus = focus
 
     @on_event(pygame.MOUSEBUTTONUP)
     def _on_mouse_button_up(self, event: Event):
@@ -274,8 +288,7 @@ class Window(PygameUtils, Clipboard):
         if owner:
             owner.widget.handle_mouse_up(button, owner.rel_x, owner.rel_y)
             if self._down[button] == owner.widget:
-                owner.widget.handle_click(button)
-                self._focus = owner.widget
+                EventPropagator.handle_click(owner.widget, button)
             elif self._down[button]:
                 self._down[button].handle_mouse_down_canceled(button)
         elif self._down[button]:
@@ -317,3 +330,13 @@ class Window(PygameUtils, Clipboard):
     @on_event(pygame.WINDOWRESIZED)
     def _on_window_resized(self, event: Event):
         logger.debug(f"Window resized: {event}")
+
+    @on_event(pygame.TEXTINPUT)
+    def _on_text_input(self, event: Event):
+        if self._focus:
+            self._focus.handle_text_input(event.text)
+
+    @on_event(pygame.KEYDOWN)
+    def _on_keydown(self, event: Event):
+        if self._focus:
+            self._focus.handle_keydown(KeyboardEntry(event))

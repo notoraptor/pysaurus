@@ -27,10 +27,16 @@ class AbstractTextElement(ABC):
 
 
 class CharTask(AbstractTextElement):
-    __slots__ = ("el", "font", "width", "horizontal_shift", "bounds")
+    __slots__ = ("el", "font", "width", "horizontal_shift", "bounds", "pos")
 
     def __init__(
-        self, c: str, font, width: int, horizontal_shift: int, bounds: pygame.Rect
+        self,
+        c: str,
+        font,
+        width: int,
+        horizontal_shift: int,
+        bounds: pygame.Rect,
+        pos: int,
     ):
         super().__init__(0)
         self.el = c
@@ -38,6 +44,10 @@ class CharTask(AbstractTextElement):
         self.width = width
         self.horizontal_shift = horizontal_shift
         self.bounds = bounds
+        self.pos = pos
+
+    def __repr__(self):
+        return f"{repr(self.el)}:pos={self.pos}@{self.x},print={self.is_printable()}"
 
     def is_newline(self) -> bool:
         return self.el == "\n"

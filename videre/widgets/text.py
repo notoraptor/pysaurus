@@ -4,6 +4,7 @@ import pygame
 
 from videre.colors import ColorDef, parse_color
 from videre.core.constants import TextAlign, TextWrap
+from videre.core.fontfactory.pygame_text_rendering import RenderedText
 from videre.widgets.widget import Widget
 
 
@@ -18,7 +19,7 @@ class Text(Widget):
         "italic",
         "underline",
     }
-    __slots__ = ()
+    __slots__ = ("_rendered",)
 
     def __init__(
         self,
@@ -33,6 +34,7 @@ class Text(Widget):
         **kwargs
     ):
         super().__init__(**kwargs)
+        self._rendered: Optional[RenderedText] = None
         self._set_wprops(size=size)
         self.text = text
         self.wrap = wrap
@@ -102,11 +104,23 @@ class Text(Widget):
     def underline(self, underline: bool):
         self._set_wprop("underline", bool(underline))
 
+    def _text_rendering(self, window):
+        from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
+
+        rendering: PygameTextRendering = window.text_rendering(
+            size=self.size,
+            strong=self.strong,
+            italic=self.italic,
+            underline=self.underline,
+        )
+        return rendering
+
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
         render_args = dict(text=self.text, color=self.color)
         if wrap == TextWrap.NONE:
             render_args["width"] = None
+            render_args["align"] = TextAlign.NONE
         elif wrap == TextWrap.CHAR:
             render_args["width"] = width
             render_args["align"] = self.align
@@ -114,9 +128,5 @@ class Text(Widget):
             render_args["width"] = width
             render_args["align"] = self.align
             render_args["wrap_words"] = True
-        return window.text_rendering(
-            size=self.size,
-            strong=self.strong,
-            italic=self.italic,
-            underline=self.underline,
-        ).render_text(**render_args)
+        self._rendered = self._text_rendering(window).render_text(**render_args)
+        return self._rendered.surface

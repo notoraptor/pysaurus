@@ -22,7 +22,7 @@ class Container(AbstractLayout):
         "width",
         "height",
     }
-    __slots__ = {}
+    __slots__ = ()
     __size__ = 1
 
     def __init__(
@@ -164,7 +164,9 @@ class Container(AbstractLayout):
         ):
             if border_points:
                 pygame.gfxdraw.filled_polygon(surface, border_points, border_color)
-        surface.blit(inner_surface, (margin.left + x, margin.top + y), area=inner_box)
+        inner_x, inner_y = margin.left + x, margin.top + y
+        surface.blit(inner_surface, (inner_x, inner_y), area=inner_box)
+        self._set_child_position(control, inner_x, inner_y)
         return surface
 
 

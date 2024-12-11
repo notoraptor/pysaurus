@@ -6,6 +6,9 @@ MOUSEBUTTONUP     pos, button, touch
 MOUSEWHEEL        which, flipped, x, y, touch, precise_x, precise_y
 MOUSEMOTION       pos, rel, buttons, touch
 WINDOWLEAVE       Mouse left the window
+WINDOWRESIZED     Window got resized
+TEXTINPUT         text
+KEYDOWN           key, mod, unicode, scancode
 ```
 
 # Deprecated
@@ -20,7 +23,6 @@ VIDEOEXPOSE       none
 
 # To handle
 ```
-KEYDOWN           key, mod, unicode, scancode
 KEYUP             key, mod, unicode, scancode
 JOYAXISMOTION     joy (deprecated), instance_id, axis, value
 JOYBALLMOTION     joy (deprecated), instance_id, ball, rel
@@ -37,7 +39,6 @@ FINGERDOWN         touch_id, finger_id, x, y, dx, dy
 FINGERUP           touch_id, finger_id, x, y, dx, dy
 MULTIGESTURE       touch_id, x, y, pinched, rotated, num_fingers
 TEXTEDITING        text, start, length
-TEXTINPUT          text
 
 DROPFILE                 file
 DROPBEGIN                (SDL backend >= 2.0.5)
@@ -61,7 +62,6 @@ WINDOWSHOWN            Window became shown
 WINDOWHIDDEN           Window became hidden
 WINDOWEXPOSED          Window got updated by some external event
 WINDOWMOVED            Window got moved
-WINDOWRESIZED          Window got resized
 WINDOWSIZECHANGED      Window changed its size
 WINDOWMINIMIZED        Window was minimized
 WINDOWMAXIMIZED        Window was maximized

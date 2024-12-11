@@ -8,6 +8,7 @@ from videre.widgets.widget import Widget
 class AbstractLayout(Widget):
     __wprops__ = {"_controls"}
     __size__ = None
+    __capture_mouse__ = False
     __slots__ = ()
 
     def __init__(self, controls: Sequence[Widget] = (), **kwargs):
@@ -33,7 +34,11 @@ class AbstractLayout(Widget):
     ) -> Optional[MouseOwnership]:
         if super().get_mouse_owner(x_in_parent, y_in_parent):
             local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
-            return get_top_mouse_owner(local_x, local_y, self._controls())
+            child = get_top_mouse_owner(local_x, local_y, self._controls())
+            if child:
+                return child
+            elif self.__capture_mouse__:
+                return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
 
     def get_mouse_wheel_owner(

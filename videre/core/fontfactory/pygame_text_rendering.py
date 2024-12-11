@@ -1,8 +1,9 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Optional, Tuple
+from typing import Any, Iterable, List, Optional, Tuple
 
 import pygame
+import pygame.freetype
 import pygame.transform
 
 from videre.colors import Colors
@@ -15,6 +16,38 @@ from videre.core.fontfactory.font_factory_utils import (
     align_words,
 )
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
+
+
+class FontSizes:
+    __slots__ = ("height_delta", "line_spacing", "ascender", "descender", "space_width")
+
+    def __init__(self, base_font: pygame.freetype.Font, size: int, height_delta=2):
+        self.height_delta = height_delta
+        self.line_spacing = base_font.get_sized_height(size) + height_delta
+        self.ascender = abs(base_font.get_sized_ascender(size)) + 1
+        self.descender = abs(base_font.get_sized_descender(size))
+        self.space_width = base_font.get_rect(" ", size=size).width
+
+
+class RenderedText:
+    __slots__ = ("lines", "surface", "font_sizes")
+
+    def __init__(
+        self,
+        lines: List[Line[WordTask]],
+        surface: pygame.Surface,
+        font_sizes: FontSizes,
+    ):
+        self.lines = lines
+        self.surface = surface
+        self.font_sizes = font_sizes
+
+    def first_x(self) -> int:
+        if self.lines:
+            line = self.lines[0]
+            if line.elements:
+                return line.elements[0].x
+        return 0
 
 
 class PygameTextRendering:
@@ -38,10 +71,7 @@ class PygameTextRendering:
         self._underline = bool(underline)
 
         self._height_delta = height_delta
-        self._line_spacing = fonts.base_font.get_sized_height(size) + height_delta
-        self._ascender = abs(fonts.base_font.get_sized_ascender(size)) + 1
-        self._descender = abs(fonts.base_font.get_sized_descender(size))
-        self._space_width = fonts.base_font.get_rect(" ", size=size).width
+        self._font_sizes = FontSizes(fonts.base_font, size, height_delta)
 
     def _get_font(self, text: str):
         font = self._fonts.get_font(text)
@@ -68,13 +98,14 @@ class PygameTextRendering:
         color: pygame.Color = None,
         align=TextAlign.LEFT,
         wrap_words=False,
-    ) -> pygame.Surface:
+    ) -> RenderedText:
         if width is None or not wrap_words:
             new_width, height, char_lines = self._get_char_tasks(text, width, compact)
             lines = WordsLine.from_chars(char_lines, align == TextAlign.NONE)
         else:
             new_width, height, lines = self._get_word_tasks(text, width, compact)
-        return self._render_word_lines(new_width, height, lines, align, color)
+        surface = self._render_word_lines(new_width, height, lines, align, color)
+        return RenderedText(lines, surface, self._font_sizes)
 
     def _render_word_lines(
         self,
@@ -162,19 +193,20 @@ class PygameTextRendering:
         if lines:
             first_line = lines[0]
             first_line.y = (
-                self._ascender + self._height_delta
+                self._font_sizes.ascender + self._height_delta
                 if compact and first_line.elements
-                else self._line_spacing
+                else self._font_sizes.line_spacing
             )
             for i in range(1, len(lines)):
-                lines[i].y = lines[i - 1].y + self._line_spacing
-            height = lines[-1].y + self._descender
+                lines[i].y = lines[i - 1].y + self._font_sizes.line_spacing
+            height = lines[-1].y + self._font_sizes.descender
             new_width = max(
                 (line.limit() for line in lines if line.elements), default=0
             )
         return new_width, height
 
-    def parse_char(self, c: str):
+    def parse_char(self, ic: Tuple[int, str]):
+        charpos, c = ic
         font = self._get_font(c)
 
         bounds = font.get_rect(c, size=self._size)
@@ -183,7 +215,7 @@ class PygameTextRendering:
         (metric,) = font.get_metrics(c, size=self._size)
         horizontal_shift = metric[4] if metric else bounds.width
 
-        return CharTask(c, font, width, horizontal_shift, bounds)
+        return CharTask(c, font, width, horizontal_shift, bounds, charpos)
 
     def parse_word(self, word: str):
         width, height, lines = self._get_char_tasks(word, None, False)
@@ -192,7 +224,7 @@ class PygameTextRendering:
             tasks = line.elements
         else:
             tasks = []
-        horizontal_shift = width + self._space_width
+        horizontal_shift = width + self._font_sizes.space_width
         return WordTask(width, 0, tasks, height, horizontal_shift)
 
 
@@ -203,7 +235,7 @@ class TextElements[T](ABC):
         self.rendering = rendering
 
     @abstractmethod
-    def text_to_elements(self, text: str) -> Iterable[str]:
+    def text_to_elements(self, text: str) -> Iterable[Any]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -217,11 +249,11 @@ class TextElements[T](ABC):
 class Characters(TextElements[CharTask]):
     __slots__ = ()
 
-    def text_to_elements(self, text: str) -> Iterable[str]:
-        return text
+    def text_to_elements(self, text: str) -> Iterable[Tuple[int, str]]:
+        return enumerate(text)
 
-    def parse_element(self, c: str) -> CharTask:
-        return self.rendering.parse_char(c)
+    def parse_element(self, ic: Tuple[int, str]) -> CharTask:
+        return self.rendering.parse_char(ic)
 
 
 class Words(TextElements[WordTask]):

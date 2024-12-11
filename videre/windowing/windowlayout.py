@@ -7,6 +7,7 @@ from videre.layouts.abstract_controls_layout import AbstractControlsLayout
 class WindowLayout(AbstractControlsLayout):
     __slots__ = ("_bgc",)
     _FILL = Colors.white
+    __capture_mouse__ = True
 
     def __init__(self, screen: pygame.Surface, background: pygame.Color | None = None):
         super().__init__()

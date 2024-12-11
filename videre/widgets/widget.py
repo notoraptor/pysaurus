@@ -6,7 +6,7 @@ import pygame
 
 from pysaurus.core.classes import StringPrinter
 from videre.core.constants import MouseButton
-from videre.core.events import MotionEvent
+from videre.core.events import KeyboardEntry, MotionEvent
 from videre.core.mouse_ownership import MouseOwnership
 from videre.core.position_mapping import Position, PositionMapping
 from videre.core.pygame_utils import PygameUtils
@@ -255,6 +255,12 @@ class Widget(PygameUtils):
     def handle_click(self, button: MouseButton):
         pass
 
+    def handle_focus_in(self):
+        pass
+
+    def handle_focus_out(self):
+        pass
+
     def handle_mouse_enter(self, event: MotionEvent):
         pass
 
@@ -274,4 +280,10 @@ class Widget(PygameUtils):
         pass
 
     def handle_mouse_exit(self):
+        pass
+
+    def handle_text_input(self, text: str):
+        pass
+
+    def handle_keydown(self, key: KeyboardEntry):
         pass
