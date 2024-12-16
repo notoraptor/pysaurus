@@ -1,4 +1,3 @@
-import functools
 import sys
 
 from tqdm import trange
@@ -8,21 +7,22 @@ from pysaurus.core.constants import LOREM_IPSUM
 from pysaurus.core.perf_counter import PerfCounter
 from videre import Colors, Gradient
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
+from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 
 
 def stress_render_text(batch=200):
     height_delta = 2
     ff = PygameFontFactory(size=24)
+    tr = PygameTextRendering(ff, height_delta=height_delta)
+
     line_height = ff.font_height + height_delta
     assert line_height == 35
 
     text = LOREM_IPSUM
     print("Text length:", len(text), file=sys.stderr)
 
-    ff_render_text = functools.partial(ff.render_text, width=None, compact=True)
-
     for _ in trange(batch):
-        ff_render_text(text)
+        tr.render_text(text, None)
 
 
 def stress_gradient(batch=200):

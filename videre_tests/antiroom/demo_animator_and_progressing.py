@@ -28,12 +28,6 @@ def main():
     aw = Animator(label, on_frame=on_label_frame)
     ap = Animator(pb, on_frame=on_pb_frame, fps=30)
     window.controls = [videre.Column([b1, b2, b3, br, bc, aw, ap, Progressing()])]
-    # print("b", b1.rendered_height)
-    # print("b:hello", b2.rendered_height)
-    # print("b:Hello", b3.rendered_height)
-    # print("radio", br.rendered_height)
-    # print("checkbox", br.rendered_height)
-    # print("standard", window.fonts.standard_size)
     window.run()
 
 

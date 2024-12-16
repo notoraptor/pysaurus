@@ -19,7 +19,14 @@ from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 
 
 class FontSizes:
-    __slots__ = ("height_delta", "line_spacing", "ascender", "descender", "space_width")
+    __slots__ = (
+        "height_delta",
+        "line_spacing",
+        "ascender",
+        "descender",
+        "space_width",
+        "space_shift",
+    )
 
     def __init__(self, base_font: pygame.freetype.Font, size: int, height_delta=2):
         self.height_delta = height_delta
@@ -27,6 +34,9 @@ class FontSizes:
         self.ascender = abs(base_font.get_sized_ascender(size)) + 1
         self.descender = abs(base_font.get_sized_descender(size))
         self.space_width = base_font.get_rect(" ", size=size).width
+
+        (metric,) = base_font.get_metrics(" ", size=size)
+        self.space_shift = metric[4] if metric else self.space_width
 
 
 class RenderedText:
@@ -222,10 +232,12 @@ class PygameTextRendering:
         if width:
             (line,) = lines
             tasks = line.elements
+            last_char = tasks[-1]
+            shift = last_char.x + last_char.horizontal_shift
         else:
             tasks = []
-        horizontal_shift = width + self._font_sizes.space_width
-        return WordTask(width, 0, tasks, height, horizontal_shift)
+            shift = 0
+        return WordTask(width, 0, tasks, height, shift + self._font_sizes.space_shift)
 
 
 class TextElements[T](ABC):
