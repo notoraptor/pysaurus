@@ -179,7 +179,7 @@ class TextInput(AbstractLayout):
         self._set_cursor_event(_CursorMouseEvent(x, y))
         self.update()
 
-    def handle_focus_in(self):
+    def handle_focus_in(self) -> bool:
         self._debug("focus_in")
         self._set_focus(True)
         if not self._cursor_event:

@@ -255,8 +255,9 @@ class Widget(PygameUtils):
     def handle_click(self, button: MouseButton):
         pass
 
-    def handle_focus_in(self):
-        pass
+    def handle_focus_in(self) -> bool:
+        """Return True if this widget accepts the focus, False otherwise."""
+        return False
 
     def handle_focus_out(self):
         pass

@@ -53,9 +53,11 @@ class Window(PygameUtils, Clipboard):
         self._manual_events_before: List[Event] = []
         self._manual_events_after: List[Event] = []
         self._layout: Optional[WindowLayout] = None
-        self._fancybox: Optional[Fancybox] = None
 
         self._controls: List[Widget] = []
+        self._fancybox: Optional[Fancybox] = None
+        self._context = None
+
         self._fonts = PygameFontFactory(size=font_size)
 
         self._event_callbacks = get_tagged_methods(self, "event_type")
@@ -192,19 +194,15 @@ class Window(PygameUtils, Clipboard):
             self.__on_event(event)
 
         # Refresh controls.
-        self._layout.controls = self.controls + (
-            (self._fancybox,) if self._fancybox else ()
-        )
+        self.__refresh_controls()
 
-        # Clear [pre - manual events -> updated controls] cycle.
+        # Clear [pre-manual events -> updated controls] cycle.
         while self._manual_events_before:
             events = self._manual_events_before
             self._manual_events_before = []
             for event in events:
                 self.__on_event(event)
-            self._layout.controls = self.controls + (
-                (self._fancybox,) if self._fancybox else ()
-            )
+            self.__refresh_controls()
 
         # Refresh screen.
         self._layout.render(self)
@@ -215,6 +213,11 @@ class Window(PygameUtils, Clipboard):
             for event in self._manual_events_after:
                 pygame.event.post(event)
             self._manual_events_after.clear()
+
+    def __refresh_controls(self):
+        self._layout.controls = self.controls + (
+            (self._fancybox,) if self._fancybox else ()
+        )
 
     def set_fancybox(
         self,
