@@ -9,6 +9,7 @@ from .layouts.container import Container, Container
 from .layouts.radiogroup import RadioGroup
 from .layouts.row import Row
 from .layouts.scroll.scrollview import ScrollView
+from .tools import printimg
 from .widgets.button import Button
 from .widgets.checkbox import Checkbox
 from .widgets.label import Label
@@ -17,5 +18,5 @@ from .widgets.progressbar import ProgressBar
 from .widgets.progressing import Progressing
 from .widgets.radio import Radio
 from .widgets.text import Text
-from .windowing.window import Window
 from .widgets.textinput import TextInput
+from .windowing.window import Window

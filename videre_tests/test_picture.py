@@ -1,5 +1,4 @@
 import io
-import os
 import pathlib
 
 import pytest
@@ -7,10 +6,11 @@ import pytest
 from pysaurus.core.modules import ImageUtils
 from videre import Picture
 from videre.windowing.windowfactory import WindowLD
+from .common import IMAGE_EXAMPLE
 
 
 class SrcProvider:
-    _string = os.path.join(os.path.dirname(__file__), "flowers-7660120_640.jpg")
+    _string = IMAGE_EXAMPLE
     _path = pathlib.Path(_string)
 
     def string(self):

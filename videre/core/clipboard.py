@@ -24,6 +24,8 @@ def bytes_to_text(data: bytes) -> str:
 
 
 class Clipboard:
+    __slots__ = ()
+
     @classmethod
     def _get_text_type(cls) -> str:
         for ct in pygame.scrap.get_types():

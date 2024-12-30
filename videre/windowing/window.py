@@ -1,4 +1,3 @@
-import io
 import logging
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -26,6 +25,27 @@ logger = logging.getLogger(__name__)
 
 
 class Window(PygameUtils, Clipboard):
+    __slots__ = (
+        "_title",
+        "_width",
+        "_height",
+        "_screen_background",
+        "_running",
+        "_closed",
+        "_screen",
+        "_down",
+        "_motion",
+        "_focus",
+        "_manual_events_before",
+        "_manual_events_after",
+        "_layout",
+        "_controls",
+        "_fancybox",
+        "_context",
+        "_fonts",
+        "_event_callbacks",
+    )
+
     def __init__(
         self,
         title="Window",
@@ -40,7 +60,6 @@ class Window(PygameUtils, Clipboard):
         self._height = height
         self._screen_background = background
 
-        self._step_mode = False
         self._running = True
         self._closed = False
         self._screen: Optional[pygame.Surface] = None
@@ -100,41 +119,9 @@ class Window(PygameUtils, Clipboard):
             height_delta=height_delta,
         )
 
-    def __enter__(self):
-        if self._closed:
-            raise RuntimeError("Window has already run. Cannot run again.")
-        self._step_mode = True
-        self._init_display()
-        return self
-
-    def render(self):
-        if not self._step_mode:
-            raise RuntimeError(f"render() requires step-mode (`with window`)")
-        self._render()
-
-    def screenshot(self) -> io.BytesIO:
-        if not self._step_mode:
-            raise RuntimeError(f"screenshot() requires step-mode (`with window`)")
-        data = io.BytesIO()
-        pygame.image.save(self._screen, data)
-        data.flush()
-        return data
-
-    def snapshot(self) -> io.BytesIO:
-        self.render()
-        return self.screenshot()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._step_mode:
-            self._step_mode = False
-            self._closed = True
-            pygame.quit()
-
     def run(self):
         if self._closed:
             raise RuntimeError("Window has already run. Cannot run again.")
-        if self._step_mode:
-            raise RuntimeError("Window is in step mode. Cannot launch run().")
 
         self._init_display()
         # We must prepare initial events before entering the render loop
