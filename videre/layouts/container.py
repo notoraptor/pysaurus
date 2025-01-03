@@ -163,7 +163,13 @@ class Container(AbstractLayout):
             outer_width, outer_height
         ):
             if border_points:
-                pygame.gfxdraw.filled_polygon(surface, border_points, border_color)
+                if border_points[0] == border_points[-1]:
+                    # Certainly a line
+                    pygame.gfxdraw.line(
+                        surface, *border_points[0], *border_points[1], border_color
+                    )
+                else:
+                    pygame.gfxdraw.filled_polygon(surface, border_points, border_color)
         inner_x, inner_y = margin.left + x, margin.top + y
         surface.blit(inner_surface, (inner_x, inner_y), area=inner_box)
         self._set_child_position(control, inner_x, inner_y)

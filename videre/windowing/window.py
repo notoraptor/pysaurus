@@ -13,6 +13,7 @@ from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 from videre.core.pygame_utils import PygameUtils
 from videre.layouts.container import Container
+from videre.layouts.context import Context
 from videre.widgets.button import Button
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
@@ -202,8 +203,10 @@ class Window(PygameUtils, Clipboard):
             self._manual_events_after.clear()
 
     def __refresh_controls(self):
-        self._layout.controls = self.controls + (
-            (self._fancybox,) if self._fancybox else ()
+        self._layout.controls = (
+            self.controls
+            + ((self._fancybox,) if self._fancybox else ())
+            + ((self._context,) if self._context else ())
         )
 
     def set_fancybox(
@@ -235,6 +238,17 @@ class Window(PygameUtils, Clipboard):
             ),
             title,
         )
+
+    def set_context(self, relative: Widget, control: Widget):
+        self._context = Context(relative, control)
+        if self._focus:
+            self._focus.handle_focus_out()
+        self._focus = self._context
+        self._context.handle_focus_in()
+
+    def clear_context(self):
+        self._context = None
+        self._register_initial_events(before=True)
 
     def __on_event(self, event: Event):
         callback = self._event_callbacks.get(event.type)

@@ -7,6 +7,17 @@ from videre.core.sides.padding import Padding
 from videre.windowing.windowfactory import WindowLD
 
 
+@pytest.mark.parametrize("border_size", [1, 2, 3])
+def test_simple_container(border_size, image_testing):
+    with WindowLD() as window:
+        window.controls = [
+            videre.Container(
+                videre.Text("Hello World!"), border=videre.Border.all(border_size)
+            )
+        ]
+        image_testing(window.snapshot())
+
+
 @pytest.mark.parametrize(
     "halign,valign", itertools.product(videre.Alignment, videre.Alignment)
 )
