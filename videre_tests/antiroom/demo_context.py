@@ -1,3 +1,4 @@
+import videre
 from videre import Button, Column, Text, Window, TextInput, Container
 
 
@@ -19,6 +20,7 @@ def main():
                 TextInput(),
                 Container(background_color="green", weight=0.5),
                 TextInput(),
+                videre.Dropdown([1, 2, 3, 4]),
             ]
         )
     ]
