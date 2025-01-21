@@ -2,14 +2,14 @@ class MouseOwnership:
     """
     Represent a mouse ownership.
     widget: widget that owns mouse.
-    rel_x, rel_y: mouse coordinates relative to widget parent.
+    x_in_parent, y_in_parent: mouse coordinates relative to widget parent.
     """
 
-    __slots__ = ("widget", "rel_x", "rel_y")
+    __slots__ = ("widget", "x_in_parent", "y_in_parent")
 
-    def __init__(self, widget, rel_x: int, rel_y: int):
+    def __init__(self, widget, x_in_parent: int, y_in_parent: int):
         from videre.widgets.widget import Widget
 
         self.widget: Widget = widget
-        self.rel_x = rel_x
-        self.rel_y = rel_y
+        self.x_in_parent = x_in_parent
+        self.y_in_parent = y_in_parent

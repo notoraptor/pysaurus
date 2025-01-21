@@ -278,7 +278,7 @@ class Window(PygameUtils, Clipboard):
         if owner:
             button = MouseButton(event.button)
             self._down[button] = owner.widget
-            owner.widget.handle_mouse_down(button, owner.rel_x, owner.rel_y)
+            owner.widget.handle_mouse_down(button, owner.x_in_parent, owner.y_in_parent)
             # Handle focus
             focus = EventPropagator.handle_focus_in(owner.widget)
             if self._focus and self._focus != focus:
@@ -290,7 +290,7 @@ class Window(PygameUtils, Clipboard):
         button = MouseButton(event.button)
         owner = self._layout.get_mouse_owner(*event.pos)
         if owner:
-            owner.widget.handle_mouse_up(button, owner.rel_x, owner.rel_y)
+            owner.widget.handle_mouse_up(button, owner.x_in_parent, owner.y_in_parent)
             if self._down[button] == owner.widget:
                 EventPropagator.handle_click(owner.widget, button)
             elif self._down[button]:
@@ -304,7 +304,7 @@ class Window(PygameUtils, Clipboard):
         m_event = MotionEvent(event)
         owner = self._layout.get_mouse_owner(*event.pos)
         if owner:
-            m_event = MotionEvent(event, owner.rel_x, owner.rel_y)
+            m_event = MotionEvent(event, owner.x_in_parent, owner.y_in_parent)
             if not self._motion:
                 owner.widget.handle_mouse_enter(m_event)
             elif self._motion is owner.widget:

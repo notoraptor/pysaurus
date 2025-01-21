@@ -34,7 +34,7 @@ class Dropdown(ControlLayout):
             text.text = str(self.selected)
 
     def _control(self) -> Container:
-        ctrl, = self._controls()
+        (ctrl,) = self._controls()
         return ctrl
 
     @property
