@@ -1,4 +1,5 @@
-from typing import List
+from dataclasses import dataclass, field
+from typing import Sequence
 
 import pygame
 from pygame.event import Event
@@ -6,44 +7,50 @@ from pygame.event import Event
 from videre import MouseButton
 
 
-class MotionEvent:
-    __slots__ = ("_e", "x", "y")
-
-    def __init__(self, event: Event, x=None, y=None):
-        self._e = event
-        self.x = event.pos[0] if x is None else x
-        self.y = event.pos[1] if y is None else y
-
-    @property
-    def dx(self) -> int:
-        return self._e.rel[0]
+@dataclass(slots=True)
+class MouseEvent:
+    x: int = 0
+    y: int = 0
+    dx: int = 0
+    dy: int = 0
+    buttons: Sequence[MouseButton] = field(default_factory=list)
 
     @property
-    def dy(self) -> int:
-        return self._e.rel[1]
+    def button(self) -> MouseButton:
+        (button,) = self.buttons
+        return button
 
     @property
-    def button_left(self) -> int:
-        return self._e.buttons[0]
+    def button_left(self) -> bool:
+        return MouseButton.BUTTON_LEFT in self.buttons
 
     @property
-    def button_middle(self) -> int:
-        return self._e.buttons[1]
+    def button_middle(self) -> bool:
+        return MouseButton.BUTTON_MIDDLE in self.buttons
 
     @property
-    def button_right(self) -> int:
-        return self._e.buttons[2]
+    def button_right(self) -> bool:
+        return MouseButton.BUTTON_RIGHT in self.buttons
 
-    @property
-    def buttons(self) -> List[MouseButton]:
+    @classmethod
+    def from_mouse_motion(cls, event: Event, x=None, y=None):
         buttons = []
-        if self.button_left:
+        if event.buttons[0]:
             buttons.append(MouseButton.BUTTON_LEFT)
-        if self.button_right:
-            buttons.append(MouseButton.BUTTON_RIGHT)
-        if self.button_middle:
+        if event.buttons[1]:
             buttons.append(MouseButton.BUTTON_MIDDLE)
-        return buttons
+        if event.buttons[2]:
+            buttons.append(MouseButton.BUTTON_RIGHT)
+        return cls(
+            x=event.pos[0] if x is None else x,
+            y=event.pos[1] if y is None else y,
+            dx=event.rel[0],
+            dy=event.rel[1],
+            buttons=buttons,
+        )
+
+    def with_coordinates(self, x: int, y: int):
+        return MouseEvent(x=x, y=y, dx=self.dx, dy=self.dy, buttons=list(self.buttons))
 
 
 class KeyboardEntry:

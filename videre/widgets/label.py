@@ -1,7 +1,7 @@
 from typing import Union
 
 from videre.core.constants import MouseButton
-from videre.core.events import MotionEvent
+from videre.core.events import MouseEvent
 from videre.widgets.abstract_button import AbstractButton
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
@@ -33,20 +33,20 @@ class Label(Text):
                 self._for_button = Widget()
         return self._for_button
 
-    def handle_mouse_enter(self, event: MotionEvent):
+    def handle_mouse_enter(self, event: MouseEvent):
         button = self._get_button()
-        return button.handle_mouse_enter(MotionEvent(event._e, x=button.x, y=button.y))
+        return button.handle_mouse_enter(event.with_coordinates(x=button.x, y=button.y))
 
     def handle_mouse_exit(self):
         return self._get_button().handle_mouse_exit()
 
-    def handle_mouse_down(self, button: MouseButton, x: int, y: int):
+    def handle_mouse_down(self, event: MouseEvent):
         bw = self._get_button()
-        return bw.handle_mouse_down(button, bw.x, bw.y)
+        return bw.handle_mouse_down(event)
 
-    def handle_mouse_up(self, button: MouseButton, x: int, y: int):
+    def handle_mouse_up(self, event: MouseEvent):
         bw = self._get_button()
-        return bw.handle_mouse_up(button, bw.x, bw.y)
+        return bw.handle_mouse_up(event)
 
     def handle_mouse_down_canceled(self, button: MouseButton):
         return self._get_button().handle_mouse_down_canceled(button)

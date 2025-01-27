@@ -7,9 +7,8 @@ import pygame
 import pygame.gfxdraw
 
 from pysaurus.core.stringsplit import get_next_word_position, get_previous_word_position
-from videre import MouseButton
 from videre.colors import Colors
-from videre.core.events import KeyboardEntry
+from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_text_rendering import RenderedText
 from videre.core.mouse_ownership import MouseOwnership
 from videre.layouts.abstractlayout import AbstractLayout
@@ -174,9 +173,9 @@ class TextInput(AbstractLayout):
     ) -> Optional[MouseOwnership]:
         return Widget.get_mouse_owner(self, x_in_parent, y_in_parent)
 
-    def handle_mouse_down(self, button: MouseButton, x: int, y: int):
+    def handle_mouse_down(self, event: MouseEvent):
         self._debug("mouse_down")
-        self._set_cursor_event(_CursorMouseEvent(x, y))
+        self._set_cursor_event(_CursorMouseEvent(event.x, event.y))
         self.update()
 
     def handle_focus_in(self) -> bool:

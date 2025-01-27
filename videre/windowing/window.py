@@ -8,7 +8,7 @@ from pysaurus.core.functions import get_tagged_methods
 from pysaurus.core.prettylogging import PrettyLogging
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
-from videre.core.events import KeyboardEntry, MotionEvent
+from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 from videre.core.pygame_utils import PygameUtils
@@ -278,7 +278,10 @@ class Window(PygameUtils, Clipboard):
         if owner:
             button = MouseButton(event.button)
             self._down[button] = owner.widget
-            owner.widget.handle_mouse_down(button, owner.x_in_parent, owner.y_in_parent)
+            EventPropagator.handle_mouse_down(
+                owner.widget,
+                MouseEvent(x=owner.x_in_parent, y=owner.y_in_parent, buttons=[button]),
+            )
             # Handle focus
             focus = EventPropagator.handle_focus_in(owner.widget)
             if self._focus and self._focus != focus:
@@ -290,45 +293,52 @@ class Window(PygameUtils, Clipboard):
         button = MouseButton(event.button)
         owner = self._layout.get_mouse_owner(*event.pos)
         if owner:
-            owner.widget.handle_mouse_up(button, owner.x_in_parent, owner.y_in_parent)
+            EventPropagator.handle_mouse_up(
+                owner.widget,
+                MouseEvent(x=owner.x_in_parent, y=owner.y_in_parent, buttons=[button]),
+            )
             if self._down[button] == owner.widget:
                 EventPropagator.handle_click(owner.widget, button)
             elif self._down[button]:
-                self._down[button].handle_mouse_down_canceled(button)
+                EventPropagator.handle_mouse_down_canceled(self._down[button], button)
         elif self._down[button]:
-            self._down[button].handle_mouse_down_canceled(button)
+            EventPropagator.handle_mouse_down_canceled(self._down[button], button)
         self._down[button] = None
 
     @on_event(pygame.MOUSEMOTION)
     def _on_mouse_motion(self, event: Event):
-        m_event = MotionEvent(event)
+        m_event = MouseEvent.from_mouse_motion(event)
         owner = self._layout.get_mouse_owner(*event.pos)
         if owner:
-            m_event = MotionEvent(event, owner.x_in_parent, owner.y_in_parent)
+            m_event = MouseEvent.from_mouse_motion(
+                event, owner.x_in_parent, owner.y_in_parent
+            )
             if not self._motion:
-                owner.widget.handle_mouse_enter(m_event)
+                EventPropagator.handle_mouse_enter(owner.widget, m_event)
             elif self._motion is owner.widget:
-                owner.widget.handle_mouse_over(m_event)
+                EventPropagator.handle_mouse_over(owner.widget, m_event)
             else:
-                self._motion.handle_mouse_exit()
-                owner.widget.handle_mouse_enter(m_event)
+                EventPropagator.manage_mouse_motion(event, owner, self._motion)
             self._motion = owner.widget
         elif self._motion:
-            self._motion.handle_mouse_exit()
+            EventPropagator.handle_mouse_exit(self._motion)
             self._motion = None
         for button in m_event.buttons:
             if self._down[button]:
                 down = self._down[button]
                 parent_x = 0 if down.parent is None else down.parent.global_x
                 parent_y = 0 if down.parent is None else down.parent.global_y
-                self._down[button].handle_mouse_down_move(
-                    MotionEvent(event, event.pos[0] - parent_x, event.pos[1] - parent_y)
+                EventPropagator.handle_mouse_down_move(
+                    self._down[button],
+                    MouseEvent.from_mouse_motion(
+                        event, event.pos[0] - parent_x, event.pos[1] - parent_y
+                    ),
                 )
 
     @on_event(pygame.WINDOWLEAVE)
     def _on_window_leave(self, event: Event):
         if self._motion:
-            self._motion.handle_mouse_exit()
+            EventPropagator.handle_mouse_exit(self._motion)
             self._motion = None
 
     @on_event(pygame.WINDOWRESIZED)

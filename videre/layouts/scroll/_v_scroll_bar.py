@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 import pygame
 
 from videre.core.constants import MouseButton
-from videre.core.events import MotionEvent
+from videre.core.events import MouseEvent
 from videre.core.mouse_ownership import MouseOwnership
 from videre.layouts.scroll._h_scroll_bar import _HScrollBar
 
@@ -29,7 +29,9 @@ class _VScrollBar(_HScrollBar):
             return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
 
-    def handle_mouse_down(self, button: MouseButton, x: int, y: int):
+    def handle_mouse_down(self, event: MouseEvent):
+        button = event.button
+        y = event.y
         if self.on_jump and button == MouseButton.BUTTON_LEFT:
             grip_length = self._surface.get_height()
             h = self._bar_length()
@@ -39,7 +41,7 @@ class _VScrollBar(_HScrollBar):
             else:
                 self._grabbed = (y - self.y,)
 
-    def handle_mouse_down_move(self, event: MotionEvent):
+    def handle_mouse_down_move(self, event: MouseEvent):
         if self.on_jump and self._grabbed and event.button_left:
             grab_y = event.y
             y = grab_y - self._grabbed[0]

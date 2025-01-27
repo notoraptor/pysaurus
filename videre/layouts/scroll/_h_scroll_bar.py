@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 import pygame
 
 from videre.core.constants import MouseButton
-from videre.core.events import MotionEvent
+from videre.core.events import MouseEvent
 from videre.core.mouse_ownership import MouseOwnership
 from videre.layouts.scroll._scroll_background import _ScrollBackground
 from videre.widgets.widget import Widget
@@ -81,7 +81,9 @@ class _HScrollBar(Widget):
             return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
 
-    def handle_mouse_down(self, button: MouseButton, x: int, y: int):
+    def handle_mouse_down(self, event: MouseEvent):
+        button = event.button
+        x = event.x
         if self.on_jump and button == MouseButton.BUTTON_LEFT:
             grip_length = self._surface.get_width()
             w = self._bar_length()
@@ -92,15 +94,15 @@ class _HScrollBar(Widget):
                 self._grabbed = (x - self.x,)
                 self._set_color()
 
-    def handle_mouse_up(self, button: MouseButton, x: int, y: int):
-        return self.handle_mouse_down_canceled(button)
+    def handle_mouse_up(self, event: MouseEvent):
+        return self.handle_mouse_down_canceled(event.button)
 
     def handle_mouse_down_canceled(self, button: MouseButton):
         if button == MouseButton.BUTTON_LEFT:
             self._grabbed = ()
             self._set_color()
 
-    def handle_mouse_down_move(self, event: MotionEvent):
+    def handle_mouse_down_move(self, event: MouseEvent):
         if self.on_jump and self._grabbed and event.button_left:
             grab_x = event.x
             x = grab_x - self._grabbed[0]
@@ -110,7 +112,7 @@ class _HScrollBar(Widget):
             if x != self.x:
                 self._jump(x, w, grip_length)
 
-    def handle_mouse_enter(self, event: MotionEvent):
+    def handle_mouse_enter(self, event: MouseEvent):
         self._hover = True
         self._set_color()
 

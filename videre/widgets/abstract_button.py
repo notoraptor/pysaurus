@@ -6,7 +6,7 @@ import pygame.gfxdraw
 
 from videre import Colors, Gradient
 from videre.core.constants import MouseButton
-from videre.core.events import MotionEvent
+from videre.core.events import MouseEvent
 from videre.widgets.widget import Widget
 
 
@@ -49,7 +49,7 @@ class AbstractButton(Widget):
             color = self._COLOR_DEFAULT
         self._set_wprop("_color", color)
 
-    def handle_mouse_enter(self, event: MotionEvent):
+    def handle_mouse_enter(self, event: MouseEvent):
         self._hover = True
         self._set_color()
 
@@ -57,12 +57,12 @@ class AbstractButton(Widget):
         self._hover = False
         self._set_color()
 
-    def handle_mouse_down(self, button: MouseButton, x: int, y: int):
+    def handle_mouse_down(self, event: MouseEvent):
         self._down = True
         self._set_color()
 
-    def handle_mouse_up(self, button: MouseButton, x: int, y: int):
-        return self.handle_mouse_down_canceled(button)
+    def handle_mouse_up(self, event: MouseEvent):
+        return self.handle_mouse_down_canceled(event.button)
 
     def handle_mouse_down_canceled(self, button: MouseButton):
         self._down = False

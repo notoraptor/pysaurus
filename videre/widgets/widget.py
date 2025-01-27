@@ -6,7 +6,7 @@ import pygame
 
 from pysaurus.core.classes import StringPrinter
 from videre.core.constants import MouseButton
-from videre.core.events import KeyboardEntry, MotionEvent
+from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.mouse_ownership import MouseOwnership
 from videre.core.position_mapping import Position, PositionMapping
 from videre.core.pygame_utils import PygameUtils
@@ -66,6 +66,17 @@ class Widget(PygameUtils):
 
     def remove_child(self, child: Self):
         self._children_pos.remove(child)
+
+    def get_lineage(self) -> List[Self]:
+        ancestors = []
+        widget = self
+        while True:
+            if widget is None:
+                break
+            else:
+                ancestors.append(widget)
+                widget = widget.parent
+        return ancestors
 
     @property
     def key(self) -> str:
@@ -262,22 +273,22 @@ class Widget(PygameUtils):
     def handle_focus_out(self):
         pass
 
-    def handle_mouse_enter(self, event: MotionEvent):
+    def handle_mouse_enter(self, event: MouseEvent):
         pass
 
-    def handle_mouse_over(self, event: MotionEvent):
+    def handle_mouse_over(self, event: MouseEvent):
         pass
 
-    def handle_mouse_down(self, button: MouseButton, x: int, y: int):
+    def handle_mouse_down(self, event: MouseEvent):
         pass
 
-    def handle_mouse_down_move(self, event: MotionEvent):
+    def handle_mouse_down_move(self, event: MouseEvent):
         pass
 
     def handle_mouse_down_canceled(self, button: MouseButton):
         pass
 
-    def handle_mouse_up(self, button: MouseButton, x: int, y: int):
+    def handle_mouse_up(self, event: MouseEvent):
         pass
 
     def handle_mouse_exit(self):
