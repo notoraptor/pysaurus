@@ -241,10 +241,6 @@ class Window(PygameUtils, Clipboard):
 
     def set_context(self, relative: Widget, control: Widget):
         self._context = Context(relative, control)
-        if self._focus:
-            self._focus.handle_focus_out()
-        self._focus = self._context
-        self._context.handle_focus_in()
 
     def clear_context(self):
         self._context = None
@@ -276,6 +272,7 @@ class Window(PygameUtils, Clipboard):
     def _on_mouse_button_down(self, event: Event):
         owner = self._layout.get_mouse_owner(*event.pos)
         if owner:
+            # Handle mouse down
             button = MouseButton(event.button)
             self._down[button] = owner.widget
             EventPropagator.handle_mouse_down(

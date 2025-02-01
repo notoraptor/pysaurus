@@ -1,3 +1,5 @@
+from typing import Self, Union
+
 import pygame
 
 from videre.colors import Colors
@@ -19,11 +21,8 @@ class Context(AbstractLayout):
         self._relative = relative
         super().__init__([container], **kwargs)
 
-    def handle_focus_in(self) -> bool:
-        return True
-
-    def handle_focus_out(self):
-        self.get_window().clear_context()
+    def handle_focus_in(self) -> Union[bool, Self]:
+        return self._relative.handle_focus_in()
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         self._relative._assert_rendered()

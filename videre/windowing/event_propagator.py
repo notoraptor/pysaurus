@@ -15,8 +15,9 @@ class EventPropagator:
     ) -> Optional[Widget]:
         # print(handle_function, widget)
         if widget:
-            if getattr(widget, handle_function)(*args, **kwargs):
-                return widget
+            handled = getattr(widget, handle_function)(*args, **kwargs)
+            if handled:
+                return handled if isinstance(handled, Widget) else widget
             else:
                 return cls._handle(widget.parent, handle_function, *args, **kwargs)
         else:

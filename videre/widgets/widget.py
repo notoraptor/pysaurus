@@ -1,6 +1,6 @@
 import logging
 from abc import abstractmethod
-from typing import Any, Callable, List, Optional, Self, Tuple
+from typing import Any, Callable, List, Optional, Self, Tuple, Union
 
 import pygame
 
@@ -266,7 +266,7 @@ class Widget(PygameUtils):
     def handle_click(self, button: MouseButton):
         pass
 
-    def handle_focus_in(self) -> bool:
+    def handle_focus_in(self) -> Union[bool, Self]:
         """Return True if this widget accepts the focus, False otherwise."""
         return False
 
