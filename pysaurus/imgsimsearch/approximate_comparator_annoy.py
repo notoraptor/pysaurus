@@ -1,8 +1,8 @@
 import math
 from typing import Any, Dict
 
-from annoy import AnnoyIndex
 from PIL import ImageFilter
+from annoy import AnnoyIndex
 
 from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler

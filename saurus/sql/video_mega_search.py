@@ -21,8 +21,8 @@ from saurus.sql.saurus_provider_utils import (
 from saurus.sql.sql_utils import QueryMaker, SQLWhereBuilder, TableDef
 from saurus.sql.sql_video_wrapper import (
     FORMATTED_VIDEO_TABLE_FIELDS,
-    VIDEO_TABLE_FIELD_NAMES,
     SQLVideoWrapper,
+    VIDEO_TABLE_FIELD_NAMES,
 )
 from saurus.sql.video_parser import VideoFieldQueryParser
 
@@ -167,12 +167,12 @@ def _get_videos(
 def _get_video_moves(db: PysaurusConnection) -> Iterable[Tuple[int, List[dict]]]:
     for row in db.query(
         """
-SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
-FROM video
-WHERE unreadable = 0 AND discarded = 0
-GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
-HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
-"""
+    SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
+    FROM video
+    WHERE unreadable = 0 AND discarded = 0
+    GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
+    HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
+    """
     ):
         not_found = []
         found = []

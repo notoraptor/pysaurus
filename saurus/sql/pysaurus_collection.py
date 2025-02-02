@@ -331,11 +331,11 @@ class PysaurusCollection(AbstractDatabase):
         output = {}
         for row in self.db.query(
             """
-            SELECT v.video_id, 
-            v.filename || ' ' || v.meta_title || ' ' || COALESCE(pv.property_text, '')
-            FROM video AS v
-            LEFT JOIN video_property_text AS pv ON v.video_id = pv.video_id
-            """
+                SELECT v.video_id, 
+                v.filename || ' ' || v.meta_title || ' ' || COALESCE(pv.property_text, '')
+                FROM video AS v
+                LEFT JOIN video_property_text AS pv ON v.video_id = pv.video_id
+                """
         ):
             t_all_str = string_to_pieces(row[1])
             t_all_str_low = string_to_pieces(row[1].lower())
@@ -533,12 +533,12 @@ class PysaurusCollection(AbstractDatabase):
     def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         for row in self.db.query(
             """
-SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
-FROM video
-WHERE unreadable = 0 AND discarded = 0
-GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
-HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
-                """
+    SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
+    FROM video
+    WHERE unreadable = 0 AND discarded = 0
+    GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
+    HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
+                    """
         ):
             not_found = []
             found = []

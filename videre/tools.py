@@ -1,7 +1,8 @@
+from pathlib import Path
+
+from .layouts.scroll.scrollview import ScrollView
 from .widgets.picture import ImageSourceType, Picture
 from .windowing.window import Window
-from .layouts.scroll.scrollview import ScrollView
-from pathlib import Path
 
 
 def printimg(src: ImageSourceType):

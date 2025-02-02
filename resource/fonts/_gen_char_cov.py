@@ -21,7 +21,6 @@ def check_characters_coverage(characters: str):
 
 
 class CharFontPriority:
-
     __slots__ = ("rank", "cov")
 
     def __init__(

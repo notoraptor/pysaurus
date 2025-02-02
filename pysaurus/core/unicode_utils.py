@@ -1,8 +1,8 @@
 import sys
 from typing import Dict, Sequence
-from unicodedata import category, unidata_version
 
 import unicodedataplus
+from unicodedata import category, unidata_version
 
 
 class Unicode:
