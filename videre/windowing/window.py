@@ -13,10 +13,10 @@ from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 from videre.core.pygame_utils import PygameUtils
 from videre.layouts.container import Container
-from videre.layouts.context import Context
 from videre.widgets.button import Button
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
+from videre.windowing.context import Context
 from videre.windowing.event_propagator import EventPropagator
 from videre.windowing.fancybox import Fancybox
 from videre.windowing.windowlayout import WindowLayout
