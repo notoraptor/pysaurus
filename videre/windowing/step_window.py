@@ -9,7 +9,7 @@ class StepWindow(Window):
     __slots__ = ("_step_mode",)
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(hide=True, **kwargs)
         self._step_mode = False
 
     def __enter__(self):

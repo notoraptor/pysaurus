@@ -45,6 +45,7 @@ class Window(PygameUtils, Clipboard):
         "_context",
         "_fonts",
         "_event_callbacks",
+        "_hide",
     )
 
     def __init__(
@@ -54,11 +55,13 @@ class Window(PygameUtils, Clipboard):
         height=720,
         background: pygame.Color | None = None,
         font_size=14,
+        hide=False,
     ):
         super().__init__()
         self._title = str(title) or "Window"
         self._width = width
         self._height = height
+        self._hide = bool(hide)
         self._screen_background = background
 
         self._running = True
@@ -136,9 +139,10 @@ class Window(PygameUtils, Clipboard):
         self._closed = True
 
     def _init_display(self):
-        self._screen = pygame.display.set_mode(
-            (self._width, self._height), flags=pygame.RESIZABLE
-        )
+        flags = pygame.RESIZABLE
+        if self._hide:
+            flags |= pygame.HIDDEN
+        self._screen = pygame.display.set_mode((self._width, self._height), flags=flags)
         pygame.display.set_caption(self._title)
         self._layout = WindowLayout(self._screen, background=self._screen_background)
 
