@@ -4,6 +4,7 @@ from .core.sides.border import Border
 from .core.sides.padding import Padding
 from .dialog import Dialog
 from .gradient import Gradient
+from .layouts.animator import Animator
 from .layouts.column import Column
 from .layouts.container import Container, Container
 from .layouts.radiogroup import RadioGroup
