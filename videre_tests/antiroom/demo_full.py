@@ -4,7 +4,7 @@ import videre
 def main():
     window = videre.Window()
     work = videre.Container(
-        background_color=videre.Colors.yellow, padding=videre.Padding.all(10)
+        background_color=videre.Colors.cyan, padding=videre.Padding.all(10)
     )
 
     def clear(*args):
@@ -15,11 +15,12 @@ def main():
             videre.Text(
                 "Hello, World! How are you? "
                 "I'm fine, thanks, and you? I am ok, too, dear!",
-                wrap=videre.TextWrap.WORD,
+                wrap=videre.TextWrap.NONE,
             ),
-            background_color="cyan",
+            background_color="yellow",
             horizontal_alignment=videre.Alignment.CENTER,
             padding=videre.Padding.all(50),
+            border=videre.Border.all(1),
         )
 
     def on_demo_animator(*args):

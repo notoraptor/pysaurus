@@ -65,15 +65,23 @@ class AbstractLayout(Widget):
         for ctrl in self._controls():
             ctrl.flush_changes()
 
+    @classmethod
+    def _align_dim(
+        cls, available_size: int, control_size: int, alignment: Alignment
+    ) -> int:
+        return max(0, cls._align_dim_free(available_size, control_size, alignment))
+
     @staticmethod
-    def _align_dim(available_size: int, control_size: int, alignment: Alignment) -> int:
+    def _align_dim_free(
+        available_size: int, control_size: int, alignment: Alignment
+    ) -> int:
         if alignment == Alignment.START:
             return 0
         elif alignment == Alignment.CENTER:
-            return max(0, (available_size - control_size) // 2)
+            return (available_size - control_size) // 2
         else:
             # alignment == Alignment.END
-            return max(0, available_size - control_size)
+            return available_size - control_size
 
 
 def get_top_mouse_owner(
