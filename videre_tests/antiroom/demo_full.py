@@ -4,11 +4,23 @@ import videre
 def main():
     window = videre.Window()
     work = videre.Container(
-        background_color=videre.Colors.yellow, padding=videre.Padding.all(10), weight=1
+        background_color=videre.Colors.yellow, padding=videre.Padding.all(10)
     )
 
     def clear(*args):
         work.control = None
+
+    def on_container(*args):
+        work.control = videre.Container(
+            videre.Text(
+                "Hello, World! How are you? "
+                "I'm fine, thanks, and you? I am ok, too, dear!",
+                wrap=videre.TextWrap.WORD,
+            ),
+            background_color="cyan",
+            horizontal_alignment=videre.Alignment.CENTER,
+            padding=videre.Padding.all(50),
+        )
 
     def on_demo_animator(*args):
         work.control = demo_animator()
@@ -27,24 +39,30 @@ def main():
     def on_text_input(*args):
         work.control = videre.TextInput(weight=1)
 
-    button_clear = videre.Button("clear", on_click=clear)
-    button_1 = videre.Button(
-        "animator, progressing and progress bar", on_click=on_demo_animator
-    )
-    button_2 = videre.Button("fancy box", on_click=on_demo_fancybox, square=False)
-    button_3 = videre.Button("alert", on_click=on_alert)
-    button_4 = videre.Button("text input", on_click=on_text_input)
-
     window.controls = [
         videre.Column(
             [
                 videre.Text("Demo of many things", strong=False),
-                videre.Row([button_clear]),
-                videre.Row([button_1, button_2, button_3, button_4]),
+                videre.Row([videre.Button("clear", on_click=clear)]),
+                videre.Row(
+                    [
+                        videre.Button("container", on_click=on_container),
+                        videre.Button(
+                            "animator, progressing and progress bar",
+                            on_click=on_demo_animator,
+                        ),
+                        videre.Button(
+                            "fancy box", on_click=on_demo_fancybox, square=False
+                        ),
+                        videre.Button("alert", on_click=on_alert),
+                        videre.Button("text input", on_click=on_text_input),
+                    ]
+                ),
                 work,
             ]
         )
     ]
+    on_container()
     window.run()
 
 
@@ -75,16 +93,6 @@ def demo_animator():
             videre.ProgressBar(1),
         ]
     )
-
-
-def call(args, code):
-    pass
-
-
-def test():
-    x = 1
-    y = 2
-    my_function = call((x, y), "x = y + 2*x")
 
 
 if __name__ == "__main__":
