@@ -157,6 +157,7 @@ class Container(AbstractLayout):
         y = self._align_dim(
             inner_height, inner_surface.get_height(), self.vertical_alignment
         )
+        # inner_box = pygame.Rect(0, 0, inner_width - x, inner_height - y)
         surface = self.background_color.generate(outer_width, outer_height)
         for border_color, border_points in border.describe_borders(
             outer_width, outer_height
@@ -170,7 +171,7 @@ class Container(AbstractLayout):
                 else:
                     pygame.gfxdraw.filled_polygon(surface, border_points, border_color)
         inner_x, inner_y = margin.left + x, margin.top + y
-        surface.blit(inner_surface, (inner_x, inner_y))
+        surface.blit(inner_surface, (inner_x, inner_y), area=None)
         self._set_child_position(control, inner_x, inner_y)
         return surface
 

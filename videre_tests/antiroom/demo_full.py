@@ -11,16 +11,33 @@ def main():
         work.control = None
 
     def on_container(*args):
-        work.control = videre.Container(
-            videre.Text(
-                "Hello, World! How are you? "
-                "I'm fine, thanks, and you? I am ok, too, dear!",
-                wrap=videre.TextWrap.NONE,
-            ),
-            background_color="yellow",
-            horizontal_alignment=videre.Alignment.CENTER,
-            padding=videre.Padding.all(50),
-            border=videre.Border.all(1),
+        text = (
+            "Hello, World! How are you? I'm fine, thanks, and you? I am ok, too, dear!"
+        )
+        parameters = {
+            "background_color": "yellow",
+            "padding": videre.Padding.all(50),
+            "border": videre.Border.all(1),
+            "weight": 1,
+        }
+        work.control = videre.Column(
+            [
+                videre.Container(
+                    videre.Text(text),
+                    **parameters,
+                    horizontal_alignment=videre.Alignment.START,
+                ),
+                videre.Container(
+                    videre.Text(text),
+                    **parameters,
+                    horizontal_alignment=videre.Alignment.CENTER,
+                ),
+                videre.Container(
+                    videre.Text(text),
+                    **parameters,
+                    horizontal_alignment=videre.Alignment.END,
+                ),
+            ]
         )
 
     def on_demo_animator(*args):
