@@ -14,7 +14,6 @@ class PygameContext:
 
 def test_display_mode():
     with PygameContext():
-        # This will quickly display a surface on screen, anyway.
-        surface = pygame.display.set_mode((300, 400))
+        surface = pygame.display.set_mode((300, 400), flags=pygame.HIDDEN)
         assert surface.get_width() == 300
         assert surface.get_height() == 400

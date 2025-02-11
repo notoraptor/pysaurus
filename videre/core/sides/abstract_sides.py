@@ -14,12 +14,12 @@ class AbstractSides[T, S]:
         bottom: Optional[T] = None,
         right: Optional[T] = None,
     ):
-        self.top = self._parse(top)
-        self.left = self._parse(left)
-        self.bottom = self._parse(bottom)
-        self.right = self._parse(right)
+        self.top: S = self._parse(top)
+        self.left: S = self._parse(left)
+        self.bottom: S = self._parse(bottom)
+        self.right: S = self._parse(right)
 
-    def _parse(self, value: Optional[T]):
+    def _parse(self, value: Optional[T]) -> S:
         return self.__default__ if value is None else self.__parser__(value)
 
     def __parser__(self, value: T) -> S:

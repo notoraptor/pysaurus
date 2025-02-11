@@ -41,7 +41,7 @@ class _DimensionsLimit:
         self._h = height
 
     def __call__(self, x: int, y: int) -> Tuple[int, int]:
-        return (min(max(x, 0), self._w - 1), min(max(y, 0), self._h - 1))
+        return min(max(x, 0), self._w - 1), min(max(y, 0), self._h - 1)
 
 
 class Border(AbstractSides[BorderType, BorderSide]):

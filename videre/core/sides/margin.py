@@ -7,12 +7,12 @@ class Margin(AbstractSides[int, int]):
 
     def __parser__(self, value: int) -> int:
         if value < 0:
-            raise ValueError(f"Padding must be >= 0, got {value}")
+            raise ValueError(f"{type(self).__name__} must be >= 0, got {value}")
         return value
 
     @classmethod
-    def all(cls, padding: int):
-        return cls(padding, padding, padding, padding)
+    def all(cls, value: int):
+        return cls(value, value, value, value)
 
     def total(self):
         return self.top + self.right + self.bottom + self.left
