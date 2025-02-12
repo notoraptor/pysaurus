@@ -1,11 +1,10 @@
 import videre
+from videre.layouts.reactive_container import Reactive
 
 
 def main():
     window = videre.Window()
-    work = videre.Container(
-        background_color=videre.Colors.cyan, padding=videre.Padding.all(10)
-    )
+    work = videre.Container(padding=videre.Padding.all(10), weight=1)
 
     def clear(*args):
         work.control = None
@@ -15,7 +14,6 @@ def main():
             "Hello, World! How are you? I'm fine, thanks, and you? I am ok, too, dear!"
         )
         parameters = {
-            "background_color": "yellow",
             "padding": videre.Padding.all(50),
             "border": videre.Border.all(1),
             "weight": 1,
@@ -27,6 +25,10 @@ def main():
                     **parameters,
                     horizontal_alignment=videre.Alignment.START,
                 ),
+                Reactive(
+                    videre.Text(text, wrap=videre.TextWrap.WORD), weight=1
+                ),
+                videre.Button(text, weight=1),
                 videre.Container(
                     videre.Text(text),
                     **parameters,
