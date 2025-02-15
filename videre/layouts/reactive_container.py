@@ -92,6 +92,10 @@ class Reactive(ControlLayout):
         self._down = False
         self._style = style
 
+    def _container(self) -> Container:
+        (container,) = self._controls()
+        return container
+
     def handle_mouse_enter(self, event: MouseEvent):
         self._hover = True
         self._set_style()

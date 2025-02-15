@@ -25,9 +25,7 @@ def main():
                     **parameters,
                     horizontal_alignment=videre.Alignment.START,
                 ),
-                Reactive(
-                    videre.Text(text, wrap=videre.TextWrap.WORD), weight=1
-                ),
+                Reactive(videre.Text(text, wrap=videre.TextWrap.WORD), weight=1),
                 videre.Button(text, weight=1),
                 videre.Container(
                     videre.Text(text),
