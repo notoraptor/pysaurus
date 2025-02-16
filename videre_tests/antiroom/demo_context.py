@@ -10,6 +10,7 @@ from videre import (
     TextWrap,
     Window,
 )
+from videre.layouts.reactive_container import Reactive
 
 
 def main():
@@ -20,7 +21,18 @@ def main():
                 TextInput(),
                 Container(background_color="green", weight=0.5),
                 TextInput(),
-                videre.Dropdown([1, 2, 3, 4, 100_000]),
+                videre.Row(
+                    [
+                        videre.Dropdown([1, 2, 3, 4, 100_000]),
+                        videre.Container(
+                            Reactive(videre.Text("Hello", height_delta=0)),
+                            padding=videre.Padding(left=10),
+                        ),
+                        videre.Container(
+                            videre.Button("Hello"), padding=videre.Padding(left=10)
+                        ),
+                    ]
+                ),
                 Container(
                     Text(
                         "Hello, World! How are you? "

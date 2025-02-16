@@ -2,7 +2,9 @@ from typing import Optional, Self
 
 import pygame
 
+from videre.core.constants import Alignment
 from videre.core.events import MouseEvent
+from videre.core.sides.border import Border
 from videre.layouts.column import Column
 from videre.layouts.container import Container
 from videre.layouts.reactive_container import Reactive
@@ -22,8 +24,8 @@ class Dropdown(Reactive):
     ARROW_DOWN = "▼"
 
     def __init__(self, options=(), **kwargs):
-        text = Text()
-        arrow = Text(self.ARROW_DOWN)
+        text = self._text()
+        arrow = self._text(self.ARROW_DOWN)
         super().__init__(Row([Container(text, weight=1), arrow]), **kwargs)
         self.options = options
         self.index = 0
@@ -74,12 +76,21 @@ class Dropdown(Reactive):
         width = self._compute_width(window, include_border=False)
         self._context = _CaptureColumn(
             [
-                Container(Text(str(option)), background_color="green", width=width)
+                Reactive(
+                    self._text(str(option)),
+                    style={
+                        "default": {
+                            "width": width,
+                            "border": Border(),
+                            "horizontal_alignment": Alignment.START,
+                        }
+                    },
+                )
                 for option in self.options
             ],
             expand_horizontal=True,
         )
-        window.set_context(self, self._context)
+        window.set_context(self, self._context, y=-1)
 
     def _close_context(self):
         if self._context:
@@ -90,12 +101,12 @@ class Dropdown(Reactive):
         text_width = (
             max(
                 (
-                    Text(str(option)).render(window, None, None).get_width()
+                    self._text(str(option)).render(window, None, None).get_width()
                     for option in self.options
                 ),
                 default=0,
             )
-            + Text(self.ARROW_DOWN).render(window, None, None).get_width()
+            + self._text(self.ARROW_DOWN).render(window, None, None).get_width()
         )
 
         container = self._container()
@@ -103,6 +114,10 @@ class Dropdown(Reactive):
         if include_border:
             margin = margin + container.border.margin()
         return margin.left + text_width + margin.right
+
+    @classmethod
+    def _text(cls, text: str = "") -> Text:
+        return Text(text, height_delta=0)
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         self._container().width = self._compute_width(window)

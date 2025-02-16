@@ -1,6 +1,6 @@
 import dataclasses
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, Optional, Union
 
 from videre import Alignment, Border, Colors
 from videre.core.constants import MouseButton
@@ -28,7 +28,7 @@ class ContainerProperties:
         self.vertical_alignment = self.vertical_alignment or Alignment.START
         self.horizontal_alignment = self.horizontal_alignment or Alignment.START
 
-    def fill(self, other: "ContainerProperties"):
+    def fill_with(self, other: "ContainerProperties"):
         if self.border is None:
             self.border = other.border
         if self.padding is None:
@@ -43,6 +43,15 @@ class ContainerProperties:
             self.width = other.width
         if self.height is None:
             self.height = other.height
+
+    def get_specific_from(self, other: "ContainerProperties"):
+        return ContainerProperties(
+            **{
+                key: value
+                for key, value in self.to_dict().items()
+                if value != getattr(other, key)
+            }
+        )
 
     def to_dict(self):
         return dataclasses.asdict(self)
@@ -61,11 +70,14 @@ class ContainerStyle:
         if self.hover is None:
             self.hover = dataclasses.replace(self.default)
         else:
-            self.hover.fill(self.default)
+            self.hover.fill_with(self.default)
         if self.click is None:
             self.click = dataclasses.replace(self.default)
         else:
-            self.click.fill(self.default)
+            self.click.fill_with(self.default)
+
+
+StyleDefinition = Optional[Union[ContainerStyle, Dict[str, Dict[str, Any]]]]
 
 
 class Reactive(ControlLayout):
@@ -74,7 +86,7 @@ class Reactive(ControlLayout):
     __capture_mouse__ = True
     __style__: ContainerStyle = ContainerStyle(
         default=ContainerProperties(
-            padding=Padding.axis(6, 4),
+            padding=Padding.axis(horizontal=6, vertical=4),
             border=Border.all(1),
             vertical_alignment=Alignment.CENTER,
             horizontal_alignment=Alignment.CENTER,
@@ -83,10 +95,37 @@ class Reactive(ControlLayout):
         click=ContainerProperties(background_color=Colors.gray),
     )
 
+    @classmethod
+    def _parse_style(cls, style: StyleDefinition) -> ContainerStyle:
+        base_style = cls.__style__
+        if style is None:
+            return base_style
+        else:
+            output = {
+                "default": dataclasses.replace(base_style.default),
+                "hover": base_style.hover.get_specific_from(base_style.default),
+                "click": base_style.click.get_specific_from(base_style.default),
+            }
+            if isinstance(style, ContainerStyle):
+                for key in ("default", "hover", "click"):
+                    if getattr(style, key) is not None:
+                        output_key = dataclasses.replace(getattr(style, key))
+                        output_key.fill_with(output[key])
+                        output[key] = output_key
+            elif isinstance(style, dict):
+                for key in ("default", "hover", "click"):
+                    if key in style:
+                        output_key = ContainerProperties(**style[key])
+                        output_key.fill_with(output[key])
+                        output[key] = output_key
+            else:
+                raise TypeError(f"Invalid style type {type(style)}")
+            return ContainerStyle(**output)
+
     def __init__(
-        self, control: Optional[Widget] = None, style: ContainerStyle = None, **kwargs
+        self, control: Optional[Widget] = None, style: StyleDefinition = None, **kwargs
     ):
-        style = style or self.__style__
+        style = self._parse_style(style)
         super().__init__(Container(control, **style.default.to_dict()), **kwargs)
         self._hover = False
         self._down = False

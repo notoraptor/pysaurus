@@ -45,8 +45,8 @@ class AbstractSides[T, S]:
         )
 
     @classmethod
-    def axis(cls, horizontal: Optional[T] = None, vertical: Optional[T] = None):
-        return cls(top=horizontal, bottom=horizontal, left=vertical, right=vertical)
+    def axis(cls, vertical: Optional[T] = None, horizontal: Optional[T] = None):
+        return cls(top=vertical, bottom=vertical, left=horizontal, right=horizontal)
 
     @classmethod
     def sides(cls, value: T, *axes: Side):

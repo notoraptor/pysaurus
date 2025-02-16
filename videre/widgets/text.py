@@ -12,6 +12,7 @@ class Text(Widget):
     __wprops__ = {
         "text",
         "size",
+        "height_delta",
         "wrap",
         "align",
         "color",
@@ -25,6 +26,7 @@ class Text(Widget):
         self,
         text="",
         size=0,
+        height_delta=2,
         wrap=TextWrap.NONE,
         align=TextAlign.NONE,
         color: ColorDef = None,
@@ -35,7 +37,7 @@ class Text(Widget):
     ):
         super().__init__(**kwargs)
         self._rendered: Optional[RenderedText] = None
-        self._set_wprops(size=size)
+        self._set_wprops(size=size, height_delta=height_delta)
         self.text = text
         self.wrap = wrap
         self.align = align
@@ -55,6 +57,10 @@ class Text(Widget):
     @property
     def size(self) -> int:
         return self._get_wprop("size")
+
+    @property
+    def height_delta(self) -> int:
+        return self._get_wprop("height_delta")
 
     @property
     def wrap(self) -> TextWrap:
@@ -112,6 +118,7 @@ class Text(Widget):
             strong=self.strong,
             italic=self.italic,
             underline=self.underline,
+            height_delta=self.height_delta,
         )
         return rendering
 

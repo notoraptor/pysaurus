@@ -243,8 +243,8 @@ class Window(PygameUtils, Clipboard):
             title,
         )
 
-    def set_context(self, relative: Widget, control: Widget):
-        self._context = Context(relative, control)
+    def set_context(self, relative: Widget, control: Widget, x=0, y=0):
+        self._context = Context(relative, control, x=x, y=y)
 
     def clear_context(self):
         self._context = None

@@ -10,15 +10,17 @@ from videre.widgets.widget import Widget
 
 
 class Context(AbstractLayout):
-    __slots__ = ("_relative",)
+    __slots__ = ("_relative", "_x", "_y")
     __wprops__ = {}
     __size__ = 1
 
-    def __init__(self, relative: Widget, control: Widget, **kwargs):
+    def __init__(self, relative: Widget, control: Widget, x=0, y=0, **kwargs):
         container = Container(
             control, border=Border.all(1), background_color=Colors.white
         )
         self._relative = relative
+        self._x = x
+        self._y = y
         super().__init__([container], **kwargs)
 
     def handle_focus_in(self) -> Union[bool, Self]:
@@ -27,8 +29,8 @@ class Context(AbstractLayout):
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         self._relative._assert_rendered()
         (container,) = self._controls()
-        x = self._relative.global_x
-        y = self._relative.global_y + self._relative.rendered_height
+        x = self._relative.global_x + self._x
+        y = self._relative.global_y + self._relative.rendered_height + self._y
 
         control_surface = container.render(window, None, None)
         surface = self._new_surface(width, height)

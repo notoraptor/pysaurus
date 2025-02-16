@@ -34,24 +34,6 @@ def test_border_all_4():
 
 def test_border_2_v_yellow():
     b = Border.axis(vertical=(2, Colors.yellow))
-    assert b.top.width == 0
-    assert b.top.color == Colors.black
-    assert b.bottom.width == 0
-    assert b.bottom.color == Colors.black
-    assert b.left.width == 2
-    assert b.left.color == Colors.yellow
-    assert b.right.width == 2
-    assert b.right.color == Colors.yellow
-
-    w, h = 100, 50
-    assert b.get_top_points(w, h) == []
-    assert b.get_right_points(w, h) == [(99, 0), (99, 49), (98, 49), (98, 0)]
-    assert b.get_bottom_points(w, h) == []
-    assert b.get_left_points(w, h) == [(0, 0), (0, 49), (1, 49), (1, 0)]
-
-
-def test_border_2_h_yellow():
-    b = Border.axis(horizontal=(2, Colors.yellow))
     assert b.left.width == 0
     assert b.left.color == Colors.black
     assert b.right.width == 0
@@ -67,6 +49,24 @@ def test_border_2_h_yellow():
     assert b.get_right_points(w, h) == []
     assert b.get_top_points(w, h) == [(0, 0), (99, 0), (99, 1), (0, 1)]
     assert b.get_bottom_points(w, h) == [(0, 49), (99, 49), (99, 48), (0, 48)]
+
+
+def test_border_2_h_yellow():
+    b = Border.axis(horizontal=(2, Colors.yellow))
+    assert b.top.width == 0
+    assert b.top.color == Colors.black
+    assert b.bottom.width == 0
+    assert b.bottom.color == Colors.black
+    assert b.left.width == 2
+    assert b.left.color == Colors.yellow
+    assert b.right.width == 2
+    assert b.right.color == Colors.yellow
+
+    w, h = 100, 50
+    assert b.get_top_points(w, h) == []
+    assert b.get_right_points(w, h) == [(99, 0), (99, 49), (98, 49), (98, 0)]
+    assert b.get_bottom_points(w, h) == []
+    assert b.get_left_points(w, h) == [(0, 0), (0, 49), (1, 49), (1, 0)]
 
 
 def test_border():
