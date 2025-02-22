@@ -1,6 +1,6 @@
 import dataclasses
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Self, Union
 
 from videre import Alignment, Border, Colors
 from videre.core.constants import MouseButton
@@ -13,7 +13,7 @@ from videre.widgets.widget import Widget
 
 
 @dataclass(slots=True)
-class ContainerProperties:
+class Style:
     border: Border = None
     padding: Padding = None
     background_color: ColoringDefinition = None
@@ -22,7 +22,7 @@ class ContainerProperties:
     width: int = None
     height: int = None
 
-    def fill_with(self, other: "ContainerProperties"):
+    def fill_with(self, other: "Style"):
         if self.border is None:
             self.border = other.border
         if self.padding is None:
@@ -38,8 +38,8 @@ class ContainerProperties:
         if self.height is None:
             self.height = other.height
 
-    def get_specific_from(self, other: "ContainerProperties"):
-        return ContainerProperties(
+    def get_specific_from(self, other: "Style"):
+        return Style(
             **{
                 key: value
                 for key, value in self.to_dict().items()
@@ -52,12 +52,10 @@ class ContainerProperties:
 
 
 @dataclass(slots=True)
-class ContainerStyle:
-    default: ContainerProperties = dataclasses.field(
-        default_factory=ContainerProperties
-    )
-    hover: Optional[ContainerProperties] = None
-    click: Optional[ContainerProperties] = None
+class StyleDef:
+    default: Style = dataclasses.field(default_factory=Style)
+    hover: Optional[Style] = None
+    click: Optional[Style] = None
 
     def __post_init__(self):
         if self.hover is None:
@@ -69,29 +67,8 @@ class ContainerStyle:
         else:
             self.click.fill_with(self.default)
 
-
-StyleDefinition = Optional[Union[ContainerStyle, Dict[str, Dict[str, Any]]]]
-OnClickType = Optional[Callable[[Widget], None]]
-
-
-class Reactive(ControlLayout):
-    __slots__ = ("_hover", "_down", "_style", "_on_click")
-    __wprops__ = {}
-    __capture_mouse__ = True
-    __style__: ContainerStyle = ContainerStyle(
-        default=ContainerProperties(
-            padding=Padding.axis(horizontal=6, vertical=4),
-            border=Border.all(1),
-            vertical_alignment=Alignment.CENTER,
-            horizontal_alignment=Alignment.CENTER,
-        ),
-        hover=ContainerProperties(background_color=Colors.lightgray),
-        click=ContainerProperties(background_color=Colors.gray),
-    )
-
-    @classmethod
-    def _parse_style(cls, style: StyleDefinition) -> ContainerStyle:
-        base_style = cls.__style__
+    def merged_with(self, style: "StyleType") -> Self:
+        base_style = self
         if style is None:
             return base_style
         else:
@@ -100,7 +77,7 @@ class Reactive(ControlLayout):
                 "hover": base_style.hover.get_specific_from(base_style.default),
                 "click": base_style.click.get_specific_from(base_style.default),
             }
-            if isinstance(style, ContainerStyle):
+            if isinstance(style, StyleDef):
                 for key in ("default", "hover", "click"):
                     if getattr(style, key) is not None:
                         output_key = dataclasses.replace(getattr(style, key))
@@ -109,21 +86,41 @@ class Reactive(ControlLayout):
             elif isinstance(style, dict):
                 for key in ("default", "hover", "click"):
                     if key in style:
-                        output_key = ContainerProperties(**style[key])
+                        output_key = Style(**style[key])
                         output_key.fill_with(output[key])
                         output[key] = output_key
             else:
                 raise TypeError(f"Invalid style type {type(style)}")
-            return ContainerStyle(**output)
+            return StyleDef(**output)
+
+
+StyleType = Optional[Union[StyleDef, Dict[str, Dict[str, Any]]]]
+OnClickType = Optional[Callable[[Widget], None]]
+
+
+class Div(ControlLayout):
+    __slots__ = ("_hover", "_down", "_style", "_on_click")
+    __wprops__ = {}
+    __capture_mouse__ = True
+    __style__: StyleDef = StyleDef(
+        default=Style(
+            padding=Padding.axis(horizontal=6, vertical=4),
+            border=Border.all(1),
+            vertical_alignment=Alignment.CENTER,
+            horizontal_alignment=Alignment.CENTER,
+        ),
+        hover=Style(background_color=Colors.lightgray),
+        click=Style(background_color=Colors.gray),
+    )
 
     def __init__(
         self,
         control: Optional[Widget] = None,
-        style: StyleDefinition = None,
+        style: StyleType = None,
         on_click: OnClickType = None,
         **kwargs,
     ):
-        style = self._parse_style(style)
+        style = self.__style__.merged_with(style)
         super().__init__(Container(control, **style.default.to_dict()), **kwargs)
         self._hover = False
         self._down = False

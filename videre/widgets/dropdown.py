@@ -7,11 +7,7 @@ from videre.core.events import MouseEvent
 from videre.core.sides.border import Border
 from videre.layouts.column import Column
 from videre.layouts.container import Container
-from videre.layouts.reactive_container import (
-    ContainerProperties,
-    ContainerStyle,
-    Reactive,
-)
+from videre.layouts.div import Div, Style, StyleDef
 from videre.layouts.row import Row
 from videre.widgets.text import Text
 
@@ -30,7 +26,7 @@ class _PlainColumn(Column):
     __capture_mouse__ = True
 
 
-class _OptionWidget(Reactive):
+class _OptionWidget(Div):
     __slots__ = ("_dropdown", "_index")
     __wprops__ = {}
 
@@ -39,8 +35,8 @@ class _OptionWidget(Reactive):
         self._index = index
         super().__init__(
             _Text(dropdown.options[index]),
-            style=ContainerStyle(
-                default=ContainerProperties(
+            style=StyleDef(
+                default=Style(
                     width=width, border=Border(), horizontal_alignment=Alignment.START
                 )
             ),
@@ -51,7 +47,7 @@ class _OptionWidget(Reactive):
         self._dropdown.index = self._index
 
 
-class Dropdown(Reactive):
+class Dropdown(Div):
     __slots__ = ("_context", "_text", "_arrow")
     __wprops__ = {"options", "index"}
     ARROW_DOWN = "▼"

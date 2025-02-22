@@ -1,5 +1,5 @@
 import videre
-from videre.layouts.reactive_container import Reactive
+from videre.layouts.div import Div
 
 
 def main():
@@ -25,7 +25,7 @@ def main():
                     **parameters,
                     horizontal_alignment=videre.Alignment.START,
                 ),
-                Reactive(videre.Text(text, wrap=videre.TextWrap.WORD), weight=1),
+                Div(videre.Text(text, wrap=videre.TextWrap.WORD), weight=1),
                 videre.Button(text, weight=1),
                 videre.Container(
                     videre.Text(text),
