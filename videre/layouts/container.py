@@ -85,16 +85,16 @@ class Container(AbstractLayout):
         return self._get_wprop("horizontal_alignment")
 
     @horizontal_alignment.setter
-    def horizontal_alignment(self, alignment: Alignment):
-        self._set_wprop("horizontal_alignment", alignment)
+    def horizontal_alignment(self, alignment: Optional[Alignment]):
+        self._set_wprop("horizontal_alignment", alignment or Alignment.START)
 
     @property
     def vertical_alignment(self) -> Alignment:
         return self._get_wprop("vertical_alignment")
 
     @vertical_alignment.setter
-    def vertical_alignment(self, alignment: Alignment):
-        self._set_wprop("vertical_alignment", alignment)
+    def vertical_alignment(self, alignment: Optional[Alignment]):
+        self._set_wprop("vertical_alignment", alignment or Alignment.START)
 
     @property
     def width(self) -> int | None:

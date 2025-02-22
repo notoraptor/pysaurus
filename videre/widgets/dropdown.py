@@ -7,32 +7,65 @@ from videre.core.events import MouseEvent
 from videre.core.sides.border import Border
 from videre.layouts.column import Column
 from videre.layouts.container import Container
-from videre.layouts.reactive_container import Reactive
+from videre.layouts.reactive_container import (
+    ContainerProperties,
+    ContainerStyle,
+    Reactive,
+)
 from videre.layouts.row import Row
 from videre.widgets.text import Text
 
 
-class _CaptureColumn(Column):
+class _Text(Text):
+    __slots__ = ()
+    __wprops__ = {}
+
+    def __init__(self, data=""):
+        super().__init__(str(data), height_delta=0)
+
+
+class _PlainColumn(Column):
     __slots__ = ()
     __wprops__ = {}
     __capture_mouse__ = True
 
 
+class _OptionWidget(Reactive):
+    __slots__ = ("_dropdown", "_index")
+    __wprops__ = {}
+
+    def __init__(self, dropdown: "Dropdown", index: int, width: int):
+        self._dropdown = dropdown
+        self._index = index
+        super().__init__(
+            _Text(dropdown.options[index]),
+            style=ContainerStyle(
+                default=ContainerProperties(
+                    width=width, border=Border(), horizontal_alignment=Alignment.START
+                )
+            ),
+            on_click=self._select,
+        )
+
+    def _select(self, *args, **kwargs):
+        self._dropdown.index = self._index
+
+
 class Dropdown(Reactive):
-    __slots__ = ("_context",)
+    __slots__ = ("_context", "_text", "_arrow")
     __wprops__ = {"options", "index"}
     ARROW_DOWN = "▼"
 
     def __init__(self, options=(), **kwargs):
-        text = self._text()
-        arrow = self._text(self.ARROW_DOWN)
-        super().__init__(Row([Container(text, weight=1), arrow]), **kwargs)
+        self._text = _Text()
+        self._arrow = _Text(self.ARROW_DOWN)
+        self._context: Optional[Column] = None
+        super().__init__(Row([Container(self._text, weight=1), self._arrow]), **kwargs)
         self.options = options
         self.index = 0
-        self._context: Optional[Column] = None
 
         if self.options:
-            text.text = str(self.selected)
+            self._text.text = str(self.selected)
 
     @property
     def options(self) -> tuple:
@@ -52,6 +85,8 @@ class Dropdown(Reactive):
     @index.setter
     def index(self, index: int):
         self._set_wprop("index", min(max(0, index), len(self.options) - 1))
+        self._text.text = str(self.selected)
+        self._close_context()
 
     @property
     def selected(self):
@@ -74,21 +109,8 @@ class Dropdown(Reactive):
     def _open_context(self):
         window = self.get_window()
         width = self._compute_width(window, include_border=False)
-        self._context = _CaptureColumn(
-            [
-                Reactive(
-                    self._text(str(option)),
-                    style={
-                        "default": {
-                            "width": width,
-                            "border": Border(),
-                            "horizontal_alignment": Alignment.START,
-                        }
-                    },
-                )
-                for option in self.options
-            ],
-            expand_horizontal=True,
+        self._context = _PlainColumn(
+            [_OptionWidget(self, i, width) for i, option in enumerate(self.options)]
         )
         window.set_context(self, self._context, y=-1)
 
@@ -101,12 +123,12 @@ class Dropdown(Reactive):
         text_width = (
             max(
                 (
-                    self._text(str(option)).render(window, None, None).get_width()
+                    _Text(str(option)).render(window, None, None).get_width()
                     for option in self.options
                 ),
                 default=0,
             )
-            + self._text(self.ARROW_DOWN).render(window, None, None).get_width()
+            + self._arrow.render(window, None, None).get_width()
         )
 
         container = self._container()
@@ -114,10 +136,6 @@ class Dropdown(Reactive):
         if include_border:
             margin = margin + container.border.margin()
         return margin.left + text_width + margin.right
-
-    @classmethod
-    def _text(cls, text: str = "") -> Text:
-        return Text(text, height_delta=0)
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         self._container().width = self._compute_width(window)

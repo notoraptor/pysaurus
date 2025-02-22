@@ -1,6 +1,6 @@
 import dataclasses
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 from videre import Alignment, Border, Colors
 from videre.core.constants import MouseButton
@@ -21,12 +21,6 @@ class ContainerProperties:
     horizontal_alignment: Alignment = None
     width: int = None
     height: int = None
-
-    def initialize(self):
-        self.border = self.border or Border()
-        self.padding = self.padding or Padding()
-        self.vertical_alignment = self.vertical_alignment or Alignment.START
-        self.horizontal_alignment = self.horizontal_alignment or Alignment.START
 
     def fill_with(self, other: "ContainerProperties"):
         if self.border is None:
@@ -66,7 +60,6 @@ class ContainerStyle:
     click: Optional[ContainerProperties] = None
 
     def __post_init__(self):
-        self.default.initialize()
         if self.hover is None:
             self.hover = dataclasses.replace(self.default)
         else:
@@ -78,10 +71,11 @@ class ContainerStyle:
 
 
 StyleDefinition = Optional[Union[ContainerStyle, Dict[str, Dict[str, Any]]]]
+OnClickType = Optional[Callable[[Widget], None]]
 
 
 class Reactive(ControlLayout):
-    __slots__ = ("_hover", "_down", "_style")
+    __slots__ = ("_hover", "_down", "_style", "_on_click")
     __wprops__ = {}
     __capture_mouse__ = True
     __style__: ContainerStyle = ContainerStyle(
@@ -123,13 +117,18 @@ class Reactive(ControlLayout):
             return ContainerStyle(**output)
 
     def __init__(
-        self, control: Optional[Widget] = None, style: StyleDefinition = None, **kwargs
+        self,
+        control: Optional[Widget] = None,
+        style: StyleDefinition = None,
+        on_click: OnClickType = None,
+        **kwargs,
     ):
         style = self._parse_style(style)
         super().__init__(Container(control, **style.default.to_dict()), **kwargs)
         self._hover = False
         self._down = False
         self._style = style
+        self._on_click = on_click
 
     def _container(self) -> Container:
         (container,) = self._controls()
@@ -153,6 +152,10 @@ class Reactive(ControlLayout):
     def handle_mouse_down_canceled(self, button: MouseButton):
         self._down = False
         self._set_style()
+
+    def handle_click(self, button: MouseButton):
+        if self._on_click is not None:
+            self._on_click(self)
 
     def _set_style(self):
         if self._down:
