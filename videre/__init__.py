@@ -6,7 +6,8 @@ from .dialog import Dialog
 from .gradient import Gradient
 from .layouts.animator import Animator
 from .layouts.column import Column
-from .layouts.container import Container, Container
+from .layouts.container import Container
+from .layouts.div import Div, Style, StyleDef
 from .layouts.radiogroup import RadioGroup
 from .layouts.row import Row
 from .layouts.scroll.scrollview import ScrollView

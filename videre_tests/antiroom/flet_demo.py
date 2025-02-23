@@ -15,12 +15,7 @@ _irrelevant_ = [
     ft.TextStyle,
 ]
 
-_to_do_ = [
-    ft.MenuBar,
-    ft.MenuItemButton,
-    ft.SubmenuButton,
-    ft.Dropdown,  # <select>options...</select>
-]
+_to_do_ = [ft.MenuBar, ft.MenuItemButton, ft.SubmenuButton]
 _doing_ = [
     ft.TextField,
     ft.Markdown,
@@ -43,4 +38,5 @@ _done_ = [
     ft.RadioGroup,
     ft.Row,
     ft.Text,
+    ft.Dropdown,  # <select>options...</select>
 ]
