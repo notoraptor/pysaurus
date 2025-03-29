@@ -1,4 +1,6 @@
 import logging
+import sys
+import traceback
 from dataclasses import dataclass, field as dataclass_field
 from typing import List, Optional
 
@@ -84,6 +86,8 @@ class PythonVideoRaptor:
                         container, task.thumb_path
                     )
                 except Exception as exc:
+                    traceback.print_tb(exc.__traceback__)
+                    print(f"{type(exc).__name__}:", exc, file=sys.stderr)
                     ret.error_thumbnail = cls._exc_to_err(exc, ERROR_SAVE_THUMBNAIL)
             container.close()
         return ret
@@ -161,8 +165,18 @@ class PythonVideoRaptor:
         if not _video_streams:
             raise NoVideoStream()
         video_stream = _video_streams[0]
-        video_stream.codec_context.skip_frame = "NONKEY"
-        container.seek(offset=container.duration // 2)
+        # video_stream.codec_context.skip_frame = "NONKEY"
+        if video_stream.duration is not None:
+            container.seek(
+                offset=video_stream.duration // 2,
+                any_frame=False,
+                backward=True,
+                stream=video_stream,
+            )
+        else:
+            container.seek(
+                offset=container.duration // 2, any_frame=False, backward=True
+            )
         for frame in container.decode(video_stream):
             image: Image.Image = frame.to_image()
             image.thumbnail((thumb_size, thumb_size))
