@@ -146,5 +146,5 @@ def test_gradient_similar_colors():
     # Check that interpolation is still working
     middle_color = surface.get_at((49, 0))
     assert middle_color.r == 255  # Red component should stay at max
-    assert middle_color.g == 0    # Green component should stay at min
+    assert middle_color.g == 0  # Green component should stay at min
     assert middle_color.b in (0, 1)  # Blue component should interpolate between 0 and 1

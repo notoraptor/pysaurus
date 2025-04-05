@@ -20,7 +20,9 @@ class Gradient(PygameUtils):
         self._colors = colors or [Colors.transparent]
         self._vertical: bool = vertical
 
-    def _interpolate_color(self, color1: pygame.Color, color2: pygame.Color, factor: float) -> pygame.Color:
+    def _interpolate_color(
+        self, color1: pygame.Color, color2: pygame.Color, factor: float
+    ) -> pygame.Color:
         """Interpolate between two colors based on a factor (0.0 to 1.0)."""
         r = int(color1.r + (color2.r - color1.r) * factor)
         g = int(color1.g + (color2.g - color1.g) * factor)
@@ -51,9 +53,7 @@ class Gradient(PygameUtils):
 
                 # Interpolate color
                 color = self._interpolate_color(
-                    self._colors[color1_index],
-                    self._colors[color2_index],
-                    factor
+                    self._colors[color1_index], self._colors[color2_index], factor
                 )
 
                 # Draw a horizontal line
@@ -74,9 +74,7 @@ class Gradient(PygameUtils):
 
                 # Interpolate color
                 color = self._interpolate_color(
-                    self._colors[color1_index],
-                    self._colors[color2_index],
-                    factor
+                    self._colors[color1_index], self._colors[color2_index], factor
                 )
 
                 # Draw a vertical line
