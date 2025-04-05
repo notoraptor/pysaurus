@@ -80,7 +80,8 @@ def main():
             ]
         )
     ]
-    on_container()
+    # on_container()
+    on_text_input()
     window.run()
 
 
