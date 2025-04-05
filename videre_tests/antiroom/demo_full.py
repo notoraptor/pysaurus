@@ -1,8 +1,13 @@
+import logging
+
 import videre
 from videre.layouts.div import Div
 
+logger = logging.getLogger(__name__)
+
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     window = videre.Window()
     work = videre.Container(padding=videre.Padding.all(10), weight=1)
 
