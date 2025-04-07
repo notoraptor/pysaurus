@@ -146,10 +146,6 @@ class Window(PygameUtils, Clipboard):
         pygame.display.set_caption(self._title)
         self._layout = WindowLayout(self._screen, background=self._screen_background)
 
-        # NB: As set_mode has been called, we can now initialize pygame.scrap.
-        # This needs to be done before calling Clipboard methods.
-        pygame.scrap.init()
-
         # Initialize keyboard repeat.
         # NB: TEXTINPUT events already handle repeat,
         # but we still need manual initialization for KEYDOWN/KEYUP events.

@@ -83,6 +83,10 @@ class KeyboardEntry:
     pagedown = property(lambda self: self._key == pygame.K_PAGEDOWN)
     printscreen = property(lambda self: self._key == pygame.K_PRINTSCREEN)
 
+    a = property(lambda self: self._key == pygame.K_a)
+    c = property(lambda self: self._key == pygame.K_c)
+    v = property(lambda self: self._key == pygame.K_v)
+
     @property
     def caps(self) -> int:
         return self._mod & pygame.KMOD_CAPS

@@ -18,6 +18,12 @@ from videre.widgets.widget import Widget
 
 
 @dataclass(slots=True)
+class _SelectionDefinition:
+    start: int
+    end: int
+
+
+@dataclass(slots=True)
 class _CursorDefinition:
     x: int
     y: int
@@ -138,16 +144,25 @@ class _InputText(Text):
 
 class TextInput(AbstractLayout):
     __wprops__ = {"has_focus"}
-    __slots__ = ("_text", "_container", "_cursor_event", "_char_position")
+    __slots__ = (
+        "_text",
+        "_container",
+        "_cursor_event",
+        "_char_position",
+        "_selection",
+        "_is_selecting",
+    )
     __size__ = 1
     __capture_mouse__ = True
 
     def __init__(self, **kwargs):
-        self._text = _InputText(text="Hello: ", size=40)
+        self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
         self._container = Container(self._text, background_color=Colors.white)
         super().__init__([self._container], **kwargs)
         self._cursor_event: Optional[_CursorEvent] = None
         self._char_position = 0
+        self._selection: Optional[_SelectionDefinition] = None
+        self._is_selecting = False
         self._set_focus(False)
         self._set_char_pos(len(self._text.text))
 
@@ -175,8 +190,20 @@ class TextInput(AbstractLayout):
 
     def handle_mouse_down(self, event: MouseEvent):
         self._debug("mouse_down")
+        self._is_selecting = True
+        self._selection = None
         self._set_cursor_event(_CursorMouseEvent(event.x, event.y))
         self.update()
+
+    def handle_mouse_up(self, event: MouseEvent):
+        self._debug("mouse_up")
+        self._is_selecting = False
+
+    def handle_mouse_down_move(self, event: MouseEvent):
+        if self._is_selecting:
+            self._debug("mouse_down_move")
+            self._set_cursor_event(_CursorMouseEvent(event.x, event.y))
+            self.update()
 
     def handle_focus_in(self) -> bool:
         self._debug("focus_in")
@@ -188,44 +215,136 @@ class TextInput(AbstractLayout):
     def handle_focus_out(self):
         self._debug("focus_out")
         self._set_focus(False)
+        self._selection = None
 
     def handle_text_input(self, text: str):
         self._debug("text_input", repr(text))
-        in_text = self._text.text
-        in_pos = self._char_pos()
-        out_text = in_text[:in_pos] + text + in_text[in_pos:]
-        out_pos = in_pos + len(text)
-        self._text.text = out_text
-        self._set_char_pos(out_pos)
-        self._set_cursor_event(_CursorCharPosEvent(out_pos))
+        if self._selection:
+            # Replace selected text
+            start, end = self._selection.start, self._selection.end
+            in_text = self._text.text
+            out_text = in_text[:start] + text + in_text[end:]
+            self._text.text = out_text
+            self._set_char_pos(start + len(text))
+            self._selection = None
+        else:
+            # Normal insertion
+            in_text = self._text.text
+            in_pos = self._char_pos()
+            out_text = in_text[:in_pos] + text + in_text[in_pos:]
+            out_pos = in_pos + len(text)
+            self._text.text = out_text
+            self._set_char_pos(out_pos)
+        self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
 
     def handle_keydown(self, key: KeyboardEntry):
         self._debug("key_down")
         if key.backspace:
-            in_text = self._text.text
-            in_pos = self._char_pos()
-            out_pos = max(0, in_pos - 1)
-            out_text = in_text[:out_pos] + in_text[in_pos:]
-            self._text.text = out_text
-            self._set_cursor_event(_CursorCharPosEvent(out_pos))
+            if self._selection:
+                # Delete selected text
+                start, end = self._selection.start, self._selection.end
+                in_text = self._text.text
+                out_text = in_text[:start] + in_text[end:]
+                self._text.text = out_text
+                self._set_char_pos(start)
+                self._selection = None
+            else:
+                # Normal backspace
+                in_text = self._text.text
+                in_pos = self._char_pos()
+                out_pos = max(0, in_pos - 1)
+                out_text = in_text[:out_pos] + in_text[in_pos:]
+                self._text.text = out_text
+                self._set_char_pos(out_pos)
+            self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
         elif key.left:
             in_pos = self._char_pos()
+            select_start = False
+            if not key.shift:
+                if self._selection:
+                    # We get out of selection.
+                    # If we move through chars, we should not move.
+                    # If we move through words, we should move.
+                    if not key.ctrl:
+                        in_pos += 1
+                self._selection = None
+            elif not self._selection:
+                # Start selection
+                self._selection = _SelectionDefinition(in_pos, in_pos)
+                select_start = True
+            else:
+                assert in_pos in (self._selection.start, self._selection.end)
+                select_start = in_pos == self._selection.start
             if key.ctrl:
                 out_pos = get_previous_word_position(self._text.text, in_pos - 1)
             else:
                 out_pos = max(0, in_pos - 1)
             self._set_char_pos(out_pos)
+            if key.shift and self._selection:
+                # Update selection
+                if select_start:
+                    self._selection.start = out_pos
+                else:
+                    self._selection.end = out_pos
             self._set_cursor_event(_CursorCharPosEvent(out_pos))
             self.update()
         elif key.right:
             in_pos = self._char_pos()
+            select_start = False
+            if not key.shift:
+                if self._selection:
+                    # We get out of selection.
+                    # If we move through chars, we should not move.
+                    # If we move through words, we should move.
+                    if not key.ctrl:
+                        in_pos -= 1
+                self._selection = None
+            elif not self._selection:
+                # Start selection
+                self._selection = _SelectionDefinition(in_pos, in_pos)
+            else:
+                assert in_pos in (self._selection.start, self._selection.end)
+                select_start = in_pos == self._selection.start
             if key.ctrl:
                 out_pos = get_next_word_position(self._text.text, in_pos)
             else:
                 out_pos = min(in_pos + 1, len(self._text.text))
             self._set_char_pos(out_pos)
+            if key.shift and self._selection:
+                # Update selection
+                if select_start:
+                    self._selection.start = out_pos
+                else:
+                    self._selection.end = out_pos
             self._set_cursor_event(_CursorCharPosEvent(out_pos))
             self.update()
+        elif key.ctrl:
+            if key.a:
+                # Select all
+                self._selection = _SelectionDefinition(0, len(self._text.text))
+                self._set_char_pos(len(self._text.text))
+                self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
+                self.update()
+            elif key.c and self._selection:
+                content = self._text.text[self._selection.start : self._selection.end]
+                self.get_window().set_clipboard(content)
+                self._debug("copied", repr(content))
+            elif key.v:
+                inserted = self.get_window().get_clipboard()
+                if inserted:
+                    in_text = self._text.text
+                    if self._selection:
+                        start, end = self._selection.start, self._selection.end
+                        out_text = in_text[:start] + inserted + in_text[end:]
+                        self._text.text = out_text
+                        self._set_char_pos(start + len(inserted))
+                        self._selection = None
+                    else:
+                        in_pos = self._char_pos()
+                        out_text = in_text[:in_pos] + inserted + in_text[in_pos:]
+                        self._text.text = out_text
+                        self._set_char_pos(in_pos + len(inserted))
+                    self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
 
     def _set_cursor_event(self, event: _CursorEvent):
         if self._cursor_event:
@@ -241,16 +360,94 @@ class TextInput(AbstractLayout):
         cursor_height = rendered.font_sizes.ascender + rendered.font_sizes.descender
         return pygame.Rect(cursor.x, cursor.y, cursor_width, cursor_height)
 
+    def _get_selection_rects(self, rendered: RenderedText) -> list[pygame.Rect]:
+        if not self._selection:
+            return []
+
+        start, end = self._selection.start, self._selection.end
+        if start > end:
+            start, end = end, start
+
+        rects = []
+        for line in rendered.lines:
+            if not line.elements:
+                continue
+
+            line_start = line.elements[0].tasks[0].pos
+            line_end = line.elements[-1].tasks[-1].pos + 1
+
+            if line_end <= start or line_start >= end:
+                continue
+
+            # Calculate x coordinates for this line
+            if line_start < start:
+                start_x = None
+                for word in line.elements:
+                    for char in word.tasks:
+                        if char.pos >= start:
+                            start_x = word.x + char.x
+                            break
+                    if start_x is not None:
+                        break
+                assert start_x is not None
+            else:
+                start_x = line.elements[0].x
+
+            if line_end > end:
+                end_x = None
+                for word in line.elements:
+                    for char in word.tasks:
+                        if char.pos >= end:
+                            end_x = word.x + char.x
+                            break
+                    if end_x is not None:
+                        break
+                assert end_x is not None
+            else:
+                end_x = line.elements[-1].x + line.elements[-1].width
+
+            print(
+                "sel pos",
+                start,
+                end,
+                "line pos",
+                line_start,
+                line_end,
+                "coords",
+                start_x,
+                end_x,
+                "limit",
+                line.limit(),
+            )
+            # Create selection rectangle for this line
+            rect = pygame.Rect(
+                start_x,
+                line.y - rendered.font_sizes.ascender,
+                end_x - start_x,
+                rendered.font_sizes.ascender + rendered.font_sizes.descender,
+            )
+            rects.append(rect)
+
+        return rects
+
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         text_surface = self._control.render(window, width, height)
         rendered = self._text._rendered
+        surface = text_surface.copy()
+
+        # Draw selection if any
+        if self._selection:
+            selection_rects = self._get_selection_rects(rendered)
+            for rect in selection_rects:
+                pygame.gfxdraw.box(surface, rect, (100, 100, 255, 100))
+
+        # Draw cursor if focused
         if self._has_focus() and self._cursor_event:
             cursor_def = self._cursor_event.handle(rendered)
             cursor = self._get_cursor_rect(cursor_def, rendered)
-            surface = text_surface.copy()
             pygame.gfxdraw.box(surface, cursor, Colors.black)
             self._set_char_pos(cursor_def.pos)
-        else:
-            surface = text_surface
+        # Reset cursor event after drawing
         self._cursor_event = None
+
         return surface
