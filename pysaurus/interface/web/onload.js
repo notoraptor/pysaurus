@@ -1,5 +1,5 @@
 window.onload = function () {
-	if (!window.backend_call) {
+	if (window.python && !window.backend_call) {
 		/* CEF backend. */
 		console.log("CEF loaded.");
 		window.backend_call = function (name, args) {

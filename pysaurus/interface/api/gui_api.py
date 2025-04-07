@@ -6,6 +6,8 @@ import threading
 from abc import abstractmethod
 from typing import Callable, Dict, Optional, Sequence
 
+import pyperclip
+
 from pysaurus.application import exceptions
 from pysaurus.core import tk_utils
 from pysaurus.core.classes import Runnable
@@ -25,7 +27,7 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
-from pysaurus.interface.api.api_utils.proxy_feature import FromTk
+from pysaurus.interface.api.api_utils.proxy_feature import FromPyperclip, FromTk
 from pysaurus.interface.api.api_utils.vlc_path import VLC_PATH
 from pysaurus.interface.api.feature_api import FeatureAPI
 from saurus.language import say
@@ -75,7 +77,7 @@ class GuiAPI(FeatureAPI):
         )
         self._proxies.update(
             {
-                "clipboard": FromTk(tk_utils.clipboard_set),
+                "clipboard": FromPyperclip(pyperclip.copy),
                 "select_directory": FromTk(tk_utils.select_directory, True),
                 "select_file": FromTk(tk_utils.select_file_to_open, True),
             }

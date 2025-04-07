@@ -25,7 +25,7 @@ class VideoClipping:
             unique_id = FNV64.hash(path)
         output_name = f"{unique_id}_{time_start}_{clip_seconds}.mp4"
         print("Clip from", time_start, "to", time_end, "sec in:", output_name)
-        sub_clip = clip.subclip(time_start, time_end)
+        sub_clip = clip.subclipped(time_start, time_end)
         sub_clip.write_videofile(output_name)
         sub_clip.close()
         clip.close()

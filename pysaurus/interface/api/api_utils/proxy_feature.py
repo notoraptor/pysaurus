@@ -68,3 +68,12 @@ class FromTk(ProxyFeature):
 
     def __init__(self, method, returns=False):
         super().__init__(getter=lambda: tk_utils, method=method, returns=returns)
+
+
+class FromPyperclip(ProxyFeature):
+    __slots__ = ()
+
+    def __init__(self, method, returns=False):
+        import pyperclip
+
+        super().__init__(getter=lambda : pyperclip, method=method, returns=returns)
