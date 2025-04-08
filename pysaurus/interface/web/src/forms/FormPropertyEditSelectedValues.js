@@ -2,24 +2,16 @@ import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { UTILITIES } from "../utils/functions.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class FormPropertyEditSelectedValues extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
+export class FormPropertyEditSelectedValues extends BaseComponent {
+	getInitialState() {
+		return {
 			form: "edit",
 			value: this.props.values[0].toString(),
 			move: "",
 			otherDefinitions: this.getCompatibleDefinitions(),
 		};
-		this.setDelete = this.setDelete.bind(this);
-		this.setEdit = this.setEdit.bind(this);
-		this.setMove = this.setMove.bind(this);
-		this.onEdit = this.onEdit.bind(this);
-		this.onMove = this.onMove.bind(this);
-		this.onClose = this.onClose.bind(this);
-		this.onEditKeyDown = this.onEditKeyDown.bind(this);
-		this.valuesToString = this.valuesToString.bind(this);
 	}
 
 	render() {

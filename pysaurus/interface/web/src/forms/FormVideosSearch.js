@@ -1,22 +1,18 @@
 import { FancyBox } from "../dialogs/FancyBox.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class FormVideosSearch extends React.Component {
-	constructor(props) {
-		// text
-		// cond
-		// onClose(criterion)
-		super(props);
-		this.state = {
+export class FormVideosSearch extends BaseComponent {
+	// text
+	// cond
+	// onClose(criterion)
+
+	getInitialState() {
+		return {
 			text: this.props.text || "",
 			cond: this.props.cond || "",
 		};
-		this.onFocusInput = this.onFocusInput.bind(this);
-		this.onChangeInput = this.onChangeInput.bind(this);
-		this.onChangeCond = this.onChangeCond.bind(this);
-		this.onInput = this.onInput.bind(this);
-		this.onClose = this.onClose.bind(this);
 	}
 
 	render() {

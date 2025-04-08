@@ -1,7 +1,7 @@
-System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, tr, Fancybox, FormVideosSource;
+  var FancyBox, tr, Fancybox, BaseComponent, FormVideosSource;
   function getSubTree(tree, entryName) {
     const steps = entryName.split("-");
     let subTree = tree;
@@ -47,22 +47,19 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
       tr = _languageJs.tr;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormVideosSource", FormVideosSource = class FormVideosSource extends React.Component {
-        constructor(props) {
-          // tree
-          // sources
-          // onClose(sources)
-          super(props);
-          this.state = {
+      _export("FormVideosSource", FormVideosSource = class FormVideosSource extends BaseComponent {
+        // tree
+        // sources
+        // onClose(sources)
+
+        getInitialState() {
+          return {
             paths: this.props.sources.map(path => path.join("-"))
           };
-          this.renderTree = this.renderTree.bind(this);
-          this.hasPath = this.hasPath.bind(this);
-          this.onChangeRadio = this.onChangeRadio.bind(this);
-          this.onChangeCheckBox = this.onChangeCheckBox.bind(this);
-          this.submit = this.submit.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {

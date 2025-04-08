@@ -1,31 +1,27 @@
-System.register(["../components/PathsInput.js", "../language.js"], function (_export, _context) {
+System.register(["../components/PathsInput.js", "../language.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var PathsInput, tr, DatabasesPage;
+  var PathsInput, tr, BaseComponent, DatabasesPage;
   _export("DatabasesPage", void 0);
   return {
     setters: [function (_componentsPathsInputJs) {
       PathsInput = _componentsPathsInputJs.PathsInput;
     }, function (_languageJs) {
       tr = _languageJs.tr;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("DatabasesPage", DatabasesPage = class DatabasesPage extends React.Component {
-        constructor(props) {
-          // parameters: {databases: [name: str], languages: [name: str]}
-          // app: App
-          super(props);
-          this.state = {
+      _export("DatabasesPage", DatabasesPage = class DatabasesPage extends BaseComponent {
+        // parameters: {databases: [name: str], languages: [name: str]}
+        // app: App
+
+        getInitialState() {
+          return {
             name: "",
             paths: [],
             update: false
           };
-          this.onChangeName = this.onChangeName.bind(this);
-          this.createDatabase = this.createDatabase.bind(this);
-          this.openDatabase = this.openDatabase.bind(this);
-          this.onChangeUpdate = this.onChangeUpdate.bind(this);
-          this.onChangeLanguage = this.onChangeLanguage.bind(this);
-          this.onUpdatePaths = this.onUpdatePaths.bind(this);
         }
         render() {
           const languages = this.props.parameters.language_names;

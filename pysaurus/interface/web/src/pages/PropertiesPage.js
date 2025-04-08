@@ -6,6 +6,7 @@ import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { backend_error, python_multiple_call } from "../utils/backend.js";
 import { UTILITIES } from "../utils/functions.js";
+import { BaseComponent } from "../BaseComponent.js";
 
 const DEFAULT_VALUES = {
 	bool: false,
@@ -18,14 +19,14 @@ function getDefaultValue(propType, isEnum) {
 	return isEnum ? [] : DEFAULT_VALUES[propType].toString();
 }
 
-export class PropertiesPage extends React.Component {
-	constructor(props) {
-		// app: App
-		// parameters {definitions}
-		super(props);
+export class PropertiesPage extends BaseComponent {
+	// app: App
+	// parameters {definitions}
+
+	getInitialState() {
 		const definitions = this.props.parameters.definitions;
 		const defaultType = "str";
-		this.state = {
+		return {
 			definitions: definitions,
 			name: "",
 			type: defaultType,
@@ -33,17 +34,6 @@ export class PropertiesPage extends React.Component {
 			defaultPropVal: getDefaultValue(defaultType, true),
 			multiple: false,
 		};
-		this.back = this.back.bind(this);
-		this.onChangeName = this.onChangeName.bind(this);
-		this.onChangeType = this.onChangeType.bind(this);
-		this.onChangeDefault = this.onChangeDefault.bind(this);
-		this.onChangeMultiple = this.onChangeMultiple.bind(this);
-		this.onChangeEnumeration = this.onChangeEnumeration.bind(this);
-		this.reset = this.reset.bind(this);
-		this.submit = this.submit.bind(this);
-		this.deleteProperty = this.deleteProperty.bind(this);
-		this.renameProperty = this.renameProperty.bind(this);
-		this.getDefaultInputState = this.getDefaultInputState.bind(this);
 	}
 
 	render() {

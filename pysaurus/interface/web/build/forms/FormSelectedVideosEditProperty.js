@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, tr, Characters, UTILITIES, FormSelectedVideosEditProperty;
+  var Dialog, tr, Characters, UTILITIES, BaseComponent, FormSelectedVideosEditProperty;
   _export("FormSelectedVideosEditProperty", void 0);
   return {
     setters: [function (_dialogsDialogJs) {
@@ -12,37 +12,27 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.j
       Characters = _utilsConstantsJs.Characters;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormSelectedVideosEditProperty", FormSelectedVideosEditProperty = class FormSelectedVideosEditProperty extends React.Component {
-        constructor(props) {
-          // nbVideos
-          // definition: property definition
-          // values: [(value, count)]
-          // onClose
-          super(props);
+      _export("FormSelectedVideosEditProperty", FormSelectedVideosEditProperty = class FormSelectedVideosEditProperty extends BaseComponent {
+        // nbVideos
+        // definition: property definition
+        // values: [(value, count)]
+        // onClose
+
+        getInitialState() {
           const current = [];
           for (let valueAndCount of this.props.values) {
             current.push(valueAndCount[0]);
           }
-          this.state = {
-            current: current,
+          return {
+            current,
             add: [],
             remove: [],
             value: this.getDefaultValue()
           };
-          this.onEdit = this.onEdit.bind(this);
-          this.onEditKeyDown = this.onEditKeyDown.bind(this);
-          this.onAddNewValue = this.onAddNewValue.bind(this);
-          this.remove = this.remove.bind(this);
-          this.add = this.add.bind(this);
-          this.unRemove = this.unRemove.bind(this);
-          this.unAdd = this.unAdd.bind(this);
-          this.onClose = this.onClose.bind(this);
-          this.unRemoveAll = this.unRemoveAll.bind(this);
-          this.removeAll = this.removeAll.bind(this);
-          this.addAll = this.addAll.bind(this);
-          this.unAddAll = this.unAddAll.bind(this);
         }
         render() {
           const propName = this.props.definition.name;

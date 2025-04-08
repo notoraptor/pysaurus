@@ -1,18 +1,15 @@
 import { Cell } from "../components/Cell.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class FormPaginationGoTo extends React.Component {
-	constructor(props) {
-		// nbPages
-		// pageNumber
-		// onClose(pageNumber)
-		super(props);
-		this.state = { pageNumber: this.props.pageNumber };
-		this.onFocusInput = this.onFocusInput.bind(this);
-		this.onChange = this.onChange.bind(this);
-		this.onInput = this.onInput.bind(this);
-		this.onClose = this.onClose.bind(this);
+export class FormPaginationGoTo extends BaseComponent {
+	// nbPages
+	// pageNumber
+	// onClose(pageNumber)
+
+	getInitialState() {
+		return { pageNumber: this.props.pageNumber };
 	}
 
 	render() {

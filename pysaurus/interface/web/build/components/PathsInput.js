@@ -1,7 +1,7 @@
-System.register(["../language.js", "../utils/backend.js"], function (_export, _context) {
+System.register(["../language.js", "../utils/backend.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var tr, backend_error, python_call, PathsInput;
+  var tr, backend_error, python_call, BaseComponent, PathsInput;
   _export("PathsInput", void 0);
   return {
     setters: [function (_languageJs) {
@@ -9,16 +9,11 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("PathsInput", PathsInput = class PathsInput extends React.Component {
-        constructor(props) {
-          super(props);
-          this.addFolder = this.addFolder.bind(this);
-          this.addFile = this.addFile.bind(this);
-          this._extendPaths = this._extendPaths.bind(this);
-          this.removePath = this.removePath.bind(this);
-        }
+      _export("PathsInput", PathsInput = class PathsInput extends BaseComponent {
         render() {
           const paths = this.props.data || [];
           return /*#__PURE__*/React.createElement("div", {

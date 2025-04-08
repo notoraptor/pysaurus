@@ -10,6 +10,7 @@ import { Collapsable } from "./Collapsable.js";
 import { Menu } from "./Menu.js";
 import { MenuItem } from "./MenuItem.js";
 import { MenuPack } from "./MenuPack.js";
+import { BaseComponent } from "../BaseComponent.js";
 
 /**
  * Generate class name for common value of videos grouped by similarity
@@ -20,34 +21,7 @@ function cc(value) {
 	return value === undefined ? "" : value ? "common-true" : "common-false";
 }
 
-export class Video extends React.Component {
-	constructor(props) {
-		super(props);
-		this.markAsRead = this.markAsRead.bind(this);
-		this.openVideo = this.openVideo.bind(this);
-		this.openVideoSurely = this.openVideoSurely.bind(this);
-		this.confirmDeletion = this.confirmDeletion.bind(this);
-		this.deleteVideo = this.deleteVideo.bind(this);
-		this.deleteVideoEntry = this.deleteVideoEntry.bind(this);
-		this.openContainingFolder = this.openContainingFolder.bind(this);
-		this.copyToClipboard = this.copyToClipboard.bind(this);
-		this.copyMetaTitle = this.copyMetaTitle.bind(this);
-		this.copyFileTitle = this.copyFileTitle.bind(this);
-		this.copyFilePath = this.copyFilePath.bind(this);
-		this.copyVideoID = this.copyVideoID.bind(this);
-		this.renameVideo = this.renameVideo.bind(this);
-		this.editProperties = this.editProperties.bind(this);
-		this.onSelect = this.onSelect.bind(this);
-		this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
-		this.reallyDeleteVideoEntry = this.reallyDeleteVideoEntry.bind(this);
-		this.confirmMove = this.confirmMove.bind(this);
-		this.moveVideo = this.moveVideo.bind(this);
-		this.dismissSimilarity = this.dismissSimilarity.bind(this);
-		this.reallyDismissSimilarity = this.reallyDismissSimilarity.bind(this);
-		this.resetSimilarity = this.resetSimilarity.bind(this);
-		this.reallyResetSimilarity = this.reallyResetSimilarity.bind(this);
-	}
-
+export class Video extends BaseComponent {
 	render() {
 		return this.props.data.readable ? this.renderVideo() : this.renderVideoState();
 	}

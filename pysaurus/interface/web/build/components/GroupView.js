@@ -1,7 +1,7 @@
-System.register(["../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/FancyboxManager.js", "../utils/constants.js", "../utils/functions.js", "./Pagination.js", "./PlusIcon.js", "./SettingIcon.js"], function (_export, _context) {
+System.register(["../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/FancyboxManager.js", "../utils/constants.js", "../utils/functions.js", "./Pagination.js", "./PlusIcon.js", "./SettingIcon.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var tr, Action, Actions, Fancybox, Characters, FIELD_MAP, capitalizeFirstLetter, Pagination, PlusIcon, SettingIcon, GroupView;
+  var tr, Action, Actions, Fancybox, Characters, FIELD_MAP, capitalizeFirstLetter, Pagination, PlusIcon, SettingIcon, BaseComponent, GroupView;
   function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   _export("GroupView", void 0);
   return {
@@ -24,22 +24,13 @@ System.register(["../language.js", "../utils/Action.js", "../utils/Actions.js", 
       PlusIcon = _PlusIconJs.PlusIcon;
     }, function (_SettingIconJs) {
       SettingIcon = _SettingIconJs.SettingIcon;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("GroupView", GroupView = class GroupView extends React.Component {
+      _export("GroupView", GroupView = class GroupView extends BaseComponent {
         constructor(props) {
           super(props);
-          this.openPropertyOptions = this.openPropertyOptions.bind(this);
-          this.openPropertyOptionsAll = this.openPropertyOptionsAll.bind(this);
-          this.openPropertyPlus = this.openPropertyPlus.bind(this);
-          this.setPage = this.setPage.bind(this);
-          this.previousGroup = this.previousGroup.bind(this);
-          this.nextGroup = this.nextGroup.bind(this);
-          this.search = this.search.bind(this);
-          this.allChecked = this.allChecked.bind(this);
-          this.onCheckEntry = this.onCheckEntry.bind(this);
-          this.onCheckAll = this.onCheckAll.bind(this);
-          this.getActions = this.getActions.bind(this);
           this.callbackIndex = -1;
         }
         render() {

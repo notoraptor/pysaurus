@@ -2,23 +2,15 @@ import { DialogSearch } from "../dialogs/DialogSearch.js";
 import { FormPaginationGoTo } from "../forms/FormPaginationGoTo.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { capitalizeFirstLetter } from "../utils/functions.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class Pagination extends React.Component {
-	constructor(props) {
-		// singular: str
-		// plural: str
-		// nbPages: int
-		// pageNumber: int
-		// onChange: function(int)
-		// onSearch? function(str)
-		super(props);
-		this.onFirst = this.onFirst.bind(this);
-		this.onNext = this.onNext.bind(this);
-		this.onLast = this.onLast.bind(this);
-		this.onPrevious = this.onPrevious.bind(this);
-		this.go = this.go.bind(this);
-		this.look = this.look.bind(this);
-	}
+export class Pagination extends BaseComponent {
+	// singular: str
+	// plural: str
+	// nbPages: int
+	// pageNumber: int
+	// onChange: function(int)
+	// onSearch? function(str)
 
 	render() {
 		const singular = this.props.singular;

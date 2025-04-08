@@ -1,7 +1,7 @@
-System.register(["../dialogs/DialogSearch.js", "../forms/FormPaginationGoTo.js", "../utils/FancyboxManager.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../dialogs/DialogSearch.js", "../forms/FormPaginationGoTo.js", "../utils/FancyboxManager.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var DialogSearch, FormPaginationGoTo, Fancybox, capitalizeFirstLetter, Pagination;
+  var DialogSearch, FormPaginationGoTo, Fancybox, capitalizeFirstLetter, BaseComponent, Pagination;
   _export("Pagination", void 0);
   return {
     setters: [function (_dialogsDialogSearchJs) {
@@ -12,24 +12,18 @@ System.register(["../dialogs/DialogSearch.js", "../forms/FormPaginationGoTo.js",
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsFunctionsJs) {
       capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("Pagination", Pagination = class Pagination extends React.Component {
-        constructor(props) {
-          // singular: str
-          // plural: str
-          // nbPages: int
-          // pageNumber: int
-          // onChange: function(int)
-          // onSearch? function(str)
-          super(props);
-          this.onFirst = this.onFirst.bind(this);
-          this.onNext = this.onNext.bind(this);
-          this.onLast = this.onLast.bind(this);
-          this.onPrevious = this.onPrevious.bind(this);
-          this.go = this.go.bind(this);
-          this.look = this.look.bind(this);
-        }
+      _export("Pagination", Pagination = class Pagination extends BaseComponent {
+        // singular: str
+        // plural: str
+        // nbPages: int
+        // pageNumber: int
+        // onChange: function(int)
+        // onSearch? function(str)
+
         render() {
           const singular = this.props.singular;
           const plural = this.props.plural;

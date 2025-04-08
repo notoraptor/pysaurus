@@ -2,21 +2,21 @@ import { ComponentPropController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
 import { UTILITIES } from "../utils/functions.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class FormVideoEditProperties extends React.Component {
-	constructor(props) {
-		// data
-		// definitions
-		// onClose
-		super(props);
-		this.state = {};
+export class FormVideoEditProperties extends BaseComponent {
+	// data
+	// definitions
+	// onClose
+
+	getInitialState() {
+		let state = {};
 		const properties = this.props.data.properties;
 		for (let def of this.props.definitions) {
 			const name = def.name;
-			this.state[name] = properties.hasOwnProperty(name) ? properties[name] : def.defaultValues;
+			state[name] = properties.hasOwnProperty(name) ? properties[name] : def.defaultValues;
 		}
-		this.onClose = this.onClose.bind(this);
-		this.onChange = this.onChange.bind(this);
+		return state;
 	}
 
 	render() {

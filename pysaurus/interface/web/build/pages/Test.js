@@ -1,7 +1,7 @@
-System.register(["../components/Cross.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../utils/FancyboxManager.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["../components/Cross.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../utils/FancyboxManager.js", "../utils/constants.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Cross, ComponentController, SetInput, Dialog, Fancybox, PAGE_SIZES, Test;
+  var Cross, ComponentController, SetInput, Dialog, Fancybox, PAGE_SIZES, BaseComponent, Test;
   _export("Test", void 0);
   return {
     setters: [function (_componentsCrossJs) {
@@ -15,12 +15,13 @@ System.register(["../components/Cross.js", "../components/SetInput.js", "../dial
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsConstantsJs) {
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("Test", Test = class Test extends React.Component {
-        constructor(props) {
-          super(props);
-          this.state = {
+      _export("Test", Test = class Test extends BaseComponent {
+        getInitialState() {
+          return {
             pageSize: PAGE_SIZES[0],
             confirmDeletion: false,
             arr: ["a", "b", "ccc"]

@@ -1,7 +1,7 @@
-System.register(["../language.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../language.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var tr, UTILITIES, SetController, ComponentController, ComponentPropController, SetInput;
+  var tr, UTILITIES, BaseComponent, SetController, ComponentController, ComponentPropController, SetInput;
   function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   _export({
     ComponentController: void 0,
@@ -13,6 +13,8 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
       tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       SetController = class SetController {
@@ -76,17 +78,11 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
           super(app, field, value => UTILITIES.parsePropValString(propType, propEnum, value));
         }
       });
-      _export("SetInput", SetInput = class SetInput extends React.Component {
-        constructor(props) {
-          super(props);
-          this.state = {
+      _export("SetInput", SetInput = class SetInput extends BaseComponent {
+        getInitialState() {
+          return {
             add: this.props.values ? this.props.values[0] : ""
           };
-          this.onChangeAdd = this.onChangeAdd.bind(this);
-          this.onInputAdd = this.onInputAdd.bind(this);
-          this.onAdd = this.onAdd.bind(this);
-          this.add = this.add.bind(this);
-          this.remove = this.remove.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement("div", {

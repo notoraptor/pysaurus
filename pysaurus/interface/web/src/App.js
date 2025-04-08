@@ -6,21 +6,21 @@ import { VideosPage } from "./pages/VideosPage.js";
 import { backend_error, python_call, python_multiple_call } from "./utils/backend.js";
 import { VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE } from "./utils/constants.js";
 import { APP_STATE } from "./utils/globals.js";
+import { BaseComponent } from "./BaseComponent.js";
 
-export class App extends React.Component {
+export class App extends BaseComponent {
 	constructor(props) {
 		super(props);
-		this.state = {
+		APP_STATE.lang = this.state.lang;
+	}
+
+	getInitialState() {
+		return {
 			page: null,
 			parameters: {},
 			lang: window.PYTHON_LANG,
 			languages: [],
 		};
-		APP_STATE.lang = this.state.lang;
-		this.loadPage = this.loadPage.bind(this);
-		this.loadPropertiesPage = this.loadPropertiesPage.bind(this);
-		this.loadVideosPage = this.loadVideosPage.bind(this);
-		this.getLanguages = this.getLanguages.bind(this);
 	}
 
 	render() {

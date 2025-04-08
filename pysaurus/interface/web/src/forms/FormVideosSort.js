@@ -2,19 +2,15 @@ import { FancyBox } from "../dialogs/FancyBox.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { FIELD_MAP } from "../utils/constants.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class FormVideosSort extends React.Component {
-	constructor(props) {
-		// sorting
-		// onClose(sorting)
-		super(props);
+export class FormVideosSort extends BaseComponent {
+	// sorting
+	// onClose(sorting)
+
+	getInitialState() {
 		const sorting = this.props.sorting.length ? this.props.sorting : ["-date"];
-		this.state = { sorting: sorting };
-		this.setField = this.setField.bind(this);
-		this.setReverse = this.setReverse.bind(this);
-		this.addCriterion = this.addCriterion.bind(this);
-		this.removeCriterion = this.removeCriterion.bind(this);
-		this.submit = this.submit.bind(this);
+		return { sorting: sorting };
 	}
 
 	render() {

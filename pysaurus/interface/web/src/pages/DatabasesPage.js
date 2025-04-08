@@ -1,22 +1,17 @@
 import { PathsInput } from "../components/PathsInput.js";
 import { tr } from "../language.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class DatabasesPage extends React.Component {
-	constructor(props) {
-		// parameters: {databases: [name: str], languages: [name: str]}
-		// app: App
-		super(props);
-		this.state = {
+export class DatabasesPage extends BaseComponent {
+	// parameters: {databases: [name: str], languages: [name: str]}
+	// app: App
+
+	getInitialState() {
+		return {
 			name: "",
 			paths: [],
 			update: false,
 		};
-		this.onChangeName = this.onChangeName.bind(this);
-		this.createDatabase = this.createDatabase.bind(this);
-		this.openDatabase = this.openDatabase.bind(this);
-		this.onChangeUpdate = this.onChangeUpdate.bind(this);
-		this.onChangeLanguage = this.onChangeLanguage.bind(this);
-		this.onUpdatePaths = this.onUpdatePaths.bind(this);
 	}
 
 	render() {

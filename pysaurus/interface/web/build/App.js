@@ -1,7 +1,7 @@
-System.register(["./pages/DatabasesPage.js", "./pages/HomePage.js", "./pages/PropertiesPage.js", "./pages/Test.js", "./pages/VideosPage.js", "./utils/backend.js", "./utils/constants.js", "./utils/globals.js"], function (_export, _context) {
+System.register(["./pages/DatabasesPage.js", "./pages/HomePage.js", "./pages/PropertiesPage.js", "./pages/Test.js", "./pages/VideosPage.js", "./utils/backend.js", "./utils/constants.js", "./utils/globals.js", "./BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var DatabasesPage, HomePage, PropertiesPage, Test, VideosPage, backend_error, python_call, python_multiple_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, APP_STATE, App;
+  var DatabasesPage, HomePage, PropertiesPage, Test, VideosPage, backend_error, python_call, python_multiple_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, APP_STATE, BaseComponent, App;
   _export("App", void 0);
   return {
     setters: [function (_pagesDatabasesPageJs) {
@@ -23,22 +23,22 @@ System.register(["./pages/DatabasesPage.js", "./pages/HomePage.js", "./pages/Pro
       VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;
     }, function (_utilsGlobalsJs) {
       APP_STATE = _utilsGlobalsJs.APP_STATE;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("App", App = class App extends React.Component {
+      _export("App", App = class App extends BaseComponent {
         constructor(props) {
           super(props);
-          this.state = {
+          APP_STATE.lang = this.state.lang;
+        }
+        getInitialState() {
+          return {
             page: null,
             parameters: {},
             lang: window.PYTHON_LANG,
             languages: []
           };
-          APP_STATE.lang = this.state.lang;
-          this.loadPage = this.loadPage.bind(this);
-          this.loadPropertiesPage = this.loadPropertiesPage.bind(this);
-          this.loadVideosPage = this.loadVideosPage.bind(this);
-          this.getLanguages = this.getLanguages.bind(this);
         }
         render() {
           const parameters = this.state.parameters;

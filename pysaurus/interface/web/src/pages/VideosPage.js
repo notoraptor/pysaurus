@@ -33,14 +33,18 @@ import { arrayEquals, compareSources } from "../utils/functions.js";
 import { APP_STATE } from "../utils/globals.js";
 import { Selector } from "../utils/Selector.js";
 import { HomePage } from "./HomePage.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class VideosPage extends React.Component {
+export class VideosPage extends BaseComponent {
 	constructor(props) {
 		// parameters: {backend state}
 		// app: App
 		super(props);
+		this.callbackIndex = -1;
+	}
 
-		this.state = this.parametersToState(
+	getInitialState() {
+		return this.parametersToState(
 			{
 				status: undefined,
 				confirmDeletion: true,
@@ -53,64 +57,6 @@ export class VideosPage extends React.Component {
 			},
 			this.props.parameters
 		);
-		this.backendGroupVideos = this.backendGroupVideos.bind(this);
-		this.changeGroup = this.changeGroup.bind(this);
-		this.changePage = this.changePage.bind(this);
-		this.previousPage = this.previousPage.bind(this);
-		this.nextPage = this.nextPage.bind(this);
-		this.classifierConcatenate = this.classifierConcatenate.bind(this);
-		this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
-		this.classifierUnstack = this.classifierUnstack.bind(this);
-		this.classifierReversePath = this.classifierReversePath.bind(this);
-		this.confirmDeletionForNotFound = this.confirmDeletionForNotFound.bind(this);
-		this.deselect = this.deselect.bind(this);
-		this.displayOnlySelected = this.displayOnlySelected.bind(this);
-		this.editPropertiesForManyVideos = this.editPropertiesForManyVideos.bind(this);
-		this.editPropertyValue = this.editPropertyValue.bind(this);
-		this.fillWithKeywords = this.fillWithKeywords.bind(this);
-		this.focusPropertyValue = this.focusPropertyValue.bind(this);
-		this.groupVideos = this.groupVideos.bind(this);
-		this.manageProperties = this.manageProperties.bind(this);
-		this.onVideoSelection = this.onVideoSelection.bind(this);
-		this.openRandomVideo = this.openRandomVideo.bind(this);
-		this.reloadDatabase = this.reloadDatabase.bind(this);
-		this.resetGroup = this.resetGroup.bind(this);
-		this.resetSearch = this.resetSearch.bind(this);
-		this.resetSort = this.resetSort.bind(this);
-		this.resetStatus = this.resetStatus.bind(this);
-		this.scrollTop = this.scrollTop.bind(this);
-		this.searchVideos = this.searchVideos.bind(this);
-		this.selectAll = this.selectAll.bind(this);
-		this.selectGroup = this.selectGroup.bind(this);
-		this.selectVideos = this.selectVideos.bind(this);
-		this.setPageSize = this.setPageSize.bind(this);
-		this.sortVideos = this.sortVideos.bind(this);
-		this.unselectVideos = this.unselectVideos.bind(this);
-		this.updateStatus = this.updateStatus.bind(this);
-		this.backend = this.backend.bind(this);
-		this.findSimilarVideos = this.findSimilarVideos.bind(this);
-		this.closeDatabase = this.closeDatabase.bind(this);
-		this.moveVideo = this.moveVideo.bind(this);
-		this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
-		this.renameDatabase = this.renameDatabase.bind(this);
-		this.deleteDatabase = this.deleteDatabase.bind(this);
-		this.onGroupViewState = this.onGroupViewState.bind(this);
-		this.notify = this.notify.bind(this);
-		this.allNotFound = this.allNotFound.bind(this);
-		this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
-		this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
-		this.sourceIsSet = this.sourceIsSet.bind(this);
-		this.groupIsSet = this.groupIsSet.bind(this);
-		this.searchIsSet = this.searchIsSet.bind(this);
-		this.sortIsSet = this.sortIsSet.bind(this);
-		this.previousGroup = this.previousGroup.bind(this);
-		this.nextGroup = this.nextGroup.bind(this);
-		this.confirmAllUniqueMoves = this.confirmAllUniqueMoves.bind(this);
-		this.getStatus = this.getStatus.bind(this);
-		this.getActions = this.getActions.bind(this);
-		this.playlist = this.playlist.bind(this);
-
-		this.callbackIndex = -1;
 	}
 
 	render() {

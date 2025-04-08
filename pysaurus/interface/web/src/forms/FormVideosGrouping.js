@@ -1,37 +1,30 @@
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
 import { FIELD_MAP } from "../utils/constants.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class FormVideosGrouping extends React.Component {
-	constructor(props) {
-		// groupDef: GroupDef
-		// prop_types: [PropDef]
-		// propertyMap: {name: PropDef}
-		// onClose(groupDef)
-		super(props);
-		this.state = this.props.groupDef.field
-			? {
-					isProperty: this.props.groupDef.is_property,
-					field: this.props.groupDef.field,
-					sorting: this.props.groupDef.sorting,
-					reverse: this.props.groupDef.reverse,
-					allowSingletons: this.props.groupDef.allow_singletons,
-			  }
-			: {
-					isProperty: false,
-					field: undefined,
-					sorting: "field",
-					reverse: false,
-					allowSingletons: undefined,
-			  };
-		this.onChangeAllowSingletons = this.onChangeAllowSingletons.bind(this);
-		this.onChangeGroupField = this.onChangeGroupField.bind(this);
-		this.onChangeSorting = this.onChangeSorting.bind(this);
-		this.onChangeGroupReverse = this.onChangeGroupReverse.bind(this);
-		this.onClose = this.onClose.bind(this);
-		this.onChangeFieldType = this.onChangeFieldType.bind(this);
-		this.getStateField = this.getStateField.bind(this);
-		this.getStateAllowSingletons = this.getStateAllowSingletons.bind(this);
+export class FormVideosGrouping extends BaseComponent {
+	// groupDef: GroupDef
+	// prop_types: [PropDef]
+	// propertyMap: {name: PropDef}
+	// onClose(groupDef)
+
+	getInitialState() {
+		return this.props.groupDef.field
+		? {
+				isProperty: this.props.groupDef.is_property,
+				field: this.props.groupDef.field,
+				sorting: this.props.groupDef.sorting,
+				reverse: this.props.groupDef.reverse,
+				allowSingletons: this.props.groupDef.allow_singletons,
+		  }
+		: {
+				isProperty: false,
+				field: undefined,
+				sorting: "field",
+				reverse: false,
+				allowSingletons: undefined,
+		  };
 	}
 
 	render() {

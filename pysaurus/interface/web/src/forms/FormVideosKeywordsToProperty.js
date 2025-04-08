@@ -1,16 +1,14 @@
 import { Cell } from "../components/Cell.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class FormVideosKeywordsToProperty extends React.Component {
-	constructor(props) {
-		// prop_types: PropertyDefinition[]
-		// onClose(name)
-		super(props);
-		this.state = { field: this.props.prop_types[0].name, onlyEmpty: false };
-		this.onChangeGroupField = this.onChangeGroupField.bind(this);
-		this.onChangeEmpty = this.onChangeEmpty.bind(this);
-		this.onClose = this.onClose.bind(this);
+export class FormVideosKeywordsToProperty extends BaseComponent {
+	// prop_types: PropertyDefinition[]
+	// onClose(name)
+
+	getInitialState() {
+		return { field: this.props.prop_types[0].name, onlyEmpty: false };
 	}
 
 	render() {

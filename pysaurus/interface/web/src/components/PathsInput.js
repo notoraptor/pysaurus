@@ -1,15 +1,8 @@
 import { tr } from "../language.js";
 import { backend_error, python_call } from "../utils/backend.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class PathsInput extends React.Component {
-	constructor(props) {
-		super(props);
-		this.addFolder = this.addFolder.bind(this);
-		this.addFile = this.addFile.bind(this);
-		this._extendPaths = this._extendPaths.bind(this);
-		this.removePath = this.removePath.bind(this);
-	}
-
+export class PathsInput extends BaseComponent {
 	render() {
 		const paths = this.props.data || [];
 		return (

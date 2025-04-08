@@ -3,11 +3,11 @@ import { ComponentController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { PAGE_SIZES } from "../utils/constants.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class Test extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
+export class Test extends BaseComponent {
+	getInitialState() {
+		return {
 			pageSize: PAGE_SIZES[0],
 			confirmDeletion: false,
 			arr: ["a", "b", "ccc"],

@@ -1,15 +1,11 @@
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class GenericFormRename extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = { data: this.props.data };
-		this.onChange = this.onChange.bind(this);
-		this.onKeyDown = this.onKeyDown.bind(this);
-		this.submit = this.submit.bind(this);
-		this.onFocusInput = this.onFocusInput.bind(this);
+export class GenericFormRename extends BaseComponent {
+	getInitialState() {
+		return { data: this.props.data };
 	}
 
 	render() {

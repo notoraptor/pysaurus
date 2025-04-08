@@ -1,17 +1,16 @@
 import { PathsInput } from "../components/PathsInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class FormDatabaseEditFolders extends React.Component {
-	constructor(props) {
-		// database: {name: str, folders: [str]}
-		// onClose(paths)
-		super(props);
-		this.state = {
+export class FormDatabaseEditFolders extends BaseComponent {
+	// database: {name: str, folders: [str]}
+	// onClose(paths)
+
+	getInitialState() {
+		return {
 			paths: this.props.database.folders.slice(),
 		};
-		this.onUpdate = this.onUpdate.bind(this);
-		this.onClose = this.onClose.bind(this);
 	}
 
 	render() {

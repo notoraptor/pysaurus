@@ -1,7 +1,7 @@
-System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, tr, Fancybox, FormVideosSearch;
+  var FancyBox, tr, Fancybox, BaseComponent, FormVideosSearch;
   _export("FormVideosSearch", void 0);
   return {
     setters: [function (_dialogsFancyBoxJs) {
@@ -10,23 +10,20 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
       tr = _languageJs.tr;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormVideosSearch", FormVideosSearch = class FormVideosSearch extends React.Component {
-        constructor(props) {
-          // text
-          // cond
-          // onClose(criterion)
-          super(props);
-          this.state = {
+      _export("FormVideosSearch", FormVideosSearch = class FormVideosSearch extends BaseComponent {
+        // text
+        // cond
+        // onClose(criterion)
+
+        getInitialState() {
+          return {
             text: this.props.text || "",
             cond: this.props.cond || ""
           };
-          this.onFocusInput = this.onFocusInput.bind(this);
-          this.onChangeInput = this.onChangeInput.bind(this);
-          this.onChangeCond = this.onChangeCond.bind(this);
-          this.onInput = this.onInput.bind(this);
-          this.onClose = this.onClose.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {

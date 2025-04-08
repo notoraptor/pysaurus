@@ -1,6 +1,7 @@
 import { FancyBox } from "../dialogs/FancyBox.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { BaseComponent } from "../BaseComponent.js";
 
 function getSubTree(tree, entryName) {
 	const steps = entryName.split("-");
@@ -43,20 +44,15 @@ function removePaths(oldPaths, paths) {
 	return newPaths;
 }
 
-export class FormVideosSource extends React.Component {
-	constructor(props) {
-		// tree
-		// sources
-		// onClose(sources)
-		super(props);
-		this.state = {
+export class FormVideosSource extends BaseComponent {
+	// tree
+	// sources
+	// onClose(sources)
+
+	getInitialState() {
+		return {
 			paths: this.props.sources.map((path) => path.join("-")),
 		};
-		this.renderTree = this.renderTree.bind(this);
-		this.hasPath = this.hasPath.bind(this);
-		this.onChangeRadio = this.onChangeRadio.bind(this);
-		this.onChangeCheckBox = this.onChangeCheckBox.bind(this);
-		this.submit = this.submit.bind(this);
 	}
 
 	render() {

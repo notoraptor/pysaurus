@@ -1,6 +1,7 @@
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class FancyBox extends React.Component {
+export class FancyBox extends BaseComponent {
 	/**
 	 * @param props {{title: str}}
 	 */
@@ -8,8 +9,6 @@ export class FancyBox extends React.Component {
 		// title, onClose() ?, children
 		super(props);
 		this.callbackIndex = -1;
-		this.checkShortcut = this.checkShortcut.bind(this);
-		this.onClose = this.onClose.bind(this);
 	}
 
 	render() {

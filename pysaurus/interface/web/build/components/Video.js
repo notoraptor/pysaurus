@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js", "../utils/backend.js", "../utils/constants.js", "../utils/globals.js", "./Collapsable.js", "./Menu.js", "./MenuItem.js", "./MenuPack.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js", "../utils/backend.js", "../utils/constants.js", "../utils/globals.js", "./Collapsable.js", "./Menu.js", "./MenuItem.js", "./MenuPack.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormVideoEditProperties, GenericFormRename, tr, Fancybox, backend_error, python_call, Characters, APP_STATE, Collapsable, Menu, MenuItem, MenuPack, Video;
+  var Dialog, FormVideoEditProperties, GenericFormRename, tr, Fancybox, backend_error, python_call, Characters, APP_STATE, Collapsable, Menu, MenuItem, MenuPack, BaseComponent, Video;
   function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   /**
    * Generate class name for common value of videos grouped by similarity
@@ -38,35 +38,11 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
       MenuItem = _MenuItemJs.MenuItem;
     }, function (_MenuPackJs) {
       MenuPack = _MenuPackJs.MenuPack;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("Video", Video = class Video extends React.Component {
-        constructor(props) {
-          super(props);
-          this.markAsRead = this.markAsRead.bind(this);
-          this.openVideo = this.openVideo.bind(this);
-          this.openVideoSurely = this.openVideoSurely.bind(this);
-          this.confirmDeletion = this.confirmDeletion.bind(this);
-          this.deleteVideo = this.deleteVideo.bind(this);
-          this.deleteVideoEntry = this.deleteVideoEntry.bind(this);
-          this.openContainingFolder = this.openContainingFolder.bind(this);
-          this.copyToClipboard = this.copyToClipboard.bind(this);
-          this.copyMetaTitle = this.copyMetaTitle.bind(this);
-          this.copyFileTitle = this.copyFileTitle.bind(this);
-          this.copyFilePath = this.copyFilePath.bind(this);
-          this.copyVideoID = this.copyVideoID.bind(this);
-          this.renameVideo = this.renameVideo.bind(this);
-          this.editProperties = this.editProperties.bind(this);
-          this.onSelect = this.onSelect.bind(this);
-          this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
-          this.reallyDeleteVideoEntry = this.reallyDeleteVideoEntry.bind(this);
-          this.confirmMove = this.confirmMove.bind(this);
-          this.moveVideo = this.moveVideo.bind(this);
-          this.dismissSimilarity = this.dismissSimilarity.bind(this);
-          this.reallyDismissSimilarity = this.reallyDismissSimilarity.bind(this);
-          this.resetSimilarity = this.resetSimilarity.bind(this);
-          this.reallyResetSimilarity = this.reallyResetSimilarity.bind(this);
-        }
+      _export("Video", Video = class Video extends BaseComponent {
         render() {
           return this.props.data.readable ? this.renderVideo() : this.renderVideoState();
         }

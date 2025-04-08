@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, tr, Fancybox, UTILITIES, FormPropertyEditSelectedValues;
+  var Dialog, tr, Fancybox, UTILITIES, BaseComponent, FormPropertyEditSelectedValues;
   _export("FormPropertyEditSelectedValues", void 0);
   return {
     setters: [function (_dialogsDialogJs) {
@@ -12,25 +12,18 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxMan
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormPropertyEditSelectedValues", FormPropertyEditSelectedValues = class FormPropertyEditSelectedValues extends React.Component {
-        constructor(props) {
-          super(props);
-          this.state = {
+      _export("FormPropertyEditSelectedValues", FormPropertyEditSelectedValues = class FormPropertyEditSelectedValues extends BaseComponent {
+        getInitialState() {
+          return {
             form: "edit",
             value: this.props.values[0].toString(),
             move: "",
             otherDefinitions: this.getCompatibleDefinitions()
           };
-          this.setDelete = this.setDelete.bind(this);
-          this.setEdit = this.setEdit.bind(this);
-          this.setMove = this.setMove.bind(this);
-          this.onEdit = this.onEdit.bind(this);
-          this.onMove = this.onMove.bind(this);
-          this.onClose = this.onClose.bind(this);
-          this.onEditKeyDown = this.onEditKeyDown.bind(this);
-          this.valuesToString = this.valuesToString.bind(this);
         }
         render() {
           const canMove = this.state.otherDefinitions.length;

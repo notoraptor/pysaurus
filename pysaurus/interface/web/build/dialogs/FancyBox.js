@@ -1,14 +1,16 @@
-System.register(["../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../utils/FancyboxManager.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Fancybox, FancyBox;
+  var Fancybox, BaseComponent, FancyBox;
   _export("FancyBox", void 0);
   return {
     setters: [function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FancyBox", FancyBox = class FancyBox extends React.Component {
+      _export("FancyBox", FancyBox = class FancyBox extends BaseComponent {
         /**
          * @param props {{title: str}}
          */
@@ -16,8 +18,6 @@ System.register(["../utils/FancyboxManager.js"], function (_export, _context) {
           // title, onClose() ?, children
           super(props);
           this.callbackIndex = -1;
-          this.checkShortcut = this.checkShortcut.bind(this);
-          this.onClose = this.onClose.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement("div", {

@@ -1,5 +1,6 @@
 import { tr } from "../language.js";
 import { UTILITIES } from "../utils/functions.js";
+import { BaseComponent } from "../BaseComponent.js";
 
 class SetController {
 	constructor() {
@@ -71,15 +72,9 @@ export class ComponentPropController extends ComponentController {
 	}
 }
 
-export class SetInput extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = { add: this.props.values ? this.props.values[0] : "" };
-		this.onChangeAdd = this.onChangeAdd.bind(this);
-		this.onInputAdd = this.onInputAdd.bind(this);
-		this.onAdd = this.onAdd.bind(this);
-		this.add = this.add.bind(this);
-		this.remove = this.remove.bind(this);
+export class SetInput extends BaseComponent {
+	getInitialState() {
+		return { add: this.props.values ? this.props.values[0] : "" };
 	}
 
 	render() {

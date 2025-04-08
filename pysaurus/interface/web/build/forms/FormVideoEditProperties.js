@@ -1,7 +1,7 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../language.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, tr, UTILITIES, FormVideoEditProperties;
+  var ComponentPropController, SetInput, Dialog, tr, UTILITIES, BaseComponent, FormVideoEditProperties;
   _export("FormVideoEditProperties", void 0);
   return {
     setters: [function (_componentsSetInputJs) {
@@ -13,22 +13,23 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../langua
       tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormVideoEditProperties", FormVideoEditProperties = class FormVideoEditProperties extends React.Component {
-        constructor(props) {
-          // data
-          // definitions
-          // onClose
-          super(props);
-          this.state = {};
+      _export("FormVideoEditProperties", FormVideoEditProperties = class FormVideoEditProperties extends BaseComponent {
+        // data
+        // definitions
+        // onClose
+
+        getInitialState() {
+          let state = {};
           const properties = this.props.data.properties;
           for (let def of this.props.definitions) {
             const name = def.name;
-            this.state[name] = properties.hasOwnProperty(name) ? properties[name] : def.defaultValues;
+            state[name] = properties.hasOwnProperty(name) ? properties[name] : def.defaultValues;
           }
-          this.onClose = this.onClose.bind(this);
-          this.onChange = this.onChange.bind(this);
+          return state;
         }
         render() {
           const data = this.props.data;

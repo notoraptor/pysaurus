@@ -1,7 +1,7 @@
-System.register(["../language.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["../language.js", "../utils/backend.js", "../utils/constants.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var tr, backend_error, python_call, Characters, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, ACTIONS;
+  var tr, backend_error, python_call, Characters, BaseComponent, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, ACTIONS;
   _export("HomePage", void 0);
   return {
     setters: [function (_languageJs) {
@@ -11,6 +11,8 @@ System.register(["../language.js", "../utils/backend.js", "../utils/constants.js
       python_call = _utilsBackendJs.python_call;
     }, function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       ProgressionMonitoring = class ProgressionMonitoring {
@@ -66,27 +68,9 @@ System.register(["../language.js", "../utils/backend.js", "../utils/constants.js
         Cancelled: true,
         End: false
       };
-      NotificationRenderer = class NotificationRenderer extends React.Component {
-        constructor(props) {
-          // {app: HomePage object, message: Notification from Python, i: int}
-          super(props);
-          this.JobStep = this.JobStep.bind(this);
-          this.DatabaseLoaded = this.DatabaseLoaded.bind(this);
-          this.DatabaseSaved = this.DatabaseSaved.bind(this);
-          this.DatabaseReady = this.DatabaseReady.bind(this);
-          this.Done = this.Done.bind(this);
-          this.Cancelled = this.Cancelled.bind(this);
-          this.End = this.End.bind(this);
-          this.FinishedCollectingVideos = this.FinishedCollectingVideos.bind(this);
-          this.MissingThumbnails = this.MissingThumbnails.bind(this);
-          this.ProfilingStart = this.ProfilingStart.bind(this);
-          this.ProfilingEnd = this.ProfilingEnd.bind(this);
-          this.VideoInfoErrors = this.VideoInfoErrors.bind(this);
-          this.VideoThumbnailErrors = this.VideoThumbnailErrors.bind(this);
-          this.JobToDo = this.JobToDo.bind(this);
-          this.NbMiniatures = this.NbMiniatures.bind(this);
-          this.Message = this.Message.bind(this);
-        }
+      NotificationRenderer = class NotificationRenderer extends BaseComponent {
+        // {app: HomePage object, message: Notification from Python, i: int}
+
         render() {
           const app = this.props.app;
           const message = this.props.message;

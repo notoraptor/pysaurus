@@ -1,6 +1,7 @@
 import { tr } from "../language.js";
 import { backend_error, python_call } from "../utils/backend.js";
 import { Characters } from "../utils/constants.js";
+import { BaseComponent } from "../BaseComponent.js";
 
 class ProgressionMonitoring {
 	constructor(name, total) {
@@ -55,27 +56,8 @@ const EndReady = {
 	End: false,
 };
 
-class NotificationRenderer extends React.Component {
-	constructor(props) {
-		// {app: HomePage object, message: Notification from Python, i: int}
-		super(props);
-		this.JobStep = this.JobStep.bind(this);
-		this.DatabaseLoaded = this.DatabaseLoaded.bind(this);
-		this.DatabaseSaved = this.DatabaseSaved.bind(this);
-		this.DatabaseReady = this.DatabaseReady.bind(this);
-		this.Done = this.Done.bind(this);
-		this.Cancelled = this.Cancelled.bind(this);
-		this.End = this.End.bind(this);
-		this.FinishedCollectingVideos = this.FinishedCollectingVideos.bind(this);
-		this.MissingThumbnails = this.MissingThumbnails.bind(this);
-		this.ProfilingStart = this.ProfilingStart.bind(this);
-		this.ProfilingEnd = this.ProfilingEnd.bind(this);
-		this.VideoInfoErrors = this.VideoInfoErrors.bind(this);
-		this.VideoThumbnailErrors = this.VideoThumbnailErrors.bind(this);
-		this.JobToDo = this.JobToDo.bind(this);
-		this.NbMiniatures = this.NbMiniatures.bind(this);
-		this.Message = this.Message.bind(this);
-	}
+class NotificationRenderer extends BaseComponent {
+	// {app: HomePage object, message: Notification from Python, i: int}
 
 	render() {
 		const app = this.props.app;

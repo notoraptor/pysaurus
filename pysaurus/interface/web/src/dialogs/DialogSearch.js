@@ -1,17 +1,13 @@
 import { Cell } from "../components/Cell.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { Dialog } from "./Dialog.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class DialogSearch extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
+export class DialogSearch extends BaseComponent {
+	getInitialState() {
+		return {
 			text: "",
 		};
-		this.onFocusInput = this.onFocusInput.bind(this);
-		this.onChangeInput = this.onChangeInput.bind(this);
-		this.onInput = this.onInput.bind(this);
-		this.onClose = this.onClose.bind(this);
 	}
 
 	render() {

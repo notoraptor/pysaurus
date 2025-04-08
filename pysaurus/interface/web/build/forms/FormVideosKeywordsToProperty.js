@@ -1,7 +1,7 @@
-System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
+System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../language.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Cell, Dialog, tr, FormVideosKeywordsToProperty;
+  var Cell, Dialog, tr, BaseComponent, FormVideosKeywordsToProperty;
   _export("FormVideosKeywordsToProperty", void 0);
   return {
     setters: [function (_componentsCellJs) {
@@ -10,20 +10,19 @@ System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../language.j
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       tr = _languageJs.tr;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormVideosKeywordsToProperty", FormVideosKeywordsToProperty = class FormVideosKeywordsToProperty extends React.Component {
-        constructor(props) {
-          // prop_types: PropertyDefinition[]
-          // onClose(name)
-          super(props);
-          this.state = {
+      _export("FormVideosKeywordsToProperty", FormVideosKeywordsToProperty = class FormVideosKeywordsToProperty extends BaseComponent {
+        // prop_types: PropertyDefinition[]
+        // onClose(name)
+
+        getInitialState() {
+          return {
             field: this.props.prop_types[0].name,
             onlyEmpty: false
           };
-          this.onChangeGroupField = this.onChangeGroupField.bind(this);
-          this.onChangeEmpty = this.onChangeEmpty.bind(this);
-          this.onClose = this.onClose.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {

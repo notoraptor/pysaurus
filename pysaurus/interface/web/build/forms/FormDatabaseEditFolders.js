@@ -1,7 +1,7 @@
-System.register(["../components/PathsInput.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
+System.register(["../components/PathsInput.js", "../dialogs/Dialog.js", "../language.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var PathsInput, Dialog, tr, FormDatabaseEditFolders;
+  var PathsInput, Dialog, tr, BaseComponent, FormDatabaseEditFolders;
   _export("FormDatabaseEditFolders", void 0);
   return {
     setters: [function (_componentsPathsInputJs) {
@@ -10,18 +10,18 @@ System.register(["../components/PathsInput.js", "../dialogs/Dialog.js", "../lang
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       tr = _languageJs.tr;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormDatabaseEditFolders", FormDatabaseEditFolders = class FormDatabaseEditFolders extends React.Component {
-        constructor(props) {
-          // database: {name: str, folders: [str]}
-          // onClose(paths)
-          super(props);
-          this.state = {
+      _export("FormDatabaseEditFolders", FormDatabaseEditFolders = class FormDatabaseEditFolders extends BaseComponent {
+        // database: {name: str, folders: [str]}
+        // onClose(paths)
+
+        getInitialState() {
+          return {
             paths: this.props.database.folders.slice()
           };
-          this.onUpdate = this.onUpdate.bind(this);
-          this.onClose = this.onClose.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {

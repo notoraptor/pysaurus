@@ -1,7 +1,7 @@
-System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../utils/FancyboxManager.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Cell, Dialog, Fancybox, FormPaginationGoTo;
+  var Cell, Dialog, Fancybox, BaseComponent, FormPaginationGoTo;
   _export("FormPaginationGoTo", void 0);
   return {
     setters: [function (_componentsCellJs) {
@@ -10,21 +10,19 @@ System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../utils/Fanc
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormPaginationGoTo", FormPaginationGoTo = class FormPaginationGoTo extends React.Component {
-        constructor(props) {
-          // nbPages
-          // pageNumber
-          // onClose(pageNumber)
-          super(props);
-          this.state = {
+      _export("FormPaginationGoTo", FormPaginationGoTo = class FormPaginationGoTo extends BaseComponent {
+        // nbPages
+        // pageNumber
+        // onClose(pageNumber)
+
+        getInitialState() {
+          return {
             pageNumber: this.props.pageNumber
           };
-          this.onFocusInput = this.onFocusInput.bind(this);
-          this.onChange = this.onChange.bind(this);
-          this.onInput = this.onInput.bind(this);
-          this.onClose = this.onClose.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {

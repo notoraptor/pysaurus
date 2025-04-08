@@ -1,7 +1,7 @@
-System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js", "../utils/constants.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, tr, Fancybox, FIELD_MAP, FormVideosSort;
+  var FancyBox, tr, Fancybox, FIELD_MAP, BaseComponent, FormVideosSort;
   _export("FormVideosSort", void 0);
   return {
     setters: [function (_dialogsFancyBoxJs) {
@@ -12,22 +12,19 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsConstantsJs) {
       FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormVideosSort", FormVideosSort = class FormVideosSort extends React.Component {
-        constructor(props) {
-          // sorting
-          // onClose(sorting)
-          super(props);
+      _export("FormVideosSort", FormVideosSort = class FormVideosSort extends BaseComponent {
+        // sorting
+        // onClose(sorting)
+
+        getInitialState() {
           const sorting = this.props.sorting.length ? this.props.sorting : ["-date"];
-          this.state = {
+          return {
             sorting: sorting
           };
-          this.setField = this.setField.bind(this);
-          this.setReverse = this.setReverse.bind(this);
-          this.addCriterion = this.addCriterion.bind(this);
-          this.removeCriterion = this.removeCriterion.bind(this);
-          this.submit = this.submit.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {

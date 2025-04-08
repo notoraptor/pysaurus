@@ -1,7 +1,7 @@
-System.register(["../components/Cell.js", "../utils/FancyboxManager.js", "./Dialog.js"], function (_export, _context) {
+System.register(["../components/Cell.js", "../utils/FancyboxManager.js", "./Dialog.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Cell, Fancybox, Dialog, DialogSearch;
+  var Cell, Fancybox, Dialog, BaseComponent, DialogSearch;
   _export("DialogSearch", void 0);
   return {
     setters: [function (_componentsCellJs) {
@@ -10,18 +10,15 @@ System.register(["../components/Cell.js", "../utils/FancyboxManager.js", "./Dial
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_DialogJs) {
       Dialog = _DialogJs.Dialog;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("DialogSearch", DialogSearch = class DialogSearch extends React.Component {
-        constructor(props) {
-          super(props);
-          this.state = {
+      _export("DialogSearch", DialogSearch = class DialogSearch extends BaseComponent {
+        getInitialState() {
+          return {
             text: ""
           };
-          this.onFocusInput = this.onFocusInput.bind(this);
-          this.onChangeInput = this.onChangeInput.bind(this);
-          this.onInput = this.onInput.bind(this);
-          this.onClose = this.onClose.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {

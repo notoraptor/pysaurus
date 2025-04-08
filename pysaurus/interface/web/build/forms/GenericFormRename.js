@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, tr, Fancybox, GenericFormRename;
+  var Dialog, tr, Fancybox, BaseComponent, GenericFormRename;
   _export("GenericFormRename", void 0);
   return {
     setters: [function (_dialogsDialogJs) {
@@ -10,18 +10,15 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxMan
       tr = _languageJs.tr;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("GenericFormRename", GenericFormRename = class GenericFormRename extends React.Component {
-        constructor(props) {
-          super(props);
-          this.state = {
+      _export("GenericFormRename", GenericFormRename = class GenericFormRename extends BaseComponent {
+        getInitialState() {
+          return {
             data: this.props.data
           };
-          this.onChange = this.onChange.bind(this);
-          this.onKeyDown = this.onKeyDown.bind(this);
-          this.submit = this.submit.bind(this);
-          this.onFocusInput = this.onFocusInput.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {

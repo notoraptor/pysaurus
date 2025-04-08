@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.js", "../BaseComponent.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, tr, FIELD_MAP, FormVideosGrouping;
+  var Dialog, tr, FIELD_MAP, BaseComponent, FormVideosGrouping;
   _export("FormVideosGrouping", void 0);
   return {
     setters: [function (_dialogsDialogJs) {
@@ -10,16 +10,18 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.j
       tr = _languageJs.tr;
     }, function (_utilsConstantsJs) {
       FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
+    }, function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
-      _export("FormVideosGrouping", FormVideosGrouping = class FormVideosGrouping extends React.Component {
-        constructor(props) {
-          // groupDef: GroupDef
-          // prop_types: [PropDef]
-          // propertyMap: {name: PropDef}
-          // onClose(groupDef)
-          super(props);
-          this.state = this.props.groupDef.field ? {
+      _export("FormVideosGrouping", FormVideosGrouping = class FormVideosGrouping extends BaseComponent {
+        // groupDef: GroupDef
+        // prop_types: [PropDef]
+        // propertyMap: {name: PropDef}
+        // onClose(groupDef)
+
+        getInitialState() {
+          return this.props.groupDef.field ? {
             isProperty: this.props.groupDef.is_property,
             field: this.props.groupDef.field,
             sorting: this.props.groupDef.sorting,
@@ -32,14 +34,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.j
             reverse: false,
             allowSingletons: undefined
           };
-          this.onChangeAllowSingletons = this.onChangeAllowSingletons.bind(this);
-          this.onChangeGroupField = this.onChangeGroupField.bind(this);
-          this.onChangeSorting = this.onChangeSorting.bind(this);
-          this.onChangeGroupReverse = this.onChangeGroupReverse.bind(this);
-          this.onClose = this.onClose.bind(this);
-          this.onChangeFieldType = this.onChangeFieldType.bind(this);
-          this.getStateField = this.getStateField.bind(this);
-          this.getStateAllowSingletons = this.getStateAllowSingletons.bind(this);
         }
         render() {
           const field = this.getStateField();

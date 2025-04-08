@@ -7,21 +7,11 @@ import { capitalizeFirstLetter } from "../utils/functions.js";
 import { Pagination } from "./Pagination.js";
 import { PlusIcon } from "./PlusIcon.js";
 import { SettingIcon } from "./SettingIcon.js";
+import { BaseComponent } from "../BaseComponent.js";
 
-export class GroupView extends React.Component {
+export class GroupView extends BaseComponent {
 	constructor(props) {
 		super(props);
-		this.openPropertyOptions = this.openPropertyOptions.bind(this);
-		this.openPropertyOptionsAll = this.openPropertyOptionsAll.bind(this);
-		this.openPropertyPlus = this.openPropertyPlus.bind(this);
-		this.setPage = this.setPage.bind(this);
-		this.previousGroup = this.previousGroup.bind(this);
-		this.nextGroup = this.nextGroup.bind(this);
-		this.search = this.search.bind(this);
-		this.allChecked = this.allChecked.bind(this);
-		this.onCheckEntry = this.onCheckEntry.bind(this);
-		this.onCheckAll = this.onCheckAll.bind(this);
-		this.getActions = this.getActions.bind(this);
 		this.callbackIndex = -1;
 	}
 
