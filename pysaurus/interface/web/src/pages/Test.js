@@ -1,9 +1,9 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { Cross } from "../components/Cross.js";
 import { ComponentController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { PAGE_SIZES } from "../utils/constants.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class Test extends BaseComponent {
 	getInitialState() {

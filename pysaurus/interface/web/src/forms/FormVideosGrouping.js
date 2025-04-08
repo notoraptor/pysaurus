@@ -1,7 +1,7 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
 import { FIELD_MAP } from "../utils/constants.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class FormVideosGrouping extends BaseComponent {
 	// groupDef: GroupDef
@@ -11,20 +11,20 @@ export class FormVideosGrouping extends BaseComponent {
 
 	getInitialState() {
 		return this.props.groupDef.field
-		? {
-				isProperty: this.props.groupDef.is_property,
-				field: this.props.groupDef.field,
-				sorting: this.props.groupDef.sorting,
-				reverse: this.props.groupDef.reverse,
-				allowSingletons: this.props.groupDef.allow_singletons,
-		  }
-		: {
-				isProperty: false,
-				field: undefined,
-				sorting: "field",
-				reverse: false,
-				allowSingletons: undefined,
-		  };
+			? {
+					isProperty: this.props.groupDef.is_property,
+					field: this.props.groupDef.field,
+					sorting: this.props.groupDef.sorting,
+					reverse: this.props.groupDef.reverse,
+					allowSingletons: this.props.groupDef.allow_singletons,
+			  }
+			: {
+					isProperty: false,
+					field: undefined,
+					sorting: "field",
+					reverse: false,
+					allowSingletons: undefined,
+			  };
 	}
 
 	render() {

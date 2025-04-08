@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js", "../utils/backend.js", "../utils/constants.js", "../utils/globals.js", "./Collapsable.js", "./Menu.js", "./MenuItem.js", "./MenuPack.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js", "../utils/backend.js", "../utils/constants.js", "../utils/globals.js", "./Collapsable.js", "./Menu.js", "./MenuItem.js", "./MenuPack.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormVideoEditProperties, GenericFormRename, tr, Fancybox, backend_error, python_call, Characters, APP_STATE, Collapsable, Menu, MenuItem, MenuPack, BaseComponent, Video;
+  var BaseComponent, Dialog, FormVideoEditProperties, GenericFormRename, tr, Fancybox, Backend, backend_error, python_call, Characters, APP_STATE, Collapsable, Menu, MenuItem, MenuPack, Video;
   function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   /**
    * Generate class name for common value of videos grouped by similarity
@@ -13,7 +13,9 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
   }
   _export("Video", void 0);
   return {
-    setters: [function (_dialogsDialogJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_formsFormVideoEditPropertiesJs) {
       FormVideoEditProperties = _formsFormVideoEditPropertiesJs.FormVideoEditProperties;
@@ -24,6 +26,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsBackendJs) {
+      Backend = _utilsBackendJs.Backend;
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
     }, function (_utilsConstantsJs) {
@@ -38,8 +41,6 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
       MenuItem = _MenuItemJs.MenuItem;
     }, function (_MenuPackJs) {
       MenuPack = _MenuPackJs.MenuPack;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("Video", Video = class Video extends BaseComponent {
@@ -297,7 +298,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           }));
         }
         markAsRead() {
-          python_call("mark_as_read", this.props.data.video_id).then(() => {
+          Backend.mark_as_read(this.props.data.video_id).then(() => {
             APP_STATE.videoHistory.add(this.props.data.filename);
             this.props.onInfo(tr("Marked as read: {path}", {
               path: this.props.data.filename
@@ -310,7 +311,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           });
         }
         openVideo() {
-          python_call("open_video", this.props.data.video_id).then(() => {
+          Backend.open_video(this.props.data.video_id).then(() => {
             APP_STATE.videoHistory.add(this.props.data.filename);
             this.props.onInfo(tr("Opened: {path}", {
               path: this.props.data.filename
@@ -323,7 +324,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           });
         }
         openVideoSurely() {
-          python_call("open_from_server", this.props.data.video_id).then(url => {
+          Backend.open_from_server(this.props.data.video_id).then(url => {
             APP_STATE.videoHistory.add(this.props.data.filename);
             this.props.onInfo(tr("Opened: {path}", {
               path: url
@@ -341,7 +342,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             data: data,
             definitions: this.props.propDefs,
             onClose: properties => {
-              python_call("set_video_properties", this.props.data.video_id, properties).then(() => this.props.onInfo(tr("Properties updated: {path}", {
+              Backend.set_video_properties(this.props.data.video_id, properties).then(() => this.props.onInfo(tr("Properties updated: {path}", {
                 path: data.filename
               }), true)).catch(backend_error);
             }
@@ -439,27 +440,27 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           if (this.props.data.found || this.props.confirmDeletion) this.confirmDeletion();else this.reallyDeleteVideo();
         }
         reallyDeleteVideo() {
-          python_call("delete_video", this.props.data.video_id).then(() => this.props.onInfo(tr("Video deleted! {path}", {
+          Backend.delete_video(this.props.data.video_id).then(() => this.props.onInfo(tr("Video deleted! {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
         reallyDeleteVideoEntry() {
-          python_call("delete_video_entry", this.props.data.video_id).then(() => this.props.onInfo(tr("Video entry deleted! {path}", {
+          Backend.delete_video_entry(this.props.data.video_id).then(() => this.props.onInfo(tr("Video entry deleted! {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
         reallyDismissSimilarity() {
-          python_call("set_similarities", [this.props.data.video_id], [-1]).then(() => this.props.onInfo(tr("Current similarity cancelled: {path}", {
+          Backend.set_similarities([this.props.data.video_id], [-1]).then(() => this.props.onInfo(tr("Current similarity cancelled: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
         reallyResetSimilarity() {
-          python_call("set_similarities", [this.props.data.video_id], [null]).then(() => this.props.onInfo(tr("Current similarity reset: {path}", {
+          Backend.set_similarities([this.props.data.video_id], [null]).then(() => this.props.onInfo(tr("Current similarity reset: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
         openContainingFolder() {
-          python_call("open_containing_folder", this.props.data.video_id).then(folder => {
+          Backend.open_containing_folder(this.props.data.video_id).then(folder => {
             this.props.onInfo(tr("Opened folder: {path}", {
               path: folder
             }));
@@ -479,7 +480,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
         }
         copyToClipboard(field) {
           const text = this.props.data[field];
-          python_call("clipboard", text).then(() => this.props.onInfo(tr("Copied to clipboard: {text}", {
+          Backend.clipboard(text).then(() => this.props.onInfo(tr("Copied to clipboard: {text}", {
             text
           }))).catch(() => this.props.onInfo(tr("Cannot copy {field} to clipboard: {text}", {
             field,
@@ -487,7 +488,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           })));
         }
         confirmMove(srcID, dstID) {
-          python_call("set_video_moved", srcID, dstID).then(() => this.props.onInfo(tr("Moved: {path}", {
+          Backend.confirm_move(srcID, dstID).then(() => this.props.onInfo(tr("Moved: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
@@ -500,7 +501,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             description: filename,
             data: title,
             onClose: newTitle => {
-              python_call("rename_video", this.props.data.video_id, newTitle).then(() => this.props.onInfo(`Renamed: ${newTitle}`, true)).catch(backend_error);
+              Backend.rename_video(this.props.data.video_id, newTitle).then(() => this.props.onInfo(`Renamed: ${newTitle}`, true)).catch(backend_error);
             }
           }));
         }

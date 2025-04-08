@@ -1,12 +1,11 @@
+import { BaseComponent } from "./BaseComponent.js";
 import { DatabasesPage } from "./pages/DatabasesPage.js";
 import { HomePage } from "./pages/HomePage.js";
 import { PropertiesPage } from "./pages/PropertiesPage.js";
 import { Test } from "./pages/Test.js";
 import { VideosPage } from "./pages/VideosPage.js";
-import { backend_error, python_call, python_multiple_call } from "./utils/backend.js";
-import { VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE } from "./utils/constants.js";
+import { Backend, backend_error, python_multiple_call } from "./utils/backend.js";
 import { APP_STATE } from "./utils/globals.js";
-import { BaseComponent } from "./BaseComponent.js";
 
 export class App extends BaseComponent {
 	constructor(props) {
@@ -58,7 +57,7 @@ export class App extends BaseComponent {
 	}
 
 	setLanguage(name) {
-		python_call("set_language", name)
+		Backend.set_language(name)
 			.then((lang) => {
 				APP_STATE.lang = lang;
 				this.setState({ lang });
@@ -80,16 +79,17 @@ export class App extends BaseComponent {
 		this.loadPage("home", { command });
 	}
 
-	loadVideosPage(pageSize = undefined, pageNumber = undefined) {
-		if (pageSize === undefined) pageSize = VIDEO_DEFAULT_PAGE_SIZE;
-		if (pageNumber === undefined) pageNumber = VIDEO_DEFAULT_PAGE_NUMBER;
-		python_call("backend", pageSize, pageNumber)
-			.then((info) => this.loadPage("videos", info))
-			.catch(backend_error);
+	async loadVideosPage(pageSize = undefined, pageNumber = undefined) {
+		try {
+			const info = await Backend.backend(pageSize, pageNumber);
+			this.loadPage("videos", info);
+		} catch (error) {
+			backend_error(error);
+		}
 	}
 
 	loadPropertiesPage() {
-		python_call("describe_prop_types")
+		Backend.describe_prop_types()
 			.then((definitions) => this.loadPage("properties", { definitions: definitions }))
 			.catch(backend_error);
 	}

@@ -1,7 +1,7 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class GenericFormRename extends BaseComponent {
 	getInitialState() {

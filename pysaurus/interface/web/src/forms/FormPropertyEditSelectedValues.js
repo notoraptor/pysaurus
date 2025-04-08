@@ -1,8 +1,8 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { UTILITIES } from "../utils/functions.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class FormPropertyEditSelectedValues extends BaseComponent {
 	getInitialState() {

@@ -1,7 +1,7 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { Cell } from "../components/Cell.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class FormVideosKeywordsToProperty extends BaseComponent {
 	// prop_types: PropertyDefinition[]

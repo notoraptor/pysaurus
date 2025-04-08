@@ -1,10 +1,12 @@
-System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js", "../utils/constants.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, tr, Fancybox, FIELD_MAP, BaseComponent, FormVideosSort;
+  var BaseComponent, FancyBox, tr, Fancybox, FIELD_MAP, FormVideosSort;
   _export("FormVideosSort", void 0);
   return {
-    setters: [function (_dialogsFancyBoxJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_languageJs) {
       tr = _languageJs.tr;
@@ -12,8 +14,6 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsConstantsJs) {
       FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("FormVideosSort", FormVideosSort = class FormVideosSort extends BaseComponent {

@@ -1,16 +1,16 @@
-System.register(["../language.js", "../utils/backend.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../language.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var tr, backend_error, python_call, BaseComponent, PathsInput;
+  var BaseComponent, tr, Backend, backend_error, PathsInput;
   _export("PathsInput", void 0);
   return {
-    setters: [function (_languageJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_languageJs) {
       tr = _languageJs.tr;
     }, function (_utilsBackendJs) {
+      Backend = _utilsBackendJs.Backend;
       backend_error = _utilsBackendJs.backend_error;
-      python_call = _utilsBackendJs.python_call;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("PathsInput", PathsInput = class PathsInput extends BaseComponent {
@@ -40,10 +40,10 @@ System.register(["../language.js", "../utils/backend.js", "../BaseComponent.js"]
           }, "-")))))))));
         }
         addFolder() {
-          python_call("select_directory").then(this._extendPaths).catch(backend_error);
+          Backend.select_directory().then(this._extendPaths).catch(backend_error);
         }
         addFile() {
-          python_call("select_file").then(this._extendPaths).catch(backend_error);
+          Backend.select_file().then(this._extendPaths).catch(backend_error);
         }
         _extendPaths(path) {
           if (path) {

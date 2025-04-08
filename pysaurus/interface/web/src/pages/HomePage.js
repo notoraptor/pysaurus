@@ -1,7 +1,7 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { tr } from "../language.js";
 import { backend_error, python_call } from "../utils/backend.js";
 import { Characters } from "../utils/constants.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 class ProgressionMonitoring {
 	constructor(name, total) {

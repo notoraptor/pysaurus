@@ -1,17 +1,17 @@
-System.register(["../components/PathsInput.js", "../dialogs/Dialog.js", "../language.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../components/PathsInput.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var PathsInput, Dialog, tr, BaseComponent, FormDatabaseEditFolders;
+  var BaseComponent, PathsInput, Dialog, tr, FormDatabaseEditFolders;
   _export("FormDatabaseEditFolders", void 0);
   return {
-    setters: [function (_componentsPathsInputJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_componentsPathsInputJs) {
       PathsInput = _componentsPathsInputJs.PathsInput;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       tr = _languageJs.tr;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("FormDatabaseEditFolders", FormDatabaseEditFolders = class FormDatabaseEditFolders extends BaseComponent {

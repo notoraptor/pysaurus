@@ -1,18 +1,18 @@
-System.register(["../language.js", "../utils/backend.js", "../utils/constants.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../language.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var tr, backend_error, python_call, Characters, BaseComponent, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, ACTIONS;
+  var BaseComponent, tr, backend_error, python_call, Characters, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, ACTIONS;
   _export("HomePage", void 0);
   return {
-    setters: [function (_languageJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_languageJs) {
       tr = _languageJs.tr;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
     }, function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       ProgressionMonitoring = class ProgressionMonitoring {

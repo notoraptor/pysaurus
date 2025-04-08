@@ -1,10 +1,12 @@
-System.register(["./pages/DatabasesPage.js", "./pages/HomePage.js", "./pages/PropertiesPage.js", "./pages/Test.js", "./pages/VideosPage.js", "./utils/backend.js", "./utils/constants.js", "./utils/globals.js", "./BaseComponent.js"], function (_export, _context) {
+System.register(["./BaseComponent.js", "./pages/DatabasesPage.js", "./pages/HomePage.js", "./pages/PropertiesPage.js", "./pages/Test.js", "./pages/VideosPage.js", "./utils/backend.js", "./utils/globals.js"], function (_export, _context) {
   "use strict";
 
-  var DatabasesPage, HomePage, PropertiesPage, Test, VideosPage, backend_error, python_call, python_multiple_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, APP_STATE, BaseComponent, App;
+  var BaseComponent, DatabasesPage, HomePage, PropertiesPage, Test, VideosPage, Backend, backend_error, python_multiple_call, APP_STATE, App;
   _export("App", void 0);
   return {
-    setters: [function (_pagesDatabasesPageJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_pagesDatabasesPageJs) {
       DatabasesPage = _pagesDatabasesPageJs.DatabasesPage;
     }, function (_pagesHomePageJs) {
       HomePage = _pagesHomePageJs.HomePage;
@@ -15,16 +17,11 @@ System.register(["./pages/DatabasesPage.js", "./pages/HomePage.js", "./pages/Pro
     }, function (_pagesVideosPageJs) {
       VideosPage = _pagesVideosPageJs.VideosPage;
     }, function (_utilsBackendJs) {
+      Backend = _utilsBackendJs.Backend;
       backend_error = _utilsBackendJs.backend_error;
-      python_call = _utilsBackendJs.python_call;
       python_multiple_call = _utilsBackendJs.python_multiple_call;
-    }, function (_utilsConstantsJs) {
-      VIDEO_DEFAULT_PAGE_NUMBER = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_NUMBER;
-      VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;
     }, function (_utilsGlobalsJs) {
       APP_STATE = _utilsGlobalsJs.APP_STATE;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("App", App = class App extends BaseComponent {
@@ -86,7 +83,7 @@ System.register(["./pages/DatabasesPage.js", "./pages/HomePage.js", "./pages/Pro
           return this.state.languages;
         }
         setLanguage(name) {
-          python_call("set_language", name).then(lang => {
+          Backend.set_language(name).then(lang => {
             APP_STATE.lang = lang;
             this.setState({
               lang
@@ -107,13 +104,16 @@ System.register(["./pages/DatabasesPage.js", "./pages/HomePage.js", "./pages/Pro
             command
           });
         }
-        loadVideosPage(pageSize = undefined, pageNumber = undefined) {
-          if (pageSize === undefined) pageSize = VIDEO_DEFAULT_PAGE_SIZE;
-          if (pageNumber === undefined) pageNumber = VIDEO_DEFAULT_PAGE_NUMBER;
-          python_call("backend", pageSize, pageNumber).then(info => this.loadPage("videos", info)).catch(backend_error);
+        async loadVideosPage(pageSize = undefined, pageNumber = undefined) {
+          try {
+            const info = await Backend.backend(pageSize, pageNumber);
+            this.loadPage("videos", info);
+          } catch (error) {
+            backend_error(error);
+          }
         }
         loadPropertiesPage() {
-          python_call("describe_prop_types").then(definitions => this.loadPage("properties", {
+          Backend.describe_prop_types().then(definitions => this.loadPage("properties", {
             definitions: definitions
           })).catch(backend_error);
         }

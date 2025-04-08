@@ -1,10 +1,12 @@
-System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../language.js", "../utils/constants.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, tr, Characters, UTILITIES, BaseComponent, FormSelectedVideosEditProperty;
+  var BaseComponent, Dialog, tr, Characters, UTILITIES, FormSelectedVideosEditProperty;
   _export("FormSelectedVideosEditProperty", void 0);
   return {
-    setters: [function (_dialogsDialogJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       tr = _languageJs.tr;
@@ -12,8 +14,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.j
       Characters = _utilsConstantsJs.Characters;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("FormSelectedVideosEditProperty", FormSelectedVideosEditProperty = class FormSelectedVideosEditProperty extends BaseComponent {

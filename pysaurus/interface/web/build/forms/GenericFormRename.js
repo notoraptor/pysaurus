@@ -1,17 +1,17 @@
-System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, tr, Fancybox, BaseComponent, GenericFormRename;
+  var BaseComponent, Dialog, tr, Fancybox, GenericFormRename;
   _export("GenericFormRename", void 0);
   return {
-    setters: [function (_dialogsDialogJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       tr = _languageJs.tr;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("GenericFormRename", GenericFormRename = class GenericFormRename extends BaseComponent {

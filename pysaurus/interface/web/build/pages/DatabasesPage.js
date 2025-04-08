@@ -1,15 +1,15 @@
-System.register(["../components/PathsInput.js", "../language.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../components/PathsInput.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var PathsInput, tr, BaseComponent, DatabasesPage;
+  var BaseComponent, PathsInput, tr, DatabasesPage;
   _export("DatabasesPage", void 0);
   return {
-    setters: [function (_componentsPathsInputJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_componentsPathsInputJs) {
       PathsInput = _componentsPathsInputJs.PathsInput;
     }, function (_languageJs) {
       tr = _languageJs.tr;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("DatabasesPage", DatabasesPage = class DatabasesPage extends BaseComponent {

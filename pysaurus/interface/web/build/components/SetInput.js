@@ -1,7 +1,7 @@
-System.register(["../language.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var tr, UTILITIES, BaseComponent, SetController, ComponentController, ComponentPropController, SetInput;
+  var BaseComponent, tr, UTILITIES, SetController, ComponentController, ComponentPropController, SetInput;
   function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   _export({
     ComponentController: void 0,
@@ -9,12 +9,12 @@ System.register(["../language.js", "../utils/functions.js", "../BaseComponent.js
     SetInput: void 0
   });
   return {
-    setters: [function (_languageJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_languageJs) {
       tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       SetController = class SetController {

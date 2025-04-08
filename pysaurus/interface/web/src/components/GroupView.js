@@ -1,3 +1,4 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { tr } from "../language.js";
 import { Action } from "../utils/Action.js";
 import { Actions } from "../utils/Actions.js";
@@ -7,7 +8,6 @@ import { capitalizeFirstLetter } from "../utils/functions.js";
 import { Pagination } from "./Pagination.js";
 import { PlusIcon } from "./PlusIcon.js";
 import { SettingIcon } from "./SettingIcon.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class GroupView extends BaseComponent {
 	constructor(props) {

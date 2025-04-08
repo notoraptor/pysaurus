@@ -1,8 +1,8 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { FancyBox } from "../dialogs/FancyBox.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { FIELD_MAP } from "../utils/constants.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class FormVideosSort extends BaseComponent {
 	// sorting

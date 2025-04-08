@@ -17,7 +17,7 @@ System.register([], function (_export, _context) {
         }
         bindMethods() {
           // Automatically bind all methods of the class
-          const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(name => name !== 'constructor' && typeof this[name] === 'function');
+          const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(name => name !== "constructor" && typeof this[name] === "function");
           methods.forEach(method => {
             this[method] = this[method].bind(this);
             // console.log(`bound ${method}`);

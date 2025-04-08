@@ -1,6 +1,6 @@
-import { tr } from "../language.js";
-import { backend_error, python_call } from "../utils/backend.js";
 import { BaseComponent } from "../BaseComponent.js";
+import { tr } from "../language.js";
+import { Backend, backend_error } from "../utils/backend.js";
 
 export class PathsInput extends BaseComponent {
 	render() {
@@ -48,11 +48,11 @@ export class PathsInput extends BaseComponent {
 	}
 
 	addFolder() {
-		python_call("select_directory").then(this._extendPaths).catch(backend_error);
+		Backend.select_directory().then(this._extendPaths).catch(backend_error);
 	}
 
 	addFile() {
-		python_call("select_file").then(this._extendPaths).catch(backend_error);
+		Backend.select_file().then(this._extendPaths).catch(backend_error);
 	}
 
 	_extendPaths(path) {

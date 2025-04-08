@@ -1,17 +1,17 @@
-System.register(["../components/Cell.js", "../utils/FancyboxManager.js", "./Dialog.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../components/Cell.js", "../utils/FancyboxManager.js", "./Dialog.js"], function (_export, _context) {
   "use strict";
 
-  var Cell, Fancybox, Dialog, BaseComponent, DialogSearch;
+  var BaseComponent, Cell, Fancybox, Dialog, DialogSearch;
   _export("DialogSearch", void 0);
   return {
-    setters: [function (_componentsCellJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_DialogJs) {
       Dialog = _DialogJs.Dialog;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("DialogSearch", DialogSearch = class DialogSearch extends BaseComponent {

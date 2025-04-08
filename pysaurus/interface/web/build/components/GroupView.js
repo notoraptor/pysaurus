@@ -1,11 +1,13 @@
-System.register(["../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/FancyboxManager.js", "../utils/constants.js", "../utils/functions.js", "./Pagination.js", "./PlusIcon.js", "./SettingIcon.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/FancyboxManager.js", "../utils/constants.js", "../utils/functions.js", "./Pagination.js", "./PlusIcon.js", "./SettingIcon.js"], function (_export, _context) {
   "use strict";
 
-  var tr, Action, Actions, Fancybox, Characters, FIELD_MAP, capitalizeFirstLetter, Pagination, PlusIcon, SettingIcon, BaseComponent, GroupView;
+  var BaseComponent, tr, Action, Actions, Fancybox, Characters, FIELD_MAP, capitalizeFirstLetter, Pagination, PlusIcon, SettingIcon, GroupView;
   function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   _export("GroupView", void 0);
   return {
-    setters: [function (_languageJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_languageJs) {
       tr = _languageJs.tr;
     }, function (_utilsActionJs) {
       Action = _utilsActionJs.Action;
@@ -24,8 +26,6 @@ System.register(["../language.js", "../utils/Action.js", "../utils/Actions.js", 
       PlusIcon = _PlusIconJs.PlusIcon;
     }, function (_SettingIconJs) {
       SettingIcon = _SettingIconJs.SettingIcon;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("GroupView", GroupView = class GroupView extends BaseComponent {

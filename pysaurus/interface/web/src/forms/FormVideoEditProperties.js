@@ -1,8 +1,8 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { ComponentPropController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { tr } from "../language.js";
 import { UTILITIES } from "../utils/functions.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class FormVideoEditProperties extends BaseComponent {
 	// data

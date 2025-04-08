@@ -1,5 +1,5 @@
-import { Fancybox } from "../utils/FancyboxManager.js";
 import { BaseComponent } from "../BaseComponent.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class FancyBox extends BaseComponent {
 	/**

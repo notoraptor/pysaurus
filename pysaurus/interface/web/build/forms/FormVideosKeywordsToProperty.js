@@ -1,17 +1,17 @@
-System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../language.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../components/Cell.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Cell, Dialog, tr, BaseComponent, FormVideosKeywordsToProperty;
+  var BaseComponent, Cell, Dialog, tr, FormVideosKeywordsToProperty;
   _export("FormVideosKeywordsToProperty", void 0);
   return {
-    setters: [function (_componentsCellJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       tr = _languageJs.tr;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("FormVideosKeywordsToProperty", FormVideosKeywordsToProperty = class FormVideosKeywordsToProperty extends BaseComponent {

@@ -1,10 +1,12 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../language.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, tr, UTILITIES, BaseComponent, FormVideoEditProperties;
+  var BaseComponent, ComponentPropController, SetInput, Dialog, tr, UTILITIES, FormVideoEditProperties;
   _export("FormVideoEditProperties", void 0);
   return {
-    setters: [function (_componentsSetInputJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_componentsSetInputJs) {
       ComponentPropController = _componentsSetInputJs.ComponentPropController;
       SetInput = _componentsSetInputJs.SetInput;
     }, function (_dialogsDialogJs) {
@@ -13,8 +15,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../langua
       tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("FormVideoEditProperties", FormVideoEditProperties = class FormVideoEditProperties extends BaseComponent {

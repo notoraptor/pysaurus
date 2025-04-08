@@ -1,13 +1,13 @@
-System.register(["../utils/FancyboxManager.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Fancybox, BaseComponent, FancyBox;
+  var BaseComponent, Fancybox, FancyBox;
   _export("FancyBox", void 0);
   return {
-    setters: [function (_utilsFancyboxManagerJs) {
-      Fancybox = _utilsFancyboxManagerJs.Fancybox;
-    }, function (_BaseComponentJs) {
+    setters: [function (_BaseComponentJs) {
       BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("FancyBox", FancyBox = class FancyBox extends BaseComponent {

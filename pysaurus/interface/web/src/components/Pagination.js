@@ -1,8 +1,8 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { DialogSearch } from "../dialogs/DialogSearch.js";
 import { FormPaginationGoTo } from "../forms/FormPaginationGoTo.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { capitalizeFirstLetter } from "../utils/functions.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class Pagination extends BaseComponent {
 	// singular: str

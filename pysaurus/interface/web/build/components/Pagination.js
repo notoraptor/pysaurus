@@ -1,10 +1,12 @@
-System.register(["../dialogs/DialogSearch.js", "../forms/FormPaginationGoTo.js", "../utils/FancyboxManager.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../dialogs/DialogSearch.js", "../forms/FormPaginationGoTo.js", "../utils/FancyboxManager.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var DialogSearch, FormPaginationGoTo, Fancybox, capitalizeFirstLetter, BaseComponent, Pagination;
+  var BaseComponent, DialogSearch, FormPaginationGoTo, Fancybox, capitalizeFirstLetter, Pagination;
   _export("Pagination", void 0);
   return {
-    setters: [function (_dialogsDialogSearchJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_dialogsDialogSearchJs) {
       DialogSearch = _dialogsDialogSearchJs.DialogSearch;
     }, function (_formsFormPaginationGoToJs) {
       FormPaginationGoTo = _formsFormPaginationGoToJs.FormPaginationGoTo;
@@ -12,8 +14,6 @@ System.register(["../dialogs/DialogSearch.js", "../forms/FormPaginationGoTo.js",
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsFunctionsJs) {
       capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("Pagination", Pagination = class Pagination extends BaseComponent {

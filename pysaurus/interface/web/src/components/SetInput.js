@@ -1,6 +1,6 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { tr } from "../language.js";
 import { UTILITIES } from "../utils/functions.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 class SetController {
 	constructor() {

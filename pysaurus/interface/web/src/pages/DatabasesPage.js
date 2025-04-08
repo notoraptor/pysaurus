@@ -1,6 +1,6 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { PathsInput } from "../components/PathsInput.js";
 import { tr } from "../language.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class DatabasesPage extends BaseComponent {
 	// parameters: {databases: [name: str], languages: [name: str]}

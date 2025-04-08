@@ -1,10 +1,12 @@
-System.register(["../components/ActionToCross.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/Cell.js", "../components/Collapsable.js", "../components/Cross.js", "../components/GroupView.js", "../components/Menu.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../dialogs/Dialog.js", "../dialogs/FancyBox.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormSelectedVideosEditProperty.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../forms/FormVideosSource.js", "../forms/GenericFormRename.js", "../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/backend.js", "../utils/constants.js", "../utils/FancyboxManager.js", "../utils/functions.js", "../utils/globals.js", "../utils/Selector.js", "./HomePage.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/Cell.js", "../components/Collapsable.js", "../components/Cross.js", "../components/GroupView.js", "../components/Menu.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../dialogs/Dialog.js", "../dialogs/FancyBox.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormSelectedVideosEditProperty.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../forms/FormVideosSource.js", "../forms/GenericFormRename.js", "../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/FancyboxManager.js", "../utils/Selector.js", "../utils/backend.js", "../utils/constants.js", "../utils/functions.js", "../utils/globals.js", "./HomePage.js"], function (_export, _context) {
   "use strict";
 
-  var ActionToCross, ActionToMenuItem, ActionToSettingIcon, Cell, Collapsable, Cross, GroupView, Menu, MenuItem, MenuItemCheck, MenuItemRadio, MenuPack, Pagination, Video, Dialog, FancyBox, FormDatabaseEditFolders, FormPropertyEditSelectedValues, FormSelectedVideosEditProperty, FormVideosGrouping, FormVideosKeywordsToProperty, FormVideosSearch, FormVideosSort, FormVideosSource, GenericFormRename, tr, Action, Actions, backend_error, python_call, python_multiple_call, FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, Fancybox, arrayEquals, compareSources, APP_STATE, Selector, HomePage, BaseComponent, VideosPage;
+  var BaseComponent, ActionToCross, ActionToMenuItem, ActionToSettingIcon, Cell, Collapsable, Cross, GroupView, Menu, MenuItem, MenuItemCheck, MenuItemRadio, MenuPack, Pagination, Video, Dialog, FancyBox, FormDatabaseEditFolders, FormPropertyEditSelectedValues, FormSelectedVideosEditProperty, FormVideosGrouping, FormVideosKeywordsToProperty, FormVideosSearch, FormVideosSort, FormVideosSource, GenericFormRename, tr, Action, Actions, Fancybox, Selector, Backend, backend_error, python_call, python_multiple_call, FIELD_MAP, PAGE_SIZES, SOURCE_TREE, SearchTypeTitle, compareSources, APP_STATE, HomePage, VideosPage;
   _export("VideosPage", void 0);
   return {
-    setters: [function (_componentsActionToCrossJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_componentsActionToCrossJs) {
       ActionToCross = _componentsActionToCrossJs.ActionToCross;
     }, function (_componentsActionToMenuItemJs) {
       ActionToMenuItem = _componentsActionToMenuItemJs.ActionToMenuItem;
@@ -60,28 +62,26 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
       Action = _utilsActionJs.Action;
     }, function (_utilsActionsJs) {
       Actions = _utilsActionsJs.Actions;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_utilsSelectorJs) {
+      Selector = _utilsSelectorJs.Selector;
     }, function (_utilsBackendJs) {
+      Backend = _utilsBackendJs.Backend;
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
       python_multiple_call = _utilsBackendJs.python_multiple_call;
     }, function (_utilsConstantsJs) {
       FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
-      SearchTypeTitle = _utilsConstantsJs.SearchTypeTitle;
       SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
-    }, function (_utilsFancyboxManagerJs) {
-      Fancybox = _utilsFancyboxManagerJs.Fancybox;
+      SearchTypeTitle = _utilsConstantsJs.SearchTypeTitle;
     }, function (_utilsFunctionsJs) {
-      arrayEquals = _utilsFunctionsJs.arrayEquals;
       compareSources = _utilsFunctionsJs.compareSources;
     }, function (_utilsGlobalsJs) {
       APP_STATE = _utilsGlobalsJs.APP_STATE;
-    }, function (_utilsSelectorJs) {
-      Selector = _utilsSelectorJs.Selector;
     }, function (_HomePageJs) {
       HomePage = _HomePageJs.HomePage;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("VideosPage", VideosPage = class VideosPage extends BaseComponent {
@@ -549,7 +549,7 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
               path: directory
             }),
             onClose: () => {
-              python_call("cancel_copy");
+              Backend.cancel_copy();
             }
           }, /*#__PURE__*/React.createElement("div", {
             className: "absolute-plain vertical"
@@ -645,7 +645,7 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
         editPropertiesForManyVideos(propertyName) {
           const selectionSize = this.state.selector.size(this.state.nbViewVideos);
           const videoIndices = this.state.selector.toJSON();
-          python_call("apply_on_view", videoIndices, "count_property_values", propertyName).then(valuesAndCounts => {
+          Backend.apply_on_view(videoIndices, "count_property_values", propertyName).then(valuesAndCounts => {
             Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosEditProperty, {
               nbVideos: selectionSize,
               definition: this.state.definitions[propertyName],
@@ -691,7 +691,7 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
           Fancybox.load( /*#__PURE__*/React.createElement(FormDatabaseEditFolders, {
             database: this.state.database,
             onClose: paths => {
-              python_call("set_video_folders", paths).then(() => this.props.app.dbUpdate("update_database")).catch(backend_error);
+              Backend.set_video_folders(paths).then(() => this.props.app.dbUpdate("update_database")).catch(backend_error);
             }
           }));
         }
@@ -741,7 +741,7 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
             title: tr("Confirm all unique moves"),
             yes: tr("move"),
             action: () => {
-              python_call("confirm_unique_moves").then(nbMoved => this.updateStatus(`Moved ${nbMoved} video(s)`, true, true)).catch(backend_error);
+              Backend.confirm_unique_moves().then(nbMoved => this.updateStatus(`Moved ${nbMoved} video(s)`, true, true)).catch(backend_error);
             }
           }, /*#__PURE__*/React.createElement(Cell, {
             center: true,
@@ -777,7 +777,7 @@ not found video entry will be deleted.
           });
         }
         openRandomVideo() {
-          python_call("open_random_video").then(filename => {
+          Backend.open_random_video().then(filename => {
             APP_STATE.videoHistory.add(filename);
             this.updateStatus(tr("Randomly opened: {path}", {
               path: filename
@@ -785,7 +785,7 @@ not found video entry will be deleted.
           }).catch(backend_error);
         }
         playlist() {
-          python_call("playlist").then(filename => this.updateStatus(`Opened playlist: ${filename}`)).catch(backend_error);
+          Backend.playlist().then(filename => this.updateStatus(`Opened playlist: ${filename}`)).catch(backend_error);
         }
         reloadDatabase() {
           this.props.app.dbUpdate("update_database");
@@ -800,7 +800,7 @@ not found video entry will be deleted.
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideosKeywordsToProperty, {
             prop_types: this.getStringSetProperties(this.state.prop_types),
             onClose: state => {
-              python_call("fill_property_with_terms", state.field, state.onlyEmpty).then(() => this.updateStatus(tr('Filled property "{name}" with video keywords.', {
+              Backend.fill_property_with_terms(state.field, state.onlyEmpty).then(() => this.updateStatus(tr('Filled property "{name}" with video keywords.', {
                 name: state.field
               }), true)).catch(backend_error);
             }
@@ -907,7 +907,7 @@ not found video entry will be deleted.
           }));
         }
         classifierReversePath() {
-          python_call("classifier_reverse").then(path => this.setState({
+          Backend.classifier_reverse().then(path => this.setState({
             path
           })).catch(backend_error);
         }

@@ -1,7 +1,7 @@
 System.register(["./App.js", "./utils/Callbacks.js", "./utils/NotificationManager.js", "./utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var App, Callbacks, NotificationManager, python_call;
+  var App, Callbacks, NotificationManager, Backend;
   return {
     setters: [function (_AppJs) {
       App = _AppJs.App;
@@ -10,7 +10,7 @@ System.register(["./App.js", "./utils/Callbacks.js", "./utils/NotificationManage
     }, function (_utilsNotificationManagerJs) {
       NotificationManager = _utilsNotificationManagerJs.NotificationManager;
     }, function (_utilsBackendJs) {
-      python_call = _utilsBackendJs.python_call;
+      Backend = _utilsBackendJs.Backend;
     }],
     execute: function () {
       /** NOTIFICATION_MANAGER.call is called from Python to send notifications to interface. */
@@ -24,7 +24,7 @@ System.register(["./App.js", "./utils/Callbacks.js", "./utils/NotificationManage
       if (!window.QT) {
         document.body.onunload = function () {
           console.info("GUI closed!");
-          python_call("close_app");
+          Backend.close_app();
         };
       }
       backend_call("get_constants", []).then(constants => {

@@ -1,3 +1,4 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { ActionToCross } from "../components/ActionToCross.js";
 import { ActionToMenuItem } from "../components/ActionToMenuItem.js";
 import { ActionToSettingIcon } from "../components/ActionToSettingIcon.js";
@@ -26,14 +27,13 @@ import { GenericFormRename } from "../forms/GenericFormRename.js";
 import { tr } from "../language.js";
 import { Action } from "../utils/Action.js";
 import { Actions } from "../utils/Actions.js";
-import { backend_error, python_call, python_multiple_call } from "../utils/backend.js";
-import { FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE } from "../utils/constants.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
-import { arrayEquals, compareSources } from "../utils/functions.js";
-import { APP_STATE } from "../utils/globals.js";
 import { Selector } from "../utils/Selector.js";
+import { Backend, backend_error, python_call, python_multiple_call } from "../utils/backend.js";
+import { FIELD_MAP, PAGE_SIZES, SOURCE_TREE, SearchTypeTitle } from "../utils/constants.js";
+import { compareSources } from "../utils/functions.js";
+import { APP_STATE } from "../utils/globals.js";
 import { HomePage } from "./HomePage.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class VideosPage extends BaseComponent {
 	constructor(props) {
@@ -718,7 +718,7 @@ export class VideosPage extends BaseComponent {
 					path: directory,
 				})}
 				onClose={() => {
-					python_call("cancel_copy");
+					Backend.cancel_copy();
 				}}>
 				<div className="absolute-plain vertical">
 					<HomePage
@@ -827,7 +827,7 @@ export class VideosPage extends BaseComponent {
 	editPropertiesForManyVideos(propertyName) {
 		const selectionSize = this.state.selector.size(this.state.nbViewVideos);
 		const videoIndices = this.state.selector.toJSON();
-		python_call("apply_on_view", videoIndices, "count_property_values", propertyName)
+		Backend.apply_on_view(videoIndices, "count_property_values", propertyName)
 			.then((valuesAndCounts) => {
 				Fancybox.load(
 					<FormSelectedVideosEditProperty
@@ -890,7 +890,7 @@ export class VideosPage extends BaseComponent {
 			<FormDatabaseEditFolders
 				database={this.state.database}
 				onClose={(paths) => {
-					python_call("set_video_folders", paths)
+					Backend.set_video_folders(paths)
 						.then(() => this.props.app.dbUpdate("update_database"))
 						.catch(backend_error);
 				}}
@@ -951,7 +951,7 @@ export class VideosPage extends BaseComponent {
 				title={tr("Confirm all unique moves")}
 				yes={tr("move")}
 				action={() => {
-					python_call("confirm_unique_moves")
+					Backend.confirm_unique_moves()
 						.then((nbMoved) => this.updateStatus(`Moved ${nbMoved} video(s)`, true, true))
 						.catch(backend_error);
 				}}>
@@ -991,7 +991,7 @@ not found video entry will be deleted.
 	}
 
 	openRandomVideo() {
-		python_call("open_random_video")
+		Backend.open_random_video()
 			.then((filename) => {
 				APP_STATE.videoHistory.add(filename);
 				this.updateStatus(
@@ -1006,7 +1006,7 @@ not found video entry will be deleted.
 	}
 
 	playlist() {
-		python_call("playlist")
+		Backend.playlist()
 			.then((filename) => this.updateStatus(`Opened playlist: ${filename}`))
 			.catch(backend_error);
 	}
@@ -1028,7 +1028,7 @@ not found video entry will be deleted.
 			<FormVideosKeywordsToProperty
 				prop_types={this.getStringSetProperties(this.state.prop_types)}
 				onClose={(state) => {
-					python_call("fill_property_with_terms", state.field, state.onlyEmpty)
+					Backend.fill_property_with_terms(state.field, state.onlyEmpty)
 						.then(() =>
 							this.updateStatus(
 								tr('Filled property "{name}" with video keywords.', {
@@ -1145,7 +1145,7 @@ not found video entry will be deleted.
 	}
 
 	classifierReversePath() {
-		python_call("classifier_reverse")
+		Backend.classifier_reverse()
 			.then((path) => this.setState({ path }))
 			.catch(backend_error);
 	}

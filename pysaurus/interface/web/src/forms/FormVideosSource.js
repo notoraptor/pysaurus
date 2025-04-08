@@ -1,7 +1,7 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { FancyBox } from "../dialogs/FancyBox.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 function getSubTree(tree, entryName) {
 	const steps = entryName.split("-");

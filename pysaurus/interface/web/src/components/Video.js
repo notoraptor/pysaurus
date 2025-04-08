@@ -1,16 +1,16 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { FormVideoEditProperties } from "../forms/FormVideoEditProperties.js";
 import { GenericFormRename } from "../forms/GenericFormRename.js";
 import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
-import { backend_error, python_call } from "../utils/backend.js";
+import { Backend, backend_error, python_call } from "../utils/backend.js";
 import { Characters } from "../utils/constants.js";
 import { APP_STATE } from "../utils/globals.js";
 import { Collapsable } from "./Collapsable.js";
 import { Menu } from "./Menu.js";
 import { MenuItem } from "./MenuItem.js";
 import { MenuPack } from "./MenuPack.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 /**
  * Generate class name for common value of videos grouped by similarity
@@ -56,9 +56,11 @@ export class Video extends BaseComponent {
 						<div className="name">
 							<div className="options horizontal">
 								<MenuPack title={`${Characters.SETTINGS}`}>
-								    {data.found ? (
-								        <MenuItem action={this.markAsRead}>{tr("Mark as read")}</MenuItem>
-								    ) : ("")}
+									{data.found ? (
+										<MenuItem action={this.markAsRead}>{tr("Mark as read")}</MenuItem>
+									) : (
+										""
+									)}
 									{data.found ? (
 										<MenuItem action={this.openVideo}>{tr("Open file")}</MenuItem>
 									) : (
@@ -131,10 +133,12 @@ export class Video extends BaseComponent {
 										""
 									)}
 									{data.found ? (
-									    <MenuItem className="red-brown" action={this.deleteVideoEntry}>
-                                            {tr("Delete video entry")}
-                                        </MenuItem>
-									) : ""}
+										<MenuItem className="red-brown" action={this.deleteVideoEntry}>
+											{tr("Delete video entry")}
+										</MenuItem>
+									) : (
+										""
+									)}
 									<MenuItem className="red-flag" action={this.deleteVideo}>
 										{data.found ? tr("Delete video") : tr("Delete entry")}
 									</MenuItem>
@@ -330,10 +334,12 @@ export class Video extends BaseComponent {
 										""
 									)}
 									{data.found ? (
-									    <MenuItem className="red-flag" action={this.deleteVideoEntry}>
-                                            {tr("Delete video entry")}
-                                        </MenuItem>
-									) : ""}
+										<MenuItem className="red-flag" action={this.deleteVideoEntry}>
+											{tr("Delete video entry")}
+										</MenuItem>
+									) : (
+										""
+									)}
 									<MenuItem className="red-flag" action={this.deleteVideo}>
 										{data.found ? tr("Delete video") : tr("Delete entry")}
 									</MenuItem>
@@ -437,7 +443,7 @@ export class Video extends BaseComponent {
 	}
 
 	markAsRead() {
-	    python_call("mark_as_read", this.props.data.video_id)
+		Backend.mark_as_read(this.props.data.video_id)
 			.then(() => {
 				APP_STATE.videoHistory.add(this.props.data.filename);
 				this.props.onInfo(
@@ -458,7 +464,7 @@ export class Video extends BaseComponent {
 	}
 
 	openVideo() {
-		python_call("open_video", this.props.data.video_id)
+		Backend.open_video(this.props.data.video_id)
 			.then(() => {
 				APP_STATE.videoHistory.add(this.props.data.filename);
 				this.props.onInfo(
@@ -479,7 +485,7 @@ export class Video extends BaseComponent {
 	}
 
 	openVideoSurely() {
-		python_call("open_from_server", this.props.data.video_id)
+		Backend.open_from_server(this.props.data.video_id)
 			.then((url) => {
 				APP_STATE.videoHistory.add(this.props.data.filename);
 				this.props.onInfo(tr("Opened: {path}", { path: url }), true);
@@ -501,7 +507,7 @@ export class Video extends BaseComponent {
 				data={data}
 				definitions={this.props.propDefs}
 				onClose={(properties) => {
-					python_call("set_video_properties", this.props.data.video_id, properties)
+					Backend.set_video_properties(this.props.data.video_id, properties)
 						.then(() =>
 							this.props.onInfo(
 								tr("Properties updated: {path}", {
@@ -544,7 +550,11 @@ export class Video extends BaseComponent {
 		Fancybox.load(
 			<Dialog title={tr("Confirm entry deletion")} yes={tr("DELETE ENTRY")} action={this.reallyDeleteVideoEntry}>
 				<div className="form-delete-video text-center">
-					{tr("## Are you sure you want to !!definitely!! delete **entry** for this video in database?", null, "markdown")}
+					{tr(
+						"## Are you sure you want to !!definitely!! delete **entry** for this video in database?",
+						null,
+						"markdown"
+					)}
 					<div className="details overflow-auto px-2 py-1">
 						<code id="filename">{filename}</code>
 					</div>
@@ -618,7 +628,7 @@ export class Video extends BaseComponent {
 	}
 
 	reallyDeleteVideo() {
-		python_call("delete_video", this.props.data.video_id)
+		Backend.delete_video(this.props.data.video_id)
 			.then(() =>
 				this.props.onInfo(
 					tr("Video deleted! {path}", {
@@ -631,7 +641,7 @@ export class Video extends BaseComponent {
 	}
 
 	reallyDeleteVideoEntry() {
-		python_call("delete_video_entry", this.props.data.video_id)
+		Backend.delete_video_entry(this.props.data.video_id)
 			.then(() =>
 				this.props.onInfo(
 					tr("Video entry deleted! {path}", {
@@ -644,7 +654,7 @@ export class Video extends BaseComponent {
 	}
 
 	reallyDismissSimilarity() {
-		python_call("set_similarities", [this.props.data.video_id], [-1])
+		Backend.set_similarities([this.props.data.video_id], [-1])
 			.then(() =>
 				this.props.onInfo(
 					tr("Current similarity cancelled: {path}", {
@@ -657,7 +667,7 @@ export class Video extends BaseComponent {
 	}
 
 	reallyResetSimilarity() {
-		python_call("set_similarities", [this.props.data.video_id], [null])
+		Backend.set_similarities([this.props.data.video_id], [null])
 			.then(() =>
 				this.props.onInfo(
 					tr("Current similarity reset: {path}", {
@@ -670,7 +680,7 @@ export class Video extends BaseComponent {
 	}
 
 	openContainingFolder() {
-		python_call("open_containing_folder", this.props.data.video_id)
+		Backend.open_containing_folder(this.props.data.video_id)
 			.then((folder) => {
 				this.props.onInfo(tr("Opened folder: {path}", { path: folder }));
 			})
@@ -695,13 +705,13 @@ export class Video extends BaseComponent {
 
 	copyToClipboard(field) {
 		const text = this.props.data[field];
-		python_call("clipboard", text)
+		Backend.clipboard(text)
 			.then(() => this.props.onInfo(tr("Copied to clipboard: {text}", { text })))
 			.catch(() => this.props.onInfo(tr("Cannot copy {field} to clipboard: {text}", { field, text })));
 	}
 
 	confirmMove(srcID, dstID) {
-		python_call("set_video_moved", srcID, dstID)
+		Backend.confirm_move(srcID, dstID)
 			.then(() =>
 				this.props.onInfo(
 					tr("Moved: {path}", {
@@ -723,7 +733,7 @@ export class Video extends BaseComponent {
 				description={filename}
 				data={title}
 				onClose={(newTitle) => {
-					python_call("rename_video", this.props.data.video_id, newTitle)
+					Backend.rename_video(this.props.data.video_id, newTitle)
 						.then(() => this.props.onInfo(`Renamed: ${newTitle}`, true))
 						.catch(backend_error);
 				}}

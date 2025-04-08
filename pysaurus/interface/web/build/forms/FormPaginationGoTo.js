@@ -1,17 +1,17 @@
-System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../utils/FancyboxManager.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../components/Cell.js", "../dialogs/Dialog.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Cell, Dialog, Fancybox, BaseComponent, FormPaginationGoTo;
+  var BaseComponent, Cell, Dialog, Fancybox, FormPaginationGoTo;
   _export("FormPaginationGoTo", void 0);
   return {
-    setters: [function (_componentsCellJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("FormPaginationGoTo", FormPaginationGoTo = class FormPaginationGoTo extends BaseComponent {

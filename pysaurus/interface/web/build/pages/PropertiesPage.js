@@ -1,13 +1,15 @@
-System.register(["../components/Cell.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js", "../utils/backend.js", "../utils/functions.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../components/Cell.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Cell, ComponentPropController, SetInput, Dialog, GenericFormRename, tr, Fancybox, backend_error, python_multiple_call, UTILITIES, BaseComponent, PropertiesPage, DEFAULT_VALUES;
+  var BaseComponent, Cell, ComponentPropController, SetInput, Dialog, GenericFormRename, tr, Fancybox, backend_error, python_multiple_call, UTILITIES, PropertiesPage, DEFAULT_VALUES;
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
   }
   _export("PropertiesPage", void 0);
   return {
-    setters: [function (_componentsCellJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
     }, function (_componentsSetInputJs) {
       ComponentPropController = _componentsSetInputJs.ComponentPropController;
@@ -25,8 +27,6 @@ System.register(["../components/Cell.js", "../components/SetInput.js", "../dialo
       python_multiple_call = _utilsBackendJs.python_multiple_call;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       DEFAULT_VALUES = {

@@ -1,7 +1,7 @@
+import { BaseComponent } from "../BaseComponent.js";
 import { Cell } from "../components/Cell.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { Dialog } from "./Dialog.js";
-import { BaseComponent } from "../BaseComponent.js";
 
 export class DialogSearch extends BaseComponent {
 	getInitialState() {

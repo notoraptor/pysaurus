@@ -1,10 +1,12 @@
-System.register(["../components/Cross.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../utils/FancyboxManager.js", "../utils/constants.js", "../BaseComponent.js"], function (_export, _context) {
+System.register(["../BaseComponent.js", "../components/Cross.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../utils/FancyboxManager.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Cross, ComponentController, SetInput, Dialog, Fancybox, PAGE_SIZES, BaseComponent, Test;
+  var BaseComponent, Cross, ComponentController, SetInput, Dialog, Fancybox, PAGE_SIZES, Test;
   _export("Test", void 0);
   return {
-    setters: [function (_componentsCrossJs) {
+    setters: [function (_BaseComponentJs) {
+      BaseComponent = _BaseComponentJs.BaseComponent;
+    }, function (_componentsCrossJs) {
       Cross = _componentsCrossJs.Cross;
     }, function (_componentsSetInputJs) {
       ComponentController = _componentsSetInputJs.ComponentController;
@@ -15,8 +17,6 @@ System.register(["../components/Cross.js", "../components/SetInput.js", "../dial
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsConstantsJs) {
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
-    }, function (_BaseComponentJs) {
-      BaseComponent = _BaseComponentJs.BaseComponent;
     }],
     execute: function () {
       _export("Test", Test = class Test extends BaseComponent {
