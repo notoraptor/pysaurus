@@ -76,4 +76,4 @@ class FromPyperclip(ProxyFeature):
     def __init__(self, method, returns=False):
         import pyperclip
 
-        super().__init__(getter=lambda : pyperclip, method=method, returns=returns)
+        super().__init__(getter=lambda: pyperclip, method=method, returns=returns)

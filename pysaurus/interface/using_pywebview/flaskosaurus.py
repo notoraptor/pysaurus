@@ -12,30 +12,13 @@ from pysaurus.interface.api.gui_api import GuiAPI
 logger = logging.getLogger(__name__)
 
 
-class MyAPI(GuiAPI):
+class _MyAPI(GuiAPI):
     __slots__ = ()
-
-
-class Backend:
-    def __init__(self):
-        self.api = MyAPI()
-
-    def call(self, call_args):
-        try:
-            name, args = call_args
-            result = {"error": False, "data": self.api.__run_feature__(name, *args)}
-        except (OSError, EnumerationError, exceptions.PysaurusError) as exception:
-            logger.exception("API call exception")
-            result = {
-                "error": True,
-                "data": {"name": type(exception).__name__, "message": str(exception)},
-            }
-        return result
 
 
 server = Flask(__name__)
 server.config["SEND_FILE_MAX_AGE_DEFAULT"] = 1  # disable caching
-server.api = MyAPI()
+server.api = _MyAPI()
 
 
 def verify_token(function):

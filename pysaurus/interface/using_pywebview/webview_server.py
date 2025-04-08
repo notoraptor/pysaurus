@@ -105,8 +105,8 @@ class WebviewServer:
         self.window = webview.create_window(
             "Pysaurus",
             f"http://localhost:{self.port}/index.html",
-            width=1280,
-            height=720,
+            width=1500,
+            height=900,
             resizable=True,
             min_size=(800, 600),
             js_api=self.backend,

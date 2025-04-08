@@ -107,7 +107,7 @@
 .video.found .info .filename.already-opened {
 	font-weight: normal;
 	font-style: italic;
-	color: gray;
+	color: rgb(210, 210, 210);
 }
 
 .video.found .info .filename code:hover {
