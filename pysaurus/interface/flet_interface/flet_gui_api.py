@@ -7,6 +7,11 @@ from pysaurus.core.notifications import Notification
 from pysaurus.interface.api.gui_api import GuiAPI
 
 
+class EmptyThread(threading.Thread):
+    def run(self):
+        pass
+
+
 class FletGuiAPI(GuiAPI):
     def __init__(self, page: ft.Page):
         self.page = page
@@ -19,7 +24,7 @@ class FletGuiAPI(GuiAPI):
             handler = function
         print("Running", function)
         self.page.run_thread(handler, *args)
-        return None
+        return EmptyThread()
 
     def _notify(self, notification: Notification) -> None:
         self.page.pubsub.send_all(notification)

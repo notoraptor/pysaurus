@@ -38,13 +38,7 @@ process = Runnable("_launch")
 
 
 class GuiAPI(FeatureAPI):
-    __slots__ = (
-        "launched_thread",
-        "copy_work",
-        "something_launched",
-        "server",
-        "_closed",
-    )
+    __slots__ = ("launched_thread", "copy_work", "server", "_closed")
 
     def __init__(self):
         """
@@ -58,7 +52,6 @@ class GuiAPI(FeatureAPI):
         super().__init__(notifier=informer)
         self.launched_thread: Optional[threading.Thread] = None
         self.copy_work: Optional[FileCopier] = None
-        self.something_launched = False
         self.server = ServerLauncher(lambda: self.database)
         self._closed = False
 
@@ -109,7 +102,7 @@ class GuiAPI(FeatureAPI):
         # Close threads.
         if self.launched_thread:
             self.launched_thread.join()
-            self.something_launched = False
+            self.launched_thread = None
         # Close manager.
         self.notifier = None
         # Close server.
@@ -135,7 +128,7 @@ class GuiAPI(FeatureAPI):
         logger.debug(f"Running {fn.__name__}")
         args = args or ()
         kwargs = kwargs or {}
-        assert not self.something_launched
+        assert self.launched_thread is None
 
         if finish:
 
@@ -150,13 +143,11 @@ class GuiAPI(FeatureAPI):
             run = fn
 
         # Then launch function.
-        self.something_launched = True
         self.launched_thread = self._run_thread(run, *args, **kwargs)
 
     def _finish_loading(self, log_message) -> None:
         self.notifier.notify(DatabaseReady())
         self.launched_thread = None
-        self.something_launched = False
         logger.debug(log_message)
 
     def _notification_callback(self, notification: Notification):
@@ -226,4 +217,3 @@ class GuiAPI(FeatureAPI):
             )
         finally:
             self.launched_thread = None
-            self.something_launched = False
