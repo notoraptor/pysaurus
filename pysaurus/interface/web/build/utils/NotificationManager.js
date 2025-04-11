@@ -30,7 +30,6 @@ System.register(["./Callbacks.js"], function (_export, _context) {
             this.callbackIDToNotification.set(callbackID, notificationName);
             // console.log(`[notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
           }
-
           object.__notification_manager_data = callbackIndices;
         }
         uninstallFrom(object) {
@@ -46,7 +45,6 @@ System.register(["./Callbacks.js"], function (_export, _context) {
             }
             // console.log(`[removed/notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
           }
-
           object.__notification_manager_data = [];
         }
         call(notification) {

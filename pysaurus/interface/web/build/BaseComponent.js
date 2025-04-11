@@ -23,7 +23,6 @@ System.register([], function (_export, _context) {
             // console.log(`bound ${method}`);
           });
         }
-
         setStateAsync(newState) {
           return new Promise(resolve => this.setState(newState, resolve));
         }

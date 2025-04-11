@@ -244,7 +244,7 @@ System.register(["../BaseComponent.js", "../components/Cell.js", "../components/
           }
         }
         deleteProperty(name) {
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: tr('Delete property "{name}"?', {
               name
             }),
@@ -265,7 +265,7 @@ System.register(["../BaseComponent.js", "../components/Cell.js", "../components/
           })))));
         }
         convertPropertyToUnique(name) {
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: tr('Convert to unique property "{name}"?', {
               name
             }),
@@ -286,7 +286,7 @@ System.register(["../BaseComponent.js", "../components/Cell.js", "../components/
           })))));
         }
         convertPropertyToMultiple(name) {
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: tr('Convert to multiple property "{name}"?', {
               name
             }),
@@ -307,7 +307,7 @@ System.register(["../BaseComponent.js", "../components/Cell.js", "../components/
           })))));
         }
         renameProperty(name) {
-          Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
+          Fancybox.load(/*#__PURE__*/React.createElement(GenericFormRename, {
             title: tr('Rename property "{name}"?', {
               name
             }),

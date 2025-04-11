@@ -2,7 +2,7 @@ System.register(["../BaseComponent.js", "../language.js", "../utils/Action.js", 
   "use strict";
 
   var BaseComponent, tr, Action, Actions, Fancybox, Characters, FIELD_MAP, capitalizeFirstLetter, Pagination, PlusIcon, SettingIcon, GroupView;
-  function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+  function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
   _export("GroupView", void 0);
   return {
     setters: [function (_BaseComponentJs) {
@@ -81,7 +81,7 @@ System.register(["../BaseComponent.js", "../language.js", "../utils/Action.js", 
             const buttons = [];
             if (isProperty && entry.value !== null) {
               if (!this.props.isClassified) {
-                buttons.push( /*#__PURE__*/React.createElement("input", {
+                buttons.push(/*#__PURE__*/React.createElement("input", {
                   key: "check-group",
                   type: "checkbox",
                   checked: selection.has(index),
@@ -89,7 +89,7 @@ System.register(["../BaseComponent.js", "../language.js", "../utils/Action.js", 
                 }));
                 buttons.push(" ");
                 if (!selection.size) {
-                  buttons.push( /*#__PURE__*/React.createElement(SettingIcon, {
+                  buttons.push(/*#__PURE__*/React.createElement(SettingIcon, {
                     key: "options",
                     title: "Options ...",
                     action: event => this.openPropertyOptions(event, index)
@@ -98,7 +98,7 @@ System.register(["../BaseComponent.js", "../language.js", "../utils/Action.js", 
                 }
               }
               if (!selection.size) {
-                buttons.push( /*#__PURE__*/React.createElement(PlusIcon, {
+                buttons.push(/*#__PURE__*/React.createElement(PlusIcon, {
                   key: "add",
                   title: "Add ...",
                   action: event => this.openPropertyPlus(event, index)

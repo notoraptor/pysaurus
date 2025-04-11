@@ -44,7 +44,7 @@ System.register(["../BaseComponent.js", "../components/Cross.js", "../components
           }, "click here!"));
         }
         fancy() {
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: "Test Fancy Box 2!",
             action: () => console.log("Choice: yes!")
           }, /*#__PURE__*/React.createElement("h1", null, "hello world ", this.state.pageSize), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world")));

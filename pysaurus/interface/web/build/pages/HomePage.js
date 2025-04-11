@@ -286,7 +286,7 @@ System.register(["../BaseComponent.js", "../language.js", "../utils/backend.js",
             i: i,
             key: i
           }));
-          if (!this.state.loaded) output.push( /*#__PURE__*/React.createElement("div", {
+          if (!this.state.loaded) output.push(/*#__PURE__*/React.createElement("div", {
             key: this.state.messages.length
           }, "..."));
           return output;

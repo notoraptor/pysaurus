@@ -33,9 +33,8 @@ System.register(["./App.js", "./utils/Callbacks.js", "./utils/NotificationManage
           window[name] = value;
           // console.log(["CONSTANT", name, value]);
         }
-
         const root = ReactDOM.createRoot(document.getElementById("root"));
-        root.render( /*#__PURE__*/React.createElement(App, null));
+        root.render(/*#__PURE__*/React.createElement(App, null));
       });
     }
   };

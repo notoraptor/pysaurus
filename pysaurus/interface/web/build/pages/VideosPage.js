@@ -544,7 +544,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
           }
         }
         moveVideo(videoID, directory) {
-          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FancyBox, {
             title: tr("Move file to {path}", {
               path: directory
             }),
@@ -610,7 +610,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
           });
         }
         selectVideos() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosSource, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FormVideosSource, {
             tree: SOURCE_TREE,
             sources: this.state.sources,
             onClose: sources => {
@@ -626,7 +626,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
             is_property: null,
             reverse: null
           };
-          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosGrouping, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FormVideosGrouping, {
             groupDef: groupDef,
             prop_types: this.state.prop_types,
             propertyMap: this.state.definitions,
@@ -646,7 +646,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
           const selectionSize = this.state.selector.size(this.state.nbViewVideos);
           const videoIndices = this.state.selector.toJSON();
           Backend.apply_on_view(videoIndices, "count_property_values", propertyName).then(valuesAndCounts => {
-            Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosEditProperty, {
+            Fancybox.load(/*#__PURE__*/React.createElement(FormSelectedVideosEditProperty, {
               nbVideos: selectionSize,
               definition: this.state.definitions[propertyName],
               values: valuesAndCounts,
@@ -667,7 +667,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
             text: null,
             cond: null
           };
-          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosSearch, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FormVideosSearch, {
             text: search_def.text,
             cond: search_def.cond,
             onClose: criterion => {
@@ -678,7 +678,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
           }));
         }
         sortVideos() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosSort, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FormVideosSort, {
             sorting: this.state.sorting,
             onClose: sorting => {
               this.backend(["set_sorting", sorting], {
@@ -688,7 +688,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
           }));
         }
         editDatabaseFolders() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormDatabaseEditFolders, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FormDatabaseEditFolders, {
             database: this.state.database,
             onClose: paths => {
               Backend.set_video_folders(paths).then(() => this.props.app.dbUpdate("update_database")).catch(backend_error);
@@ -697,7 +697,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
         }
         renameDatabase() {
           const name = this.state.database.name;
-          Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
+          Fancybox.load(/*#__PURE__*/React.createElement(GenericFormRename, {
             title: tr('Rename database "{name}"', {
               name
             }),
@@ -712,7 +712,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
           }));
         }
         deleteDatabase() {
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: tr("Delete database {name}", {
               name: this.state.database.name
             }),
@@ -737,7 +737,7 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
 `, null, "markdown"))));
         }
         confirmAllUniqueMoves() {
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: tr("Confirm all unique moves"),
             yes: tr("move"),
             action: () => {
@@ -797,7 +797,7 @@ not found video entry will be deleted.
           this.props.app.loadPropertiesPage();
         }
         fillWithKeywords() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosKeywordsToProperty, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FormVideosKeywordsToProperty, {
             prop_types: this.getStringSetProperties(this.state.prop_types),
             onClose: state => {
               Backend.fill_property_with_terms(state.field, state.onlyEmpty).then(() => this.updateStatus(tr('Filled property "{name}" with video keywords.', {
@@ -867,7 +867,7 @@ not found video entry will be deleted.
           const indices = Array.from(indicesSet);
           indices.sort();
           for (let index of indices) values.push(groupDef.groups[index].value);
-          Fancybox.load( /*#__PURE__*/React.createElement(FormPropertyEditSelectedValues, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FormPropertyEditSelectedValues, {
             definitions: this.state.definitions,
             name: name,
             values: values,

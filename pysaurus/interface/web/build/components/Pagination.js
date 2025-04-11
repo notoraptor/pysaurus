@@ -78,7 +78,7 @@ System.register(["../BaseComponent.js", "../dialogs/DialogSearch.js", "../forms/
           }
         }
         go() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormPaginationGoTo, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FormPaginationGoTo, {
             nbPages: this.props.nbPages,
             pageNumber: this.props.pageNumber,
             onClose: pageNumber => {
@@ -87,7 +87,7 @@ System.register(["../BaseComponent.js", "../dialogs/DialogSearch.js", "../forms/
           }));
         }
         look() {
-          Fancybox.load( /*#__PURE__*/React.createElement(DialogSearch, {
+          Fancybox.load(/*#__PURE__*/React.createElement(DialogSearch, {
             title: "Search first:",
             onSearch: this.props.onSearch
           }));

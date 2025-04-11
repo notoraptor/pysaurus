@@ -2,7 +2,7 @@ System.register(["../BaseComponent.js", "../language.js", "../utils/functions.js
   "use strict";
 
   var BaseComponent, tr, UTILITIES, SetController, ComponentController, ComponentPropController, SetInput;
-  function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+  function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
   _export({
     ComponentController: void 0,
     ComponentPropController: void 0,
@@ -116,7 +116,7 @@ System.register(["../BaseComponent.js", "../language.js", "../utils/functions.js
           const size = controller.size();
           for (let i = 0; i < size; ++i) {
             const value = controller.get(i);
-            output.push( /*#__PURE__*/React.createElement("tr", {
+            output.push(/*#__PURE__*/React.createElement("tr", {
               className: "item",
               key: i
             }, /*#__PURE__*/React.createElement("td", null, value.toString()), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {

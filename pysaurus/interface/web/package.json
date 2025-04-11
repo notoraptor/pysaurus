@@ -12,13 +12,12 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@babel/cli": "^7.22.9",
-    "@babel/core": "^7.22.9",
-    "@babel/plugin-transform-modules-systemjs": "^7.22.5",
-    "@babel/preset-react": "^7.22.5",
-    "prettier": "^2.8.8",
-    "prettier-plugin-organize-imports": "^3.2.3",
-    "typescript": "^5.1.6"
-  },
-  "dependencies": {}
+    "@babel/cli": "^7.27.0",
+    "@babel/core": "^7.26.10",
+    "@babel/plugin-transform-modules-systemjs": "^7.25.9",
+    "@babel/preset-react": "^7.26.3",
+    "prettier": "^3.5.3",
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "typescript": "^5.8.3"
+  }
 }

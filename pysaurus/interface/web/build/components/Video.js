@@ -2,7 +2,7 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
   "use strict";
 
   var BaseComponent, Dialog, FormVideoEditProperties, GenericFormRename, tr, Fancybox, Backend, backend_error, python_call, Characters, APP_STATE, Collapsable, Menu, MenuItem, MenuPack, Video;
-  function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+  function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
   /**
    * Generate class name for common value of videos grouped by similarity
    * @param value {boolean?}
@@ -338,7 +338,7 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
         }
         editProperties() {
           const data = this.props.data;
-          Fancybox.load( /*#__PURE__*/React.createElement(FormVideoEditProperties, {
+          Fancybox.load(/*#__PURE__*/React.createElement(FormVideoEditProperties, {
             data: data,
             definitions: this.props.propDefs,
             onClose: properties => {
@@ -351,7 +351,7 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
         confirmDeletion() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: tr("Confirm deletion"),
             yes: tr("DELETE"),
             action: this.reallyDeleteVideo
@@ -372,7 +372,7 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
         deleteVideoEntry() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: tr("Confirm entry deletion"),
             yes: tr("DELETE ENTRY"),
             action: this.reallyDeleteVideoEntry
@@ -393,7 +393,7 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
         dismissSimilarity() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: tr("Dismiss similarity"),
             yes: tr("dismiss"),
             action: this.reallyDismissSimilarity
@@ -414,7 +414,7 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
         resetSimilarity() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
-          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load(/*#__PURE__*/React.createElement(Dialog, {
             title: tr("Reset similarity"),
             yes: tr("reset"),
             action: this.reallyResetSimilarity
@@ -495,7 +495,7 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
         renameVideo() {
           const filename = this.props.data.filename;
           const title = this.props.data.file_title;
-          Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
+          Fancybox.load(/*#__PURE__*/React.createElement(GenericFormRename, {
             title: tr("Rename video"),
             header: tr("Rename video"),
             description: filename,
