@@ -73,7 +73,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ):
+    ) -> List[dict]:
         raise NotImplementedError()
 
     @abstractmethod

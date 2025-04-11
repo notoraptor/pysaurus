@@ -48,8 +48,7 @@ class GuiAPI(FeatureAPI):
         database may contain data that can't be pickled.
         E.g. Do not share database provider.
         """
-        informer = Informer.default()
-        super().__init__(notifier=informer)
+        super().__init__(notifier=Informer.default())
         self.launched_thread: Optional[threading.Thread] = None
         self.copy_work: Optional[FileCopier] = None
         self.server = ServerLauncher(lambda: self.database)
@@ -107,6 +106,8 @@ class GuiAPI(FeatureAPI):
         self.notifier = None
         # Close server.
         self.server.stop()
+        # Close databases.
+        self.__close__()
         # App closed.
         logger.debug("App closed.")
 

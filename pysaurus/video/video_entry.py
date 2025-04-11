@@ -66,6 +66,6 @@ class VideoEntry:
             del output["video_id"]
         if runtime_info:
             output["mtime"] = runtime_info.mtime
-            output["driver_id"] = runtime_info.driver_id
+            output["driver_id"] = str(runtime_info.driver_id)
             output["is_file"] = runtime_info.is_file
         return output

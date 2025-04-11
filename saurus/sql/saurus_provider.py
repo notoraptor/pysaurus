@@ -51,7 +51,7 @@ class SaurusProvider(AbstractVideoProvider):
         )
         self.group = output.group_id
         self._groups = output.result_groups
-        self._view_indices = [video["video_id"] for video in output.result_page]
+        self._view_indices = [video.video_id for video in output.result_page]
 
     def get_current_state(
         self, page_size: int, page_number: int, selector: Selector = None
@@ -105,7 +105,7 @@ class SaurusProvider(AbstractVideoProvider):
             self.group = group
             self._to_update = True
 
-    def set_search(self, text, cond) -> None:
+    def set_search(self, text, cond="and") -> None:
         search = SearchDef(text, cond)
         if self.search != search:
             self.search = search

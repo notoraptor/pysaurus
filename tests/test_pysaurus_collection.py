@@ -435,4 +435,4 @@ def test_get_videos():
     videos = collection.get_videos(include=(), where={"video_id": indices})
     assert len(videos) == len(indices)
     for video, video_id in zip(videos, indices):
-        assert video["video_id"] == video_id
+        assert video.video_id == video_id

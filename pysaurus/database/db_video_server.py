@@ -15,7 +15,17 @@ class _ServerThread(threading.Thread):
         self.hostname = "127.0.0.1"
         self.port = 5000
         self.server = make_server(self.hostname, self.port, appl, threaded=True)
+
+        # Create an application context for this thread
+        # App context is crucial for Flask to work properly in a separate thread
+        # It provides access to app-wide variables and ensures proper request isolation
         self.ctx = appl.app_context()
+
+        # Push the context onto the context stack
+        # This makes the context active for the current thread
+        # Without this, Flask would not know which context to use for handling requests
+        # in this thread, and operations like accessing current_app, request, or
+        # session would fail
         self.ctx.push()
 
     def run(self):

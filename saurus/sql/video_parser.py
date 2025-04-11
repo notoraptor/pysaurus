@@ -81,3 +81,6 @@ class VideoFieldQueryParser:
 
     def without_thumbnails(self, value) -> FieldQuery:
         return self._thumb_query("with_thumbnails", int(not value))
+
+    def driver_id(self, value) -> FieldQuery:
+        return self._video_query("driver_id", str(value))

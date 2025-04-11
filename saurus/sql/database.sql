@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS video (
 	width INTEGER NOT NULL DEFAULT 0,
 	-- runtime
 	mtime DOUBLE NOT NULL DEFAULT 0.0,
-	driver_id INTEGER,
+	driver_id TEXT,
 	is_file INTEGER NOT NULL DEFAULT 0,
 	discarded INTEGER NOT NULL DEFAULT 0,
 	-- mutable

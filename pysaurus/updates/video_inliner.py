@@ -27,6 +27,16 @@ def get_runtime(i, video: Video, key):
     return video.runtime._get(key)
 
 
+def get_driver_id(i, video: Video, key):
+    """
+    Return the driver ID of the video.
+    We convert it to a string to avoid issues with
+    SQLite and other databases that may not support
+    large integers or have different integer sizes.
+    """
+    return str(video.runtime.driver_id)
+
+
 VIDEO_FIELDS = [
     "video_id",
     "filename",
@@ -83,7 +93,7 @@ VIDEO_FIELD_GETTER = {
     "video_codec_description": get_default,
     "width": get_default,
     "mtime": get_runtime,
-    "driver_id": get_runtime,
+    "driver_id": get_driver_id,
     "is_file": get_runtime,
     "discarded": get_zero,
     "date_entry_modified": get_default,
