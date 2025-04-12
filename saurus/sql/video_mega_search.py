@@ -94,6 +94,9 @@ def _get_videos(
     with_moves: bool = False,
 ) -> List[VideoPattern]:
     videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
+    # print(query)
+    # print(parameters)
+    # print(len(videos))
 
     video_indices = [video.data["video_id"] for video in videos]
     placeholders = ", ".join(["?"] * len(video_indices))

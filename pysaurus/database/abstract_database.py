@@ -353,6 +353,8 @@ class AbstractDatabase(ABC):
 
     def count_videos(self, *flags, **forced_flags) -> int:
         forced_flags.update({flag: True for flag in flags})
+        if forced_flags:
+            forced_flags.setdefault("discarded", False)
         return len(self.get_videos(include=["video_id"], where=forced_flags))
 
     def move_video_entry(self, from_id: int, to_id: int) -> None:

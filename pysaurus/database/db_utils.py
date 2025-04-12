@@ -12,9 +12,10 @@ class DatabaseLoaded(Notification):
         "unreadable_not_found",
         "unreadable_found",
         "readable_not_found",
-        "valid",
         "readable_found_without_thumbnails",
+        "valid",
     )
+    __slot_sorter__ = list
 
     def __init__(self, database):
         super().__init__()
