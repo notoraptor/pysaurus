@@ -27,7 +27,7 @@ You can also type text and then press enter
 to automatically select "AND" as search method.
 `,
 						null,
-						"markdown"
+						"markdown",
 					)}
 					<p>
 						<input

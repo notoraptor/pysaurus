@@ -208,7 +208,7 @@ class NotificationRenderer extends BaseComponent {
 							message.name === "VideoInfoErrors"
 								? "{count} video error(s)"
 								: "{count} thumbnail error(s)",
-							{ count: keys.length }
+							{ count: keys.length },
 						)}
 					</strong>
 					:

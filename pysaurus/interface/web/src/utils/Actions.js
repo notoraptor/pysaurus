@@ -17,7 +17,7 @@ export class Actions {
 						shortcut: shortcut,
 						name1: shortcutToName[shortcut],
 						name2: name,
-					})
+					}),
 				);
 			shortcutToName[shortcut] = name;
 		}

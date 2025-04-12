@@ -86,7 +86,7 @@ export class FormPropertyEditSelectedValues extends BaseComponent {
 						name: this.props.name,
 						value: this.valuesToString(),
 					},
-					"markdown"
+					"markdown",
 				)}
 			</div>
 		);

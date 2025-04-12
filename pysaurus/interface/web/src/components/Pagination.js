@@ -77,7 +77,7 @@ export class Pagination extends BaseComponent {
 				onClose={(pageNumber) => {
 					if (pageNumber !== this.props.pageNumber) this.props.onChange(pageNumber);
 				}}
-			/>
+			/>,
 		);
 	}
 

@@ -51,10 +51,10 @@ export class GroupView extends BaseComponent {
 									{allChecked
 										? tr("All {count} selected", {
 												count: selection.size,
-										  })
+											})
 										: tr("{count} selected", {
 												count: selection.size,
-										  })}
+											})}
 								</label>
 								{selection.size ? (
 									<span>
@@ -89,7 +89,7 @@ export class GroupView extends BaseComponent {
 													type="checkbox"
 													checked={selection.has(index)}
 													onChange={(event) => this.onCheckEntry(event, index)}
-												/>
+												/>,
 											);
 											buttons.push(" ");
 											if (!selection.size) {
@@ -98,7 +98,7 @@ export class GroupView extends BaseComponent {
 														key="options"
 														title="Options ..."
 														action={(event) => this.openPropertyOptions(event, index)}
-													/>
+													/>,
 												);
 												buttons.push(" ");
 											}
@@ -109,7 +109,7 @@ export class GroupView extends BaseComponent {
 													key="add"
 													title="Add ..."
 													action={(event) => this.openPropertyPlus(event, index)}
-												/>
+												/>,
 											);
 											buttons.push(" ");
 										}

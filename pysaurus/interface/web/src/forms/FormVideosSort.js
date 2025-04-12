@@ -27,7 +27,7 @@ Click on "-" to remove a sorting criterion.
 Click on "sort" to validate, or close dialog to cancel.
 `,
 							null,
-							"markdown"
+							"markdown",
 						)}
 					</div>
 					<div id="sorting" className="flex-grow-1 overflow-auto">

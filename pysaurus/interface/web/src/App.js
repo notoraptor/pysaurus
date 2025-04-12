@@ -46,7 +46,7 @@ export class App extends BaseComponent {
 			Object.assign({}, otherState || {}, {
 				page: pageName,
 				parameters: parameters || {},
-			})
+			}),
 		);
 	}
 

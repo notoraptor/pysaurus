@@ -17,14 +17,14 @@ export class FormVideosGrouping extends BaseComponent {
 					sorting: this.props.groupDef.sorting,
 					reverse: this.props.groupDef.reverse,
 					allowSingletons: this.props.groupDef.allow_singletons,
-			  }
+				}
 			: {
 					isProperty: false,
 					field: undefined,
 					sorting: "field",
 					reverse: false,
 					allowSingletons: undefined,
-			  };
+				};
 	}
 
 	render() {
@@ -69,12 +69,12 @@ export class FormVideosGrouping extends BaseComponent {
 												<option key={index} value={def.name}>
 													{def.name}
 												</option>
-										  ))
+											))
 										: FIELD_MAP.allowed.map((fieldOption, index) => (
 												<option key={index} value={fieldOption.name}>
 													{fieldOption.title}
 												</option>
-										  ))}
+											))}
 								</select>
 							</td>
 						</tr>
@@ -196,8 +196,8 @@ export class FormVideosGrouping extends BaseComponent {
 					sorting: this.state.sorting,
 					reverse: this.state.reverse,
 					allowSingletons: this.getStateAllowSingletons(),
-				}
-			)
+				},
+			),
 		);
 	}
 }

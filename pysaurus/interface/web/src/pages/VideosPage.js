@@ -30,7 +30,7 @@ import { Actions } from "../utils/Actions.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { Selector } from "../utils/Selector.js";
 import { Backend, backend_error, python_call, python_multiple_call } from "../utils/backend.js";
-import { FIELD_MAP, PAGE_SIZES, SOURCE_TREE, SearchTypeTitle } from "../utils/constants.js";
+import { FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE } from "../utils/constants.js";
 import { compareSources } from "../utils/functions.js";
 import { APP_STATE } from "../utils/globals.js";
 import { HomePage } from "./HomePage.js";
@@ -55,7 +55,7 @@ export class VideosPage extends BaseComponent {
 				groupPageNumber: 0,
 				groupSelection: new Set(),
 			},
-			this.props.parameters
+			this.props.parameters,
 		);
 	}
 
@@ -348,7 +348,7 @@ export class VideosPage extends BaseComponent {
 									? tr("Group {group}/{count}", {
 											group: groupDef.group_id + 1,
 											count: groupDef.groups.length,
-									  })
+										})
 									: tr("No groups")}
 							</div>
 						) : (
@@ -488,11 +488,11 @@ export class VideosPage extends BaseComponent {
 										{selectedAll
 											? tr("All {count} video(s)", {
 													count: selectionSize,
-											  })
+												})
 											: tr("{count} / {total} video(s)", {
 													count: selectionSize,
 													total: nbViewVideos,
-											  })}
+												})}
 									</div>
 									<div className="mb-1">
 										<button onClick={this.displayOnlySelected}>
@@ -555,19 +555,19 @@ export class VideosPage extends BaseComponent {
 				"Ctrl+P",
 				tr("Manage properties ..."),
 				this.manageProperties,
-				Fancybox.isInactive
+				Fancybox.isInactive,
 			),
 			openRandomVideo: new Action(
 				"Ctrl+O",
 				tr("Open random video"),
 				this.openRandomVideo,
-				this.canOpenRandomVideo
+				this.canOpenRandomVideo,
 			),
 			previousPage: new Action(
 				"Ctrl+ArrowLeft",
 				tr("Go to previous page"),
 				this.previousPage,
-				Fancybox.isInactive
+				Fancybox.isInactive,
 			),
 			nextPage: new Action("Ctrl+ArrowRight", tr("Go to next page"), this.nextPage, Fancybox.isInactive),
 			playlist: new Action("Ctrl+L", tr("play list"), this.playlist, Fancybox.isInactive),
@@ -734,13 +734,13 @@ export class VideosPage extends BaseComponent {
 										tr("Video moved to {directory}", {
 											directory,
 										}),
-										true
+										true,
 									);
 							},
 						}}
 					/>
 				</div>
-			</FancyBox>
+			</FancyBox>,
 		);
 	}
 
@@ -786,7 +786,7 @@ export class VideosPage extends BaseComponent {
 				onClose={(sources) => {
 					this.backend(["set_sources", sources], { pageNumber: 0 });
 				}}
-			/>
+			/>,
 		);
 	}
 
@@ -811,10 +811,10 @@ export class VideosPage extends BaseComponent {
 							criterion.reverse,
 							criterion.allowSingletons,
 						],
-						{ pageNumber: 0 }
+						{ pageNumber: 0 },
 					);
 				}}
-			/>
+			/>,
 		);
 	}
 
@@ -850,10 +850,10 @@ export class VideosPage extends BaseComponent {
 										property: propertyName,
 										count: selectionSize,
 									}),
-								}
+								},
 							);
 						}}
-					/>
+					/>,
 				);
 			})
 			.catch(backend_error);
@@ -870,7 +870,7 @@ export class VideosPage extends BaseComponent {
 						pageNumber: 0,
 					});
 				}}
-			/>
+			/>,
 		);
 	}
 
@@ -881,7 +881,7 @@ export class VideosPage extends BaseComponent {
 				onClose={(sorting) => {
 					this.backend(["set_sorting", sorting], { pageNumber: 0 });
 				}}
-			/>
+			/>,
 		);
 	}
 
@@ -894,7 +894,7 @@ export class VideosPage extends BaseComponent {
 						.then(() => this.props.app.dbUpdate("update_database"))
 						.catch(backend_error);
 				}}
-			/>
+			/>,
 		);
 	}
 
@@ -909,7 +909,7 @@ export class VideosPage extends BaseComponent {
 				onClose={(name) => {
 					this.backend(["rename_database", name], { pageNumber: 0 });
 				}}
-			/>
+			/>,
 		);
 	}
 
@@ -938,10 +938,10 @@ export class VideosPage extends BaseComponent {
 ### Video files won't be touched.
 `,
 						null,
-						"markdown"
+						"markdown",
 					)}
 				</Cell>
-			</Dialog>
+			</Dialog>,
 		);
 	}
 
@@ -971,10 +971,10 @@ from not found to found video, and
 not found video entry will be deleted.
 `,
 						null,
-						"markdown"
+						"markdown",
 					)}
 				</Cell>
-			</Dialog>
+			</Dialog>,
 		);
 	}
 
@@ -999,7 +999,7 @@ not found video entry will be deleted.
 						path: filename,
 					}),
 					true,
-					true
+					true,
 				);
 			})
 			.catch(backend_error);
@@ -1034,12 +1034,12 @@ not found video entry will be deleted.
 								tr('Filled property "{name}" with video keywords.', {
 									name: state.field,
 								}),
-								true
-							)
+								true,
+							),
 						)
 						.catch(backend_error);
 				}}
-			/>
+			/>,
 		);
 	}
 
@@ -1140,7 +1140,7 @@ not found video entry will be deleted.
 							break;
 					}
 				}}
-			/>
+			/>,
 		);
 	}
 

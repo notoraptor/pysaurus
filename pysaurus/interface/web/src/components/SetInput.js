@@ -130,7 +130,7 @@ export class SetInput extends BaseComponent {
 							-
 						</button>
 					</td>
-				</tr>
+				</tr>,
 			);
 		}
 		return output;

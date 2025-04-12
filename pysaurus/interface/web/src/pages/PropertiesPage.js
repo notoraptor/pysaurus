@@ -305,7 +305,7 @@ export class PropertiesPage extends BaseComponent {
 			if (!this.state.enumeration) definition = UTILITIES.parsePropValString(this.state.type, null, definition);
 			python_multiple_call(
 				["create_prop_type", this.state.name, this.state.type, definition, this.state.multiple],
-				["describe_prop_types"]
+				["describe_prop_types"],
 			)
 				.then((definitions) => {
 					const state = this.getDefaultInputState();
@@ -339,7 +339,7 @@ export class PropertiesPage extends BaseComponent {
 						})}
 					</h3>
 				</Cell>
-			</Dialog>
+			</Dialog>,
 		);
 	}
 
@@ -366,7 +366,7 @@ export class PropertiesPage extends BaseComponent {
 						})}
 					</h3>
 				</Cell>
-			</Dialog>
+			</Dialog>,
 		);
 	}
 
@@ -393,7 +393,7 @@ export class PropertiesPage extends BaseComponent {
 						})}
 					</h3>
 				</Cell>
-			</Dialog>
+			</Dialog>,
 		);
 	}
 
@@ -413,7 +413,7 @@ export class PropertiesPage extends BaseComponent {
 						})
 						.catch(backend_error);
 				}}
-			/>
+			/>,
 		);
 	}
 

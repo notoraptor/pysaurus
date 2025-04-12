@@ -1,7 +1,7 @@
 System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/Cell.js", "../components/Collapsable.js", "../components/Cross.js", "../components/GroupView.js", "../components/Menu.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../dialogs/Dialog.js", "../dialogs/FancyBox.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormSelectedVideosEditProperty.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../forms/FormVideosSource.js", "../forms/GenericFormRename.js", "../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/FancyboxManager.js", "../utils/Selector.js", "../utils/backend.js", "../utils/constants.js", "../utils/functions.js", "../utils/globals.js", "./HomePage.js"], function (_export, _context) {
   "use strict";
 
-  var BaseComponent, ActionToCross, ActionToMenuItem, ActionToSettingIcon, Cell, Collapsable, Cross, GroupView, Menu, MenuItem, MenuItemCheck, MenuItemRadio, MenuPack, Pagination, Video, Dialog, FancyBox, FormDatabaseEditFolders, FormPropertyEditSelectedValues, FormSelectedVideosEditProperty, FormVideosGrouping, FormVideosKeywordsToProperty, FormVideosSearch, FormVideosSort, FormVideosSource, GenericFormRename, tr, Action, Actions, Fancybox, Selector, Backend, backend_error, python_call, python_multiple_call, FIELD_MAP, PAGE_SIZES, SOURCE_TREE, SearchTypeTitle, compareSources, APP_STATE, HomePage, VideosPage;
+  var BaseComponent, ActionToCross, ActionToMenuItem, ActionToSettingIcon, Cell, Collapsable, Cross, GroupView, Menu, MenuItem, MenuItemCheck, MenuItemRadio, MenuPack, Pagination, Video, Dialog, FancyBox, FormDatabaseEditFolders, FormPropertyEditSelectedValues, FormSelectedVideosEditProperty, FormVideosGrouping, FormVideosKeywordsToProperty, FormVideosSearch, FormVideosSort, FormVideosSource, GenericFormRename, tr, Action, Actions, Fancybox, Selector, Backend, backend_error, python_call, python_multiple_call, FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, compareSources, APP_STATE, HomePage, VideosPage;
   _export("VideosPage", void 0);
   return {
     setters: [function (_BaseComponentJs) {
@@ -74,8 +74,8 @@ System.register(["../BaseComponent.js", "../components/ActionToCross.js", "../co
     }, function (_utilsConstantsJs) {
       FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
-      SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
       SearchTypeTitle = _utilsConstantsJs.SearchTypeTitle;
+      SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
     }, function (_utilsFunctionsJs) {
       compareSources = _utilsFunctionsJs.compareSources;
     }, function (_utilsGlobalsJs) {

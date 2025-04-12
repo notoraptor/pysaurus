@@ -271,8 +271,8 @@ export class Video extends BaseComponent {
 									{data.similarity_id === null
 										? tr("(not yet compared)")
 										: data.similarity_id === -1
-										? tr("(no similarities)")
-										: data.similarity_id}
+											? tr("(no similarities)")
+											: data.similarity_id}
 								</code>
 							</div>
 						) : (
@@ -450,7 +450,7 @@ export class Video extends BaseComponent {
 					tr("Marked as read: {path}", {
 						path: this.props.data.filename,
 					}),
-					true
+					true,
 				);
 			})
 			.catch((error) => {
@@ -458,7 +458,7 @@ export class Video extends BaseComponent {
 				this.props.onInfo(
 					tr("Unable to mark as read: {path}", {
 						path: this.props.data.filename,
-					})
+					}),
 				);
 			});
 	}
@@ -471,7 +471,7 @@ export class Video extends BaseComponent {
 					tr("Opened: {path}", {
 						path: this.props.data.filename,
 					}),
-					true
+					true,
 				);
 			})
 			.catch((error) => {
@@ -479,7 +479,7 @@ export class Video extends BaseComponent {
 				this.props.onInfo(
 					tr("Unable to open: {path}", {
 						path: this.props.data.filename,
-					})
+					}),
 				);
 			});
 	}
@@ -495,7 +495,7 @@ export class Video extends BaseComponent {
 				this.props.onInfo(
 					tr("Unable to open: {path}", {
 						path: this.props.data.filename,
-					})
+					}),
 				);
 			});
 	}
@@ -513,12 +513,12 @@ export class Video extends BaseComponent {
 								tr("Properties updated: {path}", {
 									path: data.filename,
 								}),
-								true
-							)
+								true,
+							),
 						)
 						.catch(backend_error);
 				}}
-			/>
+			/>,
 		);
 	}
 
@@ -540,7 +540,7 @@ export class Video extends BaseComponent {
 						)}
 					</p>
 				</div>
-			</Dialog>
+			</Dialog>,
 		);
 	}
 
@@ -553,7 +553,7 @@ export class Video extends BaseComponent {
 					{tr(
 						"## Are you sure you want to !!definitely!! delete **entry** for this video in database?",
 						null,
-						"markdown"
+						"markdown",
 					)}
 					<div className="details overflow-auto px-2 py-1">
 						<code id="filename">{filename}</code>
@@ -566,7 +566,7 @@ export class Video extends BaseComponent {
 						)}
 					</p>
 				</div>
-			</Dialog>
+			</Dialog>,
 		);
 	}
 
@@ -588,7 +588,7 @@ export class Video extends BaseComponent {
 						)}
 					</p>
 				</div>
-			</Dialog>
+			</Dialog>,
 		);
 	}
 
@@ -605,7 +605,7 @@ export class Video extends BaseComponent {
 ### Video will then be re-compared at next similarity search
 `,
 						null,
-						"markdown"
+						"markdown",
 					)}
 					<div className="details overflow-auto px-2 py-1">
 						<code id="filename">{filename}</code>
@@ -618,7 +618,7 @@ export class Video extends BaseComponent {
 						)}
 					</p>
 				</div>
-			</Dialog>
+			</Dialog>,
 		);
 	}
 
@@ -634,8 +634,8 @@ export class Video extends BaseComponent {
 					tr("Video deleted! {path}", {
 						path: this.props.data.filename,
 					}),
-					true
-				)
+					true,
+				),
 			)
 			.catch(backend_error);
 	}
@@ -647,8 +647,8 @@ export class Video extends BaseComponent {
 					tr("Video entry deleted! {path}", {
 						path: this.props.data.filename,
 					}),
-					true
-				)
+					true,
+				),
 			)
 			.catch(backend_error);
 	}
@@ -660,8 +660,8 @@ export class Video extends BaseComponent {
 					tr("Current similarity cancelled: {path}", {
 						path: this.props.data.filename,
 					}),
-					true
-				)
+					true,
+				),
 			)
 			.catch(backend_error);
 	}
@@ -673,8 +673,8 @@ export class Video extends BaseComponent {
 					tr("Current similarity reset: {path}", {
 						path: this.props.data.filename,
 					}),
-					true
-				)
+					true,
+				),
 			)
 			.catch(backend_error);
 	}
@@ -717,8 +717,8 @@ export class Video extends BaseComponent {
 					tr("Moved: {path}", {
 						path: this.props.data.filename,
 					}),
-					true
-				)
+					true,
+				),
 			)
 			.catch(backend_error);
 	}
@@ -737,7 +737,7 @@ export class Video extends BaseComponent {
 						.then(() => this.props.onInfo(`Renamed: ${newTitle}`, true))
 						.catch(backend_error);
 				}}
-			/>
+			/>,
 		);
 	}
 

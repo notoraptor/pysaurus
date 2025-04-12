@@ -64,7 +64,7 @@ class FieldMap {
 				throw new Error(
 					tr("Duplicated field: {name}", {
 						name: fieldInfo.name,
-					})
+					}),
 				);
 			this.fields[fieldInfo.name] = fieldInfo;
 			if (!fieldInfo.isForbidden()) this.allowed.push(fieldInfo);

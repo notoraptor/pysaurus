@@ -58,7 +58,7 @@ export class FormVideoEditProperties extends BaseComponent {
 											this,
 											name,
 											def.type,
-											possibleValues
+											possibleValues,
 										);
 										input = <SetInput controller={controller} values={possibleValues} />;
 									} else if (def.enumeration) {

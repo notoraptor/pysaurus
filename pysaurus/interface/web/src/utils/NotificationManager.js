@@ -17,7 +17,7 @@ export class NotificationManager {
 				object[name] instanceof Function &&
 				(name === GENERIC_CALLBACK_NAME ||
 					(name.length && name.charAt(0) === name.charAt(0).toUpperCase()) ||
-					(name.length > 2 && name.startsWith("on")))
+					(name.length > 2 && name.startsWith("on"))),
 		)) {
 			const element = object[name];
 			const notificationName = name.startsWith("on") ? name.substring(2) : name;
