@@ -1,23 +1,11 @@
 from types import SimpleNamespace
 
-import pygame
-from pygame.event import Event
-
 import videre
+from videre_tests.common import FakeUser
 
 
 def test_button(snapwin):
     snapwin.controls = [videre.Button(text="Hello World!")]
-
-
-class FakeUser:
-    @classmethod
-    def click(cls, button):
-        x = button.global_x + button.rendered_width // 2
-        y = button.global_y + button.rendered_height // 2
-        event_data = {"pos": (x, y), "button": pygame.BUTTON_LEFT}
-        pygame.event.post(Event(pygame.MOUSEBUTTONDOWN, event_data))
-        pygame.event.post(Event(pygame.MOUSEBUTTONUP, event_data))
 
 
 def test_click(window_testing):

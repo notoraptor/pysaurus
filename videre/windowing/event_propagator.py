@@ -28,18 +28,18 @@ class EventPropagator:
         cls, widget: Widget, handle_function: str, event: MouseEvent
     ) -> Optional[Widget]:
         # print(handle_function, widget)
-        if widget:
-            if getattr(widget, handle_function)(event):
-                return widget
+        while widget:
+            handled = getattr(widget, handle_function)(event)
+            if handled:
+                return handled if isinstance(handled, Widget) else widget
             else:
                 parent = widget.parent
+                widget = parent
                 if parent:
                     x = parent.x + event.x
                     y = parent.y + event.y
                     event = event.with_coordinates(x, y)
-                return cls._handle(widget.parent, handle_function, event)
-        else:
-            return None
+        return None
 
     @classmethod
     def handle_click(cls, widget: Widget, button: MouseButton) -> Optional[Widget]:
