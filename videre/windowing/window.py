@@ -6,6 +6,7 @@ from pygame.event import Event
 
 from pysaurus.core.functions import get_tagged_methods
 from pysaurus.core.prettylogging import PrettyLogging
+from videre.colors import ColorDef, Colors, parse_color
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
 from videre.core.events import KeyboardEntry, MouseEvent
@@ -32,7 +33,6 @@ class Window(PygameUtils, Clipboard):
         "_height",
         "_screen_background",
         "_running",
-        "_closed",
         "_screen",
         "_down",
         "_motion",
@@ -53,7 +53,7 @@ class Window(PygameUtils, Clipboard):
         title="Window",
         width=1280,
         height=720,
-        background: pygame.Color | None = None,
+        background: ColorDef = None,
         font_size=14,
         hide=False,
     ):
@@ -62,10 +62,9 @@ class Window(PygameUtils, Clipboard):
         self._width = width
         self._height = height
         self._hide = bool(hide)
-        self._screen_background = background
+        self._screen_background = parse_color(background or Colors.white)
 
         self._running = True
-        self._closed = False
         self._screen: Optional[pygame.Surface] = None
 
         self._down: Dict[MouseButton, Optional[Widget]] = {
@@ -106,6 +105,14 @@ class Window(PygameUtils, Clipboard):
     def controls(self, controls: Sequence[Widget]):
         self._controls = controls
 
+    @property
+    def width(self) -> int:
+        return self._width
+
+    @property
+    def height(self) -> int:
+        return self._height
+
     def text_rendering(
         self,
         size: int = None,
@@ -124,7 +131,7 @@ class Window(PygameUtils, Clipboard):
         )
 
     def run(self):
-        if self._closed:
+        if not self._running:
             raise RuntimeError("Window has already run. Cannot run again.")
 
         self._init_display()
@@ -136,7 +143,6 @@ class Window(PygameUtils, Clipboard):
             self._render()
             clock.tick(WINDOW_FPS)
         pygame.quit()
-        self._closed = True
 
     def _init_display(self):
         flags = pygame.RESIZABLE
@@ -218,10 +224,17 @@ class Window(PygameUtils, Clipboard):
     ):
         assert not self._fancybox
         self._fancybox = Fancybox(content, title, buttons, expand_buttons)
+        # We register initial events as `after` events.
+        # We need to render the fancybox before the events are processed,
+        # so what fancybox can properly capture these events.
         self._register_initial_events()
 
     def clear_fancybox(self):
         self._fancybox = None
+        # We register initial events as `before` events.
+        # Since fancybox is not rendered anymore (juste removed from controls),
+        # initial events can be immediately processed with remaining controls,
+        # without waiting for the next render.
         self._register_initial_events(before=True)
 
     def has_fancybox(self) -> bool:
@@ -241,6 +254,7 @@ class Window(PygameUtils, Clipboard):
 
     def set_context(self, relative: Widget, control: Widget, x=0, y=0):
         self._context = Context(relative, control, x=x, y=y)
+        # todo why not register initial events?
 
     def clear_context(self):
         self._context = None
@@ -341,6 +355,7 @@ class Window(PygameUtils, Clipboard):
     @on_event(pygame.WINDOWRESIZED)
     def _on_window_resized(self, event: Event):
         logger.debug(f"Window resized: {event}")
+        self._width, self._height = event.x, event.y
 
     @on_event(pygame.TEXTINPUT)
     def _on_text_input(self, event: Event):

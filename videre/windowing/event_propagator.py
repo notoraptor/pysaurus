@@ -87,6 +87,7 @@ class EventPropagator:
     ):
         # Get potential exited widgets
         exited = set(previous.get_lineage())
+
         # Handle mouse enter and mouse over
         current = owner.widget
         mouse_x = owner.x_in_parent
@@ -98,7 +99,7 @@ class EventPropagator:
                 # to be removed from exited
                 exited.remove(current)
 
-                # mouse over on current
+                # in and out => just a mouse over on current
                 if current.handle_mouse_over(
                     MouseEvent.from_mouse_motion(event, mouse_x, mouse_y)
                 ):
@@ -109,8 +110,8 @@ class EventPropagator:
                 if current.handle_mouse_enter(
                     MouseEvent.from_mouse_motion(event, mouse_x, mouse_y)
                 ):
+                    # mouse enter captured, stop.
                     break
-                pass
 
             # get next
             parent = current.parent
@@ -139,5 +140,5 @@ class EventPropagator:
                         break
             else:
                 # Not registered in exited
-                # Thus, do not exit, neither from widget nor from parents
+                # Thus, do not `mouse exit`, neither from widget nor from parents
                 break

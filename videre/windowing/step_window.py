@@ -12,8 +12,13 @@ class StepWindow(Window):
         super().__init__(hide=True, **kwargs)
         self._step_mode = False
 
+    def run(self):
+        if self._step_mode:
+            raise RuntimeError("Window is in step mode. Cannot launch run().")
+        return super().run()
+
     def __enter__(self):
-        if self._closed:
+        if not self._running:
             raise RuntimeError("Window has already run. Cannot run again.")
         self._step_mode = True
         self._init_display()
@@ -39,10 +44,5 @@ class StepWindow(Window):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._step_mode:
             self._step_mode = False
-            self._closed = True
+            self._running = False
             pygame.quit()
-
-    def run(self):
-        if self._step_mode:
-            raise RuntimeError("Window is in step mode. Cannot launch run().")
-        return super().run()
