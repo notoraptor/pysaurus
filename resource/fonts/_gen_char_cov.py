@@ -6,7 +6,8 @@ from fontTools.ttLib import TTCollection
 from tqdm import tqdm
 
 from pysaurus.core.unicode_utils import Unicode
-from resource.fonts import FOLDER_FONT, FONT_NOTO_REGULAR, FontUtils, get_fonts
+from resource.fonts import FOLDER_FONT, FONT_NOTO_REGULAR, get_fonts
+from resource.fonts.font_utils import FontUtils
 
 
 def check_characters_coverage(characters: str):

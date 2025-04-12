@@ -13,8 +13,6 @@ from typing import Dict, List, Tuple
 
 from fontTools.ttLib import TTFont
 
-from resource.fonts.font_utils import FontUtils
-
 
 def _file_path(base, *path_pieces) -> str:
     path = os.path.abspath(os.path.join(base, *path_pieces))
