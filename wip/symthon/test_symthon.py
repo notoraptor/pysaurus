@@ -578,3 +578,38 @@ def test_procedure():
     assert f() == 1000
     assert f(None) == 1000
     assert f(1, 2, 3, 100, 1000, -1) == 1000
+
+
+def test_invalid_inputs():
+    with pytest.raises(KeyError):
+        f = Lambda(V.x, [V.x + V.y])  # V.y is undefined
+        f(1)
+
+    with pytest.raises(TypeError):
+        f = Lambda(V.x, [V.x + "string"])  # invalid addition, int + str
+        f(1)
+
+    with pytest.raises(RuntimeError):
+        f = Lambda((V.x, V.x), [V.x + 1])  # Dupplicated arguments
+        f(1, 2)
+
+
+def _test_infinite_loop_protection():
+    # Infinite loop: currently no protection
+    f = Lambda(V.x, [E.while_(V.x > 0, [E.set(V.x, V.x)])])
+    with pytest.raises(RecursionError):
+        f(1)
+
+
+def test_undefined_reference():
+    with pytest.raises(KeyError):
+        f = Lambda(V.x, [V.y])  # V.y n'est pas défini
+        f(1)
+
+
+def test_empty_expressions():
+    f = Lambda((), [])
+    assert f() is None
+
+    with pytest.raises(TypeError):
+        f = Lambda(None, None)  # Invalid body

@@ -533,7 +533,8 @@ class Lambda(metaclass=MetaLambda):
                 assert isinstance(arguments, tuple)
                 for argument in arguments:
                     assert isinstance(argument, Reference)
-            assert len(set(arg.name for arg in arguments)) == len(arguments)
+            if len(set(arg.name for arg in arguments)) != len(arguments):
+                raise RuntimeError("Duplicate argument name")
 
         self._arguments: Optional[Tuple[Reference, ...]] = arguments
         self._body = Block(body, stop_only_on_returns=True)
