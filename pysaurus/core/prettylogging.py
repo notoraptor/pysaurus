@@ -46,7 +46,7 @@ class PrettyLogging:
                 req_length = max(max_line_length, len(head) + 4)
                 printer(f"╔═{head}{'═' * (req_length - len(head) - 4)}═╗")
                 for line in lines:
-                    content = line.rjust(req_length - cls._surrounding_size)
+                    content = line.ljust(req_length - cls._surrounding_size)
                     printer(f"{cls._prefix}{content}{cls._suffix}")
                 printer(f"╚{'═' * (req_length - 2)}╝")
 
@@ -91,3 +91,7 @@ class PrettyLogging:
     @classmethod
     def plog(cls, something):
         return cls.log(pprint.pformat(something))
+
+    @classmethod
+    def pinfo(cls, something):
+        return cls.info(pprint.pformat(something))

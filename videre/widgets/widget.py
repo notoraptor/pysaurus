@@ -1,10 +1,10 @@
 import logging
+import sys
 from abc import abstractmethod
 from typing import Any, Callable, List, Optional, Self, Tuple, Union
 
 import pygame
 
-from pysaurus.core.classes import StringPrinter
 from videre.core.constants import MouseButton
 from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.mouse_ownership import MouseOwnership
@@ -190,9 +190,10 @@ class Widget(PygameUtils):
         return f"[{type(self).__name__}][{self._key}]"
 
     def _debug(self, *args, **kwargs):
-        with StringPrinter() as printer:
-            printer.write(self, *args, **kwargs)
-            logger.info(str(printer))
+        debuglevel = logging.INFO
+        if debuglevel >= logging.root.level:
+            level_name = logging.getLevelName(debuglevel)
+            print(f"{level_name}:", self, *args, **kwargs, file=sys.stderr)
 
     def get_window(self):
         from videre.windowing.window import Window

@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 import pygame
 
 from videre.core.mouse_ownership import MouseOwnership
-from videre.layouts.abstractlayout import AbstractLayout
+from videre.layouts.abstractlayout import AbstractLayout, get_top_mouse_wheel_owner
 from videre.layouts.scroll._h_scroll_bar import _HScrollBar
 from videre.layouts.scroll._v_scroll_bar import _VScrollBar
 from videre.widgets.widget import Widget
@@ -126,7 +126,7 @@ class ScrollView(AbstractLayout):
     ) -> Optional[MouseOwnership]:
         if Widget._get_mouse_owner(self, x_in_parent, y_in_parent):
             local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
-            child = self.get_mouse_owner(local_x, local_y)
+            child = get_top_mouse_wheel_owner(local_x, local_y, self._controls())
             if child and isinstance(child.widget, ScrollView):
                 return child
             else:

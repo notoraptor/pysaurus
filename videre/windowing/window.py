@@ -83,7 +83,7 @@ class Window(PygameUtils, Clipboard):
         self._fonts = PygameFontFactory(size=font_size)
 
         self._event_callbacks = get_tagged_methods(self, "event_type")
-        PrettyLogging.debug(
+        PrettyLogging.pinfo(
             {
                 pygame.event.event_name(t): c.__name__
                 for t, c in self._event_callbacks.items()
