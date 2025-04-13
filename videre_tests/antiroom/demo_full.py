@@ -1,6 +1,7 @@
 import logging
 
 import videre
+from pysaurus.core.constants import LOREM_IPSUM
 from pysaurus.core.functions import get_tagged_methods
 from videre.layouts.div import Div
 
@@ -58,12 +59,44 @@ class Demo:
         return wrapper
 
     def start(self):
-        # self.on_container()
-        self._demo_from(self.on_text_input)()
+        first_demo_title = sorted(self.demos.keys())[0]
+        first_demo = self.demos[first_demo_title]
+        self._demo_from(first_demo)()
         self.window.run()
 
     def clear(self, *args):
         self.work.control = None
+
+    @on_demo("scroll view")
+    def on_scroll_view(self, *args):
+        return videre.ScrollView(
+            videre.Column(
+                [
+                    videre.Text("Hello"),
+                    videre.Text("World"),
+                    videre.Text("This is a test"),
+                    videre.Text("of the scroll view"),
+                    videre.Text("in the antiroom demo."),
+                    videre.Row(
+                        [
+                            videre.Text("Hello"),
+                            videre.Text("World"),
+                            videre.ScrollView(
+                                videre.Text(LOREM_IPSUM, wrap=videre.TextWrap.WORD),
+                                # wrap_horizontal=True,
+                                # wrap_vertical=False,
+                                weight=1,
+                                key="scrollview2",
+                            ),
+                        ]
+                    ),
+                    videre.Text(LOREM_IPSUM, wrap=videre.TextWrap.WORD),
+                ]
+            ),
+            wrap_horizontal=True,
+            wrap_vertical=False,
+            key="scrollview1",
+        )
 
     @on_demo("container")
     def on_container(self, *args):
