@@ -1,20 +1,72 @@
 import logging
 
 import videre
+from pysaurus.core.functions import get_tagged_methods
 from videre.layouts.div import Div
 
 logger = logging.getLogger(__name__)
 
 
-def main():
-    logging.basicConfig(level=logging.INFO)
-    window = videre.Window()
-    work = videre.Container(padding=videre.Padding.all(10), weight=1)
+class DemoDecorator:
+    def __init__(self):
+        self.rank = 0
 
-    def clear(*args):
-        work.control = None
+    def __call__(self, title=""):
+        order = self.rank + 1
+        self.rank += 1
 
-    def on_container(*args):
+        def decorator(function):
+            name = title or function.__name__.replace("_", " ")
+            function.demo_title = f"({order}) {name}"
+            return function
+
+        return decorator
+
+
+on_demo = DemoDecorator()
+
+
+class Demo:
+    def __init__(self):
+        logging.basicConfig(level=logging.INFO)
+
+        self.window = videre.Window()
+        self.work = videre.Container(padding=videre.Padding.all(10), weight=1)
+
+        self.demos = get_tagged_methods(self, "demo_title")
+        buttons = [
+            videre.Button(title, on_click=self._demo_from(function))
+            for title, function in sorted(self.demos.items())
+        ]
+        self.window.controls = [
+            videre.Column(
+                [
+                    videre.Text("Demo of many things", strong=False),
+                    videre.Row([videre.Button("clear", on_click=self.clear)]),
+                    videre.Row(buttons),
+                    self.work,
+                ]
+            )
+        ]
+
+    def _demo_from(self, function):
+        def wrapper(*args):
+            ret = function(*args)
+            if ret is not None:
+                self.work.control = ret
+
+        return wrapper
+
+    def start(self):
+        # self.on_container()
+        self._demo_from(self.on_text_input)()
+        self.window.run()
+
+    def clear(self, *args):
+        self.work.control = None
+
+    @on_demo("container")
+    def on_container(self, *args):
         text = (
             "Hello, World! How are you? I'm fine, thanks, and you? I am ok, too, dear!"
         )
@@ -23,7 +75,7 @@ def main():
             "border": videre.Border.all(1),
             "weight": 1,
         }
-        work.control = videre.Column(
+        return videre.Column(
             [
                 videre.Container(
                     videre.Text(text),
@@ -45,78 +97,55 @@ def main():
             ]
         )
 
-    def on_demo_animator(*args):
-        work.control = demo_animator()
+    @on_demo("Animator, progressing and progress bars")
+    def on_demo_animator(self, *args):
+        label = videre.Text("Frame 0")
 
-    def on_demo_fancybox(*args):
-        window.set_fancybox(
+        def on_label_frame(w, f):
+            label.text = f"Frame {f}"
+
+        pb = videre.ProgressBar()
+
+        def on_pb_frame(w, f):
+            pb.value = (f % 31) / 30
+
+        aw = videre.Animator(label, on_frame=on_label_frame)
+        ap = videre.Animator(pb, on_frame=on_pb_frame, fps=30)
+        return videre.Column(
+            [
+                aw,
+                ap,
+                videre.Progressing(),
+                videre.ProgressBar(),
+                videre.ProgressBar(),
+                videre.ProgressBar(0.1),
+                videre.ProgressBar(0.5),
+                videre.ProgressBar(0.8),
+                videre.ProgressBar(0.9),
+                videre.ProgressBar(1),
+            ]
+        )
+
+    @on_demo("text input")
+    def on_text_input(self, *args):
+        return videre.TextInput(weight=1)
+
+    @on_demo("fancybox")
+    def on_demo_fancybox(self, *args):
+        self.window.set_fancybox(
             videre.ScrollView(
                 videre.Column([videre.Text(f"Item {i + 1}") for i in range(100)])
             ),
             buttons=[videre.Button("yes"), videre.Button("NO!")],
         )
 
-    def on_alert(*args):
-        window.alert("You have an alert")
-
-    def on_text_input(*args):
-        work.control = videre.TextInput(weight=1)
-
-    window.controls = [
-        videre.Column(
-            [
-                videre.Text("Demo of many things", strong=False),
-                videre.Row([videre.Button("clear", on_click=clear)]),
-                videre.Row(
-                    [
-                        videre.Button("container", on_click=on_container),
-                        videre.Button(
-                            "animator, progressing and progress bar",
-                            on_click=on_demo_animator,
-                        ),
-                        videre.Button(
-                            "fancy box", on_click=on_demo_fancybox, square=False
-                        ),
-                        videre.Button("alert", on_click=on_alert),
-                        videre.Button("text input", on_click=on_text_input),
-                    ]
-                ),
-                work,
-            ]
-        )
-    ]
-    # on_container()
-    on_text_input()
-    window.run()
+    @on_demo("alert")
+    def on_alert(self, *args):
+        self.window.alert("You have an alert")
 
 
-def demo_animator():
-    label = videre.Text("Frame 0")
-
-    def on_label_frame(w, f):
-        label.text = f"Frame {f}"
-
-    pb = videre.ProgressBar()
-
-    def on_pb_frame(w, f):
-        pb.value = (f % 31) / 30
-
-    aw = videre.Animator(label, on_frame=on_label_frame)
-    ap = videre.Animator(pb, on_frame=on_pb_frame, fps=30)
-    return videre.Column(
-        [
-            aw,
-            ap,
-            videre.Progressing(),
-            videre.ProgressBar(),
-            videre.ProgressBar(),
-            videre.ProgressBar(0.1),
-            videre.ProgressBar(0.5),
-            videre.ProgressBar(0.8),
-            videre.ProgressBar(0.9),
-            videre.ProgressBar(1),
-        ]
-    )
+def main():
+    Demo().start()
 
 
 if __name__ == "__main__":
