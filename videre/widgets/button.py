@@ -1,60 +1,34 @@
-from typing import Callable, Optional
-
-import pygame
-
-from videre import MouseButton
-from videre.widgets.abstract_button import AbstractButton
+from videre.layouts.div import Div, OnClickType
+from videre.widgets.text import Text
 
 
-class Button(AbstractButton):
-    __wprops__ = {"text", "on_click"}
-    __slots__ = ("_text_size",)
+class Button(Div):
+    __wprops__ = {"text"}
+    __slots__ = ("_text",)
 
-    def __init__(
-        self,
-        text: str,
-        on_click: Optional[Callable[["Button"], None]] = None,
-        square=False,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self._text_size = 0
-        self.text = text
-        self.on_click = on_click
-        self.square = square
+    def __init__(self, text: str, on_click: OnClickType = None, square=False, **kwargs):
+        self._text = Text(text.strip(), height_delta=0)
+        super().__init__(
+            self._text,
+            style={"default": {"square": square}},
+            on_click=on_click,
+            **kwargs
+        )
 
     @property
     def text(self) -> str:
-        return self._get_wprop("text")
+        return self._text.text
 
     @text.setter
     def text(self, text: str):
-        self._set_wprop("text", text.strip())
+        self._text.text = text.strip()
 
     @property
-    def on_click(self) -> Optional[Callable[["Button"], None]]:
-        return self._get_wprop("on_click")
+    def on_click(self) -> OnClickType:
+        return self._on_click
 
     @on_click.setter
-    def on_click(self, callback: Optional[Callable[["Button"], None]]):
-        self._set_wprop("on_click", callback)
-
-    @property
-    def square(self) -> bool:
-        return self._get_square()
-
-    @square.setter
-    def square(self, square: bool):
-        self._set_square(square)
-
-    def handle_click(self, button: MouseButton):
-        on_click = self.on_click
-        if on_click:
-            on_click(self)
-
-    def _get_text_surface(self, window, width: Optional[int] = None) -> pygame.Surface:
-        return (
-            window.text_rendering(size=self._text_size, height_delta=0)
-            .render_text(self.text, width)
-            .surface
-        )
+    def on_click(self, callback: OnClickType):
+        if self._on_click is not callback:
+            self._on_click = callback
+            self.update()

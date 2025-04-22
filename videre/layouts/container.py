@@ -145,6 +145,8 @@ class Container(AbstractLayout):
             if square:
                 dim = max(outer_width, outer_height)
                 outer_width = outer_height = dim
+                inner_width = margin.get_inner_width(outer_width)
+                inner_height = margin.get_inner_height(outer_height)
         elif width is None:
             # height available
             outer_height = max(height, min_height)
