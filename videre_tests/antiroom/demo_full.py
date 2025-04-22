@@ -61,7 +61,7 @@ class Demo:
     def start(self):
         first_demo_title = sorted(self.demos.keys())[0]
         first_demo = self.demos[first_demo_title]
-        self._demo_from(first_demo)()
+        self._demo_from(self.on_container)()
         self.window.run()
 
     def clear(self, *args):
@@ -115,8 +115,6 @@ class Demo:
                     **parameters,
                     horizontal_alignment=videre.Alignment.START,
                 ),
-                Div(videre.Text(text, wrap=videre.TextWrap.WORD), weight=1),
-                videre.Button(text, weight=1),
                 videre.Container(
                     videre.Text(text),
                     **parameters,
@@ -127,6 +125,21 @@ class Demo:
                     **parameters,
                     horizontal_alignment=videre.Alignment.END,
                 ),
+                Div(
+                    videre.Text(
+                        text, wrap=videre.TextWrap.WORD, align=videre.TextAlign.CENTER
+                    ),
+                    weight=1,
+                ),
+                videre.Button(text, weight=1),
+                Div(
+                    videre.Text(
+                        text, wrap=videre.TextWrap.WORD, align=videre.TextAlign.CENTER
+                    ),
+                    style={"default": {"square": True}},
+                    weight=1,
+                ),
+                videre.Button(text, square=True, weight=1),
             ]
         )
 

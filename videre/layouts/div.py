@@ -21,22 +21,21 @@ class Style:
     horizontal_alignment: Alignment = None
     width: int = None
     height: int = None
+    square: bool = None
 
     def fill_with(self, other: "Style"):
-        if self.border is None:
-            self.border = other.border
-        if self.padding is None:
-            self.padding = other.padding
-        if self.background_color is None:
-            self.background_color = other.background_color
-        if self.vertical_alignment is None:
-            self.vertical_alignment = other.vertical_alignment
-        if self.horizontal_alignment is None:
-            self.horizontal_alignment = other.horizontal_alignment
-        if self.width is None:
-            self.width = other.width
-        if self.height is None:
-            self.height = other.height
+        for key in (
+            "border",
+            "padding",
+            "background_color",
+            "vertical_alignment",
+            "horizontal_alignment",
+            "width",
+            "height",
+            "square",
+        ):
+            if getattr(self, key) is None:
+                setattr(self, key, getattr(other, key))
 
     def get_specific_from(self, other: "Style"):
         return Style(

@@ -21,6 +21,7 @@ class Container(AbstractLayout):
         "horizontal_alignment",
         "width",
         "height",
+        "square",
     }
     __slots__ = ()
     __size__ = 1
@@ -36,6 +37,7 @@ class Container(AbstractLayout):
         horizontal_alignment: Alignment = Alignment.START,
         width: int = None,
         height: int = None,
+        square: bool = False,
         **kwargs
     ):
         super().__init__([control or EmptyWidget()], **kwargs)
@@ -46,6 +48,7 @@ class Container(AbstractLayout):
         self.horizontal_alignment = horizontal_alignment
         self.width = width
         self.height = height
+        self.square = square
 
     @property
     def control(self) -> Widget:
@@ -112,7 +115,16 @@ class Container(AbstractLayout):
     def height(self, height: int | None):
         self._set_wprop("height", height)
 
+    @property
+    def square(self) -> bool:
+        return self._get_wprop("square")
+
+    @square.setter
+    def square(self, square: bool):
+        self._set_wprop("square", bool(square))
+
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+        square = self.square
         width = _resolve_size(self.width, width)
         height = _resolve_size(self.height, height)
         border = self.border
@@ -130,26 +142,42 @@ class Container(AbstractLayout):
             inner_height = inner_surface.get_height()
             outer_width = margin.get_outer_width(inner_width)
             outer_height = margin.get_outer_height(inner_height)
+            if square:
+                dim = max(outer_width, outer_height)
+                outer_width = outer_height = dim
         elif width is None:
             # height available
             outer_height = max(height, min_height)
-            inner_height = margin.get_inner_height(height)
-            inner_surface = control.render(window, None, inner_height)
-            inner_width = inner_surface.get_width()
-            outer_width = margin.get_outer_width(inner_width)
+            inner_height = margin.get_inner_height(outer_height)
+            if square:
+                outer_width = outer_height
+                inner_width = margin.get_inner_width(outer_width)
+                inner_surface = control.render(window, inner_width, inner_height)
+            else:
+                inner_surface = control.render(window, None, inner_height)
+                inner_width = inner_surface.get_width()
+                outer_width = margin.get_outer_width(inner_width)
         elif height is None:
             # width available
             outer_width = max(width, min_width)
-            inner_width = margin.get_inner_width(width)
-            inner_surface = control.render(window, inner_width, None)
-            inner_height = inner_surface.get_height()
-            outer_height = margin.get_outer_height(inner_height)
+            inner_width = margin.get_inner_width(outer_width)
+            if square:
+                outer_height = outer_width
+                inner_height = margin.get_inner_height(outer_height)
+                inner_surface = control.render(window, inner_width, inner_height)
+            else:
+                inner_surface = control.render(window, inner_width, None)
+                inner_height = inner_surface.get_height()
+                outer_height = margin.get_outer_height(inner_height)
         else:
             # width and height available
             outer_width = max(width, min_width)
             outer_height = max(height, min_height)
-            inner_width = margin.get_inner_width(width)
-            inner_height = margin.get_inner_height(height)
+            if square:
+                dim = min(outer_width, outer_height)
+                outer_width = outer_height = dim
+            inner_width = margin.get_inner_width(outer_width)
+            inner_height = margin.get_inner_height(outer_height)
             inner_surface = control.render(window, inner_width, inner_height)
 
         x = self._align_dim(
