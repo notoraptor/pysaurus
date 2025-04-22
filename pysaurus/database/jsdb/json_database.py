@@ -1,5 +1,6 @@
 import logging
 from typing import (
+    Any,
     Collection,
     Dict,
     Iterable,
@@ -343,7 +344,7 @@ class JsonDatabase(AbstractDatabase):
             )
         return sorted((prop.describe() for prop in prop_types), key=lambda d: d["name"])
 
-    def create_prop_type(
+    def prop_type_add(
         self,
         name: str,
         prop_type: Union[str, type],
@@ -359,14 +360,14 @@ class JsonDatabase(AbstractDatabase):
         self._prop_types[prop.name] = prop
         self.save()
 
-    def remove_prop_type(self, name) -> None:
+    def prop_type_del(self, name) -> None:
         if name in self._prop_types:
             del self._prop_types[name]
             for video in self._videos.values():
                 video.remove_property(name)
             self.save()
 
-    def rename_prop_type(self, old_name, new_name) -> None:
+    def prop_type_set_name(self, old_name, new_name) -> None:
         if self.get_prop_types(name=old_name):
             if self.get_prop_types(name=new_name):
                 raise exceptions.PropertyAlreadyExists(new_name)
@@ -378,7 +379,7 @@ class JsonDatabase(AbstractDatabase):
                     video.set_property(new_name, video.remove_property(old_name))
             self.save()
 
-    def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
+    def prop_type_set_multiple(self, name: str, multiple: bool) -> None:
         if self.get_prop_types(name=name):
             prop_type = self._prop_types[name]
             if prop_type.multiple is multiple:
@@ -469,17 +470,17 @@ class JsonDatabase(AbstractDatabase):
 
         return list(videos)
 
-    def get_all_video_terms(self) -> Dict[int, List[str]]:
+    def videos_get_terms(self) -> Dict[int, List[str]]:
         return {
             video_id: self._id_to_video[video_id].terms()
             for video_id in self._get_all_video_indices()
         }
 
-    def _write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
-        for video_id, value in zip(indices, values):
+    def videos_set_field(self, field: str, changes: Dict[int, Any]):
+        for video_id, value in changes.items():
             setattr(self._id_to_video[video_id], field, value)
 
-    def write_new_videos(
+    def videos_add(
         self,
         video_entries: List[VideoEntry],
         runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
@@ -523,7 +524,7 @@ class JsonDatabase(AbstractDatabase):
                 )
             )
 
-    def change_video_entry_filename(
+    def video_entry_set_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
         path = AbsolutePath.ensure(path)
@@ -542,7 +543,7 @@ class JsonDatabase(AbstractDatabase):
 
         return video.filename
 
-    def delete_video_entry(self, video_id: int) -> None:
+    def video_entry_del(self, video_id: int) -> None:
         video = self._id_to_video.pop(video_id)
         self._videos.pop(video.filename, None)
         self._jsondb_register_removed(video)
@@ -550,15 +551,15 @@ class JsonDatabase(AbstractDatabase):
         self.provider.delete(video_id)
         self._notify_fields_modified(["move_id"])
 
-    def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
+    def videos_get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         return self.moves_attribute.get_moves()
 
-    def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
+    def _thumbnails_add(self, filename_to_thumb_name: Dict[str, str]) -> None:
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
         for filename in filename_to_thumb_name:
             self.jsondb_register_modified(self._videos[AbsolutePath.ensure(filename)])
 
-    def get_all_prop_values(
+    def videos_tag_get(
         self, name: str, indices: List[int] = ()
     ) -> Dict[int, List[PropUnitType]]:
         return {
@@ -569,13 +570,13 @@ class JsonDatabase(AbstractDatabase):
     def _get_all_video_indices(self) -> Iterable[int]:
         return (item.video_id for item in self.get_videos(include=["video_id"]))
 
-    def _set_property_for_videos(
+    def videos_tag_set(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
         for video_id, prop_values in updates.items():
             self.update_prop_values(video_id, name, prop_values, merge=merge)
 
-    def set_video_properties(
+    def video_entry_set_tags(
         self, video_id: int, properties: dict, merge=False
     ) -> None:
         modified = [

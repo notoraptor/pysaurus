@@ -1,5 +1,5 @@
 import logging
-from typing import Collection, Dict, Iterable, List, Sequence, Tuple, Union
+from typing import Any, Collection, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -69,7 +69,7 @@ class PysaurusCollection(AbstractDatabase):
             [(path.path,) for path in folders],
         )
 
-    def get_all_prop_values(
+    def videos_tag_get(
         self, name: str, indices: List[int] = ()
     ) -> Dict[int, List[PropUnitType]]:
         (prop_desc,) = self.get_prop_types(name=name)
@@ -91,7 +91,7 @@ class PysaurusCollection(AbstractDatabase):
             output.setdefault(row[0], []).append(pt.from_string(row[1]))
         return output
 
-    def _set_property_for_videos(
+    def videos_tag_set(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
         (prop_desc,) = self.get_prop_types(name=name)
@@ -136,7 +136,7 @@ class PysaurusCollection(AbstractDatabase):
                 new_texts,
             )
 
-    def set_video_properties(
+    def video_entry_set_tags(
         self, video_id: int, properties: dict, merge=False
     ) -> None:
         if not properties:
@@ -201,7 +201,7 @@ class PysaurusCollection(AbstractDatabase):
             default=default,
         )
 
-    def create_prop_type(
+    def prop_type_add(
         self,
         name: str,
         prop_type: Union[str, type],
@@ -228,7 +228,7 @@ class PysaurusCollection(AbstractDatabase):
             ],
         )
 
-    def remove_prop_type(self, name: str):
+    def prop_type_del(self, name: str):
         video_indices = []
         pt = self.db.query_one(
             "SELECT property_id, type FROM property WHERE name = ?", [name]
@@ -262,7 +262,7 @@ class PysaurusCollection(AbstractDatabase):
                 "UPDATE video_text SET properties = ? WHERE video_id = ?", updates
             )
 
-    def rename_prop_type(self, old_name, new_name):
+    def prop_type_set_name(self, old_name, new_name):
         if self.get_prop_types(name=old_name):
             if self.get_prop_types(name=new_name):
                 raise exceptions.PropertyAlreadyExists(new_name)
@@ -270,7 +270,7 @@ class PysaurusCollection(AbstractDatabase):
                 "UPDATE property SET name = ? WHERE name = ?", [new_name, old_name]
             )
 
-    def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
+    def prop_type_set_multiple(self, name: str, multiple: bool) -> None:
         props = self.get_prop_types(name=name)
         if props:
             (prop_desc,) = props
@@ -327,7 +327,7 @@ class PysaurusCollection(AbstractDatabase):
         t_all_str_low = string_to_pieces(all_str.lower())
         return t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
 
-    def get_all_video_terms(self) -> Dict[int, List[str]]:
+    def videos_get_terms(self) -> Dict[int, List[str]]:
         output = {}
         for row in self.db.query(
             """
@@ -344,7 +344,7 @@ class PysaurusCollection(AbstractDatabase):
             )
         return output
 
-    def change_video_entry_filename(
+    def video_entry_set_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
         path = AbsolutePath.ensure(path)
@@ -352,7 +352,7 @@ class PysaurusCollection(AbstractDatabase):
         (video,) = self.get_videos(
             include=["filename"], where={"video_id": video_id, "unreadable": False}
         )
-        old_filename = AbsolutePath.ensure(video["filename"])
+        old_filename = AbsolutePath.ensure(video.filename)
         assert old_filename != path
 
         self.db.modify(
@@ -373,18 +373,18 @@ class PysaurusCollection(AbstractDatabase):
 
         return old_filename
 
-    def delete_video_entry(self, video_id: int) -> None:
+    def video_entry_del(self, video_id: int) -> None:
         self.db.modify("DELETE FROM video WHERE video_id = ?", [video_id])
         self.provider.delete(video_id)
         self._notify_fields_modified(["move_id"])
 
-    def _write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
+    def videos_set_field(self, field: str, changes: Dict[int, Any]):
         self.db.modify_many(
             f"UPDATE video SET {WRITABLE_FIELDS[field]} = ? WHERE video_id = ?",
-            zip(values, indices),
+            ((value, video_id) for video_id, value in changes.items()),
         )
 
-    def write_new_videos(
+    def videos_add(
         self,
         video_entries: List[VideoEntry],
         runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
@@ -530,7 +530,7 @@ class PysaurusCollection(AbstractDatabase):
             texts,
         )
 
-    def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
+    def videos_get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         for row in self.db.query(
             """
     SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
@@ -560,7 +560,7 @@ class PysaurusCollection(AbstractDatabase):
             for id_not_found in not_found:
                 yield id_not_found, found
 
-    def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
+    def _thumbnails_add(self, filename_to_thumb_name: Dict[str, str]) -> None:
         filename_to_video_id = {
             row[0]: row[1]
             for row in self.db.query(

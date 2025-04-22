@@ -3,7 +3,8 @@ from contextlib import redirect_stdout
 from io import StringIO
 
 import webview
-from pysaurus.interface.flesk.flaskosaurus import server
+
+from pysaurus.interface.using_pywebview.flaskosaurus import server
 
 logger = logging.getLogger(__name__)
 

@@ -70,12 +70,17 @@ class DbSimilarVideos:
             )
         ]
         with db.to_save():
-            db.set_similarities(video_indices, (None for _ in video_indices))
+            db.set_similarities({video_id: None for video_id in video_indices})
             try:
                 cls._find_similar_videos(db, miniatures)
             except Exception:
                 # Restore previous similarities.
-                db.set_similarities(video_indices, previous_sim)
+                db.set_similarities(
+                    {
+                        video_id: prev_sim_id
+                        for video_id, prev_sim_id in zip(video_indices, previous_sim)
+                    }
+                )
                 raise
 
     @classmethod
@@ -88,13 +93,13 @@ class DbSimilarVideos:
         similarities = compare_miniatures(miniatures, combined, SIM_LIMIT)
 
         video_indices = [m.video_id for m in miniatures]
-        db.set_similarities(video_indices, (-1 for _ in video_indices))
+        db.set_similarities({video_id: -1 for video_id in video_indices})
 
         similarities.sort(key=imp.to_sortable_group)
-        v_indices = []
-        v_sim_ids = []
-        for similarity_id, group in enumerate(similarities):
-            for filename in group:
-                v_indices.append(imp.video_id(filename))
-                v_sim_ids.append(similarity_id)
-        db.set_similarities(v_indices, v_sim_ids)
+        db.set_similarities(
+            {
+                imp.video_id(filename): similarity_id
+                for similarity_id, group in enumerate(similarities)
+                for filename in group
+            }
+        )

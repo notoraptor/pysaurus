@@ -9,7 +9,7 @@ _GetShortPathNameW.restype = wintypes.DWORD
 def get_short_path_name(long_name: str):
     """
     Gets the short path name of a given long path.
-    (2021/07/11) http://stackoverflow.com/a/23598461/200291
+    (2021/07/11) https://stackoverflow.com/a/23598461/200291
 
     Return None if short path can't be retrieved.
     """

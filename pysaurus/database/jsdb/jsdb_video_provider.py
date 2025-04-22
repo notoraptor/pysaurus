@@ -165,7 +165,7 @@ class _AbstractLayerGrouping(Layer):
         return self.video_id_to_values[video_id]
 
     def _get_prop_values(self, video_id: int, name: str) -> List:
-        results = self.database.get_all_prop_values(name, [video_id])
+        results = self.database.videos_tag_get(name, [video_id])
         values = results[video_id]
         assert isinstance(values, list)
         if not values and self.database.get_prop_types(name=name, multiple=False):
