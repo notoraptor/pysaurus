@@ -6,7 +6,7 @@ import sys
 import tempfile
 import threading
 import types
-from typing import Any, Collection, Dict, Iterable, List, Sequence
+from typing import Any, Collection, Dict, Iterable, List, Sequence, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -362,3 +362,24 @@ def get_tagged_methods(obj, key: str) -> Dict[Any, callable]:
             assert value not in tag_to_method
             tag_to_method[value] = method
     return tag_to_method
+
+
+def points_are_line(points: List[Tuple[int, int]]) -> bool:
+    """
+    Check if the points are a line or a polygon.
+
+    Generated with Jetbrains AI Assistant.
+    """
+    if len(points) < 2:
+        return False
+    if len(points) == 2:
+        return True
+    # Check if all points are collinear
+    x0, y0 = points[0]
+    x1, y1 = points[1]
+    dx = x1 - x0
+    dy = y1 - y0
+    for x, y in points[2:]:
+        if (y - y0) * dx != (x - x0) * dy:
+            return False
+    return True
