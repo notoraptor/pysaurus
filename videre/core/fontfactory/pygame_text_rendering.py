@@ -95,8 +95,8 @@ class PygameTextRendering:
             )
         return font
 
-    def render_char(self, c: str) -> pygame.Surface:
-        surface, box = self._get_font(c).render(c, size=self._size)
+    def render_char(self, c: str, color: pygame.Color = None) -> pygame.Surface:
+        surface, box = self._get_font(c).render(c, size=self._size, fgcolor=color)
         return surface
 
     def render_text(

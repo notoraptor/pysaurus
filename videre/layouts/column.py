@@ -76,7 +76,9 @@ class Column(AbstractControlsLayout):
                 for i, ctrl in to_render:
                     if total_height >= height:
                         break
-                    available_height = (remaining_height * weights[i]) // total_weight
+                    available_height = int(
+                        (remaining_height * weights[i]) // total_weight
+                    )
                     surface = ctrl.render(window, w_hint, available_height)
                     rendered[i] = (ctrl, surface)
                     sizes[i] = available_height

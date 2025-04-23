@@ -76,7 +76,9 @@ class Row(AbstractControlsLayout):
                 for i, ctrl in to_render:
                     if total_width >= width:
                         break
-                    available_width = (remaining_width * weights[i]) // total_weight
+                    available_width = int(
+                        (remaining_width * weights[i]) // total_weight
+                    )
                     surface = ctrl.render(window, available_width, h_hint)
                     rendered[i] = (ctrl, surface)
                     sizes[i] = available_width

@@ -40,8 +40,8 @@ class _OptionWidget(Div):
                     width=width, border=Border(), horizontal_alignment=Alignment.START
                 )
             ),
-            on_click=self._select,
         )
+        self._on_click = self._select
 
     def _select(self, *args, **kwargs):
         self._dropdown.index = self._index

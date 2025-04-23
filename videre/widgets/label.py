@@ -2,7 +2,6 @@ from typing import Union
 
 from videre.core.constants import MouseButton
 from videre.core.events import MouseEvent
-from videre.widgets.abstract_button import AbstractButton
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
 
@@ -11,9 +10,9 @@ class Label(Text):
     __wprops__ = {}
     __slots__ = ["_for_button", "_for_key"]
 
-    def __init__(self, for_button: Union[str, AbstractButton], **kwargs):
+    def __init__(self, for_button: Union[str, Widget], **kwargs):
         super().__init__(**kwargs)
-        if isinstance(for_button, AbstractButton):
+        if isinstance(for_button, Widget):
             self._for_button = for_button
             self._for_key = for_button.key
         else:
@@ -21,7 +20,7 @@ class Label(Text):
             self._for_button = None
             self._for_key = for_button
 
-    def _get_button(self) -> AbstractButton:
+    def _get_button(self) -> Widget:
         if self._for_button is None:
             candidates = self.get_root().collect_matchs(
                 lambda w: w.key == self._for_key

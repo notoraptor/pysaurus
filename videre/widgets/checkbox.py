@@ -15,22 +15,15 @@ https://en.wikipedia.org/wiki/Check_mark
 🮱 	U+1FBB1 	INVERSE CHECK MARK
 """
 
-from typing import Callable, Optional
-
-from videre import MouseButton
+from videre.layouts.div import OnClickType
 from videre.widgets.abstract_check_button import AbstractCheckButton
 
 
 class Checkbox(AbstractCheckButton):
-    __wprops__ = {"on_change"}
+    __wprops__ = {}
     __slots__ = ()
 
-    def __init__(
-        self,
-        checked=False,
-        on_change: Optional[Callable[["Checkbox"], None]] = None,
-        **kwargs
-    ):
+    def __init__(self, checked=False, on_change: OnClickType = None, **kwargs):
         super().__init__(**kwargs)
         self.checked = checked
         self.on_change = on_change
@@ -44,15 +37,11 @@ class Checkbox(AbstractCheckButton):
         self._set_checked(value)
 
     @property
-    def on_change(self) -> Optional[Callable[["Checkbox"], None]]:
-        return self._get_wprop("on_change")
+    def on_change(self) -> OnClickType:
+        return self._on_click
 
     @on_change.setter
-    def on_change(self, callback: Optional[Callable[["Checkbox"], None]]):
-        self._set_wprop("on_change", callback)
-
-    def handle_click(self, button: MouseButton):
-        super().handle_click(button)
-        on_change = self.on_change
-        if on_change:
-            on_change(self)
+    def on_change(self, callback: OnClickType):
+        if self._on_click is not callback:
+            self._on_click = callback
+            self.update()

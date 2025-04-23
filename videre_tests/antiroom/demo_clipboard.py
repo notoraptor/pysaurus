@@ -67,11 +67,11 @@ def main():
                             value="b",
                             on_change=Lambda(V.rg, [E.print(V.rg.value)]),
                         ),
-                        Label(for_button="radio_a", text="Click to select radio A"),
-                        Label(for_button=checkbox, text="check!"),
                     ],
                     vertical_alignment=videre.Alignment.CENTER,
                 ),
+                Label(for_button="radio_a", text="Click to select radio A"),
+                Label(for_button=checkbox, text="check!"),
                 videre.ScrollView(text, wrap_horizontal=True, weight=1),
             ]
         )

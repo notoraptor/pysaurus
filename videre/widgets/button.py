@@ -8,12 +8,8 @@ class Button(Div):
 
     def __init__(self, text: str, on_click: OnClickType = None, square=False, **kwargs):
         self._text = Text(text.strip(), height_delta=0)
-        super().__init__(
-            self._text,
-            style={"default": {"square": square}},
-            on_click=on_click,
-            **kwargs
-        )
+        super().__init__(self._text, style={"default": {"square": square}}, **kwargs)
+        self.on_click = on_click
 
     @property
     def text(self) -> str:
