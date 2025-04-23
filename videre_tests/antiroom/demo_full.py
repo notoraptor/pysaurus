@@ -61,7 +61,7 @@ class Demo:
     def start(self):
         first_demo_title = sorted(self.demos.keys())[0]
         first_demo = self.demos[first_demo_title]
-        self._demo_from(self.on_container)()
+        self._demo_from(self.on_text_input)()
         self.window.run()
 
     def clear(self, *args):

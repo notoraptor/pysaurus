@@ -193,7 +193,6 @@ class TextInput(AbstractLayout):
         self._is_selecting = True
         self._selection = None
         self._set_cursor_event(_CursorMouseEvent(event.x, event.y))
-        self.update()
 
     def handle_mouse_up(self, event: MouseEvent):
         self._debug("mouse_up")
@@ -203,7 +202,6 @@ class TextInput(AbstractLayout):
         if self._is_selecting:
             self._debug("mouse_down_move")
             self._set_cursor_event(_CursorMouseEvent(event.x, event.y))
-            self.update()
 
     def handle_focus_in(self) -> bool:
         self._debug("focus_in")
@@ -287,7 +285,6 @@ class TextInput(AbstractLayout):
                 else:
                     self._selection.end = out_pos
             self._set_cursor_event(_CursorCharPosEvent(out_pos))
-            self.update()
         elif key.right:
             in_pos = self._char_pos()
             select_start = False
@@ -317,14 +314,12 @@ class TextInput(AbstractLayout):
                 else:
                     self._selection.end = out_pos
             self._set_cursor_event(_CursorCharPosEvent(out_pos))
-            self.update()
         elif key.ctrl:
             if key.a:
                 # Select all
                 self._selection = _SelectionDefinition(0, len(self._text.text))
                 self._set_char_pos(len(self._text.text))
                 self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
-                self.update()
             elif key.c and self._selection:
                 content = self._text.text[self._selection.start : self._selection.end]
                 self.get_window().set_clipboard(content)
@@ -348,11 +343,13 @@ class TextInput(AbstractLayout):
 
     def _set_cursor_event(self, event: _CursorEvent):
         if self._cursor_event:
-            assert type(self._cursor_event) == type(event), (
+            assert type(self._cursor_event) is type(event), (
                 f"Unexpected different consecutive cursor event types: "
                 f"{self._cursor_event}, {event}"
             )
-        self._cursor_event = event
+        if self._cursor_event != event:
+            self._cursor_event = event
+            self.update()
 
     @classmethod
     def _get_cursor_rect(cls, cursor: _CursorDefinition, rendered: RenderedText):
