@@ -107,3 +107,12 @@ class KeyboardEntry:
         return " + ".join(
             key for key in ("caps", "ctrl", "alt", "shift") if getattr(self, key)
         )
+
+
+CUSTOM_CALLBACK_EVENT = pygame.event.custom_type()
+
+
+def custom_callback_event(function, args: tuple, kwargs: dict):
+    return Event(
+        CUSTOM_CALLBACK_EVENT, {"function": function, "args": args, "kwargs": kwargs}
+    )

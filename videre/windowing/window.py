@@ -1,15 +1,21 @@
 import logging
+import threading
 from typing import Dict, List, Optional, Sequence, Tuple
 
 import pygame
 from pygame.event import Event
 
-from pysaurus.core.functions import get_tagged_methods
+from pysaurus.core.functions import get_tagged_methods, launch_thread
 from pysaurus.core.prettylogging import PrettyLogging
 from videre.colors import ColorDef, Colors, parse_color
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
-from videre.core.events import KeyboardEntry, MouseEvent
+from videre.core.events import (
+    CUSTOM_CALLBACK_EVENT,
+    KeyboardEntry,
+    MouseEvent,
+    custom_callback_event,
+)
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 from videre.core.pygame_utils import PygameUtils
@@ -46,6 +52,7 @@ class Window(PygameUtils, Clipboard):
         "_fonts",
         "_event_callbacks",
         "_hide",
+        "_lock",
     )
 
     def __init__(
@@ -58,6 +65,9 @@ class Window(PygameUtils, Clipboard):
         hide=False,
     ):
         super().__init__()
+
+        self._lock = threading.Lock()
+
         self._title = str(title) or "Window"
         self._width = width
         self._height = height
@@ -215,6 +225,14 @@ class Window(PygameUtils, Clipboard):
             + ((self._context,) if self._context else ())
         )
 
+    def run_later(self, function, *args, **kwargs):
+        self._post_manual_event(
+            custom_callback_event(function, args, kwargs), unique=False, before=False
+        )
+
+    def run_later_async(self, function, *args, **kwargs):
+        return self.run_later(launch_thread, function, *args, **kwargs)
+
     def set_fancybox(
         self,
         content: Widget,
@@ -366,3 +384,7 @@ class Window(PygameUtils, Clipboard):
     def _on_keydown(self, event: Event):
         if self._focus:
             self._focus.handle_keydown(KeyboardEntry(event))
+
+    @on_event(CUSTOM_CALLBACK_EVENT)
+    def _on_custom_callback(self, event: Event):
+        event.function(*event.args, **event.kwargs)
