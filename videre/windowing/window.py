@@ -1,6 +1,6 @@
 import logging
 import threading
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import pygame
 from pygame.event import Event
@@ -10,12 +10,7 @@ from pysaurus.core.prettylogging import PrettyLogging
 from videre.colors import ColorDef, Colors, parse_color
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
-from videre.core.events import (
-    CUSTOM_CALLBACK_EVENT,
-    KeyboardEntry,
-    MouseEvent,
-    custom_callback_event,
-)
+from videre.core.events import CustomEvents, KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 from videre.core.pygame_utils import PygameUtils
@@ -32,18 +27,19 @@ from videre.windowing.windowutils import on_event
 logger = logging.getLogger(__name__)
 
 
+NotificationCallback = Callable[[Any], None]
+
+
 class Window(PygameUtils, Clipboard):
     __slots__ = (
         "_title",
         "_width",
         "_height",
-        "_screen_background",
         "_running",
         "_screen",
         "_down",
         "_motion",
         "_focus",
-        "_manual_events_before",
         "_manual_events_after",
         "_layout",
         "_controls",
@@ -52,6 +48,7 @@ class Window(PygameUtils, Clipboard):
         "_fonts",
         "_event_callbacks",
         "_hide",
+        "_notification_callback",
         "_lock",
     )
 
@@ -72,7 +69,6 @@ class Window(PygameUtils, Clipboard):
         self._width = width
         self._height = height
         self._hide = bool(hide)
-        self._screen_background = parse_color(background or Colors.white)
 
         self._running = True
         self._screen: Optional[pygame.Surface] = None
@@ -82,9 +78,8 @@ class Window(PygameUtils, Clipboard):
         }
         self._motion: Optional[Widget] = None
         self._focus: Optional[Widget] = None
-        self._manual_events_before: List[Event] = []
         self._manual_events_after: List[Event] = []
-        self._layout: Optional[WindowLayout] = None
+        self._layout = WindowLayout(parse_color(background or Colors.white))
 
         self._controls: List[Widget] = []
         self._fancybox: Optional[Fancybox] = None
@@ -100,6 +95,8 @@ class Window(PygameUtils, Clipboard):
             }
         )
 
+        self._notification_callback: Optional[NotificationCallback] = None
+
     def __repr__(self):
         return f"[{type(self).__name__}][{id(self)}]"
 
@@ -114,6 +111,7 @@ class Window(PygameUtils, Clipboard):
     @controls.setter
     def controls(self, controls: Sequence[Widget]):
         self._controls = controls
+        self.__refresh_controls()
 
     @property
     def width(self) -> int:
@@ -122,6 +120,10 @@ class Window(PygameUtils, Clipboard):
     @property
     def height(self) -> int:
         return self._height
+
+    def get_screen(self) -> pygame.Surface:
+        assert self._screen is not None
+        return self._screen
 
     def text_rendering(
         self,
@@ -145,8 +147,6 @@ class Window(PygameUtils, Clipboard):
             raise RuntimeError("Window has already run. Cannot run again.")
 
         self._init_display()
-        # We must prepare initial events before entering the render loop
-        self._register_initial_events()
 
         clock = pygame.time.Clock()
         while self._running:
@@ -160,7 +160,6 @@ class Window(PygameUtils, Clipboard):
             flags |= pygame.HIDDEN
         self._screen = pygame.display.set_mode((self._width, self._height), flags=flags)
         pygame.display.set_caption(self._title)
-        self._layout = WindowLayout(self._screen, background=self._screen_background)
 
         # Initialize keyboard repeat.
         # NB: TEXTINPUT events already handle repeat,
@@ -170,53 +169,42 @@ class Window(PygameUtils, Clipboard):
         # is the most like textinput repeat.
         pygame.key.set_repeat(500, 35)
 
-    def _register_initial_events(self, before=False):
-        # Post an initial mouse motion if mouse is over the window.
-        if pygame.mouse.get_focused():
-            self._post_manual_event(
+    def _render(self):
+        # Handle interface events.
+        # Also check if we got a mouse motion event.
+        has_mouse_motion = False
+        for event in pygame.event.get():
+            has_mouse_motion = has_mouse_motion or event.type == pygame.MOUSEMOTION
+            self.__on_event(event)
+
+        # If we haven't already handled a mouse motion event but mouse if over screen,
+        # then we process a custom mouse motion event.
+        # TODO We might need to process a custom mouse motion event anyway,
+        # event if there was a mouse motion event above, for example
+        # if supplementary events changed the interface between
+        # the mouse motion event found above and
+        # the end of loop above.
+        if not has_mouse_motion and pygame.mouse.get_focused():
+            self.__on_event(
                 Event(
                     pygame.MOUSEMOTION,
                     pos=pygame.mouse.get_pos(),
                     rel=(0, 0),
                     buttons=(0, 0, 0),
                     touch=False,
-                ),
-                unique=True,
-                before=before,
+                )
             )
-
-    def _post_manual_event(self, event, unique=False, before=False):
-        events_collection = (
-            self._manual_events_before if before else self._manual_events_after
-        )
-        if not unique or event not in events_collection:
-            events_collection.append(event)
-
-    def _render(self):
-        # Handle interface events.
-        for event in pygame.event.get():
-            self.__on_event(event)
-
-        # Refresh controls.
-        self.__refresh_controls()
-
-        # Clear [pre-manual events -> updated controls] cycle.
-        while self._manual_events_before:
-            events = self._manual_events_before
-            self._manual_events_before = []
-            for event in events:
-                self.__on_event(event)
-            self.__refresh_controls()
 
         # Refresh screen.
         self._layout.render(self)
         pygame.display.flip()
 
         # Post manual events.
-        if self._manual_events_after:
-            for event in self._manual_events_after:
-                pygame.event.post(event)
-            self._manual_events_after.clear()
+        with self._lock:
+            if self._manual_events_after:
+                for event in self._manual_events_after:
+                    pygame.event.post(event)
+                self._manual_events_after.clear()
 
     def __refresh_controls(self):
         self._layout.controls = (
@@ -225,13 +213,18 @@ class Window(PygameUtils, Clipboard):
             + ((self._context,) if self._context else ())
         )
 
-    def run_later(self, function, *args, **kwargs):
-        self._post_manual_event(
-            custom_callback_event(function, args, kwargs), unique=False, before=False
-        )
+    def notify(self, notification: Any):
+        self._post_event(CustomEvents.notification_event(notification))
 
-    def run_later_async(self, function, *args, **kwargs):
+    def run_later(self, function, *args, **kwargs):
+        self._post_event(CustomEvents.callback_event(function, args, kwargs))
+
+    def run_async(self, function, *args, **kwargs):
         return self.run_later(launch_thread, function, *args, **kwargs)
+
+    def _post_event(self, event: Event):
+        with self._lock:
+            self._manual_events_after.append(event)
 
     def set_fancybox(
         self,
@@ -242,18 +235,11 @@ class Window(PygameUtils, Clipboard):
     ):
         assert not self._fancybox
         self._fancybox = Fancybox(content, title, buttons, expand_buttons)
-        # We register initial events as `after` events.
-        # We need to render the fancybox before the events are processed,
-        # so what fancybox can properly capture these events.
-        self._register_initial_events()
+        self.__refresh_controls()
 
     def clear_fancybox(self):
         self._fancybox = None
-        # We register initial events as `before` events.
-        # Since fancybox is not rendered anymore (juste removed from controls),
-        # initial events can be immediately processed with remaining controls,
-        # without waiting for the next render.
-        self._register_initial_events(before=True)
+        self.__refresh_controls()
 
     def has_fancybox(self) -> bool:
         return self._fancybox is not None
@@ -272,21 +258,37 @@ class Window(PygameUtils, Clipboard):
 
     def set_context(self, relative: Widget, control: Widget, x=0, y=0):
         self._context = Context(relative, control, x=x, y=y)
-        # todo why not register initial events?
+        self.__refresh_controls()
 
     def clear_context(self):
         self._context = None
-        self._register_initial_events(before=True)
+        self.__refresh_controls()
+
+    def set_notification_callback(self, callback: Optional[NotificationCallback]):
+        self._notification_callback = callback
 
     def __on_event(self, event: Event):
+        """
+        Handle a pygame event.
+
+        :param event: event to handle
+        :return: `skip_render`: tell whether the screen update must be skipped
+            after this event handling.
+
+            By default, callbacks return None (=> False),
+            so the screen is immediately updated.
+            Some callbacks may return True to prevent this.
+
+            NB: Returned value is not yet used.
+        """
         callback = self._event_callbacks.get(event.type)
-        if callback is None:
+        if callback:
+            return callback(event)
+        else:
             logger.debug(
                 f"Unhandled pygame event: {pygame.event.event_name(event.type)}"
             )
-            return False
-        callback(event)
-        return True
+            return True
 
     @on_event(pygame.QUIT)
     def _on_quit(self, event: Event):
@@ -385,6 +387,11 @@ class Window(PygameUtils, Clipboard):
         if self._focus:
             self._focus.handle_keydown(KeyboardEntry(event))
 
-    @on_event(CUSTOM_CALLBACK_EVENT)
+    @on_event(CustomEvents.CALLBACK_EVENT)
     def _on_custom_callback(self, event: Event):
         event.function(*event.args, **event.kwargs)
+
+    @on_event(CustomEvents.NOTIFICATION_EVENT)
+    def _on_notification(self, event: Event):
+        if self._notification_callback:
+            self._notification_callback(event.notification)

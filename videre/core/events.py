@@ -109,10 +109,16 @@ class KeyboardEntry:
         )
 
 
-CUSTOM_CALLBACK_EVENT = pygame.event.custom_type()
+class CustomEvents:
+    CALLBACK_EVENT = pygame.event.custom_type()
+    NOTIFICATION_EVENT = pygame.event.custom_type()
 
+    @classmethod
+    def callback_event(cls, function, args: tuple, kwargs: dict):
+        return Event(
+            cls.CALLBACK_EVENT, {"function": function, "args": args, "kwargs": kwargs}
+        )
 
-def custom_callback_event(function, args: tuple, kwargs: dict):
-    return Event(
-        CUSTOM_CALLBACK_EVENT, {"function": function, "args": args, "kwargs": kwargs}
-    )
+    @classmethod
+    def notification_event(cls, something):
+        return Event(cls.NOTIFICATION_EVENT, {"notification": something})

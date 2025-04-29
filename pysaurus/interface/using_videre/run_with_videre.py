@@ -48,7 +48,7 @@ class App:
         self._display(
             videre.Column([videre.Text("Welcome to Pysaurus!"), videre.Progressing()])
         )
-        self.window.run_later_async(self._goto_homepage)
+        self.window.run_async(self._goto_homepage)
 
     def _goto_homepage(self):
         time.sleep(4)

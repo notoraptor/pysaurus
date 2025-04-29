@@ -9,18 +9,16 @@ class WindowLayout(AbstractControlsLayout):
     _FILL = Colors.white
     __capture_mouse__ = True
 
-    def __init__(self, screen: pygame.Surface, background: pygame.Color | None = None):
+    def __init__(self, background: pygame.Color | None = None):
         super().__init__()
-        self._surface = screen
         self._bgc = background or self._FILL
 
     def render(self, window, width: int = None, height: int = None) -> pygame.Surface:
-        return super().render(
-            window, self._surface.get_width(), self._surface.get_height()
-        )
+        screen = window.get_screen()
+        return super().render(window, screen.get_width(), screen.get_height())
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
-        screen = self._surface
+        screen = window.get_screen()
 
         screen_width, screen_height = screen.get_width(), screen.get_height()
         screen.fill(self._bgc)
