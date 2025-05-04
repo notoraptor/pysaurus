@@ -89,12 +89,12 @@ class Dropdown(Div):
         return self.options[self.index]
 
     def handle_mouse_down(self, event: MouseEvent):
-        super().handle_mouse_down(event)
-
-        if self._context:
-            self._close_context()
-        else:
-            self._open_context()
+        if event.button_left:
+            super().handle_mouse_down(event)
+            if self._context:
+                self._close_context()
+            else:
+                self._open_context()
 
     def handle_focus_in(self) -> Self:
         return self

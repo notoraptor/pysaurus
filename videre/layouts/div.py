@@ -150,7 +150,7 @@ class Div(ControlLayout):
         self._set_style()
 
     def handle_click(self, button: MouseButton):
-        if self._on_click is not None:
+        if button == MouseButton.BUTTON_LEFT and self._on_click is not None:
             self._on_click(self)
 
     def _set_style(self):
