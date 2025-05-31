@@ -17,6 +17,8 @@ def test_parse_color():
         ValueError, match="Too long color hex \(at most 8 digits expected\)"
     ):
         assert parse_color("#abcdef01c")
+    with pytest.raises(ValueError, match="Expected a non-empty string color"):
+        parse_color("")
 
     assert parse_color((1, 2, 3)) == pygame.Color(1, 2, 3)
     assert parse_color([1, 2, 3]) == pygame.Color(1, 2, 3)
