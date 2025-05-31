@@ -56,3 +56,9 @@ ft.Text
 ft.TextField
 ft.TextStyle
 ```
+
+Coverage for videre:
+
+```
+pytest --cov=videre --cov-report=term-missing --cov-report=html videre_tests
+```

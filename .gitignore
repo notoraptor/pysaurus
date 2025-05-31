@@ -20,3 +20,4 @@ webrtc_event_logs/
 /tests/*.png
 ignored
 __enamlcache__
+htmlcov
