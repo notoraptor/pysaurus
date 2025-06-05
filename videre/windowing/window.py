@@ -50,6 +50,7 @@ class Window(PygameUtils, Clipboard):
         "_hide",
         "_notification_callback",
         "_lock",
+        "_nb_frames",
     )
 
     def __init__(
@@ -96,9 +97,14 @@ class Window(PygameUtils, Clipboard):
         )
 
         self._notification_callback: Optional[NotificationCallback] = None
+        self._nb_frames = 0
 
     def __repr__(self):
         return f"[{type(self).__name__}][{id(self)}]"
+
+    @property
+    def nb_frames(self) -> int:
+        return self._nb_frames
 
     @property
     def fonts(self) -> PygameFontFactory:
@@ -198,6 +204,7 @@ class Window(PygameUtils, Clipboard):
         # Refresh screen.
         self._layout.render(self)
         pygame.display.flip()
+        self._nb_frames += 1
 
         # Post manual events.
         with self._lock:

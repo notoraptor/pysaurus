@@ -1,17 +1,17 @@
 import pygame.gfxdraw
 
 from videre.colors import Colors
-from videre.widgets.abstractanimation import AbstractAnimation
+from videre.widgets.abstractanimation import AbstractAnimation, AbstractFraming, FPS
 
 
 class Progressing(AbstractAnimation):
     __wprops__ = {"_cursor", "_direction"}
     __slots__ = ("_max_cursor",)
 
-    def __init__(self, **kwargs):
-        super().__init__(fps=30, **kwargs)
+    def __init__(self, framing: AbstractFraming = None, steps=15, **kwargs):
+        super().__init__(framing=framing or FPS(30), **kwargs)
         self._set_wprops(_cursor=0, _direction=1)
-        self._max_cursor = 15
+        self._max_cursor = steps
 
     def _on_frame(self):
         curr_direction = self._get_wprop("_direction")
