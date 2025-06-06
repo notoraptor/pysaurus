@@ -208,11 +208,17 @@ class Container(AbstractLayout):
 
 
 def _resolve_size(view_size: int | None, parent_size: int | None) -> int | None:
+    """
+    Compute a size based on view size and parent size.
+    Allow view size to have negative value (typically -1) to force no size,
+    which means to render the container with its natural size.
+    """
     if view_size is None and parent_size is None:
-        return None
+        size = None
     elif view_size is None:
-        return parent_size
+        size = parent_size
     elif parent_size is None:
-        return view_size
+        size = view_size
     else:
-        return min(view_size, parent_size)
+        size = min(view_size, parent_size)
+    return size if size is not None and size >= 0 else None

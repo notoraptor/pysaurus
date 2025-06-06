@@ -11,7 +11,11 @@ class AbstractCheckButton(Div):
     _TEXT_1 = "☑"
     __style__ = StyleDef(
         default=Style(
-            vertical_alignment=Alignment.CENTER, horizontal_alignment=Alignment.CENTER
+            vertical_alignment=Alignment.CENTER,
+            horizontal_alignment=Alignment.CENTER,
+            # set width and height to -1 to render with natural size
+            width=-1,
+            height=-1,
         )
     )
 

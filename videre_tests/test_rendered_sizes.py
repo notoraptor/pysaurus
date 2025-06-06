@@ -10,7 +10,11 @@ def test_rendered_button_sizes(image_testing):
         b3 = videre.Button("Hello")
         br = videre.Radio(None)
         bc = videre.Checkbox()
-        window.controls = [videre.Column([b1, bs, b2, b3, br, bc])]
+        window.controls = [
+            videre.Column(
+                [b1, bs, b2, b3, br, bc], horizontal_alignment=videre.Alignment.CENTER
+            )
+        ]
         window.render()
         print()
         print("b:empty", b1.rendered_height)

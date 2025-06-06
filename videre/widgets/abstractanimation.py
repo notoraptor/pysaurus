@@ -69,6 +69,7 @@ class FPR(AbstractFraming):
     we check rendering only if a new value
     of `nb_window_frames` is given to the method.
     """
+
     __slots__ = ("_nb_frames", "_nb_curr_win_frames")
 
     def __init__(self, nb_frames: int):

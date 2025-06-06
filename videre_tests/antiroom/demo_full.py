@@ -61,11 +61,20 @@ class Demo:
     def start(self):
         first_demo_title = sorted(self.demos.keys())[0]
         first_demo = self.demos[first_demo_title]
-        self._demo_from(self.on_text_input)()
+        # self._demo_from(self.on_text_input)()
+        self._demo_from(first_demo)()
         self.window.run()
 
     def clear(self, *args):
         self.work.control = None
+
+    @on_demo("label")
+    def on_label(self, *args):
+        checkbox = videre.Checkbox()
+        label = videre.Label(checkbox, text="control checkbox!", height_delta=0)
+        return videre.Row(
+            [label, videre.Container(checkbox, padding=videre.Padding(left=10))]
+        )
 
     @on_demo("scroll view")
     def on_scroll_view(self, *args):
