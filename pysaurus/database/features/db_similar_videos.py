@@ -3,6 +3,7 @@ from typing import Any, Iterable, List, Set, Tuple
 from PIL.Image import Image
 
 from pysaurus.core.fraction import Fraction
+from pysaurus.core.graph import Graph
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
@@ -30,6 +31,7 @@ class DbImageProvider(AbstractImageProvider):
                     "duration",
                     "duration_time_base",
                     "date",
+                    "similarity_id",
                 ],
                 where={"readable": True, "with_thumbnails": True},
             )
@@ -48,6 +50,9 @@ class DbImageProvider(AbstractImageProvider):
 
     def video_id(self, filename) -> int:
         return self.videos[filename].video_id
+
+    def similarity(self, filename) -> int | None:
+        return self.videos[filename].similarity_id
 
     def to_sortable_group(self, group: Set[str]) -> Tuple:
         return (
@@ -70,7 +75,7 @@ class DbSimilarVideos:
             )
         ]
         with db.to_save():
-            db.set_similarities({video_id: None for video_id in video_indices})
+            # db.set_similarities({video_id: None for video_id in video_indices})
             try:
                 cls._find_similar_videos(db, miniatures)
             except Exception:
@@ -90,7 +95,24 @@ class DbSimilarVideos:
         imp = DbImageProvider(db)
         ac = ApproximateComparatorAnnoy(imp)
         combined = ac.get_comparable_images_cos()
-        similarities = compare_miniatures(miniatures, combined, SIM_LIMIT)
+        new_similarities = compare_miniatures(miniatures, combined, SIM_LIMIT)
+
+        old_similarities = {}
+        for filename, _ in imp.items():
+            similarity_id = imp.similarity(filename)
+            if similarity_id not in (None, -1):
+                old_similarities.setdefault(similarity_id, []).append(filename)
+        graph = Graph()
+        for old_similarity_group in old_similarities.values():
+            if len(old_similarity_group) > 1:
+                f, *fs = old_similarity_group
+                for other in fs:
+                    graph.connect(f, other)
+        for group in new_similarities:
+            f, *fs = group
+            for other in fs:
+                graph.connect(f, other)
+        similarities = [group for group in graph.pop_groups() if len(group) > 1]
 
         video_indices = [m.video_id for m in miniatures]
         db.set_similarities({video_id: -1 for video_id in video_indices})

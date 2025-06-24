@@ -18,3 +18,7 @@ class AbstractImageProvider(ABC):
     @abstractmethod
     def length(self, filename) -> float:
         pass
+
+    @abstractmethod
+    def similarity(self, filename) -> int | None:
+        pass

@@ -5,12 +5,13 @@ from PIL import ImageFilter
 from annoy import AnnoyIndex
 
 from pysaurus.core.informer import Informer
+from pysaurus.core.notifications import Message
 from pysaurus.core.profiling import Profiler
 from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
 
 
 class ApproximateComparatorAnnoy:
-    __slots__ = ("vectors", "vector_size", "notifier")
+    __slots__ = ("vectors", "vector_size", "notifier", "indices_to_compare")
     DIM = 16
     SIZE = (DIM, DIM)
     WEIGHT_LENGTH = 8
@@ -25,6 +26,7 @@ class ApproximateComparatorAnnoy:
         blur = ImageFilter.BoxBlur(1)
         vector_size = 3 * self.DIM * self.DIM + weight_length
         vectors = []
+        indices_to_compare = []
         for i, (identifier, image) in enumerate(
             self.notifier.tasks(imp.items(), "get vectors", imp.count())
         ):
@@ -36,8 +38,14 @@ class ApproximateComparatorAnnoy:
             )
             assert len(vector) == vector_size
             vectors.append((identifier, vector))
+            if imp.similarity(identifier) is None:
+                indices_to_compare.append(i)
         self.vectors = vectors
         self.vector_size = vector_size
+        self.indices_to_compare = indices_to_compare
+        self.notifier.notify(
+            Message(f"To compare: {len(self.indices_to_compare)} video(s).")
+        )
 
     def get_comparable_images_cos(self) -> Dict[Any, Dict[Any, float]]:
         metric = "angular"
@@ -67,10 +75,12 @@ class ApproximateComparatorAnnoy:
             t.build(self.NB_TREES)
 
         # Get nearest neighbors for each vector.
+        # NB: For full comparison,
+        # use range(len(vectors)) instead of self.indices_to_compare
         results = [
             (i, t.get_nns_by_item(i, nb_near, include_distances=True))
             for i in self.notifier.tasks(
-                range(len(vectors)), desc="Search in Annoy index"
+                self.indices_to_compare, desc="Search in Annoy index"
             )
         ]
 
