@@ -271,7 +271,7 @@ class Window(PygameUtils, Clipboard):
         self._context = None
         self.__refresh_controls()
 
-    def set_notification_callback(self, callback: Optional[NotificationCallback]):
+    def set_notification_callback(self, callback: NotificationCallback | None):
         self._notification_callback = callback
 
     def __on_event(self, event: Event):
@@ -367,7 +367,7 @@ class Window(PygameUtils, Clipboard):
                 parent_x = 0 if down.parent is None else down.parent.global_x
                 parent_y = 0 if down.parent is None else down.parent.global_y
                 EventPropagator.handle_mouse_down_move(
-                    self._down[button],
+                    down,
                     MouseEvent.from_mouse_motion(
                         event, event.pos[0] - parent_x, event.pos[1] - parent_y
                     ),
