@@ -35,7 +35,7 @@ class _CursorEvent(ABC):
         raise NotImplementedError()
 
     @classmethod
-    def null(self, rendered: RenderedText) -> _CursorDefinition:
+    def null(cls, rendered: RenderedText) -> _CursorDefinition:
         x = 0
         y = rendered.font_sizes.height_delta
         pos = 0

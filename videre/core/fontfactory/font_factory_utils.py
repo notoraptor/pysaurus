@@ -148,11 +148,11 @@ class WordsLine(Line[WordTask]):
         return words_line
 
 
-def align_words(lines: list[Line[WordTask]], width: int, align=TextAlign.LEFT):
+def align_words(lines: list[Line[WordTask]], width: int, align=TextAlign.LEFT) -> None:
     if align == TextAlign.NONE or align == TextAlign.LEFT:
         return
     if align == TextAlign.JUSTIFY:
-        return justify_words(lines, width)
+        justify_words(lines, width)
     for line in lines:
         if line.elements:
             assert line.elements[0].x == 0, line
@@ -164,7 +164,7 @@ def align_words(lines: list[Line[WordTask]], width: int, align=TextAlign.LEFT):
                     wt.x += remaining
 
 
-def justify_words(lines: list[Line[WordTask]], width: int):
+def justify_words(lines: list[Line[WordTask]], width: int) -> None:
     paragraphs = []
     p = []
     for line in lines:
