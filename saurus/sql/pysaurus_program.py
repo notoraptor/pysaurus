@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from pysaurus.application.application import Config
 from pysaurus.core.components import AbsolutePath
@@ -27,7 +26,7 @@ class PysaurusProgram:
         self.home_dir = AbsolutePath(home_dir)
         self.app_dir = AbsolutePath.join(self.home_dir, f".{self.app_name}").mkdir()
         self.dbs_dir = AbsolutePath.join(self.app_dir, "databases").mkdir()
-        self.databases: Dict[AbsolutePath, Optional[PysaurusCollection]] = {}
+        self.databases: dict[AbsolutePath, PysaurusCollection | None] = {}
         # Load database names.
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
             if entry.is_dir():
@@ -43,7 +42,7 @@ class PysaurusProgram:
         say.set_language(self.config.language)
         say.set_folder(self.lang_dir)
 
-    def get_database_paths(self) -> List[AbsolutePath]:
+    def get_database_paths(self) -> list[AbsolutePath]:
         return sorted(self.databases.keys())
 
     def open_database(self, name: str) -> PysaurusCollection:

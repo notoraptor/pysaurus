@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from typing import Optional
 
 import pygame
 
@@ -17,11 +16,7 @@ class Animator(AbstractLayout):
     __size__ = 1
 
     def __init__(
-        self,
-        control: Widget,
-        on_frame: Optional[OnFrame] = None,
-        fps: int = 60,
-        **kwargs
+        self, control: Widget, on_frame: OnFrame | None = None, fps: int = 60, **kwargs
     ):
         super().__init__([control], **kwargs)
         self._clock = pygame.time.Clock()
@@ -41,11 +36,11 @@ class Animator(AbstractLayout):
         self._set_controls([control])
 
     @property
-    def on_frame(self) -> Optional[OnFrame]:
+    def on_frame(self) -> OnFrame | None:
         return self._get_wprop("on_frame")
 
     @on_frame.setter
-    def on_frame(self, callback: Optional[OnFrame]):
+    def on_frame(self, callback: OnFrame | None):
         self._set_wprop("on_frame", callback)
 
     @property

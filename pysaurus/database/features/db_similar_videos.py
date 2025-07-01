@@ -1,4 +1,4 @@
-from typing import Any, Iterable, List, Set, Tuple
+from typing import Any, Iterable
 
 from PIL.Image import Image
 
@@ -40,7 +40,7 @@ class DbImageProvider(AbstractImageProvider):
     def count(self) -> int:
         return len(self.videos)
 
-    def items(self) -> Iterable[Tuple[Any, Image]]:
+    def items(self) -> Iterable[tuple[Any, Image]]:
         for filename, video in self.videos.items():
             yield filename, ImageUtils.from_blob(video.thumbnail)
 
@@ -54,7 +54,7 @@ class DbImageProvider(AbstractImageProvider):
     def similarity(self, filename) -> int | None:
         return self.videos[filename].similarity_id
 
-    def to_sortable_group(self, group: Set[str]) -> Tuple:
+    def to_sortable_group(self, group: set[str]) -> tuple:
         return (
             len(group),
             -max(self.videos[filename].date.time for filename in group),
@@ -66,7 +66,7 @@ class DbSimilarVideos:
     @classmethod
     @Profiler.profile()
     def find_similar_videos(cls, db: AbstractDatabase) -> None:
-        miniatures: List[Miniature] = db.ensure_miniatures()
+        miniatures: list[Miniature] = db.ensure_miniatures()
         video_indices = [m.video_id for m in miniatures]
         previous_sim = [
             row.similarity_id
@@ -90,7 +90,7 @@ class DbSimilarVideos:
 
     @classmethod
     def _find_similar_videos(
-        cls, db: AbstractDatabase, miniatures: List[Miniature] = None
+        cls, db: AbstractDatabase, miniatures: list[Miniature] = None
     ):
         imp = DbImageProvider(db)
         ac = ApproximateComparatorAnnoy(imp)

@@ -1,7 +1,7 @@
 import logging
 import sys
 from abc import abstractmethod
-from typing import Any, Callable, List, Optional, Self, Tuple, Union
+from typing import Any, Callable, Self
 
 import pygame
 
@@ -37,11 +37,11 @@ class Widget(PygameUtils):
         self._new = {"weight": weight}
         self._old_update = ()
         self._transient_state = {}
-        self._surface: Optional[pygame.Surface] = None
+        self._surface: pygame.Surface | None = None
         self._rc = 0
 
         self._children_pos = PositionMapping()
-        self._parent: Optional[Widget] = None
+        self._parent: Widget | None = None
         if parent:
             self.with_parent(parent)
 
@@ -67,7 +67,7 @@ class Widget(PygameUtils):
     def remove_child(self, child: Self):
         self._children_pos.remove(child)
 
-    def get_lineage(self) -> List[Self]:
+    def get_lineage(self) -> list[Self]:
         ancestors = []
         widget = self
         while True:
@@ -127,7 +127,7 @@ class Widget(PygameUtils):
         return self.x
 
     @property
-    def pos(self) -> Tuple[int, int]:
+    def pos(self) -> tuple[int, int]:
         return self.x, self.y
 
     @property
@@ -159,17 +159,17 @@ class Widget(PygameUtils):
             else:
                 root = parent
 
-    def get_local_coordinates(self, global_x: int, global_y: int) -> Tuple[int, int]:
+    def get_local_coordinates(self, global_x: int, global_y: int) -> tuple[int, int]:
         return global_x - self.x, global_y - self.y
 
     def get_mouse_owner(
         self, x_in_parent: int, y_in_parent: int
-    ) -> Optional[MouseOwnership]:
+    ) -> MouseOwnership | None:
         return self._get_mouse_owner(x_in_parent, y_in_parent)
 
     def _get_mouse_owner(
         self, x_in_parent: int, y_in_parent: int
-    ) -> Optional[MouseOwnership]:
+    ) -> MouseOwnership | None:
         if (
             self._surface
             and self.left <= x_in_parent <= self.right
@@ -178,12 +178,12 @@ class Widget(PygameUtils):
             return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
 
-    def collect_matchs(self, callback: Callable[["Widget"], bool]) -> List["Widget"]:
+    def collect_matchs(self, callback: Callable[["Widget"], bool]) -> list["Widget"]:
         return [self] if callback(self) else []
 
     def get_mouse_wheel_owner(
         self, x_in_parent: int, y_in_parent: int
-    ) -> Optional[MouseOwnership]:
+    ) -> MouseOwnership | None:
         return self.get_mouse_owner(x_in_parent, y_in_parent)
 
     def __repr__(self):
@@ -267,7 +267,7 @@ class Widget(PygameUtils):
     def handle_click(self, button: MouseButton):
         pass
 
-    def handle_focus_in(self) -> Union[bool, Self]:
+    def handle_focus_in(self) -> bool | Self:
         """Return True if this widget accepts the focus, False otherwise."""
         return False
 

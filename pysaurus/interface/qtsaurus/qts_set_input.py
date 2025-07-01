@@ -1,4 +1,4 @@
-from typing import Sequence, Type, Union
+from typing import Sequence, Type
 
 from PySide6.QtWidgets import QGridLayout, QLineEdit, QPushButton, QWidget
 
@@ -6,7 +6,7 @@ from pysaurus.interface.common.qt_utils import Callback, TYPE_VALIDATORS
 from pysaurus.interface.qtsaurus.qts_alerter import QtsAlerter
 from pysaurus.interface.qtsaurus.qts_elided_label import QtsElidedLabel
 
-Value = Union[str, bool, int, float]
+Value = str | bool | int | float
 ValueType = Type[Value]
 
 

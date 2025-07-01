@@ -1,5 +1,5 @@
 import sys
-from typing import Callable, Dict, Optional, TypeVar
+from typing import Callable, TypeVar
 
 from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import Date
@@ -27,8 +27,8 @@ class Notifier(AbstractNotifier):
         print(notification)
 
     def __init__(self):
-        self.__managers: Dict[type, ManagerType] = {}
-        self.__default_manager: Optional[Callable[[Notification], None]] = None
+        self.__managers: dict[type, ManagerType] = {}
+        self.__default_manager: Callable[[Notification], None] | None = None
         self.__default_manager_policy = Notifier.DM_CALL_SOONER
         self.__log_path = None
         self.__log_written = False
@@ -36,7 +36,7 @@ class Notifier(AbstractNotifier):
     def __call__(self, notification):
         return self.notify(notification)
 
-    def set_log_path(self, path: Optional[str]):
+    def set_log_path(self, path: str | None):
         if self.__log_path != path:
             self.__log_written = False
         self.__log_path = path

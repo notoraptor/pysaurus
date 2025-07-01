@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Optional, Tuple
+from typing import Any, Iterable
 
 import pygame
 import pygame.freetype
@@ -44,7 +44,7 @@ class RenderedText:
 
     def __init__(
         self,
-        lines: List[Line[WordTask]],
+        lines: list[Line[WordTask]],
         surface: pygame.Surface,
         font_sizes: FontSizes,
     ):
@@ -121,7 +121,7 @@ class PygameTextRendering:
         self,
         width: int,
         height: int,
-        lines: List[Line[WordTask]],
+        lines: list[Line[WordTask]],
         align: TextAlign,
         color: pygame.Color,
     ) -> pygame.Surface:
@@ -157,22 +157,22 @@ class PygameTextRendering:
             out.blit(underline, (x1, line.y - box.y))
 
     def _get_char_tasks(
-        self, text: str, width: Optional[int], compact: bool
-    ) -> Tuple[int, int, List[Line[CharTask]]]:
+        self, text: str, width: int | None, compact: bool
+    ) -> tuple[int, int, list[Line[CharTask]]]:
         width = float("inf") if width is None else width
         text_factory = Characters(self)
         return self._get_tasks(text_factory, text, width, compact)
 
     def _get_word_tasks(
         self, text: str, width: int, compact: bool
-    ) -> Tuple[int, int, List[Line[WordTask]]]:
+    ) -> tuple[int, int, list[Line[WordTask]]]:
         text_factory = Words(self)
         return self._get_tasks(text_factory, text, width, compact)
 
     def _get_tasks[
         T
-    ](self, tel: "TextElements[T]", text: str, width: int, compact: bool) -> Tuple[
-        int, int, List[Line[T]]
+    ](self, tel: "TextElements[T]", text: str, width: int, compact: bool) -> tuple[
+        int, int, list[Line[T]]
     ]:
         lines = []
         task_line = tel.newline()
@@ -197,7 +197,7 @@ class PygameTextRendering:
         new_width, height = self._get_text_dimensions(lines, compact)
         return new_width, height, lines
 
-    def _get_text_dimensions(self, lines: List[Line], compact: bool) -> Tuple[int, int]:
+    def _get_text_dimensions(self, lines: list[Line], compact: bool) -> tuple[int, int]:
         # Compute width, height and ys
         new_width, height = 0, 0
         if lines:
@@ -215,7 +215,7 @@ class PygameTextRendering:
             )
         return new_width, height
 
-    def parse_char(self, ic: Tuple[int, str]):
+    def parse_char(self, ic: tuple[int, str]):
         charpos, c = ic
         font = self._get_font(c)
 
@@ -261,10 +261,10 @@ class TextElements[T](ABC):
 class Characters(TextElements[CharTask]):
     __slots__ = ()
 
-    def text_to_elements(self, text: str) -> Iterable[Tuple[int, str]]:
+    def text_to_elements(self, text: str) -> Iterable[tuple[int, str]]:
         return enumerate(text)
 
-    def parse_element(self, ic: Tuple[int, str]) -> CharTask:
+    def parse_element(self, ic: tuple[int, str]) -> CharTask:
         return self.rendering.parse_char(ic)
 
 

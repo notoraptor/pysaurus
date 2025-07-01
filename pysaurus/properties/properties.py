@@ -1,11 +1,11 @@
-from typing import Collection, List, Optional, Union
+from typing import Collection
 
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import Enumeration
 
-PropUnitType = Union[bool, int, float, str]
-PropRawType = Union[PropUnitType, Collection]
-PropValueType = Union[PropUnitType, list]
+PropUnitType = bool | int | float | str
+PropRawType = PropUnitType | Collection
+PropValueType = PropUnitType | list
 
 
 def _str_to_bool(value: str) -> bool:
@@ -32,7 +32,7 @@ class PropTypeDesc:
         return PROP_UNIT_TYPE_MAP[self._desc["type"]]
 
     @property
-    def enumeration(self) -> Optional[List[PropUnitType]]:
+    def enumeration(self) -> list[PropUnitType] | None:
         return self._desc["enumeration"]
 
     @property
@@ -40,11 +40,11 @@ class PropTypeDesc:
         return self._desc["multiple"]
 
     @property
-    def default(self) -> List[PropUnitType]:
+    def default(self) -> list[PropUnitType]:
         return self._desc["defaultValues"]
 
     @property
-    def property_id(self) -> Optional[int]:
+    def property_id(self) -> int | None:
         return self._desc.get("property_id")
 
 
@@ -63,13 +63,13 @@ class PropTypeValidator(PropTypeDesc):
         self.to_str = to_str
         self._enum_set = set(self.enumeration or ())
 
-    def _bool_to_sql(self, values: List[bool]) -> List[str]:
+    def _bool_to_sql(self, values: list[bool]) -> list[str]:
         return [str(int(value)) for value in values]
 
-    def _str_to_sql(self, values: List[str]) -> List[str]:
+    def _str_to_sql(self, values: list[str]) -> list[str]:
         return values
 
-    def _value_to_sql(self, values: list) -> List[str]:
+    def _value_to_sql(self, values: list) -> list[str]:
         return [str(value) for value in values]
 
     def __str__(self):
@@ -107,7 +107,7 @@ class PropTypeValidator(PropTypeDesc):
             raise exceptions.InvalidPropertyValue(self, value)
         return value
 
-    def instantiate(self, values: Collection[PropUnitType]) -> List[PropUnitType]:
+    def instantiate(self, values: Collection[PropUnitType]) -> list[PropUnitType]:
         if not values:
             return []
         if self.multiple:
@@ -139,7 +139,7 @@ class PropTypeValidator(PropTypeDesc):
     def define(
         cls,
         name: str,
-        prop_type: Union[str, type],
+        prop_type: str | type,
         definition: PropRawType,
         multiple: bool,
         *,

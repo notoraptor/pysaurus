@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 
 class Position:
@@ -23,7 +23,7 @@ class PositionMapping:
     __slots__ = ["_el_to_pos"]
 
     def __init__(self):
-        self._el_to_pos: Dict[Any, Position] = {}
+        self._el_to_pos: dict[Any, Position] = {}
 
     def set(self, element, x: int, y: int):
         self._el_to_pos[element] = Position(x, y)

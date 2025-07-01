@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, Iterable, List, Sequence, Set
+from typing import Iterable, Sequence
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.informer import Informer
@@ -26,8 +26,8 @@ class VideoIndexer(AbstractVideoIndexer):
         self, notifier: Notifier = DEFAULT_NOTIFIER, index_path: AbsolutePath = None
     ):
         self.notifier = notifier
-        self.term_to_filenames: Dict[Tag, Set[str]] = {}
-        self.filename_to_terms: Dict[str, List[Tag]] = {}
+        self.term_to_filenames: dict[Tag, set[str]] = {}
+        self.filename_to_terms: dict[str, list[Tag]] = {}
         self.built = False
         self.index_path = index_path
 
@@ -123,7 +123,7 @@ class VideoIndexer(AbstractVideoIndexer):
     @Profiler.profile_method()
     def query_and(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
-    ) -> Set[AbsolutePath]:
+    ) -> set[AbsolutePath]:
         # terms = terms_to_tags(terms, cls=list)
         base = {filename.path for filename in filenames}
         return AbsolutePath.map(
@@ -135,7 +135,7 @@ class VideoIndexer(AbstractVideoIndexer):
     @Profiler.profile_method()
     def query_or(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
-    ) -> Set[AbsolutePath]:
+    ) -> set[AbsolutePath]:
         # terms = terms_to_tags(terms, cls=list)
         base = {filename.path for filename in filenames}
         return AbsolutePath.map(

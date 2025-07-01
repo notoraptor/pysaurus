@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import ensure_list_or_tuple
@@ -141,17 +141,17 @@ class DatabaseField(ABC):
 
     def __init__(self, name: str, sortable=True):
         self.name = name
-        self._definition: Optional[List[str]] = None
+        self._definition: list[str] | None = None
         self._sortable = sortable
 
     @property
-    def definition(self) -> List[str]:
+    def definition(self) -> list[str]:
         if self._definition is None:
             self._definition = self._code_definition()
         return self._definition
 
     @abstractmethod
-    def _code_definition(self) -> List[str]:
+    def _code_definition(self) -> list[str]:
         raise NotImplementedError()
 
     def code_length(self) -> str:
@@ -170,7 +170,7 @@ class DatabaseField(ABC):
         direction = "DESC" if reverse else "ASC"
         return ", ".join(f"{column} {direction}" for column in self.definition)
 
-    def get_conditions(self, values: List[Any]) -> Dict[str, Any]:
+    def get_conditions(self, values: list[Any]) -> dict[str, Any]:
         return {column: value for column, value in zip(self.definition, values)}
 
 
@@ -182,7 +182,7 @@ class _VideoLength(DatabaseField):
         self.duration = duration
         self.duration_time_base = duration_time_base
 
-    def _code_definition(self) -> List[str]:
+    def _code_definition(self) -> list[str]:
         f_duration = self.duration.code_field()
         f_duration_time_base = self.duration_time_base.code_field()
         return [f"({f_duration} * 1.0 / {f_duration_time_base})"]
@@ -200,7 +200,7 @@ class _BitRate(DatabaseField):
         self.file_size = file_size
         self.duration_time_base = duration_time_base
 
-    def _code_definition(self) -> List[str]:
+    def _code_definition(self) -> list[str]:
         f_file_size = self.file_size.code_field()
         f_duration = self.duration.code_field()
         f_duration_time_base = self.duration_time_base.code_field()
@@ -215,7 +215,7 @@ class _DateEntryModified(DatabaseField):
         self.date_entry_modified = date_entry_modified
         self.mtime = mtime
 
-    def _code_definition(self) -> List[str]:
+    def _code_definition(self) -> list[str]:
         f_date_entry_modified = self.date_entry_modified.code_field()
         f_mtime = self.mtime.code_field()
         return [f"COALESCE({f_date_entry_modified}, {f_mtime})"]
@@ -227,7 +227,7 @@ class _DateEntryOpened(DatabaseField):
         self.date_entry_opened = date_entry_opened
         self.mtime = mtime
 
-    def _code_definition(self) -> List[str]:
+    def _code_definition(self) -> list[str]:
         f_date_entry_opened = self.date_entry_opened.code_field()
         f_mtime = self.mtime.code_field()
         return [f"COALESCE({f_date_entry_opened}, {f_mtime})"]
@@ -235,7 +235,7 @@ class _DateEntryOpened(DatabaseField):
 
 class CombinedFields:
     @staticmethod
-    def disk(filename: TableField, driver_id: TableField) -> List[str]:
+    def disk(filename: TableField, driver_id: TableField) -> list[str]:
         return [f"pysaurus_get_disk({filename}, {driver_id})"]
 
 
@@ -246,5 +246,5 @@ class DatabaseTableField(DatabaseField):
         self.table_field = table_field
         super().__init__(table_field.name, sortable=sortable)
 
-    def _code_definition(self) -> List[str]:
+    def _code_definition(self) -> list[str]:
         return [self.table_field.code_field()]

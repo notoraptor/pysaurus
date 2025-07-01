@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from typing import List, Optional, Tuple
 
 import pygame
 
@@ -44,8 +43,8 @@ class Column(AbstractControlsLayout):
         max_width = 0
         total_height = 0
         controls = self.controls
-        rendered: List[Optional[Tuple[Widget, pygame.Surface]]] = [None] * len(controls)
-        sizes: List[Optional[int]] = [None] * len(controls)
+        rendered: list[tuple[Widget, pygame.Surface] | None] = [None] * len(controls)
+        sizes: list[int | None] = [None] * len(controls)
 
         weights = [ctrl.weight for ctrl in controls]
         total_weight = sum(weights)

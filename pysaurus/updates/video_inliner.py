@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 
 
@@ -120,7 +118,7 @@ def flatten_video(video: Video):
     ]
 
 
-def get_video_text(video: Video, prop_names: List[str]):
+def get_video_text(video: Video, prop_names: list[str]):
     properties = video._get("properties")
     return (
         f"{video._get('filename')};{video._get('meta_title')};"
@@ -128,7 +126,7 @@ def get_video_text(video: Video, prop_names: List[str]):
     )
 
 
-def get_video_text_triple(video: Video, prop_names: List[str]) -> Tuple[str, str, str]:
+def get_video_text_triple(video: Video, prop_names: list[str]) -> tuple[str, str, str]:
     properties = video._get("properties")
     return (
         video._get("filename"),

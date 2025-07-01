@@ -1,6 +1,6 @@
 import base64
 from abc import ABC, abstractmethod
-from typing import Dict, List, TypedDict
+from typing import TypedDict
 
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
 from pysaurus.properties.properties import PropUnitType
@@ -29,7 +29,7 @@ class VideoPattern(ABC):
 
     @property
     @abstractmethod
-    def errors(self) -> List[str]:
+    def errors(self) -> list[str]:
         raise NotImplementedError()
 
     @property
@@ -174,22 +174,22 @@ class VideoPattern(ABC):
 
     @property
     @abstractmethod
-    def audio_languages(self) -> List[str]:
+    def audio_languages(self) -> list[str]:
         raise NotImplementedError()
 
     @property
     @abstractmethod
-    def subtitle_languages(self) -> List[str]:
+    def subtitle_languages(self) -> list[str]:
         raise NotImplementedError()
 
     @property
     @abstractmethod
-    def properties(self) -> Dict[str, List[PropUnitType]]:
+    def properties(self) -> dict[str, list[PropUnitType]]:
         raise NotImplementedError()
 
     @property
     @abstractmethod
-    def moves(self) -> List[MoveType]:
+    def moves(self) -> list[MoveType]:
         raise NotImplementedError()
 
     @property

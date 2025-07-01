@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Self
+from typing import Self
 
 import pygame
 
@@ -60,7 +60,7 @@ class WordTask(AbstractTextElement):
     __slots__ = ("width", "tasks", "height", "horizontal_shift")
 
     def __init__(
-        self, width: int, x: int, tasks: List[CharTask], height=0, horizontal_shift=0
+        self, width: int, x: int, tasks: list[CharTask], height=0, horizontal_shift=0
     ):
         super().__init__(x)
         self.width = width
@@ -84,7 +84,7 @@ class Line[T: AbstractTextElement]:
     def __init__(self, y=0, newline=False):
         self.y = y
         self.newline = newline
-        self.elements: List[T] = []
+        self.elements: list[T] = []
 
     def __repr__(self):
         return f"({self.y}, {self.elements})"
@@ -108,7 +108,7 @@ class WordsLine(Line[WordTask]):
     __slots__ = ()
 
     @classmethod
-    def from_chars(cls, lines: List[Line[CharTask]], keep_spaces=False):
+    def from_chars(cls, lines: list[Line[CharTask]], keep_spaces=False):
         if keep_spaces:
             word_lines = [WordsLine._chars_to_word(line) for line in lines]
         else:
@@ -124,8 +124,8 @@ class WordsLine(Line[WordTask]):
 
     @classmethod
     def _split_words(cls, chars_line: Line[CharTask]) -> Self:
-        words: List[List[CharTask]] = []
-        word: List[CharTask] = []
+        words: list[list[CharTask]] = []
+        word: list[CharTask] = []
         for task in chars_line.elements:
             if task.el == " ":
                 if word:
@@ -148,7 +148,7 @@ class WordsLine(Line[WordTask]):
         return words_line
 
 
-def align_words(lines: List[Line[WordTask]], width: int, align=TextAlign.LEFT):
+def align_words(lines: list[Line[WordTask]], width: int, align=TextAlign.LEFT):
     if align == TextAlign.NONE or align == TextAlign.LEFT:
         return
     if align == TextAlign.JUSTIFY:
@@ -164,7 +164,7 @@ def align_words(lines: List[Line[WordTask]], width: int, align=TextAlign.LEFT):
                     wt.x += remaining
 
 
-def justify_words(lines: List[Line[WordTask]], width: int):
+def justify_words(lines: list[Line[WordTask]], width: int):
     paragraphs = []
     p = []
     for line in lines:

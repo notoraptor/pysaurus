@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Sequence
 
 import pygame
 
@@ -51,7 +51,7 @@ class Fancybox(AbstractLayout):
 
     def get_mouse_owner(
         self, x_in_parent: int, y_in_parent: int
-    ) -> Optional[MouseOwnership]:
+    ) -> MouseOwnership | None:
         owner = super().get_mouse_owner(x_in_parent, y_in_parent)
         return owner or MouseOwnership(self, x_in_parent, y_in_parent)
 

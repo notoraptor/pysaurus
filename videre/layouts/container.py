@@ -1,5 +1,3 @@
-from typing import Optional
-
 import pygame
 import pygame.gfxdraw
 
@@ -28,10 +26,10 @@ class Container(AbstractLayout):
 
     def __init__(
         self,
-        control: Optional[Widget] = None,
+        control: Widget | None = None,
         *,
-        border: Optional[Border] = None,
-        padding: Optional[Padding] = None,
+        border: Border | None = None,
+        padding: Padding | None = None,
         background_color: ColoringDefinition = None,
         vertical_alignment: Alignment = Alignment.START,
         horizontal_alignment: Alignment = Alignment.START,
@@ -56,7 +54,7 @@ class Container(AbstractLayout):
         return control
 
     @control.setter
-    def control(self, control: Optional[Widget]):
+    def control(self, control: Widget | None):
         self._set_controls([control or EmptyWidget()])
 
     @property
@@ -64,7 +62,7 @@ class Container(AbstractLayout):
         return self._get_wprop("border")
 
     @border.setter
-    def border(self, border: Optional[Border]):
+    def border(self, border: Border | None):
         self._set_wprop("border", border or Border())
 
     @property
@@ -72,7 +70,7 @@ class Container(AbstractLayout):
         return self._get_wprop("padding")
 
     @padding.setter
-    def padding(self, padding: Optional[Padding]):
+    def padding(self, padding: Padding | None):
         self._set_wprop("padding", padding or Padding())
 
     @property
@@ -88,7 +86,7 @@ class Container(AbstractLayout):
         return self._get_wprop("horizontal_alignment")
 
     @horizontal_alignment.setter
-    def horizontal_alignment(self, alignment: Optional[Alignment]):
+    def horizontal_alignment(self, alignment: Alignment | None):
         self._set_wprop("horizontal_alignment", alignment or Alignment.START)
 
     @property
@@ -96,7 +94,7 @@ class Container(AbstractLayout):
         return self._get_wprop("vertical_alignment")
 
     @vertical_alignment.setter
-    def vertical_alignment(self, alignment: Optional[Alignment]):
+    def vertical_alignment(self, alignment: Alignment | None):
         self._set_wprop("vertical_alignment", alignment or Alignment.START)
 
     @property

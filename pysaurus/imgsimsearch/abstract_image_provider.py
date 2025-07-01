@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, Tuple
+from typing import Any, Iterable
 
 from PIL.Image import Image
 
@@ -12,7 +12,7 @@ class AbstractImageProvider(ABC):
         pass
 
     @abstractmethod
-    def items(self) -> Iterable[Tuple[Any, Image]]:
+    def items(self) -> Iterable[tuple[Any, Image]]:
         pass
 
     @abstractmethod

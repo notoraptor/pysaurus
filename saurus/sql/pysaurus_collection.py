@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Collection, Dict, Iterable, List, Sequence, Tuple, Union
+from typing import Any, Collection, Iterable, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -51,7 +51,7 @@ class PysaurusCollection(AbstractDatabase):
             for row in self.db.query("SELECT source FROM collection_source")
         ]
 
-    def _set_folders(self, folders: List[AbsolutePath]) -> None:
+    def _set_folders(self, folders: list[AbsolutePath]) -> None:
         folders_tree = PathTree(folders)
         videos = self.db.query_all("SELECT video_id, filename FROM video")
         self.db.modify_many(
@@ -70,8 +70,8 @@ class PysaurusCollection(AbstractDatabase):
         )
 
     def videos_tag_get(
-        self, name: str, indices: List[int] = ()
-    ) -> Dict[int, List[PropUnitType]]:
+        self, name: str, indices: list[int] = ()
+    ) -> dict[int, list[PropUnitType]]:
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
         output = {}
@@ -92,7 +92,7 @@ class PysaurusCollection(AbstractDatabase):
         return output
 
     def videos_tag_set(
-        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
+        self, name: str, updates: dict[int, Collection[PropUnitType]], merge=False
     ):
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
@@ -141,7 +141,7 @@ class PysaurusCollection(AbstractDatabase):
     ) -> None:
         if not properties:
             return
-        props: Dict[str, PropTypeValidator] = {
+        props: dict[str, PropTypeValidator] = {
             prop_desc["name"]: PropTypeValidator(prop_desc)
             for prop_desc in self.get_prop_types()
         }
@@ -191,7 +191,7 @@ class PysaurusCollection(AbstractDatabase):
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ) -> List[dict]:
+    ) -> list[dict]:
         return prop_type_search(
             self.db,
             name=name,
@@ -202,11 +202,7 @@ class PysaurusCollection(AbstractDatabase):
         )
 
     def prop_type_add(
-        self,
-        name: str,
-        prop_type: Union[str, type],
-        definition: PropRawType,
-        multiple: bool,
+        self, name: str, prop_type: str | type, definition: PropRawType, multiple: bool
     ) -> None:
         prop_def = PropTypeValidator.define(
             name, prop_type, definition, multiple, describe=True
@@ -300,14 +296,14 @@ class PysaurusCollection(AbstractDatabase):
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> List[VideoPattern]:
+    ) -> list[VideoPattern]:
         # where = where or {}
         # where["discarded"] = where.get("discarded", False)
         return video_mega_search(
             self.db, include=include, with_moves=with_moves, where=where
         )
 
-    def _get_video_terms(self, video_id: int) -> List[str]:
+    def _get_video_terms(self, video_id: int) -> list[str]:
         # **NB**: Keep this method for reference.
         video = self.db.query_one(
             "SELECT filename, meta_title FROM video WHERE video_id = ?", [video_id]
@@ -327,7 +323,7 @@ class PysaurusCollection(AbstractDatabase):
         t_all_str_low = string_to_pieces(all_str.lower())
         return t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
 
-    def videos_get_terms(self) -> Dict[int, List[str]]:
+    def videos_get_terms(self) -> dict[int, list[str]]:
         output = {}
         for row in self.db.query(
             """
@@ -378,7 +374,7 @@ class PysaurusCollection(AbstractDatabase):
         self.provider.delete(video_id)
         self._notify_fields_modified(["move_id"])
 
-    def videos_set_field(self, field: str, changes: Dict[int, Any]):
+    def videos_set_field(self, field: str, changes: dict[int, Any]):
         self.db.modify_many(
             f"UPDATE video SET {WRITABLE_FIELDS[field]} = ? WHERE video_id = ?",
             ((value, video_id) for video_id, value in changes.items()),
@@ -386,11 +382,11 @@ class PysaurusCollection(AbstractDatabase):
 
     def videos_add(
         self,
-        video_entries: List[VideoEntry],
-        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
+        video_entries: list[VideoEntry],
+        runtime_info: dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
-        entry_with_new_meta_titles: List[VideoEntry] = []
-        entry_map: Dict[str, VideoEntry] = {
+        entry_with_new_meta_titles: list[VideoEntry] = []
+        entry_map: dict[str, VideoEntry] = {
             entry.filename: entry for entry in video_entries
         }
         assert len(entry_map) == len(video_entries)
@@ -417,8 +413,8 @@ class PysaurusCollection(AbstractDatabase):
 
     def _update_video_entries(
         self,
-        entries: List[VideoEntry],
-        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
+        entries: list[VideoEntry],
+        runtime_info: dict[AbsolutePath, VideoRuntimeInfo],
     ):
         if not entries:
             return
@@ -465,8 +461,8 @@ class PysaurusCollection(AbstractDatabase):
 
     def _add_pure_new_entries(
         self,
-        entries: List[VideoEntry],
-        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
+        entries: list[VideoEntry],
+        runtime_info: dict[AbsolutePath, VideoRuntimeInfo],
     ):
         if not entries:
             return
@@ -513,7 +509,7 @@ class PysaurusCollection(AbstractDatabase):
             audio_languages + subtitle_languages,
         )
 
-    def _update_video_texts(self, entries: List[VideoEntry]):
+    def _update_video_texts(self, entries: list[VideoEntry]):
         entry_map = {entry.video_id: entry for entry in entries}
         assert len(entry_map) == len(entries)
         texts = []
@@ -530,7 +526,7 @@ class PysaurusCollection(AbstractDatabase):
             texts,
         )
 
-    def videos_get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
+    def videos_get_moves(self) -> Iterable[tuple[int, list[dict]]]:
         for row in self.db.query(
             """
     SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
@@ -560,7 +556,7 @@ class PysaurusCollection(AbstractDatabase):
             for id_not_found in not_found:
                 yield id_not_found, found
 
-    def _thumbnails_add(self, filename_to_thumb_name: Dict[str, str]) -> None:
+    def _thumbnails_add(self, filename_to_thumb_name: dict[str, str]) -> None:
         filename_to_video_id = {
             row[0]: row[1]
             for row in self.db.query(
@@ -581,7 +577,7 @@ class PysaurusCollection(AbstractDatabase):
             ),
         )
 
-    def delete_property_values(self, name: str, values: list) -> List[int]:
+    def delete_property_values(self, name: str, values: list) -> list[int]:
         if not values:
             return []
         (prop_desc,) = self.get_prop_types(name=name)

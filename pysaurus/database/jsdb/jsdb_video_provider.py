@@ -1,7 +1,7 @@
 import logging
 import random
 from abc import abstractmethod
-from typing import Any, Dict, List, Sequence, Set
+from typing import Any, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
@@ -56,7 +56,7 @@ class Layer:
         return self.output
 
     @abstractmethod
-    def default_params(self) -> Dict:
+    def default_params(self) -> dict:
         raise NotImplementedError()
 
     @abstractmethod
@@ -70,26 +70,26 @@ class Layer:
 
 class LayerSource(Layer):
     __slots__ = ("source_def", "video_indices_found", "videos_not_yet_opened")
-    output: Set[int]
+    output: set[int]
 
     def __init__(self, database):
         super().__init__(database)
         self.source_def = SourceDef(self.params["sources"])
-        self.video_indices_found: List[int] = []
-        self.videos_not_yet_opened: List[int] = []
+        self.video_indices_found: list[int] = []
+        self.videos_not_yet_opened: list[int] = []
 
     def set_params(self, *, sources: Sequence[Sequence[str]]):
         super().set_params(sources=parse_sources(sources))
         self.source_def = SourceDef(self.params["sources"])
 
     @classmethod
-    def default_params(cls) -> Dict:
+    def default_params(cls) -> dict:
         return {"sources": [["readable"]]}
 
     def run(self):
-        video_indices: Set[int] = set()
-        video_indices_found: List[int] = []
-        videos_not_yet_opened: List[int] = []
+        video_indices: set[int] = set()
+        video_indices_found: list[int] = []
+        videos_not_yet_opened: list[int] = []
         for path in self.params["sources"]:
             source = [
                 video.video_id
@@ -149,7 +149,7 @@ class _AbstractLayerGrouping(Layer):
 
     def __init__(self, database):
         super().__init__(database)
-        self.video_id_to_values: Dict[int, List] = {}
+        self.video_id_to_values: dict[int, list] = {}
 
     def _get_grouping_values(self, video_id: int):
         if video_id not in self.video_id_to_values:
@@ -164,7 +164,7 @@ class _AbstractLayerGrouping(Layer):
             self.video_id_to_values[video_id] = values
         return self.video_id_to_values[video_id]
 
-    def _get_prop_values(self, video_id: int, name: str) -> List:
+    def _get_prop_values(self, video_id: int, name: str) -> list:
         results = self.database.videos_tag_get(name, [video_id])
         values = results[video_id]
         assert isinstance(values, list)
@@ -193,13 +193,13 @@ class _AbstractLayerGrouping(Layer):
 
 class LayerGrouping(_AbstractLayerGrouping):
     __slots__ = ()
-    input: Set[int]
+    input: set[int]
     output: GroupArray
 
     def set_params(self, *, grouping: GroupDef):
         super().set_params(grouping=grouping)
 
-    def default_params(self) -> Dict:
+    def default_params(self) -> dict:
         return {"grouping": GroupDef()}
 
     def run(self):
@@ -208,7 +208,7 @@ class LayerGrouping(_AbstractLayerGrouping):
         if not group_def:
             groups = [Group(None, self.input)]
         else:
-            grouped_videos: Dict[Any, Set[int]] = {}
+            grouped_videos: dict[Any, set[int]] = {}
             with Profiler("Grouping:group videos"):
                 for video_id in self.input:
                     for value in self._get_grouping_values(video_id):
@@ -242,12 +242,12 @@ class LayerClassifier(_AbstractLayerGrouping):
     def _infer_grouping(self):
         return self.grouping_layer.params["grouping"].copy(allow_singletons=True)
 
-    def set_params(self, *, path: List, grouping: GroupDef = None):
+    def set_params(self, *, path: list, grouping: GroupDef = None):
         super().set_params(
             path=path, grouping=self._infer_grouping() if grouping is None else grouping
         )
 
-    def default_params(self) -> Dict:
+    def default_params(self) -> dict:
         return {"path": [], "grouping": self._infer_grouping()}
 
     def run(self):
@@ -276,7 +276,7 @@ class LayerClassifier(_AbstractLayerGrouping):
             self.output = self._classify_videos(videos, data.field, path)
 
     def _classify_videos(
-        self, videos: Set[int], prop_name: str, path: List
+        self, videos: set[int], prop_name: str, path: list
     ) -> GroupArray:
         classes = {}
         for video in videos:
@@ -306,7 +306,7 @@ class LayerGroup(Layer):
     def set_params(self, *, group_id: int):
         super().set_params(group_id=max(group_id, 0))
 
-    def default_params(self) -> Dict:
+    def default_params(self) -> dict:
         return {"group_id": 0}
 
     def run(self):
@@ -324,12 +324,12 @@ class LayerGroup(Layer):
 class LayerSearch(Layer):
     __slots__ = ()
     input: Group
-    output: Set[int]
+    output: set[int]
 
     def set_params(self, *, search: SearchDef):
         super().set_params(search=search)
 
-    def default_params(self) -> Dict:
+    def default_params(self) -> dict:
         return {"search": SearchDef()}
 
     def run(self):
@@ -352,13 +352,13 @@ class LayerSearch(Layer):
 
 class LayerSort(Layer):
     __slots__ = ()
-    input: Set[int]
-    output: List[int]
+    input: set[int]
+    output: list[int]
 
-    def set_params(self, *, sorting: List[str]):
+    def set_params(self, *, sorting: list[str]):
         super().set_params(sorting=parse_sorting(sorting))
 
-    def default_params(self) -> Dict:
+    def default_params(self) -> dict:
         return {"sorting": ["-date"]}
 
     def run(self):
@@ -387,7 +387,7 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
     def __init__(self, database):
         super().__init__(database)
         layer_grouping = LayerGrouping(self._database)
-        self.pipeline: List[Layer] = [
+        self.pipeline: list[Layer] = [
             LayerSource(self._database),
             layer_grouping,
             LayerClassifier(self._database, grouping_layer=layer_grouping),
@@ -395,7 +395,7 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
             LayerSearch(self._database),
             LayerSort(self._database),
         ]
-        self.layers: Dict[type, Layer] = {type(step): step for step in self.pipeline}
+        self.layers: dict[type, Layer] = {type(step): step for step in self.pipeline}
         assert len(self.pipeline) == len(self.layers)
 
     def set_layer_params(self, layer_cls: type, **params):

@@ -2,7 +2,6 @@ import io
 import logging
 import pprint
 import sys
-from typing import Union
 
 from pysaurus.core.classes import StringPrinter
 
@@ -18,15 +17,15 @@ class PrettyLogging:
     _surrounding_size = len(_prefix) + len(_suffix)
 
     @classmethod
-    def _can_log(cls, loglevel: Union[str, int]):
+    def _can_log(cls, loglevel: str | int):
         return isinstance(loglevel, str) or loglevel >= logging.root.level
 
     @classmethod
-    def _get_header(cls, loglevel: Union[str, int]):
+    def _get_header(cls, loglevel: str | int):
         return loglevel if isinstance(loglevel, str) else logging.getLevelName(loglevel)
 
     @classmethod
-    def _log(cls, loglevel: Union[int, str], *args, printer=_printerr):
+    def _log(cls, loglevel: int | str, *args, printer=_printerr):
         if args and cls._can_log(loglevel):
             with io.StringIO() as string_io:
                 print(*args, end="", file=string_io)

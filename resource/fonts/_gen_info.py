@@ -1,7 +1,6 @@
 import json
 import os.path
 from collections import Counter
-from typing import Dict, List, Set, Tuple, Union
 
 from pysaurus.core.functions import get_percent
 from pysaurus.core.modules import System
@@ -14,7 +13,7 @@ LEAST_FONT = FONT_BABEL_STONE.name
 
 
 # unused
-def save_fonts(fonts: Dict[str, str]):
+def save_fonts(fonts: dict[str, str]):
     if System.is_windows():
         assert not FOLDER_FONT.endswith("\\")
     else:
@@ -52,7 +51,7 @@ def check_unicode_coverage():
 
     nb_supported = 0
     nb_many_supported = 0
-    block_cov: Dict[str, Set[str]] = {}
+    block_cov: dict[str, set[str]] = {}
     unsupported_blocks = []
     nb_blocks_many_supported = 0
     for block, chars in blocks.items():
@@ -63,9 +62,9 @@ def check_unicode_coverage():
             nb_supported += bool(local_supported)
             nb_many_supported += len(local_supported) > 1
         if block_support_count.total():
-            block_support: List[Tuple[str, int]] = block_support_count.most_common()
+            block_support: list[tuple[str, int]] = block_support_count.most_common()
             max_count = block_support[0][1]
-            most_support: List[str] = [t[0] for t in block_support if t[1] == max_count]
+            most_support: list[str] = [t[0] for t in block_support if t[1] == max_count]
             block_cov[block] = set(most_support)
             if len(most_support) > 1:
                 nb_blocks_many_supported += 1
@@ -97,7 +96,7 @@ def check_unicode_coverage():
             block_fonts.remove(LEAST_FONT)
             print(f"[{block}] <removed> {LEAST_FONT}")
 
-    mandatory_fonts: Set[str] = set()
+    mandatory_fonts: set[str] = set()
     cov = block_cov
     while True:
         new_mandatory, cov = _clean_fonts(cov, mandatory_fonts)
@@ -148,7 +147,7 @@ def check_unicode_coverage():
         json.dump(support, file, indent=1)
 
 
-def _clean_fonts(coverage: Dict[str, Union[List, Set]], old_mandatory: Set[str]):
+def _clean_fonts(coverage: dict[str, list | set], old_mandatory: set[str]):
     new_mandatory = set()
     new_coverage = {}
     for block, fonts in coverage.items():

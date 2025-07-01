@@ -37,8 +37,8 @@ class FletApiInterface:
     def create_prop_type(
         self,
         name: str,
-        prop_type: Union[str, type],
-        definition: Union[bool, int, float, str, Collection],
+        prop_type: str | type,
+        definition: bool | int | float | str | Collection,
         multiple: bool,
     ):
         return self.api.__run_feature__(
@@ -119,7 +119,7 @@ class FletApiInterface:
     def set_search(self, text, cond):
         return self.api.__run_feature__("set_search", text, cond)
 
-    def set_similarities(self, indices: Iterable[int], values: Iterable[Optional[int]]):
+    def set_similarities(self, indices: Iterable[int], values: Iterable[int | None]):
         return self.api.__run_feature__("set_similarities", indices, values)
 
     def set_sorting(self, sorting):

@@ -1,5 +1,4 @@
 from tkinter import Tk, filedialog
-from typing import Tuple
 
 
 class TkContext:
@@ -11,7 +10,7 @@ class TkContext:
         if topmost:
             self.root.attributes("-topmost", True)
 
-    def get_display_size(self) -> Tuple[int, int]:
+    def get_display_size(self) -> tuple[int, int]:
         """
         (2024/05/22)
         https://stackoverflow.com/a/66248631
@@ -77,7 +76,7 @@ def clipboard_get() -> str:
 
 
 # unused
-def get_screen_size() -> Tuple[int, int]:
+def get_screen_size() -> tuple[int, int]:
     """Return (width, height) of screen."""
     with TkContext() as ctx:
         return ctx.get_display_size()

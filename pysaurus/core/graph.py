@@ -1,17 +1,17 @@
-from typing import Any, Dict, List, Set
+from typing import Any
 
 
 class Graph:
     __slots__ = ("edges",)
 
     def __init__(self):
-        self.edges: Dict[Any, List[Any]] = {}
+        self.edges: dict[Any, list[Any]] = {}
 
     def connect(self, a, b):
         self.edges.setdefault(a, []).append(b)
         self.edges.setdefault(b, []).append(a)
 
-    def pop_groups(self) -> List[Set[Any]]:
+    def pop_groups(self) -> list[set[Any]]:
         groups = []
         while self.edges:
             index, other_indices = self.edges.popitem()

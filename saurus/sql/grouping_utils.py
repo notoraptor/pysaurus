@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from pysaurus.core.semantic_text import get_longest_number_in_string
 from saurus.sql.pysaurus_connection import PysaurusConnection
 
@@ -8,7 +6,7 @@ SQL_LENGTH = f"(v.duration * 1.0 / {FORMATTED_DURATION_TIME_BASE})"
 
 
 class SqlField:
-    def __init__(self, name: str, definition: List[str], sortable=True):
+    def __init__(self, name: str, definition: list[str], sortable=True):
         assert name and definition
         self.name = name
         self.definition = definition
@@ -27,7 +25,7 @@ class SqlField:
     def get_where(self) -> str:
         return " AND ".join(f"{column} = ?" for column in self.definition)
 
-    def get_conditions(self, values: List) -> dict:
+    def get_conditions(self, values: list) -> dict:
         return {column: value for column, value in zip(self.definition, values)}
 
     def get_sorting(self, reverse=False) -> str:
@@ -67,7 +65,7 @@ class SqlFieldFactory:
         )
         padding = max(padding_filenames, padding_meta_titles)
         self.connection = connection
-        self.fields: Dict[str, SqlField] = {
+        self.fields: dict[str, SqlField] = {
             df.name: df
             for df in (
                 SqlField.auto("audio_bit_rate"),
@@ -134,7 +132,7 @@ class SqlFieldFactory:
     def get_where(self, name) -> str:
         return self.fields[name].get_where()
 
-    def get_conditions(self, name, values: List) -> dict:
+    def get_conditions(self, name, values: list) -> dict:
         return self.fields[name].get_conditions(values)
 
     def get_sorting(self, name, reverse) -> str:

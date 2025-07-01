@@ -1,6 +1,6 @@
 import random
 from abc import ABCMeta, abstractmethod
-from typing import List, Optional, Sequence
+from typing import Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
@@ -55,7 +55,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     @abstractmethod
     def set_groups(
         self,
-        field: Optional[str],
+        field: str | None,
         is_property=None,
         sorting=None,
         reverse=None,
@@ -80,7 +80,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_sources(self) -> List[List[str]]:
+    def get_sources(self) -> list[list[str]]:
         pass
 
     @abstractmethod
@@ -88,7 +88,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_classifier_path(self) -> List[str]:
+    def get_classifier_path(self) -> list[str]:
         pass
 
     @abstractmethod
@@ -100,7 +100,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_sort(self) -> List[str]:
+    def get_sort(self) -> list[str]:
         pass
 
     @abstractmethod
@@ -219,7 +219,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         self.set_classifier_path(path[:-1])
         self.set_group(0)
 
-    def classifier_reverse(self) -> List:
+    def classifier_reverse(self) -> list:
         path = list(reversed(self.get_classifier_path()))
         self.set_classifier_path(path)
         return path

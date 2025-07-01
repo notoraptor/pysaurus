@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
@@ -20,7 +19,7 @@ class DatabasePathDef:
         return self.name
 
 
-DatabasePathName = Union[str, DatabasePathDef]
+DatabasePathName = str | DatabasePathDef
 
 
 class DatabasePath(DatabasePathDef):
@@ -44,7 +43,7 @@ class DatabasePaths:
 
     def __init__(self, folder: PathType):
         self.db_folder: AbsolutePath = AbsolutePath.ensure_directory(folder)
-        self.paths: Dict[str, DatabasePath] = {}
+        self.paths: dict[str, DatabasePath] = {}
 
     def __iter__(self):
         yield ".", self.db_folder

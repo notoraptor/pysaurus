@@ -1,4 +1,4 @@
-from typing import List, Optional, Sequence
+from typing import Sequence
 
 import flet as ft
 
@@ -134,11 +134,11 @@ class VideosPage(ft.Container):
         self.display_only_selected_videos = False
 
         # data
-        self.state: Optional[StateWrapper] = None
+        self.state: StateWrapper | None = None
         # widgets
-        self.selection_filter: Optional[ft.Row] = None
-        self.videos_view: List[VideoView] = []
-        self.videos_view_panel: Optional[ft.Column] = None
+        self.selection_filter: ft.Row | None = None
+        self.videos_view: list[VideoView] = []
+        self.videos_view_panel: ft.Column | None = None
 
     def did_mount(self):
         # Will load view and install global shortcuts

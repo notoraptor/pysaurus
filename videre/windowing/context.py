@@ -1,4 +1,4 @@
-from typing import Self, Union
+from typing import Self
 
 import pygame
 
@@ -23,7 +23,7 @@ class Context(AbstractLayout):
         self._y = y
         super().__init__([container], **kwargs)
 
-    def handle_focus_in(self) -> Union[bool, Self]:
+    def handle_focus_in(self) -> bool | Self:
         return self._relative.handle_focus_in()
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:

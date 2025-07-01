@@ -2,14 +2,14 @@ import io
 import logging
 import sys
 from pathlib import Path
-from typing import BinaryIO, Union
+from typing import BinaryIO
 
 import pygame
 
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
 
-ImageSourceType = Union[str, Path, bytes, bytearray, BinaryIO]
+ImageSourceType = str | Path | bytes | bytearray | BinaryIO
 
 logger = logging.getLogger(__name__)
 

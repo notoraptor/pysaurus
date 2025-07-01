@@ -1,7 +1,6 @@
 import bisect
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
 
 import pygame
 import pygame.gfxdraw
@@ -159,9 +158,9 @@ class TextInput(AbstractLayout):
         self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
         self._container = Container(self._text, background_color=Colors.white)
         super().__init__([self._container], **kwargs)
-        self._cursor_event: Optional[_CursorEvent] = None
+        self._cursor_event: _CursorEvent | None = None
         self._char_position = 0
-        self._selection: Optional[_SelectionDefinition] = None
+        self._selection: _SelectionDefinition | None = None
         self._is_selecting = False
         self._set_focus(False)
         self._set_char_pos(len(self._text.text))
@@ -185,7 +184,7 @@ class TextInput(AbstractLayout):
 
     def get_mouse_owner(
         self, x_in_parent: int, y_in_parent: int
-    ) -> Optional[MouseOwnership]:
+    ) -> MouseOwnership | None:
         return Widget.get_mouse_owner(self, x_in_parent, y_in_parent)
 
     def handle_mouse_down(self, event: MouseEvent):

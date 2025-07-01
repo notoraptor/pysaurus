@@ -2,7 +2,6 @@ import logging
 import sys
 import traceback
 from dataclasses import dataclass, field as dataclass_field
-from typing import List, Optional
 
 import av
 from PIL import Image
@@ -31,7 +30,7 @@ class VideoTask:
         self,
         filename: AbsolutePath,
         need_info: bool = False,
-        thumb_path: Optional[str] = None,
+        thumb_path: str | None = None,
     ):
         assert need_info or thumb_path
         self.filename = filename
@@ -42,10 +41,10 @@ class VideoTask:
 @dataclass(slots=True)
 class VideoTaskResult:
     task: VideoTask
-    info: Optional[VideoEntry] = None
-    thumbnail: Optional[str] = None
-    error_info: List[str] = dataclass_field(default_factory=list)
-    error_thumbnail: List[str] = dataclass_field(default_factory=list)
+    info: VideoEntry | None = None
+    thumbnail: str | None = None
+    error_info: list[str] = dataclass_field(default_factory=list)
+    error_thumbnail: list[str] = dataclass_field(default_factory=list)
 
     def get_unreadable(self) -> VideoEntry:
         return VideoEntry(
@@ -187,5 +186,5 @@ class PythonVideoRaptor:
         return thumb_path
 
     @classmethod
-    def _exc_to_err(cls, exc: Exception, *extra_errors) -> List[str]:
+    def _exc_to_err(cls, exc: Exception, *extra_errors) -> list[str]:
         return [*extra_errors, f"{type(exc).__name__}: {exc}"]

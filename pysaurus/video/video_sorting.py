@@ -1,10 +1,10 @@
-from typing import Iterable, List, Tuple
+from typing import Iterable
 
 
 class VideoSorting:
     __slots__ = "fields", "reverse"
-    fields: List[str]
-    reverse: List[bool]
+    fields: list[str]
+    reverse: list[bool]
 
     def __init__(self, sorting: Iterable[str]):
         self.fields = []
@@ -22,7 +22,7 @@ class VideoSorting:
     def __len__(self):
         return len(self.fields)
 
-    def __iter__(self) -> Iterable[Tuple[str, bool]]:
+    def __iter__(self) -> Iterable[tuple[str, bool]]:
         return iter(zip(self.fields, self.reverse))
 
     def __eq__(self, other):

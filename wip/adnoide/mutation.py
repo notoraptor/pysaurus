@@ -1,6 +1,6 @@
 import inspect
 from abc import ABC, ABCMeta, abstractmethod
-from typing import Any, Dict, List, Self, Sequence, Type
+from typing import Any, Self, Sequence, Type
 
 from pysaurus.core.classes import StringPrinter
 from wip.adnoide.adnoide import Life, Protein
@@ -56,14 +56,14 @@ class Length(_IntegerInterval):
         return cls(life, 1, len(gene))
 
 
-class CodonList(_AbstractSizeable[List[int]]):
+class CodonList(_AbstractSizeable[list[int]]):
     __slots__ = ()
 
     @classmethod
     def from_life(cls, life: Life, gene: Sequence[int]) -> Self:
         return cls(life, life.min_length, life.max_length)
 
-    def random(self) -> List[int]:
+    def random(self) -> list[int]:
         return self.life.random_dna(self.min, self.max)
 
 
@@ -99,7 +99,7 @@ class MutationMeta(ABCMeta):
             and issubclass(value, _AbstractSizeable)
         )
 
-    def __new__(cls, name, bases, namespace: Dict[str, Any]):
+    def __new__(cls, name, bases, namespace: dict[str, Any]):
         _mkey = "__mutprops__"
         if _mkey not in namespace:
             mutprops = {
@@ -120,12 +120,12 @@ class MutationMeta(ABCMeta):
 class Mutation(metaclass=MutationMeta):
     __slots__ = ("life", "gene", "props")
 
-    __mutprops__: Dict[str, Type[_AbstractSizeable]]
+    __mutprops__: dict[str, Type[_AbstractSizeable]]
 
     def __init__(self, life: Life, gene: Sequence[int]):
         self.life = life
         self.gene = gene
-        self.props: Dict[str, _AbstractSizeable] = {
+        self.props: dict[str, _AbstractSizeable] = {
             name: cls.from_life(life, gene) for name, cls in self.__mutprops__.items()
         }
 
@@ -135,7 +135,7 @@ class Mutation(metaclass=MutationMeta):
         return MutationEvent(type(self), parameters, output)
 
     @abstractmethod
-    def mutate(self, **kwargs) -> List[int]:
+    def mutate(self, **kwargs) -> list[int]:
         raise NotImplementedError()
 
 
@@ -154,7 +154,7 @@ class Substitution(Mutation):
     length: Length
     codons: CodonList
 
-    def mutate(self, position: int, length: int, codons: List[int]) -> List[int]:
+    def mutate(self, position: int, length: int, codons: list[int]) -> list[int]:
         gene = list(self.gene)
         return gene[:position] + codons + gene[position + length :]
 
@@ -166,7 +166,7 @@ class Insertion(Mutation):
     position: WritingPoint
     codons: CodonList
 
-    def mutate(self, position: int, codons: List[int]) -> List[int]:
+    def mutate(self, position: int, codons: list[int]) -> list[int]:
         gene = list(self.gene)
         return gene[:position] + codons + gene[position:]
 
@@ -178,7 +178,7 @@ class Deletion(Mutation):
     position: ReadingPoint
     length: Length
 
-    def mutate(self, position: int, length: int) -> List[int]:
+    def mutate(self, position: int, length: int) -> list[int]:
         gene = list(self.gene)
         return gene[:position] + gene[position + length :]
 
@@ -191,7 +191,7 @@ class Duplication(Mutation):
     to_position: ReadingPoint
     length: Length
 
-    def mutate(self, from_position: int, to_position: int, length: int) -> List[int]:
+    def mutate(self, from_position: int, to_position: int, length: int) -> list[int]:
         gene = list(self.gene)
         codons = gene[from_position : from_position + length]
         return gene[:to_position] + codons + gene[to_position:]
@@ -202,7 +202,7 @@ class Individual:
 
     def __init__(self, protein: Protein, parent: "Individual" = None):
         self.parent = parent
-        self.phylogeny: List[MutationEvent] = [MutationEvent(Origin, {}, protein.gene)]
+        self.phylogeny: list[MutationEvent] = [MutationEvent(Origin, {}, protein.gene)]
         self.protein = protein
 
     @property
@@ -219,7 +219,7 @@ class Individual:
     def clone(self) -> Self:
         return Individual(self.protein, self)
 
-    def get_evolution(self) -> List[MutationEvent]:
+    def get_evolution(self) -> list[MutationEvent]:
         events = []
         if self.parent:
             events = self.parent.get_evolution()
@@ -232,7 +232,7 @@ class Individual:
 class Mutagenesis:
     __slots__ = ("life",)
 
-    MUTATIONS: List[Type[Mutation]] = [Substitution, Insertion, Deletion, Duplication]
+    MUTATIONS: list[Type[Mutation]] = [Substitution, Insertion, Deletion, Duplication]
 
     def __init__(self, life: Life):
         self.life = life

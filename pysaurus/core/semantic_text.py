@@ -1,6 +1,6 @@
 import itertools
 import re
-from typing import Iterable, Optional, Union
+from typing import Iterable
 
 
 class CharClass:
@@ -63,7 +63,7 @@ class DigitAccumulator:
     def __init__(self):
         self._buffer = []
 
-    def append(self, wc: Optional[CharClass]) -> Optional[int]:
+    def append(self, wc: CharClass | None) -> int | None:
         if wc is None or wc.is_alpha():
             if self._buffer:
                 return self._flush_buffer_to_number()
@@ -87,7 +87,7 @@ class DigitAccumulator:
         return number
 
 
-def separate_characters_and_numbers(text: str) -> Iterable[Union[str, int]]:
+def separate_characters_and_numbers(text: str) -> Iterable[str | int]:
     accumulator = DigitAccumulator()
     for character in text:
         wrapper = CharClass(character)

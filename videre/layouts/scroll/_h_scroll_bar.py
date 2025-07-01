@@ -1,5 +1,3 @@
-from typing import Optional, Tuple
-
 import pygame
 
 from videre.core.constants import MouseButton
@@ -72,7 +70,7 @@ class _HScrollBar(Widget):
 
     def get_mouse_owner(
         self, x_in_parent: int, y_in_parent: int
-    ) -> Optional[MouseOwnership]:
+    ) -> MouseOwnership | None:
         if (
             self._surface
             and 0 <= x_in_parent < self._bar_length()
@@ -129,7 +127,7 @@ class _HScrollBar(Widget):
 
     def _compute(
         self, view_width: int, view_height: int
-    ) -> Tuple[pygame.Surface, Tuple[int, int]]:
+    ) -> tuple[pygame.Surface, tuple[int, int]]:
         thickness = self.thickness
         h_scroll_x, h_scroll_width = self._compute_scroll_metrics(
             view_width,
@@ -145,7 +143,7 @@ class _HScrollBar(Widget):
     @classmethod
     def _compute_scroll_metrics(
         cls, view_length, content_length, content_pos, *, scrollbar_length=None
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         if scrollbar_length is None:
             scrollbar_length = view_length
         scroll_pos = (scrollbar_length * abs(content_pos)) / content_length

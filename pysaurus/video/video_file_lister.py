@@ -1,5 +1,4 @@
 import os
-from typing import Dict
 
 from pysaurus.core import constants
 from pysaurus.core.components import AbsolutePath
@@ -7,7 +6,7 @@ from pysaurus.core.modules import FileSystem
 from pysaurus.video import VideoRuntimeInfo
 
 
-def _scan_folder_for_videos(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo]):
+def _scan_folder_for_videos(folder: str, files: dict[AbsolutePath, VideoRuntimeInfo]):
     stack = [folder]
     while stack:
         current_folder = stack.pop()
@@ -33,7 +32,7 @@ def _scan_folder_for_videos(folder: str, files: Dict[AbsolutePath, VideoRuntimeI
 
 
 def scan_path_for_videos(
-    path: AbsolutePath, files: Dict[AbsolutePath, VideoRuntimeInfo]
+    path: AbsolutePath, files: dict[AbsolutePath, VideoRuntimeInfo]
 ):
     if path.isdir():
         _scan_folder_for_videos(path.path, files)

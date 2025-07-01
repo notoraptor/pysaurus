@@ -1,6 +1,6 @@
 import os
 from copy import deepcopy
-from typing import Any, Dict, List
+from typing import Any
 
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
@@ -144,11 +144,11 @@ class LazyVideo(WithSchema, VideoPattern):
         return Text(self._get("meta_title"))
 
     @property
-    def properties(self) -> Dict[str, List[Any]]:
+    def properties(self) -> dict[str, list[Any]]:
         return self._get("properties")
 
     @properties.setter
-    def properties(self, properties: Dict[str, List[Any]]):
+    def properties(self, properties: dict[str, list[Any]]):
         self._set("properties", properties)
 
     sample_rate = property(lambda self: self._get("sample_rate"))
@@ -256,7 +256,7 @@ class LazyVideo(WithSchema, VideoPattern):
     def add_errors(self, errors):
         self._set("errors", sorted(self.errors | set(errors)))
 
-    def terms(self) -> List[str]:
+    def terms(self) -> list[str]:
         term_sources = [self.filename.path, str(self.meta_title)]
         for name, val in self.properties.items():
             if self.database.get_prop_types(name=name, with_type=str):
@@ -286,7 +286,7 @@ class LazyVideo(WithSchema, VideoPattern):
     def has_property(self, name):
         return name in self._get("properties")
 
-    def get_property(self, name, default_unit=UNDEFINED) -> List[Any]:
+    def get_property(self, name, default_unit=UNDEFINED) -> list[Any]:
         props = self.properties
         return props.get(name, [] if default_unit is UNDEFINED else [default_unit])
 

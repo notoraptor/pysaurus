@@ -1,5 +1,3 @@
-from typing import List
-
 from pysaurus.core.functions import get_percent
 from wip.adnoide.adnoide import Life
 from wip.adnoide.birth import ControlledNursery, FreeNursery
@@ -8,7 +6,7 @@ from wip.adnoide.mutation import Individual, Mutagenesis
 from wip.adnoide.selection import NaturalSelection, Survival
 
 
-def create_population(life: Life, count: int, nb_args: int = None) -> List[Individual]:
+def create_population(life: Life, count: int, nb_args: int = None) -> list[Individual]:
     people = []
     total = 0
     for i in range(count):
@@ -58,7 +56,7 @@ def main():
         print(f"\tpopulation: {len(people)}")
         print(f"\tLongest sequence: {max(len(ind.gene) for ind in people)}")
 
-        survival: List[Survival] = []
+        survival: list[Survival] = []
         for individual in people:
             try:
                 survival.append(nature.survive(individual))
@@ -81,7 +79,7 @@ def main():
         best_distance = survival[0].instability
         print(f"\tbest:", best_distance)
 
-        survivants: List[Individual] = [
+        survivants: list[Individual] = [
             srv.individual for srv in survival[: min(selection_size, len(survival))]
         ]
 

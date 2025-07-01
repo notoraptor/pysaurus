@@ -2,12 +2,12 @@ import logging
 import sys
 import threading
 from abc import abstractmethod
-from typing import Callable, Sequence, Type, Union
+from typing import Callable, Sequence, Type
 
 from pysaurus.core.functions import identity
 
 logger = logging.getLogger(__name__)
-Types = Union[Type, Sequence[Type]]
+Types = Type | Sequence[Type]
 
 
 class TypeValidator:

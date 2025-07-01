@@ -1,4 +1,4 @@
-from typing import Dict, Sequence, Set
+from typing import Sequence
 
 
 class SourceFlag:
@@ -6,7 +6,7 @@ class SourceFlag:
 
     def __init__(self, flag: str):
         self.flag = flag
-        self.children: Dict[str, SourceFlag] = {}
+        self.children: dict[str, SourceFlag] = {}
 
     def __str__(self):
         return f"{self.flag}{sorted(self.children.values()) or ''}"
@@ -25,8 +25,8 @@ class SourceDef:
     __SOURCE_FLAG_CLASS__ = SourceFlag
 
     def __init__(self, sources: Sequence[Sequence[str]]):
-        self.sources: Set[Sequence[str]] = set()
-        self.children: Dict[str, SourceFlag] = {}
+        self.sources: set[Sequence[str]] = set()
+        self.children: dict[str, SourceFlag] = {}
         for source in sources:
             self.add(source)
 

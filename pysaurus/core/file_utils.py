@@ -1,4 +1,4 @@
-from typing import Dict, Iterable
+from typing import Iterable
 
 from pysaurus.core.components import AbsolutePath, Date
 from pysaurus.core.functions import generate_temporary_file
@@ -22,7 +22,7 @@ def create_xspf_playlist(paths: Iterable[AbsolutePath], output=None) -> Absolute
     return AbsolutePath(output)
 
 
-def collect_file_titles(folder: AbsolutePath, extension: str) -> Dict[str, Date]:
+def collect_file_titles(folder: AbsolutePath, extension: str) -> dict[str, Date]:
     extension = extension.lower()
     return {
         entry.name[: -(len(extension) + 1)]: Date(entry.stat().st_mtime)

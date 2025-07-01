@@ -1,5 +1,4 @@
 import logging
-from typing import Optional, Tuple
 
 import pygame
 
@@ -123,7 +122,7 @@ class ScrollView(AbstractLayout):
 
     def get_mouse_wheel_owner(
         self, x_in_parent: int, y_in_parent: int
-    ) -> Optional[MouseOwnership]:
+    ) -> MouseOwnership | None:
         if Widget._get_mouse_owner(self, x_in_parent, y_in_parent):
             local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
             child = get_top_mouse_wheel_owner(local_x, local_y, self._controls())
@@ -243,7 +242,7 @@ class ScrollView(AbstractLayout):
     @classmethod
     def _update_content_pos(
         cls, view_length, content_length, content_pos, step_count, scroll_allowed
-    ) -> Tuple[int, bool]:
+    ) -> tuple[int, bool]:
 
         if content_length <= view_length:
             content_pos = 0

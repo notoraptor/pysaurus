@@ -1,5 +1,3 @@
-from typing import Optional
-
 import pygame.event
 
 from videre import MouseButton
@@ -12,7 +10,7 @@ class EventPropagator:
     @classmethod
     def _handle(
         cls, widget: Widget, handle_function: str, *args, **kwargs
-    ) -> Optional[Widget]:
+    ) -> Widget | None:
         # print(handle_function, widget)
         if widget:
             handled = getattr(widget, handle_function)(*args, **kwargs)
@@ -26,7 +24,7 @@ class EventPropagator:
     @classmethod
     def _handle_mouse_event(
         cls, widget: Widget, handle_function: str, event: MouseEvent
-    ) -> Optional[Widget]:
+    ) -> Widget | None:
         # print(handle_function, widget)
         while widget:
             handled = getattr(widget, handle_function)(event)
@@ -42,11 +40,11 @@ class EventPropagator:
         return None
 
     @classmethod
-    def handle_click(cls, widget: Widget, button: MouseButton) -> Optional[Widget]:
+    def handle_click(cls, widget: Widget, button: MouseButton) -> Widget | None:
         return cls._handle(widget, Widget.handle_click.__name__, button)
 
     @classmethod
-    def handle_focus_in(cls, widget: Widget) -> Optional[Widget]:
+    def handle_focus_in(cls, widget: Widget) -> Widget | None:
         return cls._handle(widget, Widget.handle_focus_in.__name__)
 
     @classmethod

@@ -1,5 +1,3 @@
-from typing import Dict, List, Tuple, Union
-
 import pygame
 
 
@@ -148,9 +146,14 @@ class Colors:
     transparent = pygame.Color(0, 0, 0, 0)
 
 
-ColorDef = Union[
-    pygame.Color, Tuple[int, int, int], Tuple[int, int, int, int], List[int], str, None
-]
+ColorDef = (
+    pygame.Color
+    | tuple[int, int, int]
+    | tuple[int, int, int, int]
+    | list[int]
+    | str
+    | None
+)
 
 
 def parse_color(value: ColorDef) -> pygame.Color:
@@ -213,7 +216,7 @@ class _ColorToString:
     __slots__ = ["_color_to_name"]
 
     def __init__(self):
-        self._color_to_name: Dict[Tuple[int, int, int, int], str] = {}
+        self._color_to_name: dict[tuple[int, int, int, int], str] = {}
         for name in dir(Colors):
             if "a" <= name[0] <= "z":
                 val = getattr(Colors, name)

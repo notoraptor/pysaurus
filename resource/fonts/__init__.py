@@ -9,7 +9,6 @@ https://www.babelstone.co.uk/Fonts/Han.html
 
 import json
 import os
-from typing import Dict, List, Tuple
 
 from fontTools.ttLib import TTFont
 
@@ -20,7 +19,7 @@ def _file_path(base, *path_pieces) -> str:
     return path
 
 
-def _font_paths(folder: str) -> List[str]:
+def _font_paths(folder: str) -> list[str]:
     return [_file_path(folder, name) for name in os.listdir(folder)]
 
 
@@ -63,7 +62,7 @@ FONT_BABEL_STONE = _FontInfo(PATH_BABEL_STONE_HAN)
 FONT_NOTO_REGULAR = _FontInfo(PATH_NOTO_REGULAR)
 
 
-def _get_fonts(paths: List[str]) -> Dict[str, str]:
+def _get_fonts(paths: list[str]) -> dict[str, str]:
     output = {}
     for path in paths:
         with TTFont(path) as font:
@@ -72,7 +71,7 @@ def _get_fonts(paths: List[str]) -> Dict[str, str]:
     return output
 
 
-def _get_noto_fonts() -> Dict[str, str]:
+def _get_noto_fonts() -> dict[str, str]:
     sans_fonts = _get_fonts(_NOTO_FONTS)
     serif_fonts = _get_fonts(_NOTO_SERIF_FONTS)
     fonts = {**sans_fonts, **serif_fonts}
@@ -80,7 +79,7 @@ def _get_noto_fonts() -> Dict[str, str]:
     return fonts
 
 
-def get_fonts() -> Dict[str, str]:
+def get_fonts() -> dict[str, str]:
     noto_fonts = _get_noto_fonts()
     fonts = {**noto_fonts, **FONT_BABEL_STONE.to_dict()}
     assert len(fonts) == len(noto_fonts) + 1
@@ -100,13 +99,13 @@ class FontProvider:
     __slots__ = ("_font_name_to_path", "_fonts", "_characters")
 
     def __init__(self):
-        self._font_name_to_path: Dict[str, str] = get_fonts()
+        self._font_name_to_path: dict[str, str] = get_fonts()
         with open(os.path.join(FOLDER_FONT, "char-support.json")) as file:
             char_support = json.load(file)
-            self._fonts: List[str] = char_support["fonts"]
-            self._characters: Dict[str, int] = char_support["characters"]
+            self._fonts: list[str] = char_support["fonts"]
+            self._characters: dict[str, int] = char_support["characters"]
 
-    def get_font_info(self, character: str) -> Tuple[str, str]:
+    def get_font_info(self, character: str) -> tuple[str, str]:
         if character in self._characters:
             name = self._fonts[self._characters[character]]
             path = self._font_name_to_path[name]

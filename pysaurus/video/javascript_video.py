@@ -4,8 +4,6 @@ saurus.sql.sql_video_wrapper.SQLVideoWrapper.json
 pysaurus.database.jsdb.jsdbvideo.json_video_features.JsonVideoFeatures.json
 """
 
-from typing import List, Optional
-
 
 class JavascriptVideo:
     """
@@ -39,7 +37,7 @@ class JavascriptVideo:
         return self.data["audio_codec_description"]
 
     @property
-    def audio_languages(self) -> List[str]:
+    def audio_languages(self) -> list[str]:
         return self.data["audio_languages"]
 
     @property
@@ -71,7 +69,7 @@ class JavascriptVideo:
         return self.data["date_entry_opened"]
 
     @property
-    def errors(self) -> List[str]:
+    def errors(self) -> list[str]:
         return self.data["errors"]
 
     @property
@@ -107,7 +105,7 @@ class JavascriptVideo:
         return self.data["length"]
 
     @property
-    def moves(self) -> Optional[List[dict]]:
+    def moves(self) -> list[dict] | None:
         return self.data["moves"]
 
     @property
@@ -131,15 +129,15 @@ class JavascriptVideo:
         return self.data["size"]
 
     @property
-    def subtitle_languages(self) -> List[str]:
+    def subtitle_languages(self) -> list[str]:
         return self.data["subtitle_languages"]
 
     @property
-    def thumbnail_path(self) -> Optional[str]:
+    def thumbnail_path(self) -> str | None:
         return self.data["thumbnail_path"]
 
     @property
-    def thumbnail_base64(self) -> Optional[str]:
+    def thumbnail_base64(self) -> str | None:
         return self.data["thumbnail_base64"]
 
     @property

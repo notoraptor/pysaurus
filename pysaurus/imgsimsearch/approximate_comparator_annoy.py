@@ -1,5 +1,5 @@
 import math
-from typing import Any, Dict
+from typing import Any
 
 from PIL import ImageFilter
 from annoy import AnnoyIndex
@@ -47,19 +47,19 @@ class ApproximateComparatorAnnoy:
             Message(f"To compare: {len(self.indices_to_compare)} video(s).")
         )
 
-    def get_comparable_images_cos(self) -> Dict[Any, Dict[Any, float]]:
+    def get_comparable_images_cos(self) -> dict[Any, dict[Any, float]]:
         metric = "angular"
         max_angular = math.sqrt(2)
         max_dst = max_angular * 0.1875
         return self._compare(metric, max_dst)
 
-    def get_comparable_images_euc(self) -> Dict[Any, Dict[Any, float]]:
+    def get_comparable_images_euc(self) -> dict[Any, dict[Any, float]]:
         metric = "euclidean"
         max_euclidian = 255 * math.sqrt(self.vector_size)
         max_dst = max_euclidian * 0.2
         return self._compare(metric, max_dst)
 
-    def _compare(self, metric, max_dst) -> Dict[Any, Dict[Any, float]]:
+    def _compare(self, metric, max_dst) -> dict[Any, dict[Any, float]]:
         vectors = self.vectors
         nb_near = self.NB_NEAR
 

@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional
 
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
@@ -27,7 +27,7 @@ class FeatureAPI:
     def __init__(self, notifier):
         self.notifier = notifier
         self.application = Application(self.notifier)
-        self.database: Optional[Db] = None
+        self.database: Db | None = None
         self._constants = {
             "PYTHON_DEFAULT_SOURCES": PYTHON_DEFAULT_SOURCES,
             "PYTHON_APP_NAME": self.application.app_name,
@@ -36,7 +36,7 @@ class FeatureAPI:
             "PYTHON_LANGUAGE": self.application.lang.__language__,
         }
         # We must return value for proxy ending with "!"
-        self._proxies: Dict[str, Union[str, ProxyFeature]] = {
+        self._proxies: dict[str, str | ProxyFeature] = {
             "apply_on_view": FromView(self, View.apply_on_view, True),
             "apply_on_prop_value": FromDb(self, Db.apply_on_prop_value),
             "classifier_back": FromView(self, View.classifier_back),
@@ -96,15 +96,15 @@ class FeatureAPI:
                 return method(*args)
 
     # cannot make proxy
-    def get_constants(self) -> Dict[str, Any]:
+    def get_constants(self) -> dict[str, Any]:
         return self._constants
 
     # cannot make proxy ?
-    def set_language(self, name) -> Dict[str, str]:
+    def set_language(self, name) -> dict[str, str]:
         return language_to_dict(self.application.open_language_from_name(name))
 
     # cannot make proxy ?
-    def backend(self, page_size, page_number, selector=None) -> Dict[str, Any]:
+    def backend(self, page_size, page_number, selector=None) -> dict[str, Any]:
         """Return backend state."""
         if selector is not None and isinstance(selector, dict):
             selector = Selector.parse_dict(selector)

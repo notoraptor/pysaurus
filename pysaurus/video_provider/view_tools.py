@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional
+from typing import Iterable
 
 from pysaurus.core.classes import ToDict
 from pysaurus.core.compare import NegativeComparator
@@ -58,11 +58,11 @@ class GroupDef(ToDict):
 
     def __init__(
         self,
-        field: Optional[str] = None,
-        is_property: Optional[bool] = False,
-        sorting: Optional[str] = FIELD,
-        reverse: Optional[bool] = False,
-        allow_singletons: Optional[bool] = True,
+        field: str | None = None,
+        is_property: bool | None = False,
+        sorting: str | None = FIELD,
+        reverse: bool | None = False,
+        allow_singletons: bool | None = True,
     ):
         self.field = (field and field.strip()) or None
         self.is_property = bool(is_property)
@@ -107,10 +107,10 @@ class GroupDef(ToDict):
                 self._fn_reverse(group.field_value),
             )
 
-    def sorted(self, groups: Iterable[Group]) -> List[Group]:
+    def sorted(self, groups: Iterable[Group]) -> list[Group]:
         return sorted(groups, key=self._generate_sort_key())
 
-    def sort_inplace(self, groups: List[Group]):
+    def sort_inplace(self, groups: list[Group]):
         groups.sort(key=self._generate_sort_key())
 
 
@@ -119,7 +119,7 @@ class SearchDef(ToDict):
     __print_none__ = True
     _Cond = Enumeration(("and", "or", "exact", "id"))
 
-    def __init__(self, text: Optional[str] = None, cond: Optional[str] = None):
+    def __init__(self, text: str | None = None, cond: str | None = None):
         self.text = text.strip() if text else None
         self.cond = self._Cond((cond and cond.strip()) or "and")
 

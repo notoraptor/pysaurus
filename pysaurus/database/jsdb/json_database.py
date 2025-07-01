@@ -1,16 +1,5 @@
 import logging
-from typing import (
-    Any,
-    Collection,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Collection, Iterable, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
@@ -58,7 +47,7 @@ class JsonDatabase(AbstractDatabase):
     def __init__(
         self,
         db_folder: PathType,
-        folders: Optional[Iterable[PathType]] = None,
+        folders: Iterable[PathType] | None = None,
         notifier: Notifier = DEFAULT_NOTIFIER,
         indexer: AbstractVideoIndexer = None,
     ):
@@ -68,17 +57,17 @@ class JsonDatabase(AbstractDatabase):
         # Database content
         self._version = 2
         self._date = Date.now()
-        self._folders: Set[AbsolutePath] = set()
-        self._videos: Dict[AbsolutePath, Video] = {}
-        self._prop_types: Dict[str, PropType] = {}
+        self._folders: set[AbsolutePath] = set()
+        self._videos: dict[AbsolutePath, Video] = {}
+        self._prop_types: dict[str, PropType] = {}
         # Runtime
-        self._id_to_video: Dict[int, Video] = {}
+        self._id_to_video: dict[int, Video] = {}
         self.moves_attribute = PotentialMoveAttribute(self)
         self._indexer = indexer or VideoIndexer(
             self.notifier, self.ways.db_index_pkl_path
         )
-        self._removed: Set[Video] = set()
-        self._modified: Set[Video] = set()
+        self._removed: set[Video] = set()
+        self._modified: set[Video] = set()
         # Initialize thumbnail manager.
         thumb_sql_path: AbsolutePath = self.ways.db_thumb_sql_path
         to_build = not thumb_sql_path.exists()
@@ -94,7 +83,7 @@ class JsonDatabase(AbstractDatabase):
         self.__jsondb_load(folders)
 
     @Profiler.profile_method()
-    def __jsondb_load(self, folders: Optional[Iterable[PathType]] = None):
+    def __jsondb_load(self, folders: Iterable[PathType] | None = None):
         to_save = False
 
         with Profiler("loading JSON file", self.notifier):
@@ -158,7 +147,7 @@ class JsonDatabase(AbstractDatabase):
 
     @Profiler.profile_method()
     def _jsondb_ensure_identifiers(self):
-        id_to_video: Dict[int, Video] = {}
+        id_to_video: dict[int, Video] = {}
         without_identifiers = []
         for video_state in self._videos.values():
             if (
@@ -216,7 +205,7 @@ class JsonDatabase(AbstractDatabase):
     def jsondb_has_thumbnail(self, filename: AbsolutePath) -> bool:
         return self._thumb_mgr.has(filename)
 
-    def _jsondb_get_cached_videos(self, *flags, **forced_flags) -> List[Video]:
+    def _jsondb_get_cached_videos(self, *flags, **forced_flags) -> list[Video]:
         if flags or forced_flags:
             self._jsondb_flush_changes()
             return [
@@ -241,9 +230,9 @@ class JsonDatabase(AbstractDatabase):
         if text:
             self._jsondb_flush_changes()
             if videos is None:
-                filenames: Dict[AbsolutePath, Video] = self._videos
+                filenames: dict[AbsolutePath, Video] = self._videos
             else:
-                filenames: Dict[AbsolutePath, Video] = {
+                filenames: dict[AbsolutePath, Video] = {
                     self._id_to_video[video_id].filename: self._id_to_video[video_id]
                     for video_id in videos
                 }
@@ -316,7 +305,7 @@ class JsonDatabase(AbstractDatabase):
     def _set_date(self, date: Date):
         self._date = date
 
-    def _set_folders(self, folders: List[AbsolutePath]) -> None:
+    def _set_folders(self, folders: list[AbsolutePath]) -> None:
         folders_tree = PathTree(folders)
         for video in self._videos.values():
             video.discarded = not folders_tree.in_folders(video.filename)
@@ -327,7 +316,7 @@ class JsonDatabase(AbstractDatabase):
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ) -> List[dict]:
+    ) -> list[dict]:
         if name is with_type is multiple is with_enum is default is None:
             prop_types = self._prop_types.values()
         else:
@@ -345,11 +334,7 @@ class JsonDatabase(AbstractDatabase):
         return sorted((prop.describe() for prop in prop_types), key=lambda d: d["name"])
 
     def prop_type_add(
-        self,
-        name: str,
-        prop_type: Union[str, type],
-        definition: PropRawType,
-        multiple: bool,
+        self, name: str, prop_type: str | type, definition: PropRawType, multiple: bool
     ) -> None:
         prop = PropType.from_keys(
             **PropTypeValidator.define(name, prop_type, definition, multiple)
@@ -438,7 +423,7 @@ class JsonDatabase(AbstractDatabase):
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> List[VideoPattern]:
+    ) -> list[VideoPattern]:
         where = where or {}
         # where["discarded"] = where.get("discarded", False)
         q_flags = {key: value for key, value in where.items() if key in VIDEO_FLAGS}
@@ -470,23 +455,23 @@ class JsonDatabase(AbstractDatabase):
 
         return list(videos)
 
-    def videos_get_terms(self) -> Dict[int, List[str]]:
+    def videos_get_terms(self) -> dict[int, list[str]]:
         return {
             video_id: self._id_to_video[video_id].terms()
             for video_id in self._get_all_video_indices()
         }
 
-    def videos_set_field(self, field: str, changes: Dict[int, Any]):
+    def videos_set_field(self, field: str, changes: dict[int, Any]):
         for video_id, value in changes.items():
             setattr(self._id_to_video[video_id], field, value)
 
     def videos_add(
         self,
-        video_entries: List[VideoEntry],
-        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
+        video_entries: list[VideoEntry],
+        runtime_info: dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
-        videos: List[Video] = []
-        unreadable: List[Video] = []
+        videos: list[Video] = []
+        unreadable: list[Video] = []
         for entry in video_entries:
             file_path = AbsolutePath.ensure(entry.filename)
             if entry.unreadable:
@@ -551,17 +536,17 @@ class JsonDatabase(AbstractDatabase):
         self.provider.delete(video_id)
         self._notify_fields_modified(["move_id"])
 
-    def videos_get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
+    def videos_get_moves(self) -> Iterable[tuple[int, list[dict]]]:
         return self.moves_attribute.get_moves()
 
-    def _thumbnails_add(self, filename_to_thumb_name: Dict[str, str]) -> None:
+    def _thumbnails_add(self, filename_to_thumb_name: dict[str, str]) -> None:
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
         for filename in filename_to_thumb_name:
             self.jsondb_register_modified(self._videos[AbsolutePath.ensure(filename)])
 
     def videos_tag_get(
-        self, name: str, indices: List[int] = ()
-    ) -> Dict[int, List[PropUnitType]]:
+        self, name: str, indices: list[int] = ()
+    ) -> dict[int, list[PropUnitType]]:
         return {
             video_id: self._id_to_video[video_id].get_property(name)
             for video_id in (indices or self._get_all_video_indices())
@@ -571,7 +556,7 @@ class JsonDatabase(AbstractDatabase):
         return (item.video_id for item in self.get_videos(include=["video_id"]))
 
     def videos_tag_set(
-        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
+        self, name: str, updates: dict[int, Collection[PropUnitType]], merge=False
     ):
         for video_id, prop_values in updates.items():
             self.update_prop_values(video_id, name, prop_values, merge=merge)

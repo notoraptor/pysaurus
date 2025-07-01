@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional, Sequence, Union
+from typing import Callable, Sequence
 
 import flet as ft
 
@@ -18,7 +18,7 @@ class DatabaseStateWrapper:
         return self.state["name"]
 
     @property
-    def folders(self) -> List[str]:
+    def folders(self) -> list[str]:
         return self.state["folders"]
 
 
@@ -33,7 +33,7 @@ class StateWrapper:
         return DatabaseStateWrapper(self.state["database"])
 
     @property
-    def prop_types(self) -> List[PropTypeDesc]:
+    def prop_types(self) -> list[PropTypeDesc]:
         return [PropTypeDesc(desc) for desc in self.state["prop_types"]]
 
     @property
@@ -41,11 +41,11 @@ class StateWrapper:
         return self.state["nbSourceVideos"]
 
     @property
-    def group_def(self) -> Optional[dict]:
+    def group_def(self) -> dict | None:
         return self.state["groupDef"]
 
     @property
-    def videos(self) -> List[JavascriptVideo]:
+    def videos(self) -> list[JavascriptVideo]:
         return [JavascriptVideo(data) for data in self.state["videos"]]
 
     @property
@@ -81,15 +81,15 @@ class StateWrapper:
         return self.state["sources"]
 
     @property
-    def path(self) -> List[Union[str, bool, int, float]]:
+    def path(self) -> list[str | bool | int | float]:
         return self.state["path"]
 
     @property
-    def search_def(self) -> Optional[dict]:
+    def search_def(self) -> dict | None:
         return self.state["searchDef"]
 
     @property
-    def sorting(self) -> List[str]:
+    def sorting(self) -> list[str]:
         return self.state["sorting"]
 
     def source_is_set(self) -> bool:
@@ -118,7 +118,7 @@ class StateWrapper:
     def is_grouped_by_similarity(self) -> bool:
         return self.group_def and self.group_def["field"] == "similarity_id"
 
-    def common_fields(self) -> Dict[str, bool]:
+    def common_fields(self) -> dict[str, bool]:
         return (self.is_grouped_by_similarity() and self.group_def["common"]) or {}
 
     def can_open_random_video(self) -> bool:
@@ -127,7 +127,7 @@ class StateWrapper:
     def all_not_found(self) -> bool:
         return all("not_found" in source for source in self.sources)
 
-    def get_multiple_string_prop_types(self) -> List[PropTypeDesc]:
+    def get_multiple_string_prop_types(self) -> list[PropTypeDesc]:
         return [desc for desc in self.prop_types if desc.multiple and desc.type is str]
 
 

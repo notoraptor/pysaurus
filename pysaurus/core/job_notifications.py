@@ -1,5 +1,4 @@
 import sys
-from typing import Optional
 
 from pysaurus.core.functions import camel_case_to_snake_case
 from pysaurus.core.notifications import Notification
@@ -21,7 +20,7 @@ class JobStep(Notification):
     def __init__(
         self,
         name: str,
-        channel: Optional[str],
+        channel: str | None,
         step: int,
         total: int,
         *,
@@ -106,7 +105,7 @@ def notify_job_start(notifier, identiifier, total, kind, expectation=None, title
 def notify_job_progress(
     notifier,
     function,
-    channel: Optional[str],
+    channel: str | None,
     channel_step: int,
     channel_size: int,
     *,

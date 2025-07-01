@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import Sequence
 
 from wip.adnoide.adnoide import (
     AbstractFunctionNode,
@@ -49,7 +49,7 @@ class ProteinGenerator:
         node = self._gof(seq)
         self.protein = Protein(node=node, nb_inputs=self.nb_feeds, gene=seq)
 
-    def _gof(self, seq: List[int]) -> AbstractFunctionNode:
+    def _gof(self, seq: list[int]) -> AbstractFunctionNode:
         """[g]enerate [o]n [f]ly"""
         if len(seq) > self.gen.max_length:
             raise DNATooLongForTranslationError(f"{len(seq)} / {self.gen.max_length}")

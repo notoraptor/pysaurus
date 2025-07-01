@@ -1,7 +1,7 @@
 import ast
 import operator
 from abc import abstractmethod
-from typing import Callable, Iterable, List
+from typing import Callable, Iterable
 
 
 def _in_(a, b):
@@ -73,7 +73,7 @@ class _Run:
     __slots__ = ("runs",)
 
     def __init__(self, *runs):
-        self.runs: List[_Run] = list(runs)
+        self.runs: list[_Run] = list(runs)
 
     def __str__(self):
         return type(self).__name__

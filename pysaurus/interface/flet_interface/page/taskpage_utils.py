@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import flet as ft
 
 from pysaurus.core.classes import StringPrinter
@@ -41,8 +39,8 @@ class NotificationCollector:
     __slots__ = ("notifications", "job_map")
 
     def __init__(self):
-        self.notifications: List[Notification] = []
-        self.job_map: Dict[str, ProgressionMonitoring] = {}
+        self.notifications: list[Notification] = []
+        self.job_map: dict[str, ProgressionMonitoring] = {}
 
     def on_job_to_do(self, notification: JobToDo):
         assert notification.name not in self.job_map, (
@@ -67,7 +65,7 @@ class NotificationRenderer:
 
     def __init__(self, collector: NotificationCollector):
         self.collector = collector
-        self.controls: List[ft.Control] = []
+        self.controls: list[ft.Control] = []
         self.done = False
 
     @property

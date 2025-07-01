@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Iterable
 
 from pysaurus.video.video_pattern import VideoPattern
 
@@ -33,11 +33,11 @@ class PotentialMoveAttribute:
         from pysaurus.database.abstract_database import AbstractDatabase
 
         self.database: AbstractDatabase = database
-        self.potential_moves: Dict[int, List[dict]] = {}
-        self.move_groups: Dict[int, str] = {}
+        self.potential_moves: dict[int, list[dict]] = {}
+        self.move_groups: dict[int, str] = {}
         self.force_update = True
 
-    def __call__(self, video_id: Optional[int]):
+    def __call__(self, video_id: int | None):
         self._update()
         return self.move_groups.get(video_id, None), self.potential_moves.get(
             video_id, []
@@ -50,7 +50,7 @@ class PotentialMoveAttribute:
         logger.debug(f"[{type(self).__name__}] moves updated.")
         self.potential_moves.clear()
         self.move_groups.clear()
-        groups: Dict[_MoveKey, Tuple[List[VideoPattern], List[VideoPattern]]] = {}
+        groups: dict[_MoveKey, tuple[list[VideoPattern], list[VideoPattern]]] = {}
         videos = self.database.get_videos(
             include=(
                 "duration",
@@ -77,6 +77,6 @@ class PotentialMoveAttribute:
                 for video in found:
                     self.move_groups[video.video_id] = key.string
 
-    def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
+    def get_moves(self) -> Iterable[tuple[int, list[dict]]]:
         self._update()
         return self.potential_moves.items()

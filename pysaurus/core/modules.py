@@ -4,14 +4,14 @@ import platform
 import sys
 from html.parser import HTMLParser
 from io import BytesIO
-from typing import Any, Iterator, Sequence, Tuple
+from typing import Any, Iterator, Sequence
 
 from PIL import Image
 
 from pysaurus.core import core_exceptions
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 
-ImagePosition = Tuple[Any, int, int]
+ImagePosition = tuple[Any, int, int]
 
 
 class HTMLStripper(HTMLParser):
@@ -190,7 +190,7 @@ class ImageUtils:
     @staticmethod
     def get_near_front_pixels(
         width: int, height: int
-    ) -> Iterator[Tuple[ImagePosition, Sequence[ImagePosition]]]:
+    ) -> Iterator[tuple[ImagePosition, Sequence[ImagePosition]]]:
         # x, y:
 
         # 0, 0

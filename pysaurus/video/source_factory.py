@@ -1,4 +1,4 @@
-from typing import List, Self, Set
+from typing import Self
 
 
 class _Source(list):
@@ -109,7 +109,7 @@ class _SourceFactory:
         for i, source in enumerate(sorted(sources)):
             print(i + 1, source)
 
-    def _expand(self, source: List[str], sources: Set):
+    def _expand(self, source: list[str], sources: set):
         mu = _Source.MUTUALLY_EXCLUSIVE
         allowed_flags = set(mu)
         allowed_flags.difference_update(source)

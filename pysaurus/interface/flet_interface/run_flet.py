@@ -2,7 +2,6 @@ import asyncio
 import os
 import sys
 import traceback
-from typing import Optional
 
 import flet as ft
 
@@ -28,8 +27,8 @@ class App:
     __slots__ = ("interface", "page", "exit_code")
 
     def __init__(self):
-        self.interface: Optional[FletApiInterface] = None
-        self.page: Optional[ft.Page] = None
+        self.interface: FletApiInterface | None = None
+        self.page: ft.Page | None = None
         self.exit_code = 1
 
     def run(self, page: ft.Page):

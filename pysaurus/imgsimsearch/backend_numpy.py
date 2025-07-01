@@ -1,5 +1,4 @@
 from collections import namedtuple
-from typing import List
 
 import numpy as np
 
@@ -44,7 +43,7 @@ def classify_similarities_directed(
 
 
 def _comparison_jobs(
-    miniatures: List[Miniature],
+    miniatures: list[Miniature],
     edges,
     limit: float,
     mds: int,

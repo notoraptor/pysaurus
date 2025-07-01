@@ -1,5 +1,3 @@
-from typing import List, Optional, Set
-
 import flet as ft
 
 from pysaurus.application import exceptions
@@ -11,12 +9,12 @@ from pysaurus.interface.flet_interface.page.taskpage import TaskPage
 
 
 class Homepage(ft.Column):
-    def __init__(self, db_names: List[str]):
+    def __init__(self, db_names: list[str]):
         super().__init__()
         self.db_names = db_names
         self.new_name: str = ""
-        self.new_paths: Set[AbsolutePath] = set()
-        self.database_to_load: Optional[str] = None
+        self.new_paths: set[AbsolutePath] = set()
+        self.database_to_load: str | None = None
         self.update_on_load: bool = False
 
         self.new_paths_view = ft.ListView(expand=1)

@@ -2,18 +2,7 @@ import logging
 import tempfile
 from abc import ABC, abstractmethod
 from collections import Counter
-from typing import (
-    Any,
-    Collection,
-    Container,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Collection, Container, Iterable, Sequence
 
 import ujson as json
 
@@ -68,22 +57,18 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def _set_folders(self, folders: List[AbsolutePath]) -> None:
+    def _set_folders(self, folders: list[AbsolutePath]) -> None:
         raise NotImplementedError()
 
     @abstractmethod
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ) -> List[dict]:
+    ) -> list[dict]:
         raise NotImplementedError()
 
     @abstractmethod
     def prop_type_add(
-        self,
-        name: str,
-        prop_type: Union[str, type],
-        definition: PropRawType,
-        multiple: bool,
+        self, name: str, prop_type: str | type, definition: PropRawType, multiple: bool
     ) -> None:
         raise NotImplementedError()
 
@@ -106,15 +91,15 @@ class AbstractDatabase(ABC):
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> List[VideoPattern]:
+    ) -> list[VideoPattern]:
         raise NotImplementedError()
 
     @abstractmethod
-    def videos_get_terms(self) -> Dict[int, List[str]]:
+    def videos_get_terms(self) -> dict[int, list[str]]:
         raise NotImplementedError()
 
     @abstractmethod
-    def videos_get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
+    def videos_get_moves(self) -> Iterable[tuple[int, list[dict]]]:
         """
         Return an iterable of potential moves.
         Each potential move is represented by a couple:
@@ -141,25 +126,25 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def videos_set_field(self, field: str, changes: Dict[int, Any]):
+    def videos_set_field(self, field: str, changes: dict[int, Any]):
         raise NotImplementedError()
 
     @abstractmethod
     def videos_add(
         self,
-        video_entries: List[VideoEntry],
-        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
+        video_entries: list[VideoEntry],
+        runtime_info: dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def _thumbnails_add(self, filename_to_thumb_name: Dict[str, str]) -> None:
+    def _thumbnails_add(self, filename_to_thumb_name: dict[str, str]) -> None:
         raise NotImplementedError()
 
     @abstractmethod
     def videos_tag_get(
-        self, name: str, indices: List[int] = ()
-    ) -> Dict[int, List[PropUnitType]]:
+        self, name: str, indices: list[int] = ()
+    ) -> dict[int, list[PropUnitType]]:
         """
         Return all values for given property
         :param name: name of property
@@ -180,7 +165,7 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def videos_tag_set(
-        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
+        self, name: str, updates: dict[int, Collection[PropUnitType]], merge=False
     ):
         """Set one property for many videos."""
         raise NotImplementedError()
@@ -203,9 +188,9 @@ class AbstractDatabase(ABC):
             self._update_videos_not_found(all_files)
             files_to_update = self._find_video_paths_for_update(all_files)
             needing_thumbs = self._get_collectable_missing_thumbnails()
-            new: List[VideoEntry] = []
-            expected_thumbs: Dict[str, str] = {}
-            thumb_errors: Dict[str, List[str]] = {}
+            new: list[VideoEntry] = []
+            expected_thumbs: dict[str, str] = {}
+            thumb_errors: dict[str, list[str]] = {}
             with tempfile.TemporaryDirectory() as tmp_dir:
                 for result in Videos.hunt(files_to_update, needing_thumbs, tmp_dir):
                     task = result.task
@@ -272,8 +257,8 @@ class AbstractDatabase(ABC):
         )
 
     def _find_video_paths_for_update(
-        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
-    ) -> List[AbsolutePath]:
+        self, file_paths: dict[AbsolutePath, VideoRuntimeInfo]
+    ) -> list[AbsolutePath]:
         return sorted(
             file_name
             for file_name, file_info in file_paths.items()
@@ -288,7 +273,7 @@ class AbstractDatabase(ABC):
             )
         )
 
-    def _get_collectable_missing_thumbnails(self) -> List[AbsolutePath]:
+    def _get_collectable_missing_thumbnails(self) -> list[AbsolutePath]:
         return sorted(
             video.filename
             for video in self.get_videos(
@@ -298,7 +283,7 @@ class AbstractDatabase(ABC):
         )
 
     @Profiler.profile_method()
-    def ensure_miniatures(self) -> List[Miniature]:
+    def ensure_miniatures(self) -> list[Miniature]:
         miniatures_path = self.ways.db_miniatures_path
         prev_miniatures = Miniatures.read_miniatures_file(miniatures_path)
         valid_miniatures = {
@@ -328,7 +313,7 @@ class AbstractDatabase(ABC):
             with Profiler(say("Generating miniatures."), self.notifier):
                 added_miniatures = Miniatures.get_miniatures(tasks)
 
-        m_dict: Dict[str, Miniature] = {
+        m_dict: dict[str, Miniature] = {
             m.identifier: m
             for source in (valid_miniatures.values(), added_miniatures)
             for m in source
@@ -369,14 +354,14 @@ class AbstractDatabase(ABC):
         self._move_video_entries(unique_moves)
         return len(unique_moves)
 
-    def get_unique_moves(self) -> List[Tuple[int, int]]:
+    def get_unique_moves(self) -> list[tuple[int, int]]:
         return [
             (video_id, moves[0]["video_id"])
             for video_id, moves in self.videos_get_moves()
             if len(moves) == 1
         ]
 
-    def _move_video_entries(self, moves: List[Tuple[int, int]]):
+    def _move_video_entries(self, moves: list[tuple[int, int]]):
         if not moves:
             return
         with self.to_save():
@@ -402,9 +387,9 @@ class AbstractDatabase(ABC):
                     include=["video_id"], where={"video_id": to_indices, "found": True}
                 )
             )
-            to_properties: Dict[str, Dict[int, list]] = {}
+            to_properties: dict[str, dict[int, list]] = {}
             for from_id, to_id in moves:
-                from_props: Dict[str, list] = from_map[from_id].properties
+                from_props: dict[str, list] = from_map[from_id].properties
                 for prop_name, from_prop_values in from_props.items():
                     to_properties.setdefault(prop_name, {})[to_id] = from_prop_values
             # Update properties
@@ -432,7 +417,7 @@ class AbstractDatabase(ABC):
             for from_id in from_indices:
                 self.video_entry_del(from_id)
 
-    def set_similarities(self, similarities: Dict[int, Optional[int]]):
+    def set_similarities(self, similarities: dict[int, int | None]):
         print(repr(similarities))
         self.videos_set_field("similarity_id", similarities)
         self._notify_fields_modified(["similarity_id"])
@@ -502,7 +487,7 @@ class AbstractDatabase(ABC):
             self._notify_fields_modified([from_name, to_name], is_property=True)
         return len(from_new)
 
-    def delete_property_values(self, name: str, values: list) -> List[int]:
+    def delete_property_values(self, name: str, values: list) -> list[int]:
         values = set(self.validate_prop_values(name, values))
         modified = {}
         for video_id, previous_values in self.videos_tag_get(name).items():
@@ -555,8 +540,8 @@ class AbstractDatabase(ABC):
             self.set_property_for_videos(prop_name, modified)
 
     def count_property_for_videos(
-        self, video_indices: List[int], name: str
-    ) -> List[List]:
+        self, video_indices: list[int], name: str
+    ) -> list[list]:
         count = Counter()
         for values in self.videos_tag_get(name, indices=video_indices).values():
             count.update(values)
@@ -564,7 +549,7 @@ class AbstractDatabase(ABC):
 
     def update_property_for_videos(
         self,
-        video_indices: List[int],
+        video_indices: list[int],
         name: str,
         values_to_add: list,
         values_to_remove: list,
@@ -584,7 +569,7 @@ class AbstractDatabase(ABC):
         )
 
     def set_property_for_videos(
-        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
+        self, name: str, updates: dict[int, Collection[PropUnitType]], merge=False
     ):
         """Set property for many videos and notify about property modified."""
         self.videos_tag_set(name, updates, merge)
@@ -594,7 +579,7 @@ class AbstractDatabase(ABC):
         self.provider.manage_attributes_modified(list(fields), is_property=is_property)
         self.save()
 
-    def validate_prop_values(self, name, values: list) -> List[PropValueType]:
+    def validate_prop_values(self, name, values: list) -> list[PropValueType]:
         (prop_dict,) = self.get_prop_types(name=name)
         prop_type = PropTypeValidator(prop_dict)
         if prop_type.multiple:

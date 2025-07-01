@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional, Self
+from typing import Any, Callable, Self
 
 import pygame
 
@@ -37,11 +37,11 @@ class RadioGroup(AbstractLayout):
         self._set_new_value(value)
 
     @property
-    def on_change(self) -> Optional[Callable[[Self], None]]:
+    def on_change(self) -> Callable[[Self], None] | None:
         return self._get_wprop("on_change")
 
     @on_change.setter
-    def on_change(self, callback: Optional[Callable[[Self], None]]):
+    def on_change(self, callback: Callable[[Self], None] | None):
         self._set_wprop("on_change", callback)
 
     def handle_radio_click(self, radio):

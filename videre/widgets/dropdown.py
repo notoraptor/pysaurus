@@ -1,4 +1,4 @@
-from typing import Optional, Self
+from typing import Self
 
 import pygame
 
@@ -55,7 +55,7 @@ class Dropdown(Div):
     def __init__(self, options=(), **kwargs):
         self._text = _Text()
         self._arrow = _Text(self.ARROW_DOWN)
-        self._context: Optional[Column] = None
+        self._context: Column | None = None
         super().__init__(Row([Container(self._text, weight=1), self._arrow]), **kwargs)
         self.options = options
         self.index = 0

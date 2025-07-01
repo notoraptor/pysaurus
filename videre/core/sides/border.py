@@ -1,5 +1,3 @@
-from typing import List, Tuple, Union
-
 import pygame
 
 from videre.colors import ColorDef, parse_color, stringify_color
@@ -30,7 +28,7 @@ class BorderSide:
         )
 
 
-BorderType = Union[BorderSide, Tuple[int, ColorDef], int]
+BorderType = BorderSide | tuple[int, ColorDef] | int
 
 
 class _DimensionsLimit:
@@ -40,7 +38,7 @@ class _DimensionsLimit:
         self._w = width
         self._h = height
 
-    def __call__(self, x: int, y: int) -> Tuple[int, int]:
+    def __call__(self, x: int, y: int) -> tuple[int, int]:
         return min(max(x, 0), self._w - 1), min(max(y, 0), self._h - 1)
 
 
@@ -80,7 +78,7 @@ class Border(AbstractSides[BorderType, BorderSide]):
             left=self.left.width,
         )
 
-    def get_top_points(self, width: int, height: int) -> List[Tuple[int, int]]:
+    def get_top_points(self, width: int, height: int) -> list[tuple[int, int]]:
         if not width or not height or not self.top.width:
             return []
         limit = _DimensionsLimit(width, height)
@@ -91,7 +89,7 @@ class Border(AbstractSides[BorderType, BorderSide]):
             limit(self.left.width - 1, self.top.width - 1),
         ]
 
-    def get_right_points(self, width: int, height: int) -> List[Tuple[int, int]]:
+    def get_right_points(self, width: int, height: int) -> list[tuple[int, int]]:
         if not width or not height or not self.right.width:
             return []
         limit = _DimensionsLimit(width, height)
@@ -102,7 +100,7 @@ class Border(AbstractSides[BorderType, BorderSide]):
             limit(width - self.right.width, self.top.width - 1),
         ]
 
-    def get_bottom_points(self, width: int, height: int) -> List[Tuple[int, int]]:
+    def get_bottom_points(self, width: int, height: int) -> list[tuple[int, int]]:
         if not width or not height or not self.bottom.width:
             return []
         limit = _DimensionsLimit(width, height)
@@ -113,7 +111,7 @@ class Border(AbstractSides[BorderType, BorderSide]):
             limit(self.left.width - 1, height - self.bottom.width),
         ]
 
-    def get_left_points(self, width: int, height: int) -> List[Tuple[int, int]]:
+    def get_left_points(self, width: int, height: int) -> list[tuple[int, int]]:
         if not width or not height or not self.left.width:
             return []
         limit = _DimensionsLimit(width, height)
@@ -126,7 +124,7 @@ class Border(AbstractSides[BorderType, BorderSide]):
 
     def describe_borders(
         self, width: int, height: int
-    ) -> List[Tuple[pygame.Color, List[Tuple[int, int]]]]:
+    ) -> list[tuple[pygame.Color, list[tuple[int, int]]]]:
         return [
             (self.top.color, self.get_top_points(width, height)),
             (self.right.color, self.get_right_points(width, height)),

@@ -18,7 +18,7 @@
     * vertical_alignment: Alignment
     * horizontal_alignment: Alignment
   * RadioGroup (1 control)
-    * value: Optional[Any]
+    * value: Any | None
     * on_change: Callable[[RadioGroup], None]
     * can_deselect: bool = False
   * Animator (1 control)

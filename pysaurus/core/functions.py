@@ -6,7 +6,7 @@ import sys
 import tempfile
 import threading
 import types
-from typing import Any, Collection, Dict, Iterable, List, Sequence, Tuple
+from typing import Any, Collection, Iterable, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def camel_case_to_snake_case(name, split_upper_cases=True):
     return REGEX_LOWER_THEN_UPPER_CASES.sub(r"\1_\2", name).lower()
 
 
-def string_to_pieces(the_string) -> List[str]:
+def string_to_pieces(the_string) -> list[str]:
     the_string = camel_case_to_snake_case(the_string, split_upper_cases=False)
     the_string = split_words_and_numbers(the_string)
     return [piece.lower() for piece in REGEX_NO_WORD.sub(" ", the_string).split()]
@@ -270,7 +270,7 @@ def generate_infinite(value):
     return gen()
 
 
-def remove_from_list(arr: List, el):
+def remove_from_list(arr: list, el):
     try:
         return arr.remove(el)
     except ValueError:
@@ -325,7 +325,7 @@ def are_hashable_by(elements: Sequence, attribute: str) -> bool:
     return len({getattr(el, attribute) for el in elements}) == len(elements)
 
 
-def map_attribute[T](elements: Sequence[T], attribute: str) -> Dict[Any, T]:
+def map_attribute[T](elements: Sequence[T], attribute: str) -> dict[Any, T]:
     mapping = {getattr(element, attribute): element for element in elements}
     assert len(mapping) == len(elements)
     return mapping
@@ -347,7 +347,7 @@ def get_percent(a, b, decimals=2):
     return round(a * 100 / b, decimals)
 
 
-def get_tagged_methods(obj, key: str) -> Dict[Any, callable]:
+def get_tagged_methods(obj, key: str) -> dict[Any, callable]:
     """
     Collect methods from given object which have an attribute named "key"
     :param obj: object to inspect
@@ -364,7 +364,7 @@ def get_tagged_methods(obj, key: str) -> Dict[Any, callable]:
     return tag_to_method
 
 
-def points_are_line(points: List[Tuple[int, int]]) -> bool:
+def points_are_line(points: list[tuple[int, int]]) -> bool:
     """
     Check if the points are a line or a polygon.
 

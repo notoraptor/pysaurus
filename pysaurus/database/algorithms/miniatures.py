@@ -1,4 +1,4 @@
-from typing import Dict, List, Sequence, Tuple
+from typing import Sequence
 
 import ujson as json
 
@@ -14,7 +14,7 @@ class Miniatures:
     @classmethod
     def read_miniatures_file(
         cls, miniatures_path: AbsolutePath
-    ) -> Dict[AbsolutePath, Miniature]:
+    ) -> dict[AbsolutePath, Miniature]:
         miniatures = {}
         if miniatures_path.exists():
             with open(miniatures_path.assert_file().path) as miniatures_file:
@@ -28,8 +28,8 @@ class Miniatures:
 
     @classmethod
     def get_miniatures(
-        cls, named_thumbnails: Sequence[Tuple[AbsolutePath, bytes]]
-    ) -> List[Miniature]:
+        cls, named_thumbnails: Sequence[tuple[AbsolutePath, bytes]]
+    ) -> list[Miniature]:
         return list(
             parallelize(
                 cls._gen_miniature,

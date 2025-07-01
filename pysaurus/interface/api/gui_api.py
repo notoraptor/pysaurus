@@ -4,7 +4,7 @@ import os
 import subprocess
 import threading
 from abc import abstractmethod
-from typing import Callable, Dict, Optional, Sequence
+from typing import Callable, Sequence
 
 import pyperclip
 
@@ -49,8 +49,8 @@ class GuiAPI(FeatureAPI):
         E.g. Do not share database provider.
         """
         super().__init__(notifier=Informer.default())
-        self.launched_thread: Optional[threading.Thread] = None
-        self.copy_work: Optional[FileCopier] = None
+        self.launched_thread: threading.Thread | None = None
+        self.copy_work: FileCopier | None = None
         self.server = ServerLauncher(lambda: self.database)
         self._closed = False
 
@@ -124,7 +124,7 @@ class GuiAPI(FeatureAPI):
         return launch_thread(function, *args, **kwargs)
 
     def _launch(
-        self, fn: Callable, args: Sequence = None, kwargs: Dict = None, finish=True
+        self, fn: Callable, args: Sequence = None, kwargs: dict = None, finish=True
     ) -> None:
         logger.debug(f"Running {fn.__name__}")
         args = args or ()

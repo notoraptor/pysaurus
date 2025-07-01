@@ -1,7 +1,7 @@
 import logging
 import sys
 from collections import namedtuple
-from typing import Callable, List, Union
+from typing import Callable
 
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 
@@ -55,14 +55,14 @@ def _patch_version_2(data: dict, version) -> bool:
     return True
 
 
-_PATCHS: List[Callable[[Union[dict, list], int], bool]] = [
+_PATCHS: list[Callable[[dict | list, int], bool]] = [
     _patch_version_0,
     _patch_version_1,
     _patch_version_2,
 ]
 
 
-def patch_database_json(data: Union[dict, list], version):
+def patch_database_json(data: dict | list, version):
     for patch in _PATCHS:
         print(patch.__name__)
         if patch(data, version):

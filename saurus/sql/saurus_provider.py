@@ -1,4 +1,4 @@
-from typing import List, Sequence
+from typing import Sequence
 
 from pysaurus.core.classes import Selector
 from pysaurus.video.video_search_context import VideoSearchContext
@@ -25,15 +25,15 @@ class SaurusProvider(AbstractVideoProvider):
     def __init__(self, database):
         super().__init__(database)
 
-        self.sources: List[List[str]] = []  #
+        self.sources: list[list[str]] = []  #
         self.grouping: GroupDef = GroupDef()  #
-        self.classifier: List[str] = []  #
+        self.classifier: list[str] = []  #
         self.group: int = 0  #
         self.search: SearchDef = SearchDef()  #
-        self.sorting: List[str] = []  #
+        self.sorting: list[str] = []  #
 
         self._groups = LookupArray[GroupCount](GroupCount, (), GroupCount.keyof)
-        self._view_indices: List[int] = []
+        self._view_indices: list[int] = []
         self._to_update = True
 
         self.reset_parameters(*self.LAYERS)
@@ -117,13 +117,13 @@ class SaurusProvider(AbstractVideoProvider):
             self.sorting = sorting
             self._to_update = True
 
-    def get_sources(self) -> List[List[str]]:
+    def get_sources(self) -> list[list[str]]:
         return self.sources
 
     def get_grouping(self) -> GroupDef:
         return self.grouping
 
-    def get_classifier_path(self) -> List[str]:
+    def get_classifier_path(self) -> list[str]:
         return self.classifier
 
     def get_group(self) -> int:
@@ -132,7 +132,7 @@ class SaurusProvider(AbstractVideoProvider):
     def get_search(self) -> SearchDef:
         return self.search
 
-    def get_sort(self) -> List[str]:
+    def get_sort(self) -> list[str]:
         return self.sorting
 
     def _convert_field_value_to_group_id(self, field_value):

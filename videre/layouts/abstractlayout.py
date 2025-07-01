@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Sequence
+from typing import Callable, Sequence
 
 from videre import Alignment
 from videre.core.mouse_ownership import MouseOwnership
@@ -26,12 +26,12 @@ class AbstractLayout(Widget):
             old_control.with_parent(None)
         self._set_wprop("_controls", [ctrl.with_parent(self) for ctrl in controls])
 
-    def _controls(self) -> List[Widget]:
+    def _controls(self) -> list[Widget]:
         return self._get_wprop("_controls")
 
     def get_mouse_owner(
         self, x_in_parent: int, y_in_parent: int
-    ) -> Optional[MouseOwnership]:
+    ) -> MouseOwnership | None:
         if super().get_mouse_owner(x_in_parent, y_in_parent):
             local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
             child = get_top_mouse_owner(local_x, local_y, self._controls())
@@ -43,13 +43,13 @@ class AbstractLayout(Widget):
 
     def get_mouse_wheel_owner(
         self, x_in_parent: int, y_in_parent: int
-    ) -> Optional[MouseOwnership]:
+    ) -> MouseOwnership | None:
         if self._get_mouse_owner(x_in_parent, y_in_parent):
             local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
             return get_top_mouse_wheel_owner(local_x, local_y, self._controls())
         return None
 
-    def collect_matchs(self, callback: Callable[[Widget], bool]) -> List[Widget]:
+    def collect_matchs(self, callback: Callable[[Widget], bool]) -> list[Widget]:
         matchs = super().collect_matchs(callback)
         for control in self._controls():
             matchs.extend(control.collect_matchs(callback))
@@ -86,7 +86,7 @@ class AbstractLayout(Widget):
 
 def get_top_mouse_owner(
     x: int, y: int, controls: Sequence[Widget]
-) -> Optional[MouseOwnership]:
+) -> MouseOwnership | None:
     for ctrl in reversed(controls):
         owner = ctrl.get_mouse_owner(x, y)
         if owner is not None:
@@ -96,7 +96,7 @@ def get_top_mouse_owner(
 
 def get_top_mouse_wheel_owner(
     x: int, y: int, controls: Sequence[Widget]
-) -> Optional[MouseOwnership]:
+) -> MouseOwnership | None:
     for ctrl in reversed(controls):
         owner = ctrl.get_mouse_wheel_owner(x, y)
         if owner is not None:

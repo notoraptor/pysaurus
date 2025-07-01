@@ -1,5 +1,3 @@
-from typing import Union
-
 import pygame
 
 from videre.colors import ColorDef, Colors, parse_color
@@ -85,10 +83,10 @@ class Gradient(PygameUtils):
         return surface
 
     @classmethod
-    def parse(cls, coloring: Union[ColorDef, "Gradient"]) -> "Gradient":
+    def parse(cls, coloring: ColorDef | "Gradient") -> "Gradient":
         if isinstance(coloring, Gradient):
             return coloring
         return Gradient(parse_color(coloring))
 
 
-ColoringDefinition = Union[ColorDef, Gradient]
+ColoringDefinition = ColorDef | Gradient

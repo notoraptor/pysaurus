@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Sequence, Set
+from typing import Any, Sequence
 
 from pysaurus.core.graph import Graph
 from pysaurus.core.informer import Informer
@@ -8,10 +8,10 @@ from pysaurus.imgsimsearch.common import THUMBNAIL_DIMENSION
 
 
 def compare_miniatures(
-    miniatures_list: List[Miniature],
-    comparisons: Dict[Any, Sequence[Any]],
+    miniatures_list: list[Miniature],
+    comparisons: dict[Any, Sequence[Any]],
     sim_limit: float,
-) -> List[Set[Any]]:
+) -> list[set[Any]]:
     notifier = Informer.default()
 
     all_filenames = set(comparisons)
@@ -21,7 +21,7 @@ def compare_miniatures(
     for filename in all_filenames:
         assert filename in miniatures
 
-    numpy_miniatures: Dict[str, NumpyMiniature] = {}
+    numpy_miniatures: dict[str, NumpyMiniature] = {}
     for miniature in notifier.tasks(
         miniatures_list, "Generate NumPy miniatures", len(miniatures_list)
     ):

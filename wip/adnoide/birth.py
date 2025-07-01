@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Sequence
+from typing import Sequence
 
 from wip.adnoide.mutation import Individual, Mutagenesis
 
@@ -11,7 +11,7 @@ class AbstractNursery(ABC):
         self.mutagenesis = mutagenesis
 
     @abstractmethod
-    def spring(self, parents: Sequence[Individual]) -> List[Individual]:
+    def spring(self, parents: Sequence[Individual]) -> list[Individual]:
         raise NotImplementedError()
 
 
@@ -22,7 +22,7 @@ class FreeNursery(AbstractNursery):
         super().__init__(mutagenesis)
         self.population_size = population_size
 
-    def spring(self, parents: Sequence[Individual]) -> List[Individual]:
+    def spring(self, parents: Sequence[Individual]) -> list[Individual]:
         children = []
         nb_children = self.population_size - len(parents)
         for i in range(nb_children):
@@ -35,7 +35,7 @@ class FreeNursery(AbstractNursery):
 class ControlledNursery(AbstractNursery):
     __slots__ = ("children_sizes",)
 
-    def __init__(self, mutagenesis: Mutagenesis, children_sizes: List[int]):
+    def __init__(self, mutagenesis: Mutagenesis, children_sizes: list[int]):
         super().__init__(mutagenesis)
         self.children_sizes = children_sizes
 
@@ -46,7 +46,7 @@ class ControlledNursery(AbstractNursery):
             degressive_distribution(population_size - selection_size, selection_size),
         )
 
-    def spring(self, parents: Sequence[Individual]) -> List[Individual]:
+    def spring(self, parents: Sequence[Individual]) -> list[Individual]:
         children = []
         for survivant, nb_children in zip(parents, self.children_sizes):
             for _ in range(nb_children):
@@ -55,7 +55,7 @@ class ControlledNursery(AbstractNursery):
         return children
 
 
-def degressive_distribution(surface: int, side: int) -> List[int]:
+def degressive_distribution(surface: int, side: int) -> list[int]:
     """
     surface = (1 * side) + (side * other_side / 2)
     surface = side + (side * other_side / 2)

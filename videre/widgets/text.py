@@ -1,5 +1,3 @@
-from typing import Optional
-
 import pygame
 
 from videre.colors import ColorDef, parse_color
@@ -36,7 +34,7 @@ class Text(Widget):
         **kwargs
     ):
         super().__init__(**kwargs)
-        self._rendered: Optional[RenderedText] = None
+        self._rendered: RenderedText | None = None
         self._set_wprops(size=size, height_delta=height_delta)
         self.text = text
         self.wrap = wrap
@@ -79,7 +77,7 @@ class Text(Widget):
         self._set_wprop("align", align)
 
     @property
-    def color(self) -> Optional[pygame.Color]:
+    def color(self) -> pygame.Color | None:
         return self._get_wprop("color")
 
     @color.setter

@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Sequence
+from typing import Any, Sequence
 
 from pysaurus.video import VideoRuntimeInfo
 
@@ -43,7 +43,7 @@ class VideoEntry:
     date_entry_opened: float = None  # as Date(this or mtime if None)
     similarity_id: int = None
 
-    # Missing: `properties`: Dict[str, List[PropUnitType]]
+    # Missing: `properties`: dict[str, list[PropUnitType]]
     # Missing: `moves`: list of dicts {video_id => int, filename => str}
 
     def to_formatted_dict(self):
@@ -55,7 +55,7 @@ class VideoEntry:
 
     def to_table(
         self, for_update=False, runtime_info: VideoRuntimeInfo = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         output = asdict(self)
         del output["errors"]
         del output["audio_languages"]

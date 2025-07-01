@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List
+from typing import Iterable
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
@@ -20,10 +20,10 @@ class Videos:
     @classmethod
     def get_runtime_info_from_paths(
         cls, folders: Iterable[AbsolutePath]
-    ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
+    ) -> dict[AbsolutePath, VideoRuntimeInfo]:
         sources = list(folders)
         notifier = Informer.default()
-        paths: Dict[AbsolutePath, VideoRuntimeInfo] = {}
+        paths: dict[AbsolutePath, VideoRuntimeInfo] = {}
         with Profiler(title=say("Collect videos"), notifier=notifier):
             for local_result in parallelize(
                 cls._collect_videos_from_folders,
@@ -39,18 +39,18 @@ class Videos:
     @classmethod
     def _collect_videos_from_folders(
         cls, path: AbsolutePath
-    ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
-        files: Dict[AbsolutePath, VideoRuntimeInfo] = {}
+    ) -> dict[AbsolutePath, VideoRuntimeInfo]:
+        files: dict[AbsolutePath, VideoRuntimeInfo] = {}
         scan_path_for_videos(path, files)
         return files
 
     @classmethod
     def hunt(
         cls,
-        filenames: List[AbsolutePath],
-        need_thumbs: List[AbsolutePath],
+        filenames: list[AbsolutePath],
+        need_thumbs: list[AbsolutePath],
         working_directory: str,
-    ) -> List[VideoTaskResult]:
+    ) -> list[VideoTaskResult]:
         hasher = FNV64()
         tasks = []
         filenames_without_thumbs = set(need_thumbs)
@@ -81,7 +81,7 @@ class Videos:
         notifier = Informer.default()
         raptor = PythonVideoRaptor()
         with Profiler(say("Collect videos info"), notifier=notifier):
-            results: List[VideoTaskResult] = list(
+            results: list[VideoTaskResult] = list(
                 parallelize(
                     raptor.capture,
                     tasks,

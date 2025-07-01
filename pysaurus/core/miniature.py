@@ -1,6 +1,6 @@
 import base64
 from io import BytesIO
-from typing import Any, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 
@@ -8,7 +8,7 @@ from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.modules import ImageUtils
 
-Bytes = Union[bytes, bytearray]
+Bytes = bytes | bytearray
 
 
 class NumpyMiniature:
@@ -81,19 +81,19 @@ class Miniature(AbstractMatrix):
 
     @staticmethod
     def from_file_name(file_name, dimensions, identifier=None):
-        # type: (str, Tuple[int, int], Optional[Any]) -> Miniature
+        # type: (str, tuple[int, int], Any | None) -> Miniature
         image = ImageUtils.open_rgb_image(file_name)
         return Miniature._img_to_mnt(image, dimensions, identifier)
 
     @staticmethod
     def from_file_data(binary_data, dimensions, identifier=None):
-        # type: (bytes, Tuple[int, int], Optional[Any]) -> Miniature
+        # type: (bytes, tuple[int, int], Any | None) -> Miniature
         blob = BytesIO(binary_data)
         image = ImageUtils.open_rgb_image(blob)
         return Miniature._img_to_mnt(image, dimensions, identifier)
 
     @staticmethod
-    def _img_to_mnt(image, dimensions: Tuple[int, int], identifier: Optional[Any]):
+    def _img_to_mnt(image, dimensions: tuple[int, int], identifier: Any | None):
         thumbnail = image.resize(dimensions)
         width, height = dimensions
         size = width * height
@@ -107,7 +107,7 @@ class Miniature(AbstractMatrix):
         return Miniature(red, green, blue, width, height, identifier)
 
     @staticmethod
-    def from_image(thumbnail, identifier: Optional[Any] = None):
+    def from_image(thumbnail, identifier: Any | None = None):
         width, height = thumbnail.size
         r, g, b = thumbnail.split()
         return Miniature(

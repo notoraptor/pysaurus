@@ -1,6 +1,6 @@
 import logging
 import threading
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Sequence
 
 import pygame
 from pygame.event import Event
@@ -72,18 +72,18 @@ class Window(PygameUtils, Clipboard):
         self._hide = bool(hide)
 
         self._running = True
-        self._screen: Optional[pygame.Surface] = None
+        self._screen: pygame.Surface | None = None
 
-        self._down: Dict[MouseButton, Optional[Widget]] = {
+        self._down: dict[MouseButton, Widget | None] = {
             button: None for button in MouseButton
         }
-        self._motion: Optional[Widget] = None
-        self._focus: Optional[Widget] = None
-        self._manual_events_after: List[Event] = []
+        self._motion: Widget | None = None
+        self._focus: Widget | None = None
+        self._manual_events_after: list[Event] = []
         self._layout = WindowLayout(parse_color(background or Colors.white))
 
-        self._controls: List[Widget] = []
-        self._fancybox: Optional[Fancybox] = None
+        self._controls: list[Widget] = []
+        self._fancybox: Fancybox | None = None
         self._context = None
 
         self._fonts = PygameFontFactory(size=font_size)
@@ -96,7 +96,7 @@ class Window(PygameUtils, Clipboard):
             }
         )
 
-        self._notification_callback: Optional[NotificationCallback] = None
+        self._notification_callback: NotificationCallback | None = None
         self._nb_frames = 0
 
     def __repr__(self):
@@ -111,7 +111,7 @@ class Window(PygameUtils, Clipboard):
         return self._fonts
 
     @property
-    def controls(self) -> Tuple[Widget, ...]:
+    def controls(self) -> tuple[Widget, ...]:
         return tuple(self._controls)
 
     @controls.setter

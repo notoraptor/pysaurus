@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Iterable
 
 import ujson as json
 
@@ -62,8 +62,8 @@ class Application:
         self.lang_dir = AbsolutePath.join(self.app_dir, "languages").mkdir()
         self.config_path = AbsolutePath.join(self.app_dir, "config.json")
         self.config = Config()
-        self.databases: Dict[AbsolutePath, Optional[AbstractDatabase]] = {}
-        self.languages: Dict[AbsolutePath, Optional[DefaultLanguage]] = {}
+        self.databases: dict[AbsolutePath, AbstractDatabase | None] = {}
+        self.languages: dict[AbsolutePath, DefaultLanguage | None] = {}
         self.notifier = notifier
         # Load database names.
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
@@ -122,7 +122,7 @@ class Application:
             AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")
         ]
 
-    def get_database_names(self) -> List[str]:
+    def get_database_names(self) -> list[str]:
         return sorted(path.title for path in self.databases.keys())
 
     @Profiler.profile_method()
@@ -162,10 +162,10 @@ class Application:
             path.delete()
             return True
 
-    def get_language_paths(self) -> List[AbsolutePath]:
+    def get_language_paths(self) -> list[AbsolutePath]:
         return sorted(self.languages.keys())
 
-    def get_language_names(self) -> List[str]:
+    def get_language_names(self) -> list[str]:
         return sorted(path.title for path in self.languages.keys())
 
     def open_language(self, lang_path: AbsolutePath) -> DefaultLanguage:

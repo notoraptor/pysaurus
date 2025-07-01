@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pysaurus.core.job_notifications import ConsoleJobProgress, JobStep, JobToDo
 from pysaurus.core.notifications import ProfilingEnd, ProfilingStart
 
@@ -8,8 +6,8 @@ class ConsoleNotificationPrinter:
     __slots__ = ("_prev_profiling_start", "progress")
 
     def __init__(self):
-        self._prev_profiling_start: Optional[ProfilingStart] = None
-        self.progress: Optional[ConsoleJobProgress] = None
+        self._prev_profiling_start: ProfilingStart | None = None
+        self.progress: ConsoleJobProgress | None = None
 
     def print(self, notification):
         prev_profiling_start = self._prev_profiling_start

@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List
+from typing import Callable
 
 import flet as ft
 
@@ -19,9 +19,9 @@ class VideoView(ft.Container):
     def __init__(
         self,
         video: JavascriptVideo,
-        prop_types: List[PropTypeDesc],
+        prop_types: list[PropTypeDesc],
         index=None,
-        common_fields: Dict[str, bool] = None,
+        common_fields: dict[str, bool] = None,
         grouped_by_similarity=False,
         grouped_by_moves=False,
         is_selected=False,

@@ -4,7 +4,7 @@ import operator
 import random
 import sys
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Self, Sequence, Tuple, Union
+from typing import Any, Self, Sequence
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import boolean_and, boolean_or, if_else, map_attribute
@@ -93,7 +93,7 @@ class AbstractFunction(ABC):
     def __init__(
         self,
         name=None,
-        input_types: Union[int, Sequence[FoodType]] = (),
+        input_types: int | Sequence[FoodType] = (),
         output_type: FoodType = Numeric,
     ):
         if isinstance(input_types, int):
@@ -101,7 +101,7 @@ class AbstractFunction(ABC):
 
         self.name: str = (name or type(self).__name__).lower()
         self.unique_id: int = Utils.unum(self.name)
-        self.input_types: Tuple[FoodType, ...] = tuple(input_types)
+        self.input_types: tuple[FoodType, ...] = tuple(input_types)
         self.output_type: FoodType = output_type or Numeric
 
     def __hash__(self):
@@ -129,7 +129,7 @@ class Function(AbstractFunction):
     def __init__(
         self,
         function: callable,
-        input_types: Union[int, Sequence[FoodType]] = (),
+        input_types: int | Sequence[FoodType] = (),
         output_type=None,
         name=None,
     ):
@@ -201,7 +201,7 @@ class AbstractFunctionNode(ABC):
 
     def __init__(self, function: AbstractFunction, inputs=()):
         self.function = function
-        self.input_nodes: Tuple[AbstractFunctionNode, ...] = tuple(inputs)
+        self.input_nodes: tuple[AbstractFunctionNode, ...] = tuple(inputs)
 
     def __hash__(self):
         return hash((self.function, self.input_nodes))
@@ -274,7 +274,7 @@ class Protein:
         node.expect_type()
         self.node = node
         self.nb_inputs = nb_inputs
-        self.gene: Tuple[int, ...] = tuple(gene)
+        self.gene: tuple[int, ...] = tuple(gene)
 
     @classmethod
     def _count_feeds(cls, node: AbstractFunctionNode):
@@ -303,7 +303,7 @@ class Protein:
         return self.node.execute(Feeder(args))
 
 
-FUNCTIONS: List[AbstractFunction] = [
+FUNCTIONS: list[AbstractFunction] = [
     # -- basic operators
     # math binary operators
     Function(operator.add, 2),
@@ -378,8 +378,8 @@ FUNCTIONS: List[AbstractFunction] = [
     Function(boolean_or, [Anything, Anything], Anything, "or"),
     Function(if_else, [Anything, Anything, Anything], Anything, "if"),
 ]
-CODON_TO_FUNCTION: Dict[int, AbstractFunction] = map_attribute(FUNCTIONS, "unique_id")
-CODONS: List[int] = sorted(CODON_TO_FUNCTION)
+CODON_TO_FUNCTION: dict[int, AbstractFunction] = map_attribute(FUNCTIONS, "unique_id")
+CODONS: list[int] = sorted(CODON_TO_FUNCTION)
 
 
 class Life:
@@ -400,7 +400,7 @@ class Life:
     def random_codon(self) -> int:
         return self.rng.choice(CODONS)
 
-    def random_dna(self, min_length=None, max_length=None) -> List[int]:
+    def random_dna(self, min_length=None, max_length=None) -> list[int]:
         if min_length is None:
             min_length = self.min_length
         if max_length is None:
@@ -432,7 +432,7 @@ class Gene(AbstractGene, AbstractLimitedCursor[int]):
 
 class RandomGene(AbstractGene):
     __slots__ = ("_sequence", "_gen")
-    _sequence: List[int]
+    _sequence: list[int]
 
     def __init__(self, generator: Life):
         super().__init__([])

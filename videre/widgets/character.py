@@ -1,5 +1,3 @@
-from typing import Optional
-
 import pygame
 
 from videre.colors import ColorDef, parse_color
@@ -38,11 +36,11 @@ class Character(Widget):
         self._set_wprop("text", text)
 
     @property
-    def size(self) -> Optional[int]:
+    def size(self) -> int | None:
         return self._get_wprop("size")
 
     @size.setter
-    def size(self, size: Optional[int]):
+    def size(self, size: int | None):
         self._set_wprop("size", size)
 
     @property

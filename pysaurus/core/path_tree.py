@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Self
+from typing import Self
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath
@@ -10,7 +10,7 @@ class PathTreeNode:
 
     def __init__(self, name: str):
         self.name = name
-        self.children: Dict[str, Self] = {}
+        self.children: dict[str, Self] = {}
         self.termination = False
 
 

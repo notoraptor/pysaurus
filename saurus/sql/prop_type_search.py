@@ -1,5 +1,3 @@
-from typing import List
-
 from pysaurus.properties.properties import PROP_UNIT_CONVERTER
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.sql_utils import SQLWhereBuilder
@@ -13,7 +11,7 @@ def prop_type_search(
     multiple=None,
     with_enum=None,
     default=None,
-) -> List[dict]:
+) -> list[dict]:
     where_clause = SQLWhereBuilder()
     if name is not None:
         where_clause.append_field("name", name)

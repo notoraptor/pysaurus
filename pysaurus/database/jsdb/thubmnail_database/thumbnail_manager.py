@@ -1,5 +1,5 @@
 import base64
-from typing import Dict, Iterable, List, Set
+from typing import Iterable
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_database import (
@@ -36,7 +36,7 @@ class ThumbnailManager:
             many=True,
         )
 
-    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
+    def save_existing_thumbnails(self, filename_to_thumb_name: dict[str, str]):
         self.thumb_db.modify(
             "INSERT OR IGNORE INTO video_to_thumbnail "
             "(filename, thumbnail) VALUES (?, ?)",
@@ -52,7 +52,7 @@ class ThumbnailManager:
             "video_to_thumbnail", "filename", "filename = ?", [filename.path]
         )
 
-    def filter(self, filenames: Iterable[str]) -> Set[str]:
+    def filter(self, filenames: Iterable[str]) -> set[str]:
         if not isinstance(filenames, (list, tuple, set)):
             filenames = list(filenames)
         return {
@@ -88,7 +88,7 @@ class ThumbnailManager:
             "DELETE FROM video_to_thumbnail WHERE filename = ?", [path.path]
         )
 
-    def clean_thumbnails(self, paths: List[AbsolutePath]):
+    def clean_thumbnails(self, paths: list[AbsolutePath]):
         paths = set(paths)
         absent = [
             row

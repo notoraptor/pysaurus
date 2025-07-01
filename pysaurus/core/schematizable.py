@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable
+from typing import Any, Iterable
 
 from pysaurus.core.json_type import Type
 
@@ -32,7 +32,7 @@ class Schema:
     __slots__ = ("schema", "from_short", "linear_type")
 
     def __init__(self, types: Iterable[Type]):
-        self.schema: Dict[str, Type] = {t.name: t for t in types}
+        self.schema: dict[str, Type] = {t.name: t for t in types}
         self.from_short = {t.short: t.name for t in self.schema.values()}
         self.linear_type = self.to_linear_type()
 

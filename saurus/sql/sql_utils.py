@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Iterable, List, Optional, Self, Tuple, Union
+from typing import Iterable, Self
 
 from saurus.sql.video_parser import FieldQuery
 
@@ -127,11 +127,11 @@ class QueryMaker:
     )
 
     def __init__(self, table_name: str, table_alias: str):
-        self._fields: List[str] = []
-        self._main_table: Optional[TableDef] = None
-        self._jointures: List[JoinDef] = []
+        self._fields: list[str] = []
+        self._main_table: TableDef | None = None
+        self._jointures: list[JoinDef] = []
         self.where = SQLWhereBuilder()
-        self._order: List[Union[OrderField, str]] = []
+        self._order: list[OrderField | str] = []
         self.limit = None
         self.offset = None
 
@@ -140,7 +140,7 @@ class QueryMaker:
     def __str__(self):
         return self.generate()
 
-    def to_sql(self) -> Tuple[str, list]:
+    def to_sql(self) -> tuple[str, list]:
         return str(self), self.where.get_parameters()
 
     def add_field(self, field: str):

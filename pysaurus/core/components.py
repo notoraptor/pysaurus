@@ -5,7 +5,7 @@ import pathlib
 import shutil
 import subprocess
 from datetime import datetime
-from typing import Self, Union
+from typing import Self
 
 from pysaurus.core import core_exceptions
 from pysaurus.core.modules import FileSystem, System
@@ -240,7 +240,7 @@ STDERR: {stderr.strip()}"""
             return file.read()
 
     @classmethod
-    def ensure(cls, path: Union[str, Self]) -> Self:
+    def ensure(cls, path: str | Self) -> Self:
         return path if isinstance(path, AbsolutePath) else AbsolutePath(str(path))
 
     @staticmethod
@@ -274,7 +274,7 @@ STDERR: {stderr.strip()}"""
         return cls(os.path.join(str(folder_path), f"{file_title}.{file_extension}"))
 
 
-PathType = Union[AbsolutePath, str]
+PathType = AbsolutePath | str
 
 
 class Date:
@@ -324,7 +324,7 @@ class Duration:
     H = 3600_000_000
     D = 86_400_000_000
 
-    def __init__(self, microseconds: Union[int, float]):
+    def __init__(self, microseconds: int | float):
         microseconds = round(microseconds)
         self.d = microseconds // 86_400_000_000
         self.h = (microseconds % 86_400_000_000) // 3600_000_000

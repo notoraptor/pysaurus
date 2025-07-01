@@ -1,6 +1,6 @@
 import inspect
 import logging
-from typing import List, Sequence, Tuple, Type
+from typing import Sequence, Type
 
 from pysaurus.core.classes import StringPrinter
 
@@ -80,7 +80,7 @@ class Overridden:
 
     def _filter_candidates(
         self,
-        candidates: List[Tuple[Sequence[Type], callable]],
+        candidates: list[tuple[Sequence[Type], callable]],
         annotation: Sequence[Type],
         column: int = 0,
     ):

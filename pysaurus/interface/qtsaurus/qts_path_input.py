@@ -1,5 +1,3 @@
-from typing import List
-
 from PySide6.QtWidgets import (
     QFileDialog,
     QGridLayout,
@@ -20,7 +18,7 @@ NAME_FILTER = (
 
 
 class QtsPathInput(QWidget):
-    def __init__(self, paths: List[PathType] = ()):
+    def __init__(self, paths: list[PathType] = ()):
         super().__init__()
         self.__paths = sorted(AbsolutePath.ensure(path) for path in paths)
 
@@ -46,7 +44,7 @@ class QtsPathInput(QWidget):
 
         self.__draw()
 
-    def paths(self) -> List[AbsolutePath]:
+    def paths(self) -> list[AbsolutePath]:
         return self.__paths
 
     def _add_file(self):

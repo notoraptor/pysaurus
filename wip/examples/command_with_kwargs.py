@@ -1,9 +1,8 @@
 import ast
 import re
-from typing import Tuple
 
 
-def parse_command_with_kwargs(command_string: str) -> Tuple[str, dict]:
+def parse_command_with_kwargs(command_string: str) -> tuple[str, dict]:
     # Extract command name
     cmd_parts = command_string.split(maxsplit=1)
     cmd_name = cmd_parts[0]

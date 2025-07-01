@@ -1,4 +1,4 @@
-from typing import Any, Iterable, List, Self, Tuple
+from typing import Any, Iterable, Self
 
 from pysaurus.core import functions
 from pysaurus.video_provider.view_tools import SearchDef
@@ -9,14 +9,14 @@ def get_jointure(field: str) -> str:
     return "" if "(" in field or "v." in field else "v."
 
 
-def convert_dict_to_sql(dictionary: dict) -> Tuple[str, Tuple]:
+def convert_dict_to_sql(dictionary: dict) -> tuple[str, tuple]:
     keys = list(dictionary.keys())
     where = " AND ".join(f"{get_jointure(key)}{key} = ?" for key in keys)
     parameters = tuple(dictionary[key] for key in keys)
     return where, parameters
 
 
-def convert_dict_series_to_sql(dicts: Iterable[dict]) -> Tuple[str, List]:
+def convert_dict_series_to_sql(dicts: Iterable[dict]) -> tuple[str, list]:
     query_pieces = []
     params = []
     for dct in dicts:
@@ -27,7 +27,7 @@ def convert_dict_series_to_sql(dicts: Iterable[dict]) -> Tuple[str, List]:
     return f"({query})", params
 
 
-def search_to_sql(search: SearchDef) -> Tuple[str, List[str]]:
+def search_to_sql(search: SearchDef) -> tuple[str, list[str]]:
     terms = []
     for piece in functions.string_to_pieces(search.text):
         if piece in ("and", "or"):

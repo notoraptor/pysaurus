@@ -1,6 +1,6 @@
 import dataclasses
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, Self, Union
+from typing import Any, Callable, Self
 
 from videre import Alignment, Border, Colors
 from videre.core.constants import MouseButton
@@ -53,8 +53,8 @@ class Style:
 @dataclass(slots=True)
 class StyleDef:
     default: Style = dataclasses.field(default_factory=Style)
-    hover: Optional[Style] = None
-    click: Optional[Style] = None
+    hover: Style | None = None
+    click: Style | None = None
 
     def __post_init__(self):
         if self.hover is None:
@@ -93,8 +93,8 @@ class StyleDef:
             return StyleDef(**output)
 
 
-StyleType = Optional[Union[StyleDef, Dict[str, Dict[str, Any]]]]
-OnClickType = Optional[Callable[[Widget], None]]
+StyleType = StyleDef | dict[str, dict[str, Any]] | None
+OnClickType = Callable[[Widget], None] | None
 
 
 class Div(ControlLayout):
@@ -114,7 +114,7 @@ class Div(ControlLayout):
 
     def __init__(
         self,
-        control: Optional[Widget] = None,
+        control: Widget | None = None,
         style: StyleType = None,
         on_click: OnClickType = None,
         **kwargs,

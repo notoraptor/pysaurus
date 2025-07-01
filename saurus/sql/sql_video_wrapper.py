@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Optional
+from typing import Iterable
 
 from pysaurus.core.classes import StringedTuple
 from pysaurus.core.components import AbsolutePath, Date
@@ -75,7 +75,7 @@ class SQLVideoWrapper(VideoPattern):
         audio_languages=(),
         subtitle_languages=(),
         errors=(),
-        json_properties: Optional[dict] = None,
+        json_properties: dict | None = None,
         moves=(),
     ):
         # Data must contains key "with_thumbnails"
@@ -175,23 +175,23 @@ class SQLVideoWrapper(VideoPattern):
         return self.data[F.width]
 
     @property
-    def errors(self) -> List[str]:
+    def errors(self) -> list[str]:
         return self._errors
 
     @property
-    def audio_languages(self) -> List[str]:
+    def audio_languages(self) -> list[str]:
         return self._audio_languages
 
     @property
-    def subtitle_languages(self) -> List[str]:
+    def subtitle_languages(self) -> list[str]:
         return self._subtitle_languages
 
     @property
-    def properties(self) -> Dict[str, List[PropUnitType]]:
+    def properties(self) -> dict[str, list[PropUnitType]]:
         return self._properties
 
     @property
-    def moves(self) -> List[MoveType]:
+    def moves(self) -> list[MoveType]:
         return self._moves
 
     @property

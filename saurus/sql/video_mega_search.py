@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Iterable, Sequence
 
 from pysaurus.core.classes import Selector
 from pysaurus.core.components import AbsolutePath, Duration, FileSize
@@ -33,7 +33,7 @@ def video_mega_search(
     include: Sequence[str] = None,
     with_moves: bool = False,
     where: dict = None,
-) -> List[VideoPattern]:
+) -> list[VideoPattern]:
     where_builder = SQLWhereBuilder()
     selection_builder = SQLWhereBuilder(use_or=True)
     vid_query = None
@@ -92,7 +92,7 @@ def _get_videos(
     *,
     include: Sequence[str] = None,
     with_moves: bool = False,
-) -> List[VideoPattern]:
+) -> list[VideoPattern]:
     videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
     # print(query)
     # print(parameters)
@@ -125,7 +125,7 @@ def _get_videos(
         ):
             languages[row[0]][row[1]].append(row[2])
     if with_properties:
-        prop_types: Dict[int, PropTypeValidator] = {
+        prop_types: dict[int, PropTypeValidator] = {
             desc["property_id"]: PropTypeValidator(desc)
             for desc in prop_type_search(db)
         }
@@ -167,7 +167,7 @@ def _get_videos(
     return videos
 
 
-def _get_video_moves(db: PysaurusConnection) -> Iterable[Tuple[int, List[dict]]]:
+def _get_video_moves(db: PysaurusConnection) -> Iterable[tuple[int, list[dict]]]:
     for row in db.query(
         """
     SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
@@ -201,7 +201,7 @@ def _get_video_moves(db: PysaurusConnection) -> Iterable[Tuple[int, List[dict]]]
 def video_mega_group(
     sql_db: PysaurusConnection,
     *,
-    sources: Sequence[List[str]] = (),
+    sources: Sequence[list[str]] = (),
     grouping: GroupDef = GroupDef(),
     classifier: Sequence[str] = (),
     group=0,

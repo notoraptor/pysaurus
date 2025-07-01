@@ -1,5 +1,3 @@
-from typing import Optional
-
 from videre.core.constants import Side
 
 
@@ -9,17 +7,17 @@ class AbstractSides[T, S]:
 
     def __init__(
         self,
-        top: Optional[T] = None,
-        left: Optional[T] = None,
-        bottom: Optional[T] = None,
-        right: Optional[T] = None,
+        top: T | None = None,
+        left: T | None = None,
+        bottom: T | None = None,
+        right: T | None = None,
     ):
         self.top: S = self._parse(top)
         self.left: S = self._parse(left)
         self.bottom: S = self._parse(bottom)
         self.right: S = self._parse(right)
 
-    def _parse(self, value: Optional[T]) -> S:
+    def _parse(self, value: T | None) -> S:
         return self.__default__ if value is None else self.__parser__(value)
 
     def __parser__(self, value: T) -> S:
@@ -45,7 +43,7 @@ class AbstractSides[T, S]:
         )
 
     @classmethod
-    def axis(cls, vertical: Optional[T] = None, horizontal: Optional[T] = None):
+    def axis(cls, vertical: T | None = None, horizontal: T | None = None):
         return cls(top=vertical, bottom=vertical, left=horizontal, right=horizontal)
 
     @classmethod

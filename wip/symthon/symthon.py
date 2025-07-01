@@ -1,6 +1,6 @@
 import operator
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Self, Sequence, Tuple, Union
+from typing import Any, Self, Sequence
 
 from pysaurus.core import functions
 
@@ -49,7 +49,7 @@ class Variable(ABC):
         return type(self).__name__
 
     @abstractmethod
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         raise NotImplementedError()
 
     def __getattr__(self, item) -> Self:
@@ -179,7 +179,7 @@ class Reference(Variable):
     def name(self) -> str:
         return self._name
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         return space[self._name]
 
 
@@ -193,7 +193,7 @@ class Value(Variable):
     def __repr__(self):
         return _name_of(self._value)
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         return self._value
 
 
@@ -222,7 +222,7 @@ class Function(_Expression):
             )
         return output + ")"
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         return (self._function.__run__(space))(
             *(arg.__run__(space) for arg in self._args),
             **{key: value.__run__(space) for key, value in self._kwargs.items()},
@@ -247,7 +247,7 @@ class Getattr(Function):
 class Assign(_Expression):
     __slots__ = ("_lvalue", "_rvalue")
 
-    def __init__(self, lvalue: Union[Reference, Getattr], rvalue: Variable):
+    def __init__(self, lvalue: Reference | Getattr, rvalue: Variable):
         lvalue = self._wrap(lvalue)
         rvalue = self._wrap(rvalue)
         assert isinstance(lvalue, (Getattr, Reference))
@@ -255,7 +255,7 @@ class Assign(_Expression):
         self._lvalue = lvalue
         self._rvalue = rvalue
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         rvalue = self._rvalue.__run__(space)
         if isinstance(self._lvalue, Reference):
             space[self._lvalue.name] = rvalue
@@ -287,7 +287,7 @@ class Return(_Expression):
         super().__init__()
         self._ret = self._wrap(ret)
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         return _Returned(self._ret.__run__(space))
 
 
@@ -299,7 +299,7 @@ class Block(_Expression):
         self._block = [self._wrap(expr) for expr in block]
         self._stop_cls = _Returned if stop_only_on_returns else _Stopped
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         ret = None
         for variable in self._block:
             ret = variable.__run__(space)
@@ -316,7 +316,7 @@ class If(_Expression):
         self._condition = self._wrap(condition)
         self._block = Block(block)
 
-    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Stopped]:
+    def __run__(self, space: dict[str, Any]) -> bool | _Stopped:
         if self._condition.__run__(space):
             ret = self._block.__run__(space)
             return ret if isinstance(ret, _Stopped) else True
@@ -337,7 +337,7 @@ class Elif(If):
         super().__init__(condition, block)
         self._from_if = from_if
 
-    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Stopped]:
+    def __run__(self, space: dict[str, Any]) -> bool | _Stopped:
         return self._from_if.__run__(space) or super().__run__(space)
 
 
@@ -349,7 +349,7 @@ class Else(_Expression):
         self._from_if = from_if
         self._block = Block(block)
 
-    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Stopped]:
+    def __run__(self, space: dict[str, Any]) -> bool | _Stopped:
         ret_if = self._from_if.__run__(space)
         if ret_if:
             return ret_if
@@ -362,7 +362,7 @@ class _Loop(_Expression):
     __slots__ = ()
 
     @abstractmethod
-    def __run__(self, space: Dict[str, Any]) -> Optional[_Stopped]:
+    def __run__(self, space: dict[str, Any]) -> _Stopped | None:
         raise NotImplementedError()
 
 
@@ -371,7 +371,7 @@ class For(_Loop):
 
     def __init__(
         self,
-        statement: Union[Reference, Tuple[Reference, ...]],
+        statement: Reference | tuple[Reference, ...],
         iterable: Variable,
         block: Sequence[_Expression],
     ):
@@ -387,14 +387,14 @@ class For(_Loop):
         self._block = Block(block)
         self._parse_data = _parse_data
 
-    def _data_to_one_statement(self, data, space: Dict[str, Any]):
+    def _data_to_one_statement(self, data, space: dict[str, Any]):
         space[self._statement.name] = data
 
-    def _data_to_many_statements(self, data: tuple, space: Dict[str, Any]):
+    def _data_to_many_statements(self, data: tuple, space: dict[str, Any]):
         for i, ref in enumerate(self._statement):
             space[ref.name] = data[i]
 
-    def __run__(self, space: Dict[str, Any]) -> Optional[_Stopped]:
+    def __run__(self, space: dict[str, Any]) -> _Stopped | None:
         for data in self._iterable.__run__(space):
             self._parse_data(data, space)
             ret = self._block.__run__(space)
@@ -417,7 +417,7 @@ class _ForElse(_Expression):
         self._for = from_for
         self._block = Block(block)
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         ret_for = self._for.__run__(space)
         if ret_for is None:
             ret_for = self._block.__run__(space)
@@ -427,14 +427,14 @@ class _ForElse(_Expression):
 class Continue(_Expression):
     __slots__ = ()
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         return _Continued()
 
 
 class Break(_Expression):
     __slots__ = ()
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         return _Broken()
 
 
@@ -446,7 +446,7 @@ class While(_Loop):
         self._condition = self._wrap(condition)
         self._block = Block(block)
 
-    def __run__(self, space: Dict[str, Any]) -> Optional[_Stopped]:
+    def __run__(self, space: dict[str, Any]) -> _Stopped | None:
         while True:
             condition = self._condition.__run__(space)
             if condition:
@@ -470,8 +470,8 @@ class With(_Expression):
     def __init__(
         self,
         expr: _Expression,
-        as_or_block: Union[Reference, Sequence[_Expression]],
-        block: Optional[Sequence[_Expression]] = None,
+        as_or_block: Reference | Sequence[_Expression],
+        block: Sequence[_Expression] | None = None,
     ):
         if block is None:
             as_ = None
@@ -487,7 +487,7 @@ class With(_Expression):
         self._as = as_
         self._block = Block(block)
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         with self._expr.__run__(space) as context:
             if self._as is not None:
                 space[self._as.name] = context
@@ -503,7 +503,7 @@ class Condition(_Expression):
         self._if_true = self._wrap(if_true)
         self._if_false = self._wrap(if_false)
 
-    def __run__(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: dict[str, Any]) -> Any:
         return (
             self._if_true.__run__(space)
             if self._condition.__run__(space)
@@ -523,7 +523,7 @@ class Lambda(metaclass=MetaLambda):
 
     def __init__(
         self,
-        arguments: Optional[Union[Reference, Tuple[Reference, ...]]],
+        arguments: Reference | tuple[Reference, ...] | None,
         body: Sequence[_Expression],
     ):
         if arguments is not None:
@@ -536,7 +536,7 @@ class Lambda(metaclass=MetaLambda):
             if len(set(arg.name for arg in arguments)) != len(arguments):
                 raise RuntimeError("Duplicate argument name")
 
-        self._arguments: Optional[Tuple[Reference, ...]] = arguments
+        self._arguments: tuple[Reference, ...] | None = arguments
         self._body = Block(body, stop_only_on_returns=True)
 
     def __call__(self, *args):
@@ -563,9 +563,7 @@ class ReferenceFactory:
 
 class ExpressionFactory:
     @classmethod
-    def set(
-        cls, reference: Union[Reference, Getattr], variable: Variable
-    ) -> _Expression:
+    def set(cls, reference: Reference | Getattr, variable: Variable) -> _Expression:
         return Assign(reference, variable)
 
     @classmethod

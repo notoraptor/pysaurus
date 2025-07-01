@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, List, Optional, Self, Sequence
+from typing import Self, Sequence
 
 from fontTools.ttLib import TTCollection
 from tqdm import tqdm
@@ -28,8 +28,8 @@ class CharFontPriority:
         self,
         name: str,
         character: str,
-        block_to_covlen: Dict[str, int],
-        font_to_rank: Dict[str, int],
+        block_to_covlen: dict[str, int],
+        font_to_rank: dict[str, int],
     ):
         self.rank = font_to_rank.get(name)
         self.cov = block_to_covlen[Unicode.block(character)]
@@ -50,7 +50,7 @@ class CharFontPriority:
             return self.rank < other.rank
 
 
-def _load_fonts(font_table: Optional[Dict[str, str]] = None) -> List[FontUtils]:
+def _load_fonts(font_table: dict[str, str] | None = None) -> list[FontUtils]:
     font_table = font_table or get_fonts()
     fonts = []
     for path in font_table.values():
@@ -66,12 +66,12 @@ def _load_fonts(font_table: Optional[Dict[str, str]] = None) -> List[FontUtils]:
 
 def generate_char_cov(priority_fonts: Sequence[str] = ()):
     font_to_rank = {name: order for order, name in enumerate(priority_fonts)}
-    font_to_block_cov_len: Dict[str, Dict[str, int]] = {}
+    font_to_block_cov_len: dict[str, dict[str, int]] = {}
 
     fonts = _load_fonts()
     char_to_fonts = {}
     for font in fonts:
-        block_cov_len: Dict[str, int] = {}
+        block_cov_len: dict[str, int] = {}
         coverage = font.coverage(join=False)
         for block, block_coverage in coverage.items():
             covered_chars = block_coverage["coverage"]
@@ -82,7 +82,7 @@ def generate_char_cov(priority_fonts: Sequence[str] = ()):
     print("Characters:", len(list(Unicode.characters())))
     print("Covered:", len(char_to_fonts))
 
-    char_to_font: Dict[str, str] = {}
+    char_to_font: dict[str, str] = {}
     selected_fonts = set()
     for c, names in tqdm(char_to_fonts.items()):
         if len(names) == 1:
