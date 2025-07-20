@@ -153,6 +153,7 @@ def align_words(lines: list[Line[WordTask]], width: int, align=TextAlign.LEFT) -
         return
     if align == TextAlign.JUSTIFY:
         justify_words(lines, width)
+        return
     for line in lines:
         if line.elements:
             assert line.elements[0].x == 0, line
