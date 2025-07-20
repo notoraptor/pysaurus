@@ -68,6 +68,25 @@ class Demo:
     def clear(self, *args):
         self.work.control = None
 
+    @on_demo("text input")
+    def on_text_input(self, *args):
+        return videre.TextInput(weight=1)
+
+    @on_demo("radio")
+    def on_radio(self, *args):
+        radio1 = videre.Radio(value="one")
+        radio2 = videre.Radio(value="two")
+        radio3 = videre.Radio(value="three")
+        text = videre.Text("none")
+
+        def on_change(group: videre.RadioGroup):
+            text.text = group.value
+
+        group = videre.RadioGroup(
+            videre.Column([radio1, radio2, radio3, text]), on_change=on_change
+        )
+        return group
+
     @on_demo("label")
     def on_label(self, *args):
         checkbox = videre.Checkbox()
@@ -180,10 +199,6 @@ class Demo:
                 videre.ProgressBar(1),
             ]
         )
-
-    @on_demo("text input")
-    def on_text_input(self, *args):
-        return videre.TextInput(weight=1)
 
     @on_demo("fancybox")
     def on_demo_fancybox(self, *args):

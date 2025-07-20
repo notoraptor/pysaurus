@@ -63,7 +63,7 @@ class Border(AbstractSides[BorderType, BorderSide]):
         elif isinstance(side, int):
             return BorderSide(side)
         else:
-            raise ValueError(f"Unsupported border side value: {side}")
+            raise ValueError(f"Unsupported border side value: {side!r}")
 
     @classmethod
     def all(cls, width: int, color: ColorDef = None):

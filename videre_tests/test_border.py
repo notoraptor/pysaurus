@@ -1,3 +1,5 @@
+import pytest
+
 from videre.colors import Colors
 from videre.core.constants import Side
 from videre.core.sides.border import Border
@@ -32,17 +34,24 @@ def test_border_all_4():
     assert b.get_left_points(w, h) == [(0, 0), (0, 49), (3, 46), (3, 3)]
 
 
-def test_border_2_v_yellow():
+def test_border_2_v_yellow_and_hash_border_side():
     b = Border.axis(vertical=(2, Colors.yellow))
     assert b.left.width == 0
     assert b.left.color == Colors.black
     assert b.right.width == 0
     assert b.right.color == Colors.black
+    assert b.left == b.right
+    assert hash(b.left) == hash(b.right)
 
     assert b.top.width == 2
     assert b.top.color == Colors.yellow
     assert b.bottom.width == 2
     assert b.bottom.color == Colors.yellow
+    assert b.top == b.bottom
+    assert hash(b.top) == hash(b.bottom)
+
+    assert b.left != b.top
+    assert hash(b.left) != hash(b.top)
 
     w, h = 100, 50
     assert b.get_left_points(w, h) == []
@@ -117,3 +126,8 @@ def test_border_left_0():
     assert b.get_right_points(w, h) == [(99, 0), (99, 49), (95, 44), (95, 3)]
     assert b.get_bottom_points(w, h) == [(0, 49), (99, 49), (95, 44), (0, 44)]
     assert b.get_left_points(w, h) == []
+
+
+def test_bad_border():
+    with pytest.raises(ValueError, match="Unsupported border side value: ''"):
+        Border(top="")
