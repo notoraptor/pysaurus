@@ -5,13 +5,22 @@ from videre.layouts.abstract_controls_layout import AbstractControlsLayout
 
 
 class WindowLayout(AbstractControlsLayout):
-    __slots__ = ("_bgc",)
+    __wprops__ = {"background"}
+    __slots__ = ()
     _FILL = Colors.white
     __capture_mouse__ = True
 
     def __init__(self, background: pygame.Color | None = None):
         super().__init__()
-        self._bgc = background or self._FILL
+        self.background = background
+
+    @property
+    def background(self) -> pygame.Color:
+        return self._get_wprop("background")
+
+    @background.setter
+    def background(self, value: pygame.Color | None):
+        self._set_wprop("background", value or self._FILL)
 
     def render(self, window, width: int = None, height: int = None) -> pygame.Surface:
         screen = window.get_screen()
@@ -21,7 +30,7 @@ class WindowLayout(AbstractControlsLayout):
         screen = window.get_screen()
 
         screen_width, screen_height = screen.get_width(), screen.get_height()
-        screen.fill(self._bgc)
+        screen.fill(self.background)
         for control in self.controls:
             surface = control.render(window, screen_width, screen_height)
             screen.blit(surface, (control.x, control.y))

@@ -5,7 +5,6 @@ import pytest
 
 from pysaurus.core.modules import ImageUtils
 from videre import Picture
-from videre.windowing.windowfactory import WindowLD
 from .common import IMAGE_EXAMPLE
 
 
@@ -33,15 +32,13 @@ class SrcProvider:
 
 
 @pytest.mark.parametrize("src", ["string", "path", "bytes", "bytearray", "file_like"])
-def test_image(src, image_testing):
+def test_image(src, fake_win):
     src_provider = SrcProvider()
-    with WindowLD() as window:
-        window.controls = [Picture(src=getattr(src_provider, src)())]
-        image_testing(window.snapshot())
+    fake_win.controls = [Picture(src=getattr(src_provider, src)())]
+    fake_win.check()
 
 
 @pytest.mark.parametrize("alt", [None, "Bad image!"])
-def test_bad_image(alt, image_testing):
-    with WindowLD() as window:
-        window.controls = [Picture("", alt=alt)]
-        image_testing(window.snapshot())
+def test_bad_image(alt, fake_win):
+    fake_win.controls = [Picture("", alt=alt)]
+    fake_win.check()

@@ -4,11 +4,11 @@ import videre
 from videre_tests.common import FakeUser
 
 
-def test_button(snapwin):
-    snapwin.controls = [videre.Button(text="Hello World!")]
+def test_button(snap_win):
+    snap_win.controls = [videre.Button(text="Hello World!")]
 
 
-def test_click(window_testing):
+def test_click(fake_win):
     data = SimpleNamespace(value=100)
 
     def on_click(button):
@@ -17,10 +17,10 @@ def test_click(window_testing):
     assert data.value == 100
 
     button = videre.Button(text="Hello World!", on_click=on_click)
-    window_testing.controls = [button]
-    window_testing.render()
+    fake_win.controls = [button]
+    fake_win.render()
 
     FakeUser.click(button)
 
-    window_testing.render()
+    fake_win.render()
     assert data.value == 200

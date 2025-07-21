@@ -103,6 +103,14 @@ class Window(PygameUtils, Clipboard):
         return f"[{type(self).__name__}][{id(self)}]"
 
     @property
+    def backround(self) -> pygame.Color:
+        return self._layout.background
+
+    @backround.setter
+    def backround(self, value: ColorDef):
+        self._layout.background = parse_color(value or Colors.white)
+
+    @property
     def nb_frames(self) -> int:
         return self._nb_frames
 

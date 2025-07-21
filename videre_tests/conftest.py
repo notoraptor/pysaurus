@@ -3,7 +3,7 @@ import io
 import pytest
 
 from videre.windowing.step_window import StepWindow
-from videre.windowing.windowfactory import WindowLD
+from videre.windowing.windowfactory import LD
 from videre_tests.common import FakeUser
 
 
@@ -16,19 +16,6 @@ def image_testing(image_regression):
 
 
 @pytest.fixture
-def window_testing():
-    with WindowLD() as window:
-        yield window
-
-
-@pytest.fixture
-def snapwin(image_testing):
-    with WindowLD() as window:
-        yield window
-        image_testing(window.snapshot())
-
-
-@pytest.fixture
 def fake_user():
     yield FakeUser
 
@@ -37,8 +24,8 @@ def fake_user():
 def fake_win(image_testing, request):
     class FakeWindow(StepWindow):
 
-        def __init__(self):
-            super().__init__(width=320, height=240)
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
 
         def check(self, basename: str | None = None):
             kwargs = {}
@@ -46,5 +33,13 @@ def fake_win(image_testing, request):
                 kwargs["basename"] = f"{request.node.name}_{basename}"
             image_testing(self.snapshot(), **kwargs)
 
-    with FakeWindow() as window:
+    win_params = request.node.get_closest_marker("win_params")
+    win_params = (win_params and win_params.args[0]) or LD
+    with FakeWindow(**win_params) as window:
         yield window
+
+
+@pytest.fixture
+def snap_win(fake_win):
+    yield fake_win
+    fake_win.check()
