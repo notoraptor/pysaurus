@@ -156,7 +156,7 @@ class TextInput(AbstractLayout):
 
     def __init__(self, **kwargs):
         self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
-        self._container = Container(self._text, background_color=Colors.white)
+        self._container = Container(self._text, background_color=(240, 240, 240))
         super().__init__([self._container], **kwargs)
         self._cursor_event: _CursorEvent | None = None
         self._char_position = 0
@@ -186,6 +186,12 @@ class TextInput(AbstractLayout):
         self, x_in_parent: int, y_in_parent: int
     ) -> MouseOwnership | None:
         return Widget.get_mouse_owner(self, x_in_parent, y_in_parent)
+
+    def handle_mouse_enter(self, event: MouseEvent):
+        self.get_window().set_text_cursor()
+
+    def handle_mouse_exit(self):
+        self.get_window().set_default_cursor()
 
     def handle_mouse_down(self, event: MouseEvent):
         self._debug("mouse_down")

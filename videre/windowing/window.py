@@ -51,6 +51,8 @@ class Window(PygameUtils, Clipboard):
         "_notification_callback",
         "_lock",
         "_nb_frames",
+        "_text_cursor",
+        "_default_cursor",
     )
 
     def __init__(
@@ -99,8 +101,17 @@ class Window(PygameUtils, Clipboard):
         self._notification_callback: NotificationCallback | None = None
         self._nb_frames = 0
 
+        self._default_cursor = pygame.mouse.get_cursor()
+        self._text_cursor = pygame.cursors.compile(pygame.cursors.textmarker_strings)
+
     def __repr__(self):
         return f"[{type(self).__name__}][{id(self)}]"
+
+    def set_text_cursor(self):
+        pygame.mouse.set_cursor((8, 16), (0, 0), *self._text_cursor)
+
+    def set_default_cursor(self):
+        pygame.mouse.set_cursor(*self._default_cursor)
 
     @property
     def backround(self) -> pygame.Color:
