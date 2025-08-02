@@ -63,32 +63,32 @@ def test_get_slots():
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify(file_regression):
+def test_tablify_objects(file_regression):
     things = [Something(i) for i in range(15)]
     fields = ["thing_id", "start", "end"]
     file_regression.check(objects_to_table(things, fields))
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_exclude(file_regression):
+def test_tablify_objects_exclude(file_regression):
     things = [Something(i) for i in range(15)]
     file_regression.check(objects_to_table(things, exclude=["start"]))
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_full(file_regression):
+def test_tablify_objects_full(file_regression):
     things = [Something(i) for i in range(15)]
     file_regression.check(objects_to_table(things))
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_full_with_slots(file_regression):
+def test_tablify_objects_full_with_slots(file_regression):
     things = [SomethingWithSlots.init(i) for i in range(15)]
     file_regression.check(objects_to_table(things))
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_with_props(file_regression):
+def test_tablify_objects_with_props(file_regression):
     things = [SomethingWithProps.init(i) for i in range(15)]
     file_regression.check(objects_to_table(things))
 
