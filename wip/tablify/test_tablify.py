@@ -33,6 +33,10 @@ class Something:
         }
 
 
+class SomethingWithProps(Something):
+    __props__ = ("thing_id", "end")
+
+
 @dataclass(slots=True)
 class SomethingWithSlots:
     thing_id: int
@@ -48,9 +52,15 @@ class SomethingWithSlots:
         return cls(thing_id=index, start=start, end=end, quantity=quantity)
 
 
-class SomethingWithProps(Something):
+class SomethingWithPropsAndSlots:
     __props__ = ("thing_id", "end")
-    __slots__ = ()
+    __slots__ = ("thing_id", "start", "end", "quantity")
+
+    def __init__(self, index):
+        self.thing_id = index
+        self.start = datetime.now() + timedelta(days=index)
+        self.end = self.start + timedelta(hours=index)
+        self.quantity = index * 1.23
 
 
 MOCK_TIME = "2025-01-01 00:00:00"
@@ -94,6 +104,12 @@ def test_tablify_objects_with_slots(file_regression):
 @pytest.mark.freeze_time(MOCK_TIME)
 def test_tablify_objects_with_props(file_regression):
     things = [SomethingWithProps(i) for i in range(15)]
+    file_regression.check(objects_to_table(things))
+
+
+@pytest.mark.freeze_time(MOCK_TIME)
+def test_tablify_objects_with_props_and_slots(file_regression):
+    things = [SomethingWithPropsAndSlots(i) for i in range(15)]
     file_regression.check(objects_to_table(things))
 
 
@@ -144,4 +160,3 @@ def test_tablify_include_exclude_error():
 
     with pytest.raises(NoFieldAfterExcludingError):
         dicts_to_table(dicts, exclude=["start", "end", "quantity", "dict_id"])
-
