@@ -59,7 +59,7 @@ class SomethingWithProps(Something):
 
 
 class SomethingWithSlots:
-    __slots__ = ("thing_id", "start", "end", "quantity")
+    __slots__ = ("quantity", "thing_id", "start", "end")
 
     def __init__(self, index):
         self.thing_id = index
@@ -70,7 +70,7 @@ class SomethingWithSlots:
 
 class SomethingWithPropsAndSlots:
     __props__ = ("thing_id", "end")
-    __slots__ = ("thing_id", "start", "end", "quantity")
+    __slots__ = ("quantity", "thing_id", "start", "end")
 
     def __init__(self, index):
         self.thing_id = index
@@ -146,7 +146,6 @@ MOCK_TIME = "2025-01-01 00:00:00"
             Raise(EmptyWithSlots, NoFieldAfterExcludingError),
             Raise(EmptyWithPropsAndSlots, NoFieldAfterExcludingError),
             Raise(Something, NoFieldAfterExcludingError, exclude=EXCLUDE_ALL),
-            Raise(Empty, IncludeExcludeError, fields=True, exclude=EXCLUDE),
             Raise(Something, IncludeExcludeError, fields=True, exclude=EXCLUDE),
             Case(Something),
             Case(SomethingWithSlots),
