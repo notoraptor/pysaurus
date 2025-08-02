@@ -89,11 +89,12 @@ class Case:
         # props = hasattr(cls, "__props__")
         # slots = hasattr(cls, "__slots__")
 
-        names = [cls.__name__]
+        names = []
         if fields:
             names.append("fields")
         if exclude:
             names.append("exclude")
+        names.append(cls.__name__)
 
         self.cls = cls
         self.fields = fields
