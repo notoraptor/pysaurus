@@ -13,6 +13,10 @@ from wip.tablify.core import (
 )
 
 
+class Empty:
+    pass
+
+
 class Something:
     def __init__(self, index):
         self.thing_id = index
@@ -44,7 +48,7 @@ class SomethingWithSlots:
         return cls(thing_id=index, start=start, end=end, quantity=quantity)
 
 
-class SomethingWithProps(SomethingWithSlots):
+class SomethingWithProps(Something):
     __props__ = ("thing_id", "end")
     __slots__ = ()
 
@@ -63,7 +67,7 @@ def test_get_slots():
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_objects(file_regression):
+def test_tablify_objects_with_fields(file_regression):
     things = [Something(i) for i in range(15)]
     fields = ["thing_id", "start", "end"]
     file_regression.check(objects_to_table(things, fields))
@@ -76,20 +80,20 @@ def test_tablify_objects_exclude(file_regression):
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_objects_full(file_regression):
+def test_tablify_objects(file_regression):
     things = [Something(i) for i in range(15)]
     file_regression.check(objects_to_table(things))
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_objects_full_with_slots(file_regression):
+def test_tablify_objects_with_slots(file_regression):
     things = [SomethingWithSlots.init(i) for i in range(15)]
     file_regression.check(objects_to_table(things))
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
 def test_tablify_objects_with_props(file_regression):
-    things = [SomethingWithProps.init(i) for i in range(15)]
+    things = [SomethingWithProps(i) for i in range(15)]
     file_regression.check(objects_to_table(things))
 
 
@@ -116,6 +120,15 @@ def test_tablify_dicts_full(file_regression):
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
+def test_tablify_empty():
+    with pytest.raises(NoFieldAfterExcludingError):
+        objects_to_table([Empty()])
+
+    with pytest.raises(NoFieldAfterExcludingError):
+        dicts_to_table([{}])
+
+
+@pytest.mark.freeze_time(MOCK_TIME)
 def test_tablify_include_exclude_error():
     things = [Something(i) for i in range(15)]
     with pytest.raises(IncludeExcludeError):
@@ -131,3 +144,4 @@ def test_tablify_include_exclude_error():
 
     with pytest.raises(NoFieldAfterExcludingError):
         dicts_to_table(dicts, exclude=["start", "end", "quantity", "dict_id"])
+
