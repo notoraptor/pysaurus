@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Any
 
 import pytest
@@ -8,13 +8,34 @@ from wip.tablify.core import (
     IncludeExcludeError,
     NoFieldAfterExcludingError,
     dicts_to_table,
-    get_slots,
     objects_to_table,
 )
 
 
+class Exclude(Enum):
+    NONE = "none"
+    SOME = "some"
+    ALL = "all"
+
+
 class Empty:
-    pass
+    def __init__(self, index: int):
+        pass
+
+
+class EmptyWithProps(Empty):
+    __props__ = ()
+
+
+class EmptyWithSlots:
+    __slots__ = ()
+
+    def __init__(self, index: int):
+        pass
+
+
+class EmptyWithPropsAndSlots(EmptyWithSlots):
+    __props__ = ()
 
 
 class Something:
@@ -37,24 +58,8 @@ class SomethingWithProps(Something):
     __props__ = ("thing_id", "end")
 
 
-@dataclass(slots=True)
 class SomethingWithSlots:
-    thing_id: int
-    start: datetime
-    end: datetime
-    quantity: float
-
-    @classmethod
-    def init(cls, index: int) -> "SomethingWithSlots":
-        start = datetime.now() + timedelta(days=index)
-        end = start + timedelta(hours=index)
-        quantity = index * 1.23
-        return cls(thing_id=index, start=start, end=end, quantity=quantity)
-
-
-class SomethingWithPropsAndSlots:
-    __props__ = ("thing_id", "end")
-    __slots__ = ("thing_id", "start", "end", "quantity")
+    __slots__ = ("quantity", "thing_id", "start", "end")
 
     def __init__(self, index):
         self.thing_id = index
@@ -63,100 +68,202 @@ class SomethingWithPropsAndSlots:
         self.quantity = index * 1.23
 
 
+class SomethingWithPropsAndSlots(SomethingWithSlots):
+    __props__ = ("thing_id", "end")
+
+
+class AbstractCase:
+    __fields__ = ("thing_id", "start", "end")
+    __exclude__ = ("thing_id", "start", "unknown")
+    __exclude_all__ = ("thing_id", "start", "end", "quantity")
+
+    def __init__(
+        self,
+        factory: callable,
+        function: callable,
+        cls_name: str,
+        fields: bool = False,
+        exclude: Exclude = Exclude.NONE,
+    ):
+        names = []
+        if fields:
+            names.append("fields")
+        if exclude != Exclude.NONE:
+            names.append("exclude")
+        names.append(cls_name)
+
+        self.factory = factory
+        self.fields = fields
+        self.exclude = exclude
+        self.function = function
+        self.name = "_".join(names)
+
+    def generate(self):
+        kwargs = {}
+        if self.fields:
+            kwargs["include"] = self.__fields__
+        if self.exclude != Exclude.NONE:
+            kwargs["exclude"] = (
+                self.__exclude__
+                if self.exclude == Exclude.SOME
+                else self.__exclude_all__
+            )
+        elements = [self.factory(i) for i in range(15)]
+        return self.function(elements, **kwargs)
+
+    def check(self):
+        return self.generate()
+
+
+class Case(AbstractCase):
+    def __init__(
+        self, cls: type, fields: bool = False, exclude: Exclude = Exclude.NONE
+    ):
+        super().__init__(
+            factory=cls,
+            function=objects_to_table,
+            cls_name=cls.__name__,
+            fields=fields,
+            exclude=exclude,
+        )
+
+
+class Raise(Case):
+    def __init__(
+        self,
+        cls: type,
+        exception: type[Exception],
+        fields: bool = False,
+        exclude: Exclude = Exclude.NONE,
+    ):
+        super().__init__(cls, fields, exclude)
+        self.name = f"{self.name}_raises_{exception.__name__}"
+        self.exception = exception
+
+    def check(self):
+        with pytest.raises(self.exception):
+            self.generate()
+        return None
+
+
+class DictCase(AbstractCase):
+    __rename__ = {"thing_id": "dict_id"}
+    __fields__ = ("dict_id", "start", "end")
+    __exclude__ = ("dict_id", "start", "unknown")
+    __exclude_all__ = ("dict_id", "start", "end", "quantity")
+
+    @classmethod
+    def _factory(cls, index: int) -> dict[str, Any]:
+        return Something(index).to_dict(rename=cls.__rename__)
+
+    def __init__(
+        self,
+        name: str = "DictSomething",
+        fields: bool = False,
+        exclude: Exclude = Exclude.NONE,
+    ):
+        super().__init__(
+            self._factory, dicts_to_table, name, fields=fields, exclude=exclude
+        )
+
+
+class EmptyDictCase(DictCase):
+    def __init__(
+        self,
+        name: str = "DictEmpty",
+        fields: bool = False,
+        exclude: Exclude = Exclude.NONE,
+    ):
+        super().__init__(name, fields, exclude)
+
+    @classmethod
+    def _factory(cls, index: int) -> dict[str, Any]:
+        return {}
+
+
 MOCK_TIME = "2025-01-01 00:00:00"
 
 
-def test_get_slots():
-    assert list(get_slots(Something)) == []
-    assert list(get_slots(SomethingWithSlots)) == [
-        "thing_id",
-        "start",
-        "end",
-        "quantity",
-    ]
+def test_classes():
+    assert not hasattr(Empty, "__props__")
+    assert not hasattr(Empty, "__slots__")
+
+    assert hasattr(EmptyWithProps, "__props__")
+    assert not hasattr(EmptyWithProps, "__slots__")
+
+    assert not hasattr(EmptyWithSlots, "__props__")
+    assert hasattr(EmptyWithSlots, "__slots__")
+
+    assert hasattr(EmptyWithPropsAndSlots, "__props__")
+    assert hasattr(EmptyWithPropsAndSlots, "__slots__")
+
+    assert not hasattr(Something, "__props__")
+    assert not hasattr(Something, "__slots__")
+
+    assert hasattr(SomethingWithProps, "__props__")
+    assert not hasattr(SomethingWithProps, "__slots__")
+
+    assert not hasattr(SomethingWithSlots, "__props__")
+    assert hasattr(SomethingWithSlots, "__slots__")
+
+    assert hasattr(SomethingWithPropsAndSlots, "__props__")
+    assert hasattr(SomethingWithPropsAndSlots, "__slots__")
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_objects_with_fields(file_regression):
-    things = [Something(i) for i in range(15)]
-    fields = ["thing_id", "start", "end"]
-    file_regression.check(objects_to_table(things, fields))
+@pytest.mark.parametrize(
+    "case",
+    [
+        pytest.param(case, id=case.name)
+        for case in [
+            Raise(Empty, NoFieldAfterExcludingError),
+            Raise(EmptyWithProps, NoFieldAfterExcludingError),
+            Raise(EmptyWithSlots, NoFieldAfterExcludingError),
+            Raise(EmptyWithPropsAndSlots, NoFieldAfterExcludingError),
+            Raise(Something, NoFieldAfterExcludingError, exclude=Exclude.ALL),
+            Raise(Something, IncludeExcludeError, fields=True, exclude=Exclude.SOME),
+            Case(Something),
+            Case(SomethingWithSlots),
+            Case(SomethingWithProps),
+            Case(SomethingWithPropsAndSlots),
+            Case(Something, exclude=Exclude.SOME),
+            Case(SomethingWithSlots, exclude=Exclude.SOME),
+            Case(SomethingWithProps, exclude=Exclude.SOME),
+            Case(SomethingWithPropsAndSlots, exclude=Exclude.SOME),
+            Case(Something, fields=True),
+            Case(SomethingWithSlots, fields=True),
+            Case(SomethingWithProps, fields=True),
+            Case(SomethingWithPropsAndSlots, fields=True),
+        ]
+    ],
+)
+def test_tablify(case: Case, file_regression):
+    table_string = case.check()
+    if table_string:
+        file_regression.check(table_string)
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_objects_exclude(file_regression):
-    things = [Something(i) for i in range(15)]
-    file_regression.check(objects_to_table(things, exclude=["start"]))
+@pytest.mark.parametrize(
+    "case",
+    [
+        pytest.param(case, id=case.name)
+        for case in [DictCase(), DictCase(exclude=Exclude.SOME), DictCase(fields=True)]
+    ],
+)
+def test_tablify_dicts(case: Case, file_regression):
+    table_string = case.check()
+    if table_string:
+        file_regression.check(table_string)
 
 
 @pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_objects(file_regression):
-    things = [Something(i) for i in range(15)]
-    file_regression.check(objects_to_table(things))
-
-
-@pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_objects_with_slots(file_regression):
-    things = [SomethingWithSlots.init(i) for i in range(15)]
-    file_regression.check(objects_to_table(things))
-
-
-@pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_objects_with_props(file_regression):
-    things = [SomethingWithProps(i) for i in range(15)]
-    file_regression.check(objects_to_table(things))
-
-
-@pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_objects_with_props_and_slots(file_regression):
-    things = [SomethingWithPropsAndSlots(i) for i in range(15)]
-    file_regression.check(objects_to_table(things))
-
-
-@pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_dicts(file_regression):
-    rename = {"thing_id": "dict_id"}
-    things = [Something(i).to_dict(rename) for i in range(15)]
-    fields = ["dict_id", "start", "quantity"]
-    file_regression.check(dicts_to_table(things, fields))
-
-
-@pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_dicts_exclude(file_regression):
-    rename = {"thing_id": "dict_id"}
-    things = [Something(i).to_dict(rename) for i in range(15)]
-    file_regression.check(dicts_to_table(things, exclude=["start"]))
-
-
-@pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_dicts_full(file_regression):
-    rename = {"thing_id": "dict_id"}
-    things = [Something(i).to_dict(rename) for i in range(15)]
-    file_regression.check(dicts_to_table(things))
-
-
-@pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_empty():
+def test_tablify_dicts_errors():
     with pytest.raises(NoFieldAfterExcludingError):
-        objects_to_table([Empty()])
+        EmptyDictCase().check()
 
     with pytest.raises(NoFieldAfterExcludingError):
-        dicts_to_table([{}])
+        DictCase(exclude=Exclude.ALL).check()
 
-
-@pytest.mark.freeze_time(MOCK_TIME)
-def test_tablify_include_exclude_error():
-    things = [Something(i) for i in range(15)]
     with pytest.raises(IncludeExcludeError):
-        objects_to_table(things, include=["thing_id"], exclude=["start"])
-
-    with pytest.raises(NoFieldAfterExcludingError):
-        objects_to_table(things, exclude=["start", "end", "quantity", "thing_id"])
-
-    rename = {"thing_id": "dict_id"}
-    dicts = [thing.to_dict(rename) for thing in things]
-    with pytest.raises(IncludeExcludeError):
-        dicts_to_table(dicts, include=["thing_id"], exclude=["start"])
-
-    with pytest.raises(NoFieldAfterExcludingError):
-        dicts_to_table(dicts, exclude=["start", "end", "quantity", "dict_id"])
+        DictCase(fields=True, exclude=Exclude.SOME).check()
