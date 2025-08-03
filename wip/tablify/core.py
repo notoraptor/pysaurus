@@ -10,6 +10,10 @@ def get_slots(cls: type) -> Iterable[str]:
     return chain.from_iterable(getattr(typ, "__slots__", ()) for typ in cls.__mro__)
 
 
+class NoFieldError(Exception):
+    """Raised when a field is not found in the object."""
+
+
 class NoFieldAfterExcludingError(Exception):
     """Raised when no fields are left after excluding some fields."""
 
@@ -77,6 +81,8 @@ def tablify(
             provider = ObjectsProvider()
 
         fields = fields or provider.get_fields(el)
+        if not fields:
+            raise NoFieldError()
         if exclude:
             fields = [field for field in fields if field not in exclude]
         if not fields:
@@ -86,7 +92,8 @@ def tablify(
             rows.append([str(provider.get_field(el, field)) for field in fields])
             el = next(iterator)
     except StopIteration:
-        pass
+        if not rows:
+            return ""
 
     headers = [f"[{field}]" for field in fields]
 

@@ -4,7 +4,12 @@ from typing import Any
 
 import pytest
 
-from wip.tablify.core import IncludeExcludeError, NoFieldAfterExcludingError, tablify
+from wip.tablify.core import (
+    IncludeExcludeError,
+    NoFieldAfterExcludingError,
+    NoFieldError,
+    tablify,
+)
 
 
 class Exclude(Enum):
@@ -203,10 +208,10 @@ def test_mock_classes():
     [
         pytest.param(case, id=case.name)
         for case in [
-            Raise(Empty, NoFieldAfterExcludingError),
-            Raise(EmptyWithProps, NoFieldAfterExcludingError),
-            Raise(EmptyWithSlots, NoFieldAfterExcludingError),
-            Raise(EmptyWithPropsAndSlots, NoFieldAfterExcludingError),
+            Raise(Empty, NoFieldError),
+            Raise(EmptyWithProps, NoFieldError),
+            Raise(EmptyWithSlots, NoFieldError),
+            Raise(EmptyWithPropsAndSlots, NoFieldError),
             Raise(Something, NoFieldAfterExcludingError, exclude=Exclude.ALL),
             Raise(Something, IncludeExcludeError, fields=True, exclude=Exclude.SOME),
             Case(Something),
@@ -246,7 +251,7 @@ def test_tablify_dicts(case: Case, file_regression):
 
 @pytest.mark.freeze_time(MOCK_TIME)
 def test_tablify_dicts_errors():
-    with pytest.raises(NoFieldAfterExcludingError):
+    with pytest.raises(NoFieldError):
         EmptyDictCase().check()
 
     with pytest.raises(NoFieldAfterExcludingError):
@@ -254,3 +259,12 @@ def test_tablify_dicts_errors():
 
     with pytest.raises(IncludeExcludeError):
         DictCase(fields=True, exclude=Exclude.SOME).check()
+
+
+def test_tablify_empty():
+    assert tablify([]) == ""
+    assert tablify([], include=["a", "b"]) == ""
+    assert tablify([], exclude=["a", "b"]) == ""
+    assert tablify([], index=None) == ""
+    assert tablify([], indent="  ") == ""
+    assert tablify([], space=4) == ""
