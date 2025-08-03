@@ -184,7 +184,7 @@ class EmptyDictCase(DictCase):
 MOCK_TIME = "2025-01-01 00:00:00"
 
 
-def test_classes():
+def test_mock_classes():
     assert not hasattr(Empty, "__props__")
     assert not hasattr(Empty, "__slots__")
 
