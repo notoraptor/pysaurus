@@ -4,12 +4,7 @@ from typing import Any
 
 import pytest
 
-from wip.tablify.core import (
-    IncludeExcludeError,
-    NoFieldAfterExcludingError,
-    dicts_to_table,
-    objects_to_table,
-)
+from wip.tablify.core import IncludeExcludeError, NoFieldAfterExcludingError, tablify
 
 
 class Exclude(Enum):
@@ -80,7 +75,6 @@ class AbstractCase:
     def __init__(
         self,
         factory: callable,
-        function: callable,
         cls_name: str,
         fields: bool = False,
         exclude: Exclude = Exclude.NONE,
@@ -95,7 +89,6 @@ class AbstractCase:
         self.factory = factory
         self.fields = fields
         self.exclude = exclude
-        self.function = function
         self.name = "_".join(names)
 
     def generate(self):
@@ -109,7 +102,7 @@ class AbstractCase:
                 else self.__exclude_all__
             )
         elements = [self.factory(i) for i in range(15)]
-        return self.function(elements, **kwargs)
+        return tablify(elements, **kwargs)
 
     def check(self):
         return self.generate()
@@ -120,11 +113,7 @@ class Case(AbstractCase):
         self, cls: type, fields: bool = False, exclude: Exclude = Exclude.NONE
     ):
         super().__init__(
-            factory=cls,
-            function=objects_to_table,
-            cls_name=cls.__name__,
-            fields=fields,
-            exclude=exclude,
+            factory=cls, cls_name=cls.__name__, fields=fields, exclude=exclude
         )
 
 
@@ -162,9 +151,7 @@ class DictCase(AbstractCase):
         fields: bool = False,
         exclude: Exclude = Exclude.NONE,
     ):
-        super().__init__(
-            self._factory, dicts_to_table, name, fields=fields, exclude=exclude
-        )
+        super().__init__(self._factory, name, fields=fields, exclude=exclude)
 
 
 class EmptyDictCase(DictCase):

@@ -25,27 +25,6 @@ class AbstractProvider(ABC):
     def get_fields(self, el: Any) -> list[str]:
         raise NotImplementedError()
 
-    def get_fields_and_rows(
-        self, elements: Iterable[Any], exclude: Collection[str] = ()
-    ) -> tuple[list[str], list[list[str]]]:
-        fields = []
-        rows = []
-        try:
-            it = iter(elements)
-            el = next(it)
-            fields = self.get_fields(el)
-            if exclude:
-                fields = [field for field in fields if field not in exclude]
-            if not fields:
-                raise NoFieldAfterExcludingError()
-            rows = []
-            while True:
-                rows.append([str(self.get_field(el, field)) for field in fields])
-                el = next(it)
-        except StopIteration:
-            pass
-        return fields, rows
-
 
 class ObjectsProvider(AbstractProvider):
     def get_field(self, el: Any, field: str) -> Any:
@@ -74,7 +53,7 @@ class DictProvider(AbstractProvider):
         return list(el.keys())
 
 
-def objects_to_table(
+def tablify(
     iterable: Iterable[Any],
     /,
     include: Collection[str] = (),
@@ -83,26 +62,31 @@ def objects_to_table(
     index: int | None = 1,
     indent: str = "",
     space: int = 2,
-    provider: AbstractProvider | None = None,
 ) -> str:
-    provider = provider or ObjectsProvider()
-
-    fields = ()
     if include and exclude:
         raise IncludeExcludeError()
-    elif include:
-        fields = include
 
-    if fields:
+    fields = include
+    rows = []
+    iterator = iter(iterable)
+    try:
+        el = next(iterator)
+        if isinstance(el, dict):
+            provider = DictProvider()
+        else:
+            provider = ObjectsProvider()
+
+        fields = fields or provider.get_fields(el)
         if exclude:
             fields = [field for field in fields if field not in exclude]
         if not fields:
             raise NoFieldAfterExcludingError()
-        rows = [
-            [str(provider.get_field(el, field)) for field in fields] for el in iterable
-        ]
-    else:
-        fields, rows = provider.get_fields_and_rows(iterable, exclude)
+
+        while True:
+            rows.append([str(provider.get_field(el, field)) for field in fields])
+            el = next(iterator)
+    except StopIteration:
+        pass
 
     headers = [f"[{field}]" for field in fields]
 
@@ -121,24 +105,3 @@ def objects_to_table(
                 file=output,
             )
         return output.getvalue()
-
-
-def dicts_to_table(
-    iterable: Iterable[dict[str, Any]],
-    /,
-    include: Collection[str] = (),
-    *,
-    exclude: Collection[str] = (),
-    index: int | None = 1,
-    indent: str = "",
-    space: int = 2,
-) -> str:
-    return objects_to_table(
-        iterable,
-        include,
-        exclude=exclude,
-        index=index,
-        indent=indent,
-        space=space,
-        provider=DictProvider(),
-    )
