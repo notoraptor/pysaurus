@@ -114,11 +114,11 @@ class Window(PygameUtils, Clipboard):
         pygame.mouse.set_cursor(*self._default_cursor)
 
     @property
-    def backround(self) -> pygame.Color:
+    def background(self) -> pygame.Color:
         return self._layout.background
 
-    @backround.setter
-    def backround(self, value: ColorDef):
+    @background.setter
+    def background(self, value: ColorDef):
         self._layout.background = parse_color(value or Colors.white)
 
     @property
