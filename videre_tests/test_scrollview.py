@@ -173,8 +173,6 @@ class TestScrollViewInteractions:
         click_x = v_scrollbar.global_x + 5
         click_y = v_scrollbar.global_y + v_scrollbar.rendered_height + 2
 
-        print("\n\n\n\n\n", click_x, click_y)
-
         # Simulate mouse click
         fake_user.click_at(click_x, click_y)
         fake_win.check("jump_true")
