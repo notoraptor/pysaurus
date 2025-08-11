@@ -34,7 +34,11 @@ class Checkbox(AbstractCheckButton):
 
     @checked.setter
     def checked(self, value: bool):
-        self._set_checked(value)
+        prev = self._get_checked()
+        if prev != value:
+            self._set_checked(value)
+            if self._on_click:
+                self._on_click(self)
 
     @property
     def on_change(self) -> OnClickType:

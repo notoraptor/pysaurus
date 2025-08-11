@@ -1,3 +1,4 @@
+import math
 from collections.abc import Callable
 
 import pygame
@@ -21,7 +22,7 @@ class Animator(AbstractLayout):
         super().__init__([control], **kwargs)
         self._clock = pygame.time.Clock()
         self._fps = min(max(0, int(fps)), WINDOW_FPS)
-        self._delay_ms = 1000 / self._fps
+        self._delay_ms = 1000 / self._fps if self._fps > 0 else math.inf
         self._spent_ms = 0
         self._nb_frames = 0
         self.on_frame = on_frame

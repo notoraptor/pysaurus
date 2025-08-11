@@ -36,6 +36,13 @@ class FakeUser:
         pygame.event.post(Event(pygame.MOUSEMOTION, event_data))
 
     @classmethod
+    def mouve_over(cls, widget: Widget):
+        """Move mouse over a widget"""
+        x = widget.global_x + widget.rendered_width // 2
+        y = widget.global_y + widget.rendered_height // 2
+        cls.mouse_motion(x, y)
+
+    @classmethod
     def mouse_wheel(cls, x: int, y: int):
         event_data = {"x": x, "y": y}
         pygame.event.post(Event(pygame.MOUSEWHEEL, event_data))

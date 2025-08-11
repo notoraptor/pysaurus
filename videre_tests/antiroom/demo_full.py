@@ -70,7 +70,9 @@ class Demo:
 
     @on_demo("nested_scrollview")
     def on_nested_scrollview(self, *args):
-        inner_content = videre.Column([videre.Text(f"Inner {i}", size=14) for i in range(10)])
+        inner_content = videre.Column(
+            [videre.Text(f"Inner {i}", size=14) for i in range(10)]
+        )
         inner_scroll = videre.ScrollView(inner_content)
 
         outer_content = videre.Column(

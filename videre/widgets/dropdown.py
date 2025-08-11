@@ -135,4 +135,4 @@ class Dropdown(Div):
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         self._container().width = self._compute_width(window)
-        return super().draw(window, width, height)
+        return super().draw(window, width, None)

@@ -19,9 +19,9 @@ class Style:
     background_color: ColoringDefinition = None
     vertical_alignment: Alignment = None
     horizontal_alignment: Alignment = None
-    width: int = None
-    height: int = None
-    square: bool = None
+    width: int | None = None
+    height: int | None = None
+    square: bool | None = None
 
     def fill_with(self, other: "Style"):
         for key in (
