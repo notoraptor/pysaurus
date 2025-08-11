@@ -68,6 +68,23 @@ class Demo:
     def clear(self, *args):
         self.work.control = None
 
+    @on_demo("nested_scrollview")
+    def on_nested_scrollview(self, *args):
+        inner_content = videre.Column([videre.Text(f"Inner {i}", size=14) for i in range(10)])
+        inner_scroll = videre.ScrollView(inner_content)
+
+        outer_content = videre.Column(
+            [
+                videre.Text("Before inner scroll", size=16),
+                videre.Container(inner_scroll, width=150, height=100),
+                videre.Text("After inner scroll", size=16),
+            ]
+            + [videre.Text(f"Outer item {i}", size=14) for i in range(10)]
+        )
+
+        outer_scroll = videre.ScrollView(outer_content)
+        return outer_scroll
+
     @on_demo("text input")
     def on_text_input(self, *args):
         return videre.TextInput(weight=1)

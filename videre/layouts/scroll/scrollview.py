@@ -39,13 +39,11 @@ class ScrollView(AbstractLayout):
             thickness=scroll_thickness, on_jump=self.on_jump_y
         )
         super().__init__([control, self._hscrollbar, self._vscrollbar], **kwargs)
-        self._set_wprops(
-            scroll_thickness=scroll_thickness,
-            horizontal_scroll=horizontal_scroll,
-            vertical_scroll=vertical_scroll,
-            wrap_horizontal=wrap_horizontal,
-            wrap_vertical=wrap_vertical,
-        )
+        self.scroll_thickness = scroll_thickness
+        self.horizontal_scroll = horizontal_scroll
+        self.vertical_scroll = vertical_scroll
+        self.wrap_horizontal = wrap_horizontal
+        self.wrap_vertical = wrap_vertical
 
     @property
     def scroll_thickness(self) -> int:
@@ -53,7 +51,7 @@ class ScrollView(AbstractLayout):
 
     @scroll_thickness.setter
     def scroll_thickness(self, value: int):
-        self._set_wprop("scroll_thickness", value)
+        self._set_wprop("scroll_thickness", max(0, value))
 
     @property
     def horizontal_scroll(self) -> bool:
@@ -182,6 +180,7 @@ class ScrollView(AbstractLayout):
             return content_pos > view_length - content_length
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+        thickness = self.scroll_thickness
         c_w_hint = width if self.wrap_horizontal else None
         c_h_hint = height if self.wrap_vertical else None
         content = self.control.render(window, c_w_hint, c_h_hint)
@@ -221,13 +220,13 @@ class ScrollView(AbstractLayout):
 
         both = has_h_scroll and has_v_scroll
         if has_h_scroll:
-            self._hscrollbar.configure(content_w, self._content_x, both)
+            self._hscrollbar.configure(content_w, self._content_x, both, thickness)
             bg = self._hscrollbar.background.render(window, width, height)
             view.blit(bg, self._hscrollbar.background.pos)
             h_scroll = self._hscrollbar.render(window, width, height)
             view.blit(h_scroll, (self._hscrollbar.x, self._hscrollbar.y))
         if has_v_scroll:
-            self._vscrollbar.configure(content_h, self._content_y, both)
+            self._vscrollbar.configure(content_h, self._content_y, both, thickness)
             bg = self._vscrollbar.background.render(window, width, height)
             view.blit(bg, self._vscrollbar.background.pos)
             v_scroll = self._vscrollbar.render(window, width, height)
