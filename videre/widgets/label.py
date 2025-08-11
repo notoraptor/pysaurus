@@ -1,5 +1,6 @@
 from videre.core.constants import MouseButton
 from videre.core.events import MouseEvent
+from videre.widgets.empty_widget import EmptyWidget
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
 
@@ -27,7 +28,7 @@ class Label(Text):
                 (self._for_button,) = candidates
             else:
                 # TODO Warning here ?
-                self._for_button = Widget()
+                self._for_button = EmptyWidget()
         return self._for_button
 
     def handle_mouse_enter(self, event: MouseEvent):
