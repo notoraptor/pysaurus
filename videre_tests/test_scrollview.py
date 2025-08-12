@@ -3,7 +3,7 @@ import pytest
 
 import videre
 from videre import Column, Container, ScrollView, Text
-from videre.windowing.windowfactory import HD
+from videre_tests.utilities.windowfactory import HD
 
 
 class TestScrollViewRendering:

@@ -34,7 +34,7 @@ class TestColumnLayout:
         items = [
             videre.Text("Item 1", weight=0),
             videre.Text("Item 2", weight=0),
-            videre.Text("Item 3", weight=0)
+            videre.Text("Item 3", weight=0),
         ]
         column = videre.Column(items)
         fake_win.controls = [column]
@@ -52,7 +52,7 @@ class TestColumnLayout:
             videre.Text("Item 0", weight=0),
             videre.Container(weight=1),
             videre.Container(weight=2),
-            videre.Text("Item 3", weight=0)
+            videre.Text("Item 3", weight=0),
         ]
         column = videre.Column(items)
         fake_win.controls = [column]
@@ -94,7 +94,7 @@ class TestColumnLayout:
         items = [
             videre.Text("Large weight 1", weight=1000),
             videre.Text("Large weight 2", weight=2000),
-            videre.Text("Small weight", weight=1)
+            videre.Text("Small weight", weight=1),
         ]
         column = videre.Column(items)
         fake_win.controls = [column]
@@ -109,11 +109,17 @@ class TestColumnLayout:
         """Test column horizontal alignment with varying child widths"""
         items = [
             videre.Container(width=10, height=20, background_color=videre.Colors.red),
-            videre.Container(width=100, height=20, background_color=videre.Colors.green),
-            videre.Container(width=50, height=20, background_color=videre.Colors.blue)
+            videre.Container(
+                width=100, height=20, background_color=videre.Colors.green
+            ),
+            videre.Container(width=50, height=20, background_color=videre.Colors.blue),
         ]
 
-        alignments = [videre.Alignment.START, videre.Alignment.CENTER, videre.Alignment.END]
+        alignments = [
+            videre.Alignment.START,
+            videre.Alignment.CENTER,
+            videre.Alignment.END,
+        ]
 
         for alignment in alignments:
             column = videre.Column(items, horizontal_alignment=alignment)

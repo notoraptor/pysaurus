@@ -1,6 +1,6 @@
 import functools
 
-from videre.windowing.step_window import StepWindow
+from videre_tests.utilities.step_window import StepWindow
 
 LD = dict(width=320, height=240)
 SD = dict(width=640, height=480)

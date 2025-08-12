@@ -4,7 +4,7 @@ import pytest
 
 import videre
 from pysaurus.core.constants import LOREM_IPSUM
-from videre.windowing.windowfactory import SD
+from videre_tests.utilities.windowfactory import SD
 
 NB_LINES = (0, 1, 2)
 WRAP = list(videre.TextWrap)

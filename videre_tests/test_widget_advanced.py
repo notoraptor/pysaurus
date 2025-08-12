@@ -15,11 +15,9 @@ class TestWidgetAdvanced:
         widget = Widget()
 
         # Create mock keyboard event
-        mock_event = pygame.event.Event(pygame.KEYDOWN, {
-            'mod': pygame.KMOD_CTRL,
-            'key': pygame.K_c,
-            'unicode': 'c'
-        })
+        mock_event = pygame.event.Event(
+            pygame.KEYDOWN, {"mod": pygame.KMOD_CTRL, "key": pygame.K_c, "unicode": "c"}
+        )
 
         entry = KeyboardEntry(mock_event)
 
@@ -48,7 +46,7 @@ class TestWidgetAdvanced:
         assert child1._parent is new_parent
         assert child1 not in parent._children_pos._el_to_pos
         new_parent._set_child_x(child1, 0)
-        assert child1  in new_parent._children_pos._el_to_pos
+        assert child1 in new_parent._children_pos._el_to_pos
 
         # Test setting same parent again (should be no-op)
         initial_count = len(new_parent._children_pos._el_to_pos)
@@ -82,7 +80,9 @@ class TestWidgetAdvanced:
 
         # Test setting multiple properties
         # Should raise error for unknown properties
-        with pytest.raises(AssertionError, match="unknown widget property: custom_prop"):
+        with pytest.raises(
+            AssertionError, match="unknown widget property: custom_prop"
+        ):
             widget._set_wprops(weight=10, custom_prop=42)
 
         # Test setting known properties

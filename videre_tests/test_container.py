@@ -5,7 +5,7 @@ import pytest
 import videre
 from videre.core.sides.padding import Padding
 from videre.widgets.empty_widget import EmptyWidget
-from videre.windowing.windowfactory import LD
+from videre_tests.utilities.windowfactory import LD
 
 
 @pytest.mark.parametrize("border_size", [1, 2, 3])

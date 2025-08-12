@@ -127,7 +127,7 @@ class TestAbstractAnimation:
 
         fps_framing = FPS(0)
         assert fps_framing._fps == 0
-        assert fps_framing._delay_ms == float('inf')
+        assert fps_framing._delay_ms == float("inf")
 
     def test_fps_framing_negative_fps(self):
         """Test FPS framing with negative fps"""
@@ -217,6 +217,7 @@ class TestAbstractAnimation:
             def draw(self, window, view_width=None, view_height=None):
                 # Simple implementation for testing
                 import pygame
+
                 surface = pygame.Surface((100, 50))
                 surface.fill((255, 255, 255))
                 return surface
@@ -251,6 +252,7 @@ class TestAbstractAnimation:
 
             def draw(self, window, view_width=None, view_height=None):
                 import pygame
+
                 return pygame.Surface((50, 50))
 
         # No framing specified should use default FPS
@@ -274,6 +276,7 @@ class TestAbstractAnimation:
 
             def draw(self, window, view_width=None, view_height=None):
                 import pygame
+
                 return pygame.Surface((50, 50))
 
         # Use FPR framing - every 2 window frames

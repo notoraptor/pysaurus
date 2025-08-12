@@ -34,7 +34,7 @@ class TestRowLayout:
         items = [
             videre.Text("Item 1", weight=0),
             videre.Text("Item 2", weight=0),
-            videre.Text("Item 3", weight=0)
+            videre.Text("Item 3", weight=0),
         ]
         row = videre.Row(items)
         fake_win.controls = [row]
@@ -51,7 +51,7 @@ class TestRowLayout:
         items = [
             videre.Container(weight=1),
             videre.Text("B", weight=0),
-            videre.Container(weight=2)
+            videre.Container(weight=2),
         ]
         row = videre.Row(items)
         fake_win.controls = [row]
@@ -92,7 +92,7 @@ class TestRowLayout:
         items = [
             videre.Text("Weight 10000", weight=10000),
             videre.Text("Weight 20000", weight=20000),
-            videre.Text("Weight 1", weight=1)
+            videre.Text("Weight 1", weight=1),
         ]
         row = videre.Row(items)
         fake_win.controls = [row]
@@ -107,11 +107,17 @@ class TestRowLayout:
         """Test row vertical alignment with varying child heights"""
         items = [
             videre.Container(width=20, height=10, background_color=videre.Colors.red),
-            videre.Container(width=20, height=100, background_color=videre.Colors.green),
-            videre.Container(width=20, height=50, background_color=videre.Colors.blue)
+            videre.Container(
+                width=20, height=100, background_color=videre.Colors.green
+            ),
+            videre.Container(width=20, height=50, background_color=videre.Colors.blue),
         ]
 
-        alignments = [videre.Alignment.START, videre.Alignment.CENTER, videre.Alignment.END]
+        alignments = [
+            videre.Alignment.START,
+            videre.Alignment.CENTER,
+            videre.Alignment.END,
+        ]
 
         for alignment in alignments:
             row = videre.Row(items, vertical_alignment=alignment)
@@ -126,10 +132,14 @@ class TestRowLayout:
     def test_row_mixed_weight_and_fixed_size_children(self, fake_win):
         """Test row with mix of weighted and fixed-size children"""
         items = [
-            videre.Container(width=50, height=30, background_color=videre.Colors.red),  # Fixed
+            videre.Container(
+                width=50, height=30, background_color=videre.Colors.red
+            ),  # Fixed
             videre.Text("Flexible", weight=1),  # Weighted
-            videre.Container(width=30, height=30, background_color=videre.Colors.blue),  # Fixed
-            videre.Text("Also flexible", weight=2)  # Weighted
+            videre.Container(
+                width=30, height=30, background_color=videre.Colors.blue
+            ),  # Fixed
+            videre.Text("Also flexible", weight=2),  # Weighted
         ]
         row = videre.Row(items)
         fake_win.controls = [row]
