@@ -29,7 +29,7 @@ class Widget(PygameUtils):
         "_children_pos",
     )
 
-    def __init__(self, weight=0, parent=None, key=None):
+    def __init__(self, weight=0, parent: Self | None = None, key=None):
         super().__init__()
 
         self._key = key or id(self)

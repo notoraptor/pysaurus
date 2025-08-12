@@ -50,8 +50,8 @@ def test_clipboard_class_structure():
     """Test that Clipboard class has the expected structure"""
     clipboard = Clipboard()
 
-    assert hasattr(clipboard, 'get_clipboard')
-    assert hasattr(clipboard, 'set_clipboard')
+    assert hasattr(clipboard, "get_clipboard")
+    assert hasattr(clipboard, "set_clipboard")
     assert callable(clipboard.get_clipboard)
     assert callable(clipboard.set_clipboard)
 

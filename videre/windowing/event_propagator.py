@@ -9,7 +9,7 @@ from videre.widgets.widget import Widget
 class EventPropagator:
     @classmethod
     def _handle(
-        cls, widget: Widget, handle_function: str, *args, **kwargs
+        cls, widget: Widget | None, handle_function: str, *args, **kwargs
     ) -> Widget | None:
         # print(handle_function, widget)
         if widget:
@@ -23,7 +23,7 @@ class EventPropagator:
 
     @classmethod
     def _handle_mouse_event(
-        cls, widget: Widget, handle_function: str, event: MouseEvent
+        cls, widget: Widget | None, handle_function: str, event: MouseEvent
     ) -> Widget | None:
         # print(handle_function, widget)
         while widget:
