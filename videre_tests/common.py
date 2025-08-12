@@ -43,6 +43,18 @@ class FakeUser:
         cls.mouse_motion(x, y)
 
     @classmethod
+    def mouse_down(cls, x: int, y: int, button=pygame.BUTTON_LEFT):
+        """Simulate mouse down at specific coordinates"""
+        event_data = {"pos": (x, y), "button": button}
+        pygame.event.post(Event(pygame.MOUSEBUTTONDOWN, event_data))
+
+    @classmethod
+    def mouse_up(cls, x: int, y: int, button=pygame.BUTTON_LEFT):
+        """Simulate mouse up at specific coordinates"""
+        event_data = {"pos": (x, y), "button": button}
+        pygame.event.post(Event(pygame.MOUSEBUTTONUP, event_data))
+
+    @classmethod
     def mouse_wheel(cls, x: int, y: int):
         event_data = {"x": x, "y": y}
         pygame.event.post(Event(pygame.MOUSEWHEEL, event_data))

@@ -21,3 +21,5 @@ webrtc_event_logs/
 ignored
 __enamlcache__
 htmlcov
+coverage.json
+CLAUDE.md

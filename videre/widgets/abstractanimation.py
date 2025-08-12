@@ -1,3 +1,4 @@
+import math
 from abc import ABC, abstractmethod
 
 import pygame
@@ -38,7 +39,7 @@ class FPS(AbstractFraming):
     def __init__(self, fps: int = 60):
         self._clock = pygame.time.Clock()
         self._fps = min(max(0, int(fps)), WINDOW_FPS)
-        self._delay_ms = 1000 / self._fps
+        self._delay_ms = 1000 / self._fps if self._fps > 0 else math.inf
         self._spent_ms = 0
 
     def needs_frame(self, nb_window_frames: int) -> bool:

@@ -60,5 +60,5 @@ ft.TextStyle
 Coverage for videre:
 
 ```
-pytest --cov=videre --cov-report=term-missing --cov-report=html videre_tests
+pytest --cov=videre --cov-report=term-missing --cov-report=html --cov-report=json videre_tests
 ```

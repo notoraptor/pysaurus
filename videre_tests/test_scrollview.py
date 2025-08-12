@@ -180,6 +180,88 @@ class TestScrollViewInteractions:
         # Content should have jumped to new position
         assert scroll._content_y < initial_y
 
+    def test_scrollbar_drag_interaction(self, fake_win, fake_user):
+        """Test dragging scrollbar grip to scroll content"""
+        items = [Text(f"Item {i}", size=16) for i in range(20)]
+        content = Column(items)
+        scroll = ScrollView(content)
+        fake_win.controls = [scroll]
+        fake_win.check("drag_0")
+
+        v_scrollbar = scroll._vscrollbar
+
+        # Test clicking and dragging the scrollbar grip
+        grip_x = v_scrollbar.global_x + 5
+        grip_y = v_scrollbar.global_y + 10
+
+        # Mouse down on grip
+        assert v_scrollbar._grabbed == ()
+        fake_user.mouse_motion(grip_x, grip_y)
+        fake_user.mouse_down(grip_x, grip_y)
+        fake_win.check("drag_1")
+        assert v_scrollbar._grabbed != ()
+
+        # Drag to new position
+        new_y = grip_y + 20
+        fake_user.mouse_motion(grip_x, new_y, button_left=True)
+        fake_win.check("drag_2")
+
+        # Mouse up to finish drag
+        fake_user.mouse_up(grip_x, new_y)
+        fake_win.check("drag_3")
+        assert v_scrollbar._grabbed == ()
+
+    def test_horizontal_scrollbar_drag_interactions(self, fake_win, fake_user):
+        """Test horizontal scrollbar mouse interactions"""
+        content = Text("Very long horizontal text " * 20, size=16)
+        scroll = ScrollView(content)
+        fake_win.controls = [scroll]
+        fake_win.check("drag_0")
+
+        h_scrollbar = scroll._hscrollbar
+
+        # Test hover state
+        grip_x = h_scrollbar.global_x + 10
+        grip_y = h_scrollbar.global_y + 5
+        assert h_scrollbar._grabbed == ()
+        fake_user.mouse_motion(grip_x, grip_y)
+        fake_user.mouse_down(grip_x, grip_y)
+        fake_win.check("drag_1")
+        assert h_scrollbar._grabbed != ()
+
+        # Dragging the horizontal scrollbar grip
+        new_x = h_scrollbar.global_x + 15
+        fake_user.mouse_motion(new_x, grip_y, button_left=True)
+        fake_win.check("drag_2")
+
+        # Mouse up to finish drag
+        fake_user.mouse_up(new_x, grip_y)
+        fake_win.check("drag_3")
+        assert h_scrollbar._grabbed == ()
+
+    def test_scrollbar_mouse_cancel_events(self, fake_win, fake_user):
+        """Test scrollbar mouse cancel events"""
+        items = [Text(f"Item {i}", size=16) for i in range(20)]
+        content = Column(items)
+        scroll = ScrollView(content)
+        fake_win.controls = [scroll]
+        fake_win.render()
+
+        v_scrollbar = scroll._vscrollbar
+
+        # Start a drag operation
+        grip_x = v_scrollbar.global_x + 5
+        grip_y = v_scrollbar.global_y + 10
+        assert v_scrollbar._grabbed == ()
+        fake_user.mouse_down(grip_x, grip_y)
+        fake_win.render()
+        assert v_scrollbar._grabbed != ()
+
+        # Cancel the drag with mouse_down_canceled
+        fake_user.mouse_up(grip_x, grip_y)
+        fake_win.render()
+        assert v_scrollbar._grabbed == ()
+
 
 class TestScrollViewConfiguration:
     """Test ScrollView configuration and property changes"""
