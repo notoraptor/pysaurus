@@ -264,6 +264,51 @@ class TestEventPropagator:
         assert len(previous.events_received) == 1
         assert previous.events_received[0][0] == "mouse_exit"
 
+    def test_manage_mouse_motion_on_same_widget(self):
+        """Test manage_mouse_motion on same widget"""
+        # Setup widgets
+        root = MockWidget(capture_events=True)
+        child = MockWidget(parent=root, capture_events=False)
+
+        # Setup ownership
+        ownership = MouseOwnership(widget=child, x_in_parent=10, y_in_parent=20)
+
+        # Setup previous widget (different hierarchy)
+        previous = MockWidget(capture_events=False)
+
+        # Create pygame event
+        pygame_event1 = _pygame_mouse_motion_event(100, 200, rel=(5, 5))
+        pygame_event2 = _pygame_mouse_motion_event(101, 201, rel=(1, 1))
+
+        # Test
+        EventPropagator.manage_mouse_motion(pygame_event1, ownership, previous)
+
+        # Verify mouse enter was called on new widgets
+        assert len(child.events_received) == 1
+        assert child.events_received[0][0] == "mouse_enter"
+        assert len(root.events_received) == 1
+        assert root.events_received[0][0] == "mouse_enter"
+
+        # Verify mouse exit was called on previous
+        assert len(previous.events_received) == 1
+        assert previous.events_received[0][0] == "mouse_exit"
+
+        child.events_received.clear()
+        root.events_received.clear()
+        previous.events_received.clear()
+
+        # Test second event on same widget (child)
+        EventPropagator.manage_mouse_motion(pygame_event2, ownership, child)
+
+        # No new mouse enter or exit events should be triggered
+        # But we should have mouse_over on child and root
+        assert len(child.events_received) == 1
+        assert child.events_received[0][0] == "mouse_over"
+        assert len(root.events_received) == 1
+        assert root.events_received[0][0] == "mouse_over"
+
+        assert len(previous.events_received) == 0
+
     def test_manage_mouse_motion_with_capture(self):
         """Test manage_mouse_motion with event capture stopping propagation"""
         # Setup widgets

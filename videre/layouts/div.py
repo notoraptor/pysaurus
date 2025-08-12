@@ -89,7 +89,7 @@ class StyleDef:
                         output_key.fill_with(output[key])
                         output[key] = output_key
             else:
-                raise TypeError(f"Invalid style type {type(style)}")
+                raise TypeError(f"Invalid style type: {type(style).__name__}")
             return StyleDef(**output)
 
 

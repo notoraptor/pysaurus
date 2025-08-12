@@ -23,6 +23,7 @@ def test_checkbox_toggle(fake_win):
     fake_win.controls = [checkbox]
     fake_win.render()
 
+    assert checkbox.on_change is on_change
     assert checkbox.checked is False
     assert data.value == 0
 

@@ -1,6 +1,7 @@
 import pytest
 
 import videre
+from videre.widgets.dropdown import _OptionWidget
 from videre_tests.common import FakeUser
 
 
@@ -93,6 +94,28 @@ def test_dropdown_focus_behavior(fake_win):
 
     # Context should be closed
     assert dropdown._context is None
+
+
+def test_dropdown_click_to_option(fake_win, fake_user):
+    dropdown = videre.Dropdown(options=["Apple", "Banana", "Cherry"])
+    fake_win.controls = [dropdown]
+    fake_win.render()
+    assert dropdown._context is None
+
+    fake_user.click(dropdown)
+    fake_win.render()
+    assert dropdown._context is not None
+    assert dropdown.selected == "Apple"
+    (option,) = dropdown._context.collect_matchs(
+        lambda widget: isinstance(widget, _OptionWidget) and widget._index == 1
+    )
+    assert dropdown.options[option._index] == "Banana"
+
+    fake_user.click(option)
+    fake_win.render()
+
+    assert dropdown._context is None
+    assert dropdown.selected == "Banana"
 
 
 def test_dropdown_click_outer(fake_win, fake_user):

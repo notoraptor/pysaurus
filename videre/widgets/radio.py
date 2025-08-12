@@ -20,7 +20,7 @@ class Radio(AbstractCheckButton):
         return self._get_wprop("value")
 
     @classmethod
-    def _get_radio_group(cls, widget: "Widget"):
+    def _get_radio_group(cls, widget: Widget | None):
         from videre.layouts.radiogroup import RadioGroup
 
         while True:

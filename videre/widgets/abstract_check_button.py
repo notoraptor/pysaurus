@@ -22,6 +22,7 @@ class AbstractCheckButton(Div):
     def __init__(self, **kwargs):
         self._text = Character(self._TEXT_0)
         super().__init__(self._text, **kwargs)
+        self._set_wprop("_checked", False)
 
     def _get_checked(self) -> bool:
         return self._get_wprop("_checked")

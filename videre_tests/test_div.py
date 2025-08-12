@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 import videre
 from videre.core.constants import Alignment
 from videre.core.sides.border import Border
@@ -98,6 +100,12 @@ def test_div_no_click_handler(fake_win):
     # Should not crash without click handler
     FakeUser.click(div)
     fake_win.render()
+
+
+def test_div_invalid_style():
+    control = videre.Text("Hello")
+    with pytest.raises(TypeError, match="Invalid style type: str"):
+        videre.Div(control, style="invalid_style")
 
 
 def test_style_fill_with():
