@@ -123,7 +123,7 @@ class Demo:
                     videre.Text("World"),
                     videre.Text("This is a test"),
                     videre.Text("of the scroll view"),
-                    videre.Text("in the antiroom demo."),
+                    videre.Text("in the videre_examples demo."),
                     videre.Row(
                         [
                             videre.Text("Hello"),
