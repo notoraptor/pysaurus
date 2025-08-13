@@ -1,6 +1,5 @@
 import videre
 from videre import Button, Column, ScrollView, Text
-from videre_tests.common import FakeUser
 
 
 def test_fancybox_rendering(fake_win):
@@ -16,7 +15,7 @@ def test_fancybox_rendering(fake_win):
     fake_win.check()
 
 
-def test_fancybox(fake_win):
+def test_fancybox(fake_win, fake_user):
     def _fancy(*args, **kwargs):
         fake_win.set_fancybox(videre.Text("I am at top!"), title="fancybox")
 
@@ -29,7 +28,7 @@ def test_fancybox(fake_win):
     assert not fake_win.find(videre.Button, text="✕")
     assert not fake_win.has_fancybox()
 
-    FakeUser.click(bt_open_fancybox)
+    fake_user.click(bt_open_fancybox)
     fake_win.render()
 
     (_,) = fake_win.find(videre.Text, text="fancybox")
@@ -37,7 +36,7 @@ def test_fancybox(fake_win):
     (bt_close_fancybox,) = fake_win.find(videre.Button, text="✕")
     assert fake_win.has_fancybox()
 
-    FakeUser.click(bt_close_fancybox)
+    fake_user.click(bt_close_fancybox)
     fake_win.render()
 
     assert not fake_win.find(videre.Text, text="fancybox")
@@ -46,7 +45,7 @@ def test_fancybox(fake_win):
     assert not fake_win.has_fancybox()
 
 
-def test_alert(fake_win):
+def test_alert(fake_win, fake_user):
     def _alert(*args, **kwargs):
         fake_win.alert("I am at top!", title="fancybox")
 
@@ -59,7 +58,7 @@ def test_alert(fake_win):
     assert not fake_win.find(videre.Button, text="✕")
     assert not fake_win.has_fancybox()
 
-    FakeUser.click(bt_open_fancybox)
+    fake_user.click(bt_open_fancybox)
     fake_win.render()
 
     (_,) = fake_win.find(videre.Text, text="fancybox")
@@ -67,7 +66,7 @@ def test_alert(fake_win):
     (bt_close_fancybox,) = fake_win.find(videre.Button, text="✕")
     assert fake_win.has_fancybox()
 
-    FakeUser.click(bt_close_fancybox)
+    fake_user.click(bt_close_fancybox)
     fake_win.render()
 
     assert not fake_win.find(videre.Text, text="fancybox")

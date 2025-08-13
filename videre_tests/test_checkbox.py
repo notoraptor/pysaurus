@@ -3,7 +3,6 @@ from types import SimpleNamespace
 import pytest
 
 import videre
-from videre_tests.common import FakeUser
 
 
 @pytest.mark.parametrize("checked", [False, True])
@@ -12,7 +11,7 @@ def test_checkbox_unchecked(snap_win, checked):
     snap_win.controls = [checkbox]
 
 
-def test_checkbox_toggle(fake_win):
+def test_checkbox_toggle(fake_win, fake_user):
     data = SimpleNamespace(value=0, checkbox=None)
 
     def on_change(checkbox):
@@ -28,7 +27,7 @@ def test_checkbox_toggle(fake_win):
     assert data.value == 0
 
     # Click to check
-    FakeUser.click(checkbox)
+    fake_user.click(checkbox)
     fake_win.render()
 
     assert checkbox.checked is True
@@ -36,7 +35,7 @@ def test_checkbox_toggle(fake_win):
     assert data.checkbox is checkbox
 
     # Click to uncheck
-    FakeUser.click(checkbox)
+    fake_user.click(checkbox)
     fake_win.render()
 
     assert checkbox.checked is False
@@ -65,7 +64,7 @@ def test_checkbox_set_checked_property(fake_win):
     assert data.value == 1
 
 
-def test_checkbox_change_callback(fake_win):
+def test_checkbox_change_callback(fake_win, fake_user):
     data = SimpleNamespace(value=0)
 
     def on_change1(checkbox):
@@ -78,7 +77,7 @@ def test_checkbox_change_callback(fake_win):
     fake_win.controls = [checkbox]
     fake_win.render()
 
-    FakeUser.click(checkbox)
+    fake_user.click(checkbox)
     fake_win.render()
     assert data.value == 10
 
@@ -86,6 +85,6 @@ def test_checkbox_change_callback(fake_win):
     checkbox.on_change = on_change2
     fake_win.render()
 
-    FakeUser.click(checkbox)
+    fake_user.click(checkbox)
     fake_win.render()
     assert data.value == 110

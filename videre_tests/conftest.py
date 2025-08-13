@@ -2,9 +2,9 @@ import io
 
 import pytest
 
-from videre_tests.common import FakeUser
-from videre_tests.utilities.step_window import StepWindow
-from videre_tests.utilities.windowfactory import LD
+from videre_tests.testing.fake_user import FakeUser
+from videre_tests.testing.step_window import StepWindow
+from videre_tests.testing.utils import LD
 
 
 @pytest.fixture

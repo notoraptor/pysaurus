@@ -2,7 +2,6 @@ import pytest
 
 import videre
 from videre.widgets.dropdown import _OptionWidget
-from videre_tests.common import FakeUser
 
 
 def test_dropdown_display(snap_win):
@@ -54,7 +53,7 @@ def test_dropdown_options_change(fake_win):
     assert dropdown.options == ("X", "Y", "Z")
 
 
-def test_dropdown_click_opens_context(fake_win):
+def test_dropdown_click_opens_context(fake_win, fake_user):
     dropdown = videre.Dropdown(options=["Apple", "Banana", "Cherry"])
     fake_win.controls = [dropdown]
     fake_win.check("default")
@@ -63,7 +62,7 @@ def test_dropdown_click_opens_context(fake_win):
     assert dropdown._context is None
 
     # Click to open context
-    FakeUser.click(dropdown)
+    fake_user.click(dropdown)
     fake_win.check("opened")
 
     # Context should be created
@@ -71,20 +70,20 @@ def test_dropdown_click_opens_context(fake_win):
     assert len(dropdown._context.controls) == 3
 
     # Click again to close context
-    FakeUser.click(dropdown)
+    fake_user.click(dropdown)
     fake_win.check("default")
 
     # Context should be closed
     assert dropdown._context is None
 
 
-def test_dropdown_focus_behavior(fake_win):
+def test_dropdown_focus_behavior(fake_win, fake_user):
     dropdown = videre.Dropdown(options=["Apple", "Banana", "Cherry"])
     fake_win.controls = [dropdown]
     fake_win.render()
 
     # Open context
-    FakeUser.click(dropdown)
+    fake_user.click(dropdown)
     fake_win.render()
     assert dropdown._context is not None
 
@@ -124,7 +123,7 @@ def test_dropdown_click_outer(fake_win, fake_user):
     fake_win.render()
 
     # Open context
-    FakeUser.click(dropdown)
+    fake_user.click(dropdown)
     fake_win.render()
     assert dropdown._context is not None
 

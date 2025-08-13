@@ -7,7 +7,6 @@ from videre.core.constants import Alignment
 from videre.core.sides.border import Border
 from videre.core.sides.padding import Padding
 from videre.layouts.div import Style, StyleDef
-from videre_tests.common import FakeUser
 
 
 def test_div_simple(snap_win):
@@ -31,7 +30,7 @@ def test_div_with_style(snap_win):
     snap_win.controls = [div]
 
 
-def test_div_click_handler(fake_win):
+def test_div_click_handler(fake_win, fake_user):
     data = SimpleNamespace(clicked=False, div_ref=None)
 
     def on_click(div):
@@ -45,7 +44,7 @@ def test_div_click_handler(fake_win):
 
     assert data.clicked is False
 
-    FakeUser.click(div)
+    fake_user.click(div)
     fake_win.render()
 
     assert data.clicked is True
@@ -91,14 +90,14 @@ def test_div_alignment(snap_win):
     snap_win.controls = [div]
 
 
-def test_div_no_click_handler(fake_win):
+def test_div_no_click_handler(fake_win, fake_user):
     text = videre.Text("No Handler")
     div = videre.Div(text)
     fake_win.controls = [div]
     fake_win.render()
 
     # Should not crash without click handler
-    FakeUser.click(div)
+    fake_user.click(div)
     fake_win.render()
 
 

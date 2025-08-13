@@ -5,7 +5,7 @@ import pytest
 
 from pysaurus.core.modules import ImageUtils
 from videre import Picture
-from .common import IMAGE_EXAMPLE
+from videre_tests.testing.utils import IMAGE_EXAMPLE
 
 
 class SrcProvider:
