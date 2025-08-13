@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 import videre
 from videre_tests.common import FakeUser
 
@@ -9,18 +7,15 @@ def test_button(snap_win):
 
 
 def test_click(fake_win):
-    data = SimpleNamespace(value=100)
-
     def on_click(button):
-        data.value += 100
-
-    assert data.value == 100
+        button.text = "Hello Again!"
 
     button = videre.Button(text="Hello World!", on_click=on_click)
+    assert button.on_click == on_click
     fake_win.controls = [button]
-    fake_win.render()
+    fake_win.check("hello")
 
     FakeUser.click(button)
 
-    fake_win.render()
-    assert data.value == 200
+    fake_win.check("hello_again")
+    assert button.text == "Hello Again!"

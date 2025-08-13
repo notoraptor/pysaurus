@@ -159,7 +159,7 @@ class TestScrollViewInteractions:
 
     def test_scrollbar_click_jump(self, fake_win, fake_user):
         """Test clicking on scrollbar track to jump to position"""
-        items = [Text(f"Item {i}", size=16) for i in range(20)]
+        items = [Text(f"Item {i}" * 20, size=16) for i in range(20)]
         content = Column(items)
         scroll = ScrollView(content)
         fake_win.controls = [scroll]
@@ -171,7 +171,7 @@ class TestScrollViewInteractions:
 
         # Click somewhere on the scrollbar track (not on the grip)
         click_x = v_scrollbar.global_x + 5
-        click_y = v_scrollbar.global_y + v_scrollbar.rendered_height + 2
+        click_y = v_scrollbar.global_y + v_scrollbar.background.rendered_height - 2
 
         # Simulate mouse click
         fake_user.click_at(click_x, click_y)

@@ -19,8 +19,8 @@ class Column(AbstractControlsLayout):
         **kwargs
     ):
         super().__init__(controls, **kwargs)
-        self._set_wprop("expand_horizontal", expand_horizontal)
-        self._set_wprop("horizontal_alignment", horizontal_alignment)
+        self.expand_horizontal = expand_horizontal
+        self.horizontal_alignment = horizontal_alignment
 
     @property
     def horizontal_alignment(self) -> Alignment:

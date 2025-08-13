@@ -58,3 +58,8 @@ class FakeUser:
     def mouse_wheel(cls, x: int, y: int):
         event_data = {"x": x, "y": y}
         pygame.event.post(Event(pygame.MOUSEWHEEL, event_data))
+
+    @classmethod
+    def quit(cls):
+        """Simulate quitting the application"""
+        pygame.event.post(Event(pygame.QUIT))

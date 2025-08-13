@@ -27,6 +27,7 @@ def test_fancybox(fake_win):
     assert not fake_win.find(videre.Text, text="fancybox")
     assert not fake_win.find(videre.Text, text="I am at top!")
     assert not fake_win.find(videre.Button, text="✕")
+    assert not fake_win.has_fancybox()
 
     FakeUser.click(bt_open_fancybox)
     fake_win.render()
@@ -34,6 +35,7 @@ def test_fancybox(fake_win):
     (_,) = fake_win.find(videre.Text, text="fancybox")
     (_,) = fake_win.find(videre.Text, text="I am at top!")
     (bt_close_fancybox,) = fake_win.find(videre.Button, text="✕")
+    assert fake_win.has_fancybox()
 
     FakeUser.click(bt_close_fancybox)
     fake_win.render()
@@ -41,3 +43,34 @@ def test_fancybox(fake_win):
     assert not fake_win.find(videre.Text, text="fancybox")
     assert not fake_win.find(videre.Text, text="I am at top!")
     assert not fake_win.find(videre.Button, text="✕")
+    assert not fake_win.has_fancybox()
+
+
+def test_alert(fake_win):
+    def _alert(*args, **kwargs):
+        fake_win.alert("I am at top!", title="fancybox")
+
+    bt_open_fancybox = videre.Button("click", on_click=_alert)
+    fake_win.controls = [videre.Text("Hwllo, world!"), bt_open_fancybox]
+    fake_win.render()
+
+    assert not fake_win.find(videre.Text, text="fancybox")
+    assert not fake_win.find(videre.Text, text="I am at top!")
+    assert not fake_win.find(videre.Button, text="✕")
+    assert not fake_win.has_fancybox()
+
+    FakeUser.click(bt_open_fancybox)
+    fake_win.render()
+
+    (_,) = fake_win.find(videre.Text, text="fancybox")
+    (_,) = fake_win.find(videre.Text, text="I am at top!")
+    (bt_close_fancybox,) = fake_win.find(videre.Button, text="✕")
+    assert fake_win.has_fancybox()
+
+    FakeUser.click(bt_close_fancybox)
+    fake_win.render()
+
+    assert not fake_win.find(videre.Text, text="fancybox")
+    assert not fake_win.find(videre.Text, text="I am at top!")
+    assert not fake_win.find(videre.Button, text="✕")
+    assert not fake_win.has_fancybox()

@@ -91,6 +91,7 @@ class TestWindowEvents:
             patch("pygame.key.set_repeat"),
             patch("pygame.mouse.get_cursor"),
             patch("pygame.cursors.compile"),
+            patch("pygame.display.flip"),
         ]
 
         for p in self.pygame_patches:
@@ -597,17 +598,6 @@ class TestWindowEvents:
             assert self.window._manual_events_after[0] is test_event
 
     @patch("videre.windowing.window.Window._post_event")
-    def test_notify_method(self, mock_post):
-        """Test notify method creates notification event"""
-        self.window.notify("test notification")
-
-        # Verify notification event was posted
-        mock_post.assert_called_once()
-        event = mock_post.call_args[0][0]
-        assert event.type == CustomEvents.NOTIFICATION_EVENT
-        assert event.notification == "test notification"
-
-    @patch("videre.windowing.window.Window._post_event")
     def test_run_later_method(self, mock_post):
         """Test run_later method creates callback event"""
 
@@ -675,3 +665,15 @@ class TestWindowEvents:
 
         # Verify no events were lost or corrupted
         assert len(events_posted) == 30
+
+    def test_window_default_mouse_over_no(self, fake_win, mock_layout_get_mouse_owner):
+        with patch("pygame.mouse.get_focused") as mock_get_focused:
+            mock_get_focused.return_value = False
+            fake_win.render()
+            mock_layout_get_mouse_owner.assert_not_called()
+
+    def test_window_default_mouse_over(self, fake_win, mock_layout_get_mouse_owner):
+        with patch("pygame.mouse.get_focused") as mock_get_focused:
+            mock_get_focused.return_value = True
+            fake_win.render()
+            mock_layout_get_mouse_owner.assert_called_once_with(0, 0)

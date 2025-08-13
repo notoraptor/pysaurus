@@ -6,8 +6,12 @@ class Margin(AbstractSides[int, int]):
     __default__ = 0
 
     def __parser__(self, value: int) -> int:
+        if not isinstance(value, int):
+            raise TypeError(
+                f"Unsupported {type(self).__name__} value type: {type(value).__name__}"
+            )
         if value < 0:
-            raise ValueError(f"{type(self).__name__} must be >= 0, got {value}")
+            raise ValueError(f"Unsupported {type(self).__name__} value: {value}")
         return value
 
     @classmethod

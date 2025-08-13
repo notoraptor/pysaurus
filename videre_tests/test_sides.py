@@ -4,6 +4,7 @@ from videre.colors import Colors
 from videre.core.constants import Side
 from videre.core.sides.border import Border
 from videre.core.sides.margin import Margin
+from videre.core.sides.abstract_sides import AbstractSides
 
 
 def test_border_all_1():
@@ -131,3 +132,25 @@ def test_border_left_0():
 def test_bad_border():
     with pytest.raises(ValueError, match="Unsupported border side value: ''"):
         Border(top="")
+
+
+def test_margin():
+    with pytest.raises(TypeError, match="Unsupported Margin value type: str"):
+        Margin(top="")
+
+    with pytest.raises(ValueError, match="Unsupported Margin value: -1"):
+        Margin(top=-1)
+
+    assert Margin(top=10).total() == 10
+
+    m = Margin(top=1, right=2, bottom=3, left=4)
+    assert m.total() == 10
+
+
+def test_abstract_side():
+    sides_1 = AbstractSides(bottom="hello")
+    sides_2 = AbstractSides(bottom=3.4)
+    sides_3 = AbstractSides(bottom="hello")
+
+    assert sides_1 == sides_3
+    assert {sides_1, sides_2, sides_3} == {sides_1, sides_2}

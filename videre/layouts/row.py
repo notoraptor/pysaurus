@@ -19,8 +19,8 @@ class Row(AbstractControlsLayout):
         **kwargs
     ):
         super().__init__(controls, **kwargs)
-        self._set_wprop("vertical_alignment", vertical_alignment)
-        self._set_wprop("expand_vertical", expand_vertical)
+        self.vertical_alignment = vertical_alignment
+        self.expand_vertical = expand_vertical
 
     @property
     def vertical_alignment(self) -> Alignment:
