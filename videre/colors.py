@@ -1,3 +1,5 @@
+from typing import TypeAlias
+
 import pygame
 
 
@@ -146,7 +148,7 @@ class Colors:
     transparent = pygame.Color(0, 0, 0, 0)
 
 
-ColorDef = (
+ColorDef: TypeAlias = (
     pygame.Color
     | tuple[int, int, int]
     | tuple[int, int, int, int]
