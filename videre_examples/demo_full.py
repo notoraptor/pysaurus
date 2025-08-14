@@ -68,6 +68,10 @@ class Demo:
     def clear(self, *args):
         self.work.control = None
 
+    @on_demo("text input")
+    def on_text_input(self, *args):
+        return videre.Container(videre.TextInput(), padding=videre.Padding.all(20))
+
     @on_demo("nested_scrollview")
     def on_nested_scrollview(self, *args):
         inner_content = videre.Column(
@@ -86,10 +90,6 @@ class Demo:
 
         outer_scroll = videre.ScrollView(outer_content)
         return outer_scroll
-
-    @on_demo("text input")
-    def on_text_input(self, *args):
-        return videre.TextInput(weight=1)
 
     @on_demo("radio")
     def on_radio(self, *args):

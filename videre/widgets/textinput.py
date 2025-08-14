@@ -16,8 +16,8 @@ from videre.widgets.text import Text
 from videre.widgets.widget import Widget
 
 
-@dataclass(slots=True)
-class _SelectionDefinition:
+@dataclass(slots=True, frozen=True)
+class _TextSelection:
     start: int
     end: int
 
@@ -30,6 +30,8 @@ class _CursorDefinition:
 
 
 class _CursorEvent(ABC):
+    __slots__ = ()
+
     @abstractmethod
     def handle(self, rendered: RenderedText) -> _CursorDefinition:
         raise NotImplementedError()
@@ -43,6 +45,8 @@ class _CursorEvent(ABC):
 
 
 class _CursorMouseEvent(_CursorEvent):
+    __slots__ = ("x", "y")
+
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
@@ -76,8 +80,15 @@ class _CursorMouseEvent(_CursorEvent):
         left = char.x
         right = char.x + char.horizontal_shift
 
+        # NB: x may be outside the line, e.g. before line start or after line end.
+        # So, it is not guaranteed that left <= x <= right.
+        dist_x_left = abs(x - left)
+        dist_x_right = abs(x - right)
+
+        print(f"[{left} === {x} === {right}]")
+
         cursor_y = line.y - rendered.font_sizes.ascender
-        if x - left < right - x:
+        if dist_x_left <= dist_x_right:
             cursor_x = left
             chosen_charpos = char.pos
         else:
@@ -89,6 +100,8 @@ class _CursorMouseEvent(_CursorEvent):
 
 
 class _CursorCharPosEvent(_CursorEvent):
+    __slots__ = ("pos",)
+
     def __init__(self, pos: int):
         self.pos = pos
 
@@ -124,6 +137,10 @@ class _CursorCharPosEvent(_CursorEvent):
             0, bisect.bisect_right(word.tasks, pos, key=lambda chr: chr.pos) - 1
         )
         char = word.tasks[char_pos]
+        assert pos in (
+            char.pos,
+            char.pos + 1,
+        ), f"Unexpected char pos {char.pos} for cursor pos {pos}; char: {char}"
 
         left = char.x
         right = char.x + char.horizontal_shift
@@ -142,13 +159,12 @@ class _InputText(Text):
 
 
 class TextInput(AbstractLayout):
-    __wprops__ = {"has_focus"}
+    __wprops__ = {"has_focus", "_selection"}
     __slots__ = (
         "_text",
         "_container",
         "_cursor_event",
         "_char_position",
-        "_selection",
         "_is_selecting",
     )
     __size__ = 1
@@ -160,15 +176,41 @@ class TextInput(AbstractLayout):
         super().__init__([self._container], **kwargs)
         self._cursor_event: _CursorEvent | None = None
         self._char_position = 0
-        self._selection: _SelectionDefinition | None = None
         self._is_selecting = False
+
         self._set_focus(False)
+        self._set_selection(None)
         self._set_char_pos(len(self._text.text))
 
     @property
     def _control(self) -> Widget:
         (control,) = self._controls()
         return control
+
+    def __selection(self) -> _TextSelection | None:
+        """Returns current selection definition if available, else None."""
+        return self._get_wprop("_selection")
+
+    def _has_selection(self) -> bool:
+        return self.__selection() is not None
+
+    def _get_selection(self) -> tuple[int, int]:
+        selection: _TextSelection = self.__selection()
+        return selection.start, selection.end
+
+    def _set_selection(self, start: int | None = None, end: int | None = None):
+        prev_selection = self.__selection()
+        if start is None and end is None:
+            selection = None
+        elif start is None:
+            assert prev_selection
+            selection = _TextSelection(prev_selection.start, end)
+        elif end is None:
+            assert prev_selection
+            selection = _TextSelection(start, prev_selection.end)
+        else:
+            selection = _TextSelection(start, end)
+        self._set_wprop("_selection", selection)
 
     def _has_focus(self) -> bool:
         return self._get_wprop("has_focus")
@@ -185,6 +227,9 @@ class TextInput(AbstractLayout):
     def get_mouse_owner(
         self, x_in_parent: int, y_in_parent: int
     ) -> MouseOwnership | None:
+        """
+        The mouse owner must be this widget itself, not any of its children.
+        """
         return Widget.get_mouse_owner(self, x_in_parent, y_in_parent)
 
     def handle_mouse_enter(self, event: MouseEvent):
@@ -196,17 +241,23 @@ class TextInput(AbstractLayout):
     def handle_mouse_down(self, event: MouseEvent):
         self._debug("mouse_down")
         self._is_selecting = True
-        self._selection = None
-        self._set_cursor_event(_CursorMouseEvent(event.x, event.y))
+        self._set_selection(None)
+        # NB: Mouse position is relative to widget parent.
+        # Character positions are relative to widget itself.
+        # To make correct comparisons between mouse and characters,
+        # we convert mouse position into widget coordinates.
+        self._set_cursor_event(_CursorMouseEvent(event.x - self.x, event.y - self.y))
+
+    def handle_mouse_down_move(self, event: MouseEvent):
+        assert self._is_selecting
+        self._debug("mouse_down_move")
+        # We convert mouse position into widget coordinates
+        # before setting the cursor event.
+        self._set_cursor_event(_CursorMouseEvent(event.x - self.x, event.y - self.y))
 
     def handle_mouse_up(self, event: MouseEvent):
         self._debug("mouse_up")
         self._is_selecting = False
-
-    def handle_mouse_down_move(self, event: MouseEvent):
-        if self._is_selecting:
-            self._debug("mouse_down_move")
-            self._set_cursor_event(_CursorMouseEvent(event.x, event.y))
 
     def handle_focus_in(self) -> bool:
         self._debug("focus_in")
@@ -218,18 +269,18 @@ class TextInput(AbstractLayout):
     def handle_focus_out(self):
         self._debug("focus_out")
         self._set_focus(False)
-        self._selection = None
+        self._set_selection(None)
 
     def handle_text_input(self, text: str):
         self._debug("text_input", repr(text))
-        if self._selection:
+        if self._has_selection():
             # Replace selected text
-            start, end = self._selection.start, self._selection.end
+            start, end = self._get_selection()
             in_text = self._text.text
             out_text = in_text[:start] + text + in_text[end:]
             self._text.text = out_text
             self._set_char_pos(start + len(text))
-            self._selection = None
+            self._set_selection(None)
         else:
             # Normal insertion
             in_text = self._text.text
@@ -243,14 +294,14 @@ class TextInput(AbstractLayout):
     def handle_keydown(self, key: KeyboardEntry):
         self._debug("key_down")
         if key.backspace:
-            if self._selection:
+            if self._has_selection():
                 # Delete selected text
-                start, end = self._selection.start, self._selection.end
+                start, end = self._get_selection()
                 in_text = self._text.text
                 out_text = in_text[:start] + in_text[end:]
                 self._text.text = out_text
                 self._set_char_pos(start)
-                self._selection = None
+                self._set_selection(None)
             else:
                 # Normal backspace
                 in_text = self._text.text
@@ -264,81 +315,84 @@ class TextInput(AbstractLayout):
             in_pos = self._char_pos()
             select_start = False
             if not key.shift:
-                if self._selection:
+                if self._has_selection():
                     # We get out of selection.
                     # If we move through chars, we should not move.
                     # If we move through words, we should move.
                     if not key.ctrl:
                         in_pos += 1
-                self._selection = None
-            elif not self._selection:
+                self._set_selection(None)
+            elif not self._has_selection():
                 # Start selection
-                self._selection = _SelectionDefinition(in_pos, in_pos)
+                self._set_selection(in_pos, in_pos)
                 select_start = True
             else:
-                assert in_pos in (self._selection.start, self._selection.end)
-                select_start = in_pos == self._selection.start
+                start, end = self._get_selection()
+                assert in_pos in (start, end)
+                select_start = in_pos == start
             if key.ctrl:
                 out_pos = get_previous_word_position(self._text.text, in_pos - 1)
             else:
                 out_pos = max(0, in_pos - 1)
             self._set_char_pos(out_pos)
-            if key.shift and self._selection:
+            if key.shift and self._has_selection():
                 # Update selection
                 if select_start:
-                    self._selection.start = out_pos
+                    self._set_selection(start=out_pos)
                 else:
-                    self._selection.end = out_pos
+                    self._set_selection(end=out_pos)
             self._set_cursor_event(_CursorCharPosEvent(out_pos))
         elif key.right:
             in_pos = self._char_pos()
             select_start = False
             if not key.shift:
-                if self._selection:
+                if self._has_selection():
                     # We get out of selection.
                     # If we move through chars, we should not move.
                     # If we move through words, we should move.
                     if not key.ctrl:
                         in_pos -= 1
-                self._selection = None
-            elif not self._selection:
+                self._set_selection(None)
+            elif not self._has_selection():
                 # Start selection
-                self._selection = _SelectionDefinition(in_pos, in_pos)
+                self._set_selection(in_pos, in_pos)
             else:
-                assert in_pos in (self._selection.start, self._selection.end)
-                select_start = in_pos == self._selection.start
+                start, end = self._get_selection()
+                assert in_pos in (start, end)
+                select_start = in_pos == start
             if key.ctrl:
                 out_pos = get_next_word_position(self._text.text, in_pos)
             else:
                 out_pos = min(in_pos + 1, len(self._text.text))
             self._set_char_pos(out_pos)
-            if key.shift and self._selection:
+            if key.shift and self._has_selection():
                 # Update selection
                 if select_start:
-                    self._selection.start = out_pos
+                    self._set_selection(start=out_pos)
                 else:
-                    self._selection.end = out_pos
+                    self._set_selection(end=out_pos)
             self._set_cursor_event(_CursorCharPosEvent(out_pos))
         elif key.ctrl:
             if key.a:
                 # Select all
-                self._selection = _SelectionDefinition(0, len(self._text.text))
+                self._set_selection(0, len(self._text.text))
                 self._set_char_pos(len(self._text.text))
                 self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
-            elif key.c and self._selection:
-                content = self._text.text[self._selection.start : self._selection.end]
+            elif key.c and self._has_selection():
+                start, end = self._get_selection()
+                content = self._text.text[start:end]
                 self.get_window().set_clipboard(content)
                 self._debug("copied", repr(content))
             elif key.v:
                 inserted = self.get_window().get_clipboard()
                 if inserted:
                     in_text = self._text.text
-                    if self._selection:
-                        start, end = self._selection.start, self._selection.end
+                    if self._has_selection():
+                        start, end = self._get_selection()
                         out_text = in_text[:start] + inserted + in_text[end:]
                         self._text.text = out_text
                         self._set_char_pos(start + len(inserted))
-                        self._selection = None
+                        self._set_selection(None)
                     else:
                         in_pos = self._char_pos()
                         out_text = in_text[:in_pos] + inserted + in_text[in_pos:]
@@ -363,10 +417,10 @@ class TextInput(AbstractLayout):
         return pygame.Rect(cursor.x, cursor.y, cursor_width, cursor_height)
 
     def _get_selection_rects(self, rendered: RenderedText) -> list[pygame.Rect]:
-        if not self._selection:
+        if not self._has_selection():
             return []
 
-        start, end = self._selection.start, self._selection.end
+        start, end = self._get_selection()
         if start > end:
             start, end = end, start
 
@@ -438,7 +492,7 @@ class TextInput(AbstractLayout):
         surface = text_surface.copy()
 
         # Draw selection if any
-        if self._selection:
+        if self._has_selection():
             selection_rects = self._get_selection_rects(rendered)
             for rect in selection_rects:
                 pygame.gfxdraw.box(surface, rect, (100, 100, 255, 100))
