@@ -1,3 +1,5 @@
+from typing import Any
+
 import pygame
 
 from videre.colors import ColorDef, parse_color
@@ -19,6 +21,10 @@ class Text(Widget):
         "underline",
     }
     __slots__ = ("_rendered",)
+
+    # Properties that do not affect rendering
+    # and can be set without re-rendering the text.
+    __neutral_props__ = {"color", "underline"}
 
     def __init__(
         self,
@@ -43,6 +49,12 @@ class Text(Widget):
         self.strong = strong
         self.italic = italic
         self.underline = underline
+
+    def _set_wprop(self, name: str, value: Any):
+        if value != self._get_wprop(name):
+            super()._set_wprop(name, value)
+            if name not in self.__neutral_props__:
+                self._rendered = None
 
     @property
     def text(self) -> str:
@@ -122,16 +134,11 @@ class Text(Widget):
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
-        render_args = dict(text=self.text, color=self.color)
-        if wrap == TextWrap.NONE:
-            render_args["width"] = None
-            render_args["align"] = TextAlign.NONE
-        elif wrap == TextWrap.CHAR:
-            render_args["width"] = width
-            render_args["align"] = self.align
-        else:
-            render_args["width"] = width
-            render_args["align"] = self.align
-            render_args["wrap_words"] = True
-        self._rendered = self._text_rendering(window).render_text(**render_args)
+        self._rendered = self._text_rendering(window).render_text(
+            text=self.text,
+            color=self.color,
+            wrap_words=(wrap == TextWrap.WORD),
+            width=(None if wrap == TextWrap.NONE else width),
+            align=(TextAlign.NONE if wrap == TextWrap.NONE else self.align),
+        )
         return self._rendered.surface
