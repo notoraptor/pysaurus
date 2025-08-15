@@ -1,6 +1,7 @@
 import bisect
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Any
 
 import pygame
 import pygame.gfxdraw
@@ -38,10 +39,7 @@ class _CursorEvent(ABC):
 
     @classmethod
     def null(cls, rendered: RenderedText) -> _CursorDefinition:
-        x = 0
-        y = rendered.font_sizes.height_delta
-        pos = 0
-        return _CursorDefinition(x, y, pos)
+        return _CursorDefinition(x=0, y=rendered.font_sizes.height_delta, pos=0)
 
 
 class _CursorMouseEvent(_CursorEvent):
@@ -57,19 +55,19 @@ class _CursorMouseEvent(_CursorEvent):
     def __eq__(self, other):
         return isinstance(other, type(self)) and self.x == other.x and self.y == other.y
 
-    def handle(self, rendered: RenderedText) -> _CursorDefinition:
+    def _handle(self, rendered: RenderedText) -> Any:
         x = self.x
         y = self.y
 
         lines = rendered.lines
         if not lines:
-            return self.null(rendered)
+            return None
 
         ys = [line.y for line in lines]
         line_pos = max(0, bisect.bisect_right(ys, y) - 1)
         line = lines[line_pos]
         if not line.elements:
-            return self.null(rendered)
+            return None
 
         xs = [el.x for el in line.elements]
         word_pos = max(0, bisect.bisect_right(xs, x) - 1)
@@ -85,18 +83,30 @@ class _CursorMouseEvent(_CursorEvent):
         dist_x_left = abs(x - left)
         dist_x_right = abs(x - right)
 
-        print(f"[{left} === {x} === {right}]")
-
-        cursor_y = line.y - rendered.font_sizes.ascender
         if dist_x_left <= dist_x_right:
-            cursor_x = left
+            to_right = False
             chosen_charpos = char.pos
         else:
-            cursor_x = right
+            to_right = True
             chosen_charpos = char.pos + 1
 
-        # print(char.x, char.el, "left" if cursor_x == left else "right")
+        return line, chosen_charpos, left, right, to_right
+
+    def handle(self, rendered: RenderedText) -> _CursorDefinition:
+        output = self._handle(rendered)
+        if output is None:
+            return self.null(rendered)
+        line, chosen_charpos, left, right, to_right = output
+        cursor_x = right if to_right else left
+        cursor_y = line.y - rendered.font_sizes.ascender
         return _CursorDefinition(x=cursor_x, y=cursor_y, pos=chosen_charpos)
+
+    def to_pos(self, rendered: RenderedText) -> int:
+        output = self._handle(rendered)
+        if output is None:
+            return 0
+        _, chosen_charpos, _, _, _ = output
+        return chosen_charpos
 
 
 class _CursorCharPosEvent(_CursorEvent):
@@ -160,13 +170,7 @@ class _InputText(Text):
 
 class TextInput(AbstractLayout):
     __wprops__ = {"has_focus", "_selection"}
-    __slots__ = (
-        "_text",
-        "_container",
-        "_cursor_event",
-        "_char_position",
-        "_is_selecting",
-    )
+    __slots__ = ("_text", "_container", "_cursor_event", "_selecting_pivot")
     __size__ = 1
     __capture_mouse__ = True
 
@@ -174,13 +178,24 @@ class TextInput(AbstractLayout):
         self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
         self._container = Container(self._text, background_color=(240, 240, 240))
         super().__init__([self._container], **kwargs)
-        self._cursor_event: _CursorEvent | None = None
-        self._char_position = 0
-        self._is_selecting = False
+        self._cursor_event: _CursorCharPosEvent | None = None
+        self._selecting_pivot: int | None = None
 
         self._set_focus(False)
         self._set_selection(None)
-        self._set_char_pos(len(self._text.text))
+        self._set_cursor(len(self._text.text))
+
+    @property
+    def value(self) -> str:
+        """Returns the current text value."""
+        return self._text.text
+
+    @value.setter
+    def value(self, text: str):
+        """Sets the text value."""
+        self._text.text = text
+        self._set_cursor(len(text))
+        self._set_selection(None)
 
     @property
     def _control(self) -> Widget:
@@ -218,12 +233,6 @@ class TextInput(AbstractLayout):
     def _set_focus(self, value):
         self._set_wprop("has_focus", bool(value))
 
-    def _char_pos(self) -> int:
-        return self._char_position
-
-    def _set_char_pos(self, pos: int):
-        self._char_position = pos
-
     def get_mouse_owner(
         self, x_in_parent: int, y_in_parent: int
     ) -> MouseOwnership | None:
@@ -231,6 +240,9 @@ class TextInput(AbstractLayout):
         The mouse owner must be this widget itself, not any of its children.
         """
         return Widget.get_mouse_owner(self, x_in_parent, y_in_parent)
+
+    def _mouse_to_pos(self, x: int, y: int) -> int:
+        return _CursorMouseEvent(x, y).to_pos(self._text._rendered)
 
     def handle_mouse_enter(self, event: MouseEvent):
         self.get_window().set_text_cursor()
@@ -240,30 +252,42 @@ class TextInput(AbstractLayout):
 
     def handle_mouse_down(self, event: MouseEvent):
         self._debug("mouse_down")
-        self._is_selecting = True
-        self._set_selection(None)
         # NB: Mouse position is relative to widget parent.
         # Character positions are relative to widget itself.
         # To make correct comparisons between mouse and characters,
         # we convert mouse position into widget coordinates.
-        self._set_cursor_event(_CursorMouseEvent(event.x - self.x, event.y - self.y))
+        pos = self._mouse_to_pos(event.x - self.x, event.y - self.y)
+        self._selecting_pivot = pos
+        self._set_selection(pos, pos)
+        self._set_cursor(pos)
 
     def handle_mouse_down_move(self, event: MouseEvent):
-        assert self._is_selecting
+        assert self._selecting_pivot is not None
+        assert self._has_selection()
         self._debug("mouse_down_move")
         # We convert mouse position into widget coordinates
         # before setting the cursor event.
-        self._set_cursor_event(_CursorMouseEvent(event.x - self.x, event.y - self.y))
+        pos = self._mouse_to_pos(event.x - self.x, event.y - self.y)
+
+        pivot = self._selecting_pivot
+        if pos < pivot:
+            # If the cursor is before the pivot, we select from the cursor to the pivot.
+            self._set_selection(pos, pivot)
+        else:
+            # If the cursor is after the pivot, we select from the pivot to the cursor.
+            self._set_selection(pivot, pos)
+        # Set the cursor event to the current cursor position.
+        self._set_cursor(pos)
 
     def handle_mouse_up(self, event: MouseEvent):
         self._debug("mouse_up")
-        self._is_selecting = False
+        self._selecting_pivot = None
 
     def handle_focus_in(self) -> bool:
         self._debug("focus_in")
         self._set_focus(True)
         if not self._cursor_event:
-            self._cursor_event = _CursorCharPosEvent(0)
+            self._set_cursor(0)
         return True
 
     def handle_focus_out(self):
@@ -279,17 +303,16 @@ class TextInput(AbstractLayout):
             in_text = self._text.text
             out_text = in_text[:start] + text + in_text[end:]
             self._text.text = out_text
-            self._set_char_pos(start + len(text))
+            self._set_cursor(start + len(text))
             self._set_selection(None)
         else:
             # Normal insertion
             in_text = self._text.text
-            in_pos = self._char_pos()
+            in_pos = self._get_cursor()
             out_text = in_text[:in_pos] + text + in_text[in_pos:]
             out_pos = in_pos + len(text)
             self._text.text = out_text
-            self._set_char_pos(out_pos)
-        self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
+            self._set_cursor(out_pos)
 
     def handle_keydown(self, key: KeyboardEntry):
         self._debug("key_down")
@@ -300,19 +323,18 @@ class TextInput(AbstractLayout):
                 in_text = self._text.text
                 out_text = in_text[:start] + in_text[end:]
                 self._text.text = out_text
-                self._set_char_pos(start)
+                self._set_cursor(start)
                 self._set_selection(None)
             else:
                 # Normal backspace
                 in_text = self._text.text
-                in_pos = self._char_pos()
+                in_pos = self._get_cursor()
                 out_pos = max(0, in_pos - 1)
                 out_text = in_text[:out_pos] + in_text[in_pos:]
                 self._text.text = out_text
-                self._set_char_pos(out_pos)
-            self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
+                self._set_cursor(out_pos)
         elif key.left:
-            in_pos = self._char_pos()
+            in_pos = self._get_cursor()
             select_start = False
             if not key.shift:
                 if self._has_selection():
@@ -334,16 +356,15 @@ class TextInput(AbstractLayout):
                 out_pos = get_previous_word_position(self._text.text, in_pos - 1)
             else:
                 out_pos = max(0, in_pos - 1)
-            self._set_char_pos(out_pos)
             if key.shift and self._has_selection():
                 # Update selection
                 if select_start:
                     self._set_selection(start=out_pos)
                 else:
                     self._set_selection(end=out_pos)
-            self._set_cursor_event(_CursorCharPosEvent(out_pos))
+            self._set_cursor(out_pos)
         elif key.right:
-            in_pos = self._char_pos()
+            in_pos = self._get_cursor()
             select_start = False
             if not key.shift:
                 if self._has_selection():
@@ -364,20 +385,18 @@ class TextInput(AbstractLayout):
                 out_pos = get_next_word_position(self._text.text, in_pos)
             else:
                 out_pos = min(in_pos + 1, len(self._text.text))
-            self._set_char_pos(out_pos)
             if key.shift and self._has_selection():
                 # Update selection
                 if select_start:
                     self._set_selection(start=out_pos)
                 else:
                     self._set_selection(end=out_pos)
-            self._set_cursor_event(_CursorCharPosEvent(out_pos))
+            self._set_cursor(out_pos)
         elif key.ctrl:
             if key.a:
                 # Select all
                 self._set_selection(0, len(self._text.text))
-                self._set_char_pos(len(self._text.text))
-                self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
+                self._set_cursor(len(self._text.text))
             elif key.c and self._has_selection():
                 start, end = self._get_selection()
                 content = self._text.text[start:end]
@@ -391,16 +410,16 @@ class TextInput(AbstractLayout):
                         start, end = self._get_selection()
                         out_text = in_text[:start] + inserted + in_text[end:]
                         self._text.text = out_text
-                        self._set_char_pos(start + len(inserted))
+                        self._set_cursor(start + len(inserted))
                         self._set_selection(None)
                     else:
-                        in_pos = self._char_pos()
+                        in_pos = self._get_cursor()
                         out_text = in_text[:in_pos] + inserted + in_text[in_pos:]
                         self._text.text = out_text
-                        self._set_char_pos(in_pos + len(inserted))
-                    self._set_cursor_event(_CursorCharPosEvent(self._char_pos()))
+                        self._set_cursor(in_pos + len(inserted))
 
-    def _set_cursor_event(self, event: _CursorEvent):
+    def _set_cursor(self, pos: int):
+        event = _CursorCharPosEvent(pos)
         if self._cursor_event:
             assert type(self._cursor_event) is type(event), (
                 f"Unexpected different consecutive cursor event types: "
@@ -409,6 +428,9 @@ class TextInput(AbstractLayout):
         if self._cursor_event != event:
             self._cursor_event = event
             self.update()
+
+    def _get_cursor(self) -> int:
+        return self._cursor_event.pos
 
     @classmethod
     def _get_cursor_rect(cls, cursor: _CursorDefinition, rendered: RenderedText):
@@ -502,8 +524,5 @@ class TextInput(AbstractLayout):
             cursor_def = self._cursor_event.handle(rendered)
             cursor = self._get_cursor_rect(cursor_def, rendered)
             pygame.gfxdraw.box(surface, cursor, Colors.black)
-            self._set_char_pos(cursor_def.pos)
-        # Reset cursor event after drawing
-        self._cursor_event = None
 
         return surface
