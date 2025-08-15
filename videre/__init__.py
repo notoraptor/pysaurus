@@ -21,5 +21,5 @@ from .widgets.progressbar import ProgressBar
 from .widgets.progressing import Progressing
 from .widgets.radio import Radio
 from .widgets.text import Text
-from .widgets.textinput import TextInput
+from .widgets.textinput.textinput import TextInput
 from .windowing.window import Window

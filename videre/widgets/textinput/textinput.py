@@ -17,12 +17,6 @@ from videre.widgets.text import Text
 from videre.widgets.widget import Widget
 
 
-@dataclass(slots=True, frozen=True)
-class _TextSelection:
-    start: int
-    end: int
-
-
 @dataclass(slots=True)
 class _CursorDefinition:
     x: int
@@ -169,13 +163,14 @@ class _InputText(Text):
 
 
 class TextInput(AbstractLayout):
-    __wprops__ = {"has_focus", "_selection"}
+    __wprops__ = {"has_focus"}
     __slots__ = ("_text", "_container", "_cursor_event", "_selecting_pivot")
     __size__ = 1
     __capture_mouse__ = True
 
     def __init__(self, **kwargs):
-        self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
+        # self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
+        self._text = Text()
         self._container = Container(self._text, background_color=(240, 240, 240))
         super().__init__([self._container], **kwargs)
         self._cursor_event: _CursorCharPosEvent | None = None
@@ -202,16 +197,15 @@ class TextInput(AbstractLayout):
         (control,) = self._controls()
         return control
 
-    def __selection(self) -> _TextSelection | None:
+    def __selection(self) -> tuple[int, int] | None:
         """Returns current selection definition if available, else None."""
-        return self._get_wprop("_selection")
+        return self._text.selection
 
     def _has_selection(self) -> bool:
         return self.__selection() is not None
 
     def _get_selection(self) -> tuple[int, int]:
-        selection: _TextSelection = self.__selection()
-        return selection.start, selection.end
+        return self.__selection()
 
     def _set_selection(self, start: int | None = None, end: int | None = None):
         prev_selection = self.__selection()
@@ -219,13 +213,13 @@ class TextInput(AbstractLayout):
             selection = None
         elif start is None:
             assert prev_selection
-            selection = _TextSelection(prev_selection.start, end)
+            selection = (prev_selection[0], end)
         elif end is None:
             assert prev_selection
-            selection = _TextSelection(start, prev_selection.end)
+            selection = (start, prev_selection[1])
         else:
-            selection = _TextSelection(start, end)
-        self._set_wprop("_selection", selection)
+            selection = (start, end)
+        self._text.selection = selection
 
     def _has_focus(self) -> bool:
         return self._get_wprop("has_focus")
@@ -243,6 +237,20 @@ class TextInput(AbstractLayout):
 
     def _mouse_to_pos(self, x: int, y: int) -> int:
         return _CursorMouseEvent(x, y).to_pos(self._text._rendered)
+
+    def _set_cursor(self, pos: int):
+        event = _CursorCharPosEvent(pos)
+        if self._cursor_event:
+            assert type(self._cursor_event) is type(event), (
+                f"Unexpected different consecutive cursor event types: "
+                f"{self._cursor_event}, {event}"
+            )
+        if self._cursor_event != event:
+            self._cursor_event = event
+            self.update()
+
+    def _get_cursor(self) -> int:
+        return self._cursor_event.pos
 
     def handle_mouse_enter(self, event: MouseEvent):
         self.get_window().set_text_cursor()
@@ -418,106 +426,16 @@ class TextInput(AbstractLayout):
                         self._text.text = out_text
                         self._set_cursor(in_pos + len(inserted))
 
-    def _set_cursor(self, pos: int):
-        event = _CursorCharPosEvent(pos)
-        if self._cursor_event:
-            assert type(self._cursor_event) is type(event), (
-                f"Unexpected different consecutive cursor event types: "
-                f"{self._cursor_event}, {event}"
-            )
-        if self._cursor_event != event:
-            self._cursor_event = event
-            self.update()
-
-    def _get_cursor(self) -> int:
-        return self._cursor_event.pos
-
     @classmethod
     def _get_cursor_rect(cls, cursor: _CursorDefinition, rendered: RenderedText):
         cursor_width = 2
         cursor_height = rendered.font_sizes.ascender + rendered.font_sizes.descender
         return pygame.Rect(cursor.x, cursor.y, cursor_width, cursor_height)
 
-    def _get_selection_rects(self, rendered: RenderedText) -> list[pygame.Rect]:
-        if not self._has_selection():
-            return []
-
-        start, end = self._get_selection()
-        if start > end:
-            start, end = end, start
-
-        rects = []
-        for line in rendered.lines:
-            if not line.elements:
-                continue
-
-            line_start = line.elements[0].tasks[0].pos
-            line_end = line.elements[-1].tasks[-1].pos + 1
-
-            if line_end <= start or line_start >= end:
-                continue
-
-            # Calculate x coordinates for this line
-            if line_start < start:
-                start_x = None
-                for word in line.elements:
-                    for char in word.tasks:
-                        if char.pos >= start:
-                            start_x = word.x + char.x
-                            break
-                    if start_x is not None:
-                        break
-                assert start_x is not None
-            else:
-                start_x = line.elements[0].x
-
-            if line_end > end:
-                end_x = None
-                for word in line.elements:
-                    for char in word.tasks:
-                        if char.pos >= end:
-                            end_x = word.x + char.x
-                            break
-                    if end_x is not None:
-                        break
-                assert end_x is not None
-            else:
-                end_x = line.elements[-1].x + line.elements[-1].width
-
-            print(
-                "sel pos",
-                start,
-                end,
-                "line pos",
-                line_start,
-                line_end,
-                "coords",
-                start_x,
-                end_x,
-                "limit",
-                line.limit(),
-            )
-            # Create selection rectangle for this line
-            rect = pygame.Rect(
-                start_x,
-                line.y - rendered.font_sizes.ascender,
-                end_x - start_x,
-                rendered.font_sizes.ascender + rendered.font_sizes.descender,
-            )
-            rects.append(rect)
-
-        return rects
-
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         text_surface = self._control.render(window, width, height)
         rendered = self._text._rendered
         surface = text_surface.copy()
-
-        # Draw selection if any
-        if self._has_selection():
-            selection_rects = self._get_selection_rects(rendered)
-            for rect in selection_rects:
-                pygame.gfxdraw.box(surface, rect, (100, 100, 255, 100))
 
         # Draw cursor if focused
         if self._has_focus() and self._cursor_event:

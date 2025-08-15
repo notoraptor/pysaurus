@@ -19,12 +19,13 @@ class Text(Widget):
         "strong",
         "italic",
         "underline",
+        "selection",
     }
     __slots__ = ("_rendered",)
 
-    # Properties that do not affect rendering
-    # and can be set without re-rendering the text.
-    __neutral_props__ = {"color", "underline"}
+    # Properties that do not affect characters layout or size
+    # in the rendered, then can be set without re-rendering the text.
+    __neutral_props__ = {"color", "underline", "selection"}
 
     def __init__(
         self,
@@ -37,6 +38,7 @@ class Text(Widget):
         strong: bool = False,
         italic: bool = False,
         underline: bool = False,
+        selection: tuple[int, int] | None = None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -120,17 +122,33 @@ class Text(Widget):
     def underline(self, underline: bool):
         self._set_wprop("underline", bool(underline))
 
-    def _text_rendering(self, window):
-        from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
+    @property
+    def selection(self) -> tuple[int, int] | None:
+        return self._get_wprop("selection")
 
-        rendering: PygameTextRendering = window.text_rendering(
+    @selection.setter
+    def selection(self, selection: tuple[int, int] | None):
+        if isinstance(selection, tuple):
+            if len(selection) != 2 or not all(isinstance(i, int) for i in selection):
+                raise ValueError("Selection must be a tuple of two integers.")
+            start, end = selection
+            if start > end:
+                start, end = end, start
+            start = max(0, start)
+            end = max(start, end)
+            selection = (start, end)
+        elif selection is not None:
+            raise TypeError("Selection must be a tuple of two integers or None.")
+        self._set_wprop("selection", selection)
+
+    def _text_rendering(self, window):
+        return window.text_rendering(
             size=self.size,
             strong=self.strong,
             italic=self.italic,
             underline=self.underline,
             height_delta=self.height_delta,
         )
-        return rendering
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
@@ -140,5 +158,6 @@ class Text(Widget):
             wrap_words=(wrap == TextWrap.WORD),
             width=(None if wrap == TextWrap.NONE else width),
             align=(TextAlign.NONE if wrap == TextWrap.NONE else self.align),
+            selection=self.selection,
         )
         return self._rendered.surface

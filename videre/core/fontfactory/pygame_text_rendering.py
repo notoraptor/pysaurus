@@ -1,9 +1,11 @@
 import logging
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Any, Iterable
 
 import pygame
 import pygame.freetype
+import pygame.gfxdraw
 import pygame.transform
 
 from videre.colors import Colors
@@ -39,18 +41,11 @@ class FontSizes:
         self.space_shift = metric[4] if metric else self.space_width
 
 
+@dataclass(slots=True)
 class RenderedText:
-    __slots__ = ("lines", "surface", "font_sizes")
-
-    def __init__(
-        self,
-        lines: list[Line[WordTask]],
-        surface: pygame.Surface,
-        font_sizes: FontSizes,
-    ):
-        self.lines = lines
-        self.surface = surface
-        self.font_sizes = font_sizes
+    lines: list[Line[WordTask]]
+    surface: pygame.Surface
+    font_sizes: FontSizes
 
     def first_x(self) -> int:
         if self.lines:
@@ -108,13 +103,16 @@ class PygameTextRendering:
         color: pygame.Color = None,
         align=TextAlign.LEFT,
         wrap_words=False,
+        selection: tuple[int, int] | None = None,
     ) -> RenderedText:
         if width is None or not wrap_words:
             new_width, height, char_lines = self._get_char_tasks(text, width, compact)
             lines = WordsLine.from_chars(char_lines, align == TextAlign.NONE)
         else:
             new_width, height, lines = self._get_word_tasks(text, width, compact)
-        surface = self._render_word_lines(new_width, height, lines, align, color)
+        surface = self._render_word_lines(
+            new_width, height, lines, align, color, selection
+        )
         return RenderedText(lines, surface, self._font_sizes)
 
     def _render_word_lines(
@@ -124,10 +122,13 @@ class PygameTextRendering:
         lines: list[Line[WordTask]],
         align: TextAlign,
         color: pygame.Color,
+        selection: tuple[int, int] | None = None,
     ) -> pygame.Surface:
         align_words(lines, width, align)
         size = self._size
         out = pygame.Surface((width, height), flags=pygame.SRCALPHA)
+        for rect in self._get_selection_rects(lines, selection):
+            pygame.gfxdraw.box(out, rect, (100, 100, 255, 100))
         for line in lines:
             self._draw_underline(line, out, color)
             y = line.y
@@ -138,6 +139,79 @@ class PygameTextRendering:
                         out, (x + ch.x, y), ch.el, size=size, fgcolor=color
                     )
         return out
+
+    def _get_selection_rects(
+        self, lines: list[Line[WordTask]], selection: tuple[int, int] | None
+    ) -> list[pygame.Rect]:
+        if selection is None:
+            return []
+
+        start, end = selection
+        if start == end:
+            return []
+        assert start < end
+
+        rects = []
+        for line in lines:
+            if not line.elements:
+                continue
+
+            line_start = line.elements[0].tasks[0].pos
+            line_end = line.elements[-1].tasks[-1].pos + 1
+
+            if line_end <= start or line_start >= end:
+                continue
+
+            # Calculate x coordinates for this line
+            if line_start < start:
+                start_x = None
+                for word in line.elements:
+                    for char in word.tasks:
+                        if char.pos >= start:
+                            start_x = word.x + char.x
+                            break
+                    if start_x is not None:
+                        break
+                assert start_x is not None
+            else:
+                start_x = line.elements[0].x
+
+            if line_end > end:
+                end_x = None
+                for word in line.elements:
+                    for char in word.tasks:
+                        if char.pos >= end:
+                            end_x = word.x + char.x
+                            break
+                    if end_x is not None:
+                        break
+                assert end_x is not None
+            else:
+                end_x = line.elements[-1].x + line.elements[-1].width
+
+            print(
+                "sel pos",
+                start,
+                end,
+                "line pos",
+                line_start,
+                line_end,
+                "coords",
+                start_x,
+                end_x,
+                "limit",
+                line.limit(),
+            )
+            # Create selection rectangle for this line
+            rect = pygame.Rect(
+                start_x,
+                line.y - self._font_sizes.ascender,
+                end_x - start_x,
+                self._font_sizes.ascender + self._font_sizes.descender,
+            )
+            rects.append(rect)
+
+        return rects
 
     def _draw_underline(self, line: Line[WordTask], out: pygame.Surface, color):
         if self._underline and line:
