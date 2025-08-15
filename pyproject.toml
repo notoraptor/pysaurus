@@ -23,6 +23,7 @@ annoy = "^1.17.3"
 chardet = "^5.2.0"
 pyperclip = "^1.9.0"
 pywebview = "^5.4"
+strarr = "^0.1.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"
