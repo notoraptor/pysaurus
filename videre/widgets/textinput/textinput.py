@@ -6,7 +6,7 @@ from typing import Any
 import pygame
 import pygame.gfxdraw
 
-from pysaurus.core.stringsplit import get_next_word_position, get_previous_word_position
+from pysaurus.core.stringsplit import get_previous_word_position
 from videre.colors import Colors
 from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_text_rendering import RenderedText
@@ -14,6 +14,7 @@ from videre.core.mouse_ownership import MouseOwnership
 from videre.layouts.abstractlayout import AbstractLayout
 from videre.layouts.container import Container
 from videre.widgets.text import Text
+from videre.widgets.textinput.keyboard_handling import compute_key_right
 from videre.widgets.widget import Widget
 
 
@@ -169,8 +170,8 @@ class TextInput(AbstractLayout):
     __capture_mouse__ = True
 
     def __init__(self, **kwargs):
-        # self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
-        self._text = Text()
+        self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
+        # self._text = Text()
         self._container = Container(self._text, background_color=(240, 240, 240))
         super().__init__([self._container], **kwargs)
         self._cursor_event: _CursorCharPosEvent | None = None
@@ -372,34 +373,15 @@ class TextInput(AbstractLayout):
                     self._set_selection(end=out_pos)
             self._set_cursor(out_pos)
         elif key.right:
-            in_pos = self._get_cursor()
-            select_start = False
-            if not key.shift:
-                if self._has_selection():
-                    # We get out of selection.
-                    # If we move through chars, we should not move.
-                    # If we move through words, we should move.
-                    if not key.ctrl:
-                        in_pos -= 1
-                self._set_selection(None)
-            elif not self._has_selection():
-                # Start selection
-                self._set_selection(in_pos, in_pos)
-            else:
-                start, end = self._get_selection()
-                assert in_pos in (start, end)
-                select_start = in_pos == start
-            if key.ctrl:
-                out_pos = get_next_word_position(self._text.text, in_pos)
-            else:
-                out_pos = min(in_pos + 1, len(self._text.text))
-            if key.shift and self._has_selection():
-                # Update selection
-                if select_start:
-                    self._set_selection(start=out_pos)
-                else:
-                    self._set_selection(end=out_pos)
-            self._set_cursor(out_pos)
+            ret = compute_key_right(
+                text=self._text.text,
+                cursor=self._get_cursor(),
+                selection=self._get_selection(),
+                ctrl=key.ctrl,
+                shift=key.shift,
+            )
+            self._set_cursor(ret.out_pos)
+            self._set_selection(*ret.out_selection)
         elif key.ctrl:
             if key.a:
                 # Select all
