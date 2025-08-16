@@ -169,9 +169,9 @@ class TextInput(AbstractLayout):
     __size__ = 1
     __capture_mouse__ = True
 
-    def __init__(self, **kwargs):
-        self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
-        # self._text = Text()
+    def __init__(self, text="", size=0, **kwargs):
+        # self._text = _InputText(text="Hello, 炎炎ノ消防隊: ", size=80)
+        self._text = Text(text=text, size=size)
         self._container = Container(self._text, background_color=(240, 240, 240))
         super().__init__([self._container], **kwargs)
         self._cursor_event: _CursorCharPosEvent | None = None
