@@ -6,6 +6,7 @@ from typing import Any
 import pygame
 import pygame.gfxdraw
 
+from pysaurus.core.stringsplit import get_next_word_position, get_previous_word_position
 from videre.colors import Colors
 from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_text_rendering import RenderedText
@@ -324,21 +325,33 @@ class TextInput(AbstractLayout):
 
     def handle_keydown(self, key: KeyboardEntry):
         self._debug("key_down")
-        if key.backspace:
-            if self._has_selection():
+        if key.backspace or key.delete:
+            selection = self._get_selection()
+            if selection and selection[0] != selection[1]:
                 # Delete selected text
-                start, end = self._get_selection()
+                start, end = selection
                 in_text = self._text.text
                 out_text = in_text[:start] + in_text[end:]
                 self._text.text = out_text
                 self._set_cursor(start)
                 self._set_selection(None)
             else:
-                # Normal backspace
+                # Normal backspace or delete
                 in_text = self._text.text
                 in_pos = self._get_cursor()
-                out_pos = max(0, in_pos - 1)
-                out_text = in_text[:out_pos] + in_text[in_pos:]
+                if key.backspace:
+                    if key.ctrl:
+                        out_pos = get_previous_word_position(in_text, in_pos - 1)
+                    else:
+                        out_pos = max(0, in_pos - 1)
+                    next_pos = in_pos
+                else:
+                    out_pos = in_pos
+                    if key.ctrl:
+                        next_pos = get_next_word_position(in_text, in_pos)
+                    else:
+                        next_pos = in_pos + 1
+                out_text = in_text[:out_pos] + in_text[next_pos:]
                 self._text.text = out_text
                 self._set_cursor(out_pos)
         elif key.left:

@@ -57,7 +57,7 @@ def get_previous_word_position(text: str, start: int):
 
 
 def get_next_word_position(text: str, start: int):
-    start = min(max(0, start), len(text) - 1)
+    start = min(max(0, start), max(0, len(text) - 1))
     cat = CAT_NONE
     for i in range(start, len(text)):
         local_cat = get_category(text[i])
