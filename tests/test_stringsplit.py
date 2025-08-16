@@ -142,7 +142,9 @@ def test_asian_text_navigation():
     while pos < len(chinese_text):
         next_pos = get_next_word_position(chinese_text, pos)
         chinese_positions.append(next_pos)
-        print(f"Position {pos} -> {next_pos} (remaining: {len(chinese_text) - next_pos})")
+        print(
+            f"Position {pos} -> {next_pos} (remaining: {len(chinese_text) - next_pos})"
+        )
         if next_pos == pos:  # Prevent infinite loop
             break
         pos = next_pos
@@ -156,7 +158,7 @@ def test_asian_text_navigation():
     print("Character categories:")
     for i, c in enumerate(japanese_text):
         cat = unicodedata.category(c)
-        is_space = c == ' '
+        is_space = c == " "
         is_alpha = c.isalnum()
         print(f"  {i}: {cat} (space={is_space}, alnum={is_alpha})")
 
