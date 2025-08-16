@@ -68,7 +68,7 @@ class Pipeline:
         self.out_pos = get_next_word_position(self._in_text, self._in_pos)
 
     def move_to_previous_word(self):
-        self.out_pos = get_previous_word_position(self._in_text, self._in_pos - 1)
+        self.out_pos = get_previous_word_position(self._in_text, self._in_pos)
 
     def move_to_select_end(self):
         selection = self._out_selection or self._in_selection

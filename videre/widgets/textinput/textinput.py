@@ -341,7 +341,7 @@ class TextInput(AbstractLayout):
                 in_pos = self._get_cursor()
                 if key.backspace:
                     if key.ctrl:
-                        out_pos = get_previous_word_position(in_text, in_pos - 1)
+                        out_pos = get_previous_word_position(in_text, in_pos)
                     else:
                         out_pos = max(0, in_pos - 1)
                     next_pos = in_pos
