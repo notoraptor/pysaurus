@@ -55,6 +55,57 @@ class FakeUser:
         pygame.event.post(Event(pygame.MOUSEWHEEL, event_data))
 
     @classmethod
+    def key_down(cls, key: int, mod: int = 0, unicode: str = ""):
+        """Simulate key down event"""
+        event_data = {"key": key, "mod": mod, "unicode": unicode}
+        pygame.event.post(Event(pygame.KEYDOWN, event_data))
+
+    @classmethod
+    def keyboard_entry(
+        cls, key: str, ctrl: bool = False, alt: bool = False, shift: bool = False
+    ):
+        """Simulate keyboard entry with character and modifiers"""
+        # Build modifier mask
+        mod = 0
+        if ctrl:
+            mod |= pygame.KMOD_CTRL
+        if alt:
+            mod |= pygame.KMOD_ALT
+        if shift:
+            mod |= pygame.KMOD_SHIFT
+
+        # Convert character to pygame key code
+        key_map = {
+            "backspace": pygame.K_BACKSPACE,
+            "tab": pygame.K_TAB,
+            "enter": pygame.K_RETURN,
+            "escape": pygame.K_ESCAPE,
+            "delete": pygame.K_DELETE,
+            "up": pygame.K_UP,
+            "down": pygame.K_DOWN,
+            "left": pygame.K_LEFT,
+            "right": pygame.K_RIGHT,
+            "home": pygame.K_HOME,
+            "end": pygame.K_END,
+            "pageup": pygame.K_PAGEUP,
+            "pagedown": pygame.K_PAGEDOWN,
+            "space": pygame.K_SPACE,
+        }
+        key = key.strip().lower()
+        if key in key_map:
+            pygame_key = key_map[key]
+        else:
+            assert len(key) == 1
+            pygame_key = ord(key)
+        cls.key_down(pygame_key, mod)
+
+    @classmethod
+    def text_input(cls, text: str):
+        """Simulate text input"""
+        event_data = {"text": text}
+        pygame.event.post(Event(pygame.TEXTINPUT, event_data))
+
+    @classmethod
     def quit(cls):
         """Simulate quitting the application"""
         pygame.event.post(Event(pygame.QUIT))
