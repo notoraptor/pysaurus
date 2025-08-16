@@ -1,4 +1,4 @@
-from pysaurus.core.stringsplit import get_next_word_position
+from pysaurus.core.stringsplit import get_next_word_position, get_previous_word_position
 
 
 class Pipeline:
@@ -61,8 +61,14 @@ class Pipeline:
     def move_to_next_char(self):
         self.out_pos = min(self._in_pos + 1, len(self._in_text))
 
+    def move_to_previous_char(self):
+        self.out_pos = max(0, self._in_pos - 1)
+
     def move_to_next_word(self):
         self.out_pos = get_next_word_position(self._in_text, self._in_pos)
+
+    def move_to_previous_word(self):
+        self.out_pos = get_previous_word_position(self._in_text, self._in_pos - 1)
 
     def move_to_select_end(self):
         selection = self._out_selection or self._in_selection
@@ -77,6 +83,14 @@ class Pipeline:
             # and move just to end of selection
             self.out_pos = selection[1]
 
+    def move_to_select_start(self):
+        selection = self._out_selection or self._in_selection
+        assert selection, f"No selection to move cursor to start: {self}"
+        if selection[0] == selection[1]:
+            self.move_to_previous_char()
+        else:
+            self.out_pos = selection[0]
+
     def update_select(self):
         assert self._out_selection is not None
         assert self.out_pos is not None
@@ -86,18 +100,28 @@ class Pipeline:
             self._out_selection = (self._out_selection[0], self.out_pos)
 
 
-def compute_key_right(
+def compute_key_x(
     text: str,
     cursor: int,
     selection: tuple[int, int] | None,
     ctrl: bool | int,
     shift: bool | int,
+    right: bool = True,
 ) -> Pipeline:
     pp = Pipeline(in_text=text, in_pos=cursor, selection=selection)
     proc_1_get_select = None
     proc_2_set_select = None
     proc_3_move_cursor = None
     proc_4_update_select = None
+
+    if right:
+        move_char = pp.move_to_next_char
+        move_word = pp.move_to_next_word
+        move_select = pp.move_to_select_end
+    else:
+        move_char = pp.move_to_previous_char
+        move_word = pp.move_to_previous_word
+        move_select = pp.move_to_select_start
 
     if shift:
         if selection:
@@ -115,11 +139,11 @@ def compute_key_right(
         proc_4_update_select = pp.ignore_select
 
     if ctrl:
-        proc_3_move_cursor = pp.move_to_next_word
+        proc_3_move_cursor = move_word
     elif selection and not shift:
-        proc_3_move_cursor = pp.move_to_select_end
+        proc_3_move_cursor = move_select
     else:
-        proc_3_move_cursor = pp.move_to_next_char
+        proc_3_move_cursor = move_char
 
     pp.out_procedure = [
         proc_1_get_select,

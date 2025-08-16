@@ -6,7 +6,6 @@ from typing import Any
 import pygame
 import pygame.gfxdraw
 
-from pysaurus.core.stringsplit import get_previous_word_position
 from videre.colors import Colors
 from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_text_rendering import RenderedText
@@ -14,7 +13,7 @@ from videre.core.mouse_ownership import MouseOwnership
 from videre.layouts.abstractlayout import AbstractLayout
 from videre.layouts.container import Container
 from videre.widgets.text import Text
-from videre.widgets.textinput.keyboard_handling import compute_key_right
+from videre.widgets.textinput.keyboard_handling import compute_key_x
 from videre.widgets.widget import Widget
 
 
@@ -343,42 +342,24 @@ class TextInput(AbstractLayout):
                 self._text.text = out_text
                 self._set_cursor(out_pos)
         elif key.left:
-            in_pos = self._get_cursor()
-            select_start = False
-            if not key.shift:
-                if self._has_selection():
-                    # We get out of selection.
-                    # If we move through chars, we should not move.
-                    # If we move through words, we should move.
-                    if not key.ctrl:
-                        in_pos += 1
-                self._set_selection(None)
-            elif not self._has_selection():
-                # Start selection
-                self._set_selection(in_pos, in_pos)
-                select_start = True
-            else:
-                start, end = self._get_selection()
-                assert in_pos in (start, end)
-                select_start = in_pos == start
-            if key.ctrl:
-                out_pos = get_previous_word_position(self._text.text, in_pos - 1)
-            else:
-                out_pos = max(0, in_pos - 1)
-            if key.shift and self._has_selection():
-                # Update selection
-                if select_start:
-                    self._set_selection(start=out_pos)
-                else:
-                    self._set_selection(end=out_pos)
-            self._set_cursor(out_pos)
-        elif key.right:
-            ret = compute_key_right(
+            ret = compute_key_x(
                 text=self._text.text,
                 cursor=self._get_cursor(),
                 selection=self._get_selection(),
                 ctrl=key.ctrl,
                 shift=key.shift,
+                right=False,
+            )
+            self._set_cursor(ret.out_pos)
+            self._set_selection(*ret.out_selection)
+        elif key.right:
+            ret = compute_key_x(
+                text=self._text.text,
+                cursor=self._get_cursor(),
+                selection=self._get_selection(),
+                ctrl=key.ctrl,
+                shift=key.shift,
+                right=True,
             )
             self._set_cursor(ret.out_pos)
             self._set_selection(*ret.out_selection)
