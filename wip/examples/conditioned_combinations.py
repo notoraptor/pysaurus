@@ -112,7 +112,7 @@ def _combine_values(values: Sequence, nb: int) -> list[tuple[int, ...]]:
     return result
 
 
-def main():
+def main_right():
     criterions = ("ctrl", "shift", "select")
     cases = [
         Case(
@@ -171,5 +171,64 @@ def main():
     check(cases, criterions)
 
 
+def main_left():
+    criterions = ("ctrl", "shift", "select")
+    cases = [
+        Case(
+            (0, 0, 0),
+            ["select_no", "ignore_select", "move_to_previous_char", "ignore_select_2"],
+        ),
+        Case(
+            (0, 0, 1),
+            ["select_out", "ignore_select", "move_to_select_start", "ignore_select_2"],
+        ),
+        Case(
+            (0, 1, 0),
+            [
+                "select_start",
+                "find_cursor_in_select",
+                "move_to_previous_char",
+                "update_select",
+            ],
+        ),
+        Case(
+            (0, 1, 1),
+            [
+                "select_has",
+                "find_cursor_in_select",
+                "move_to_previous_char",
+                "update_select",
+            ],
+        ),
+        Case(
+            (1, 0, 0),
+            ["select_no", "ignore_select", "move_to_previous_word", "ignore_select_2"],
+        ),
+        Case(
+            (1, 0, 1),
+            ["select_out", "ignore_select", "move_to_previous_word", "ignore_select_2"],
+        ),
+        Case(
+            (1, 1, 0),
+            [
+                "select_start",
+                "find_cursor_in_select",
+                "move_to_previous_word",
+                "update_select",
+            ],
+        ),
+        Case(
+            (1, 1, 1),
+            [
+                "select_has",
+                "find_cursor_in_select",
+                "move_to_previous_word",
+                "update_select",
+            ],
+        ),
+    ]
+    check(cases, criterions)
+
+
 if __name__ == "__main__":
-    main()
+    main_left()
