@@ -104,5 +104,6 @@ class Column(AbstractControlsLayout):
                 self._set_child_position(ctrl, x, y)
                 y += sizes[i]
             else:
+                # todo see comment in Row
                 controls[i].flush_changes()
         return column

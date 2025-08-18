@@ -104,5 +104,10 @@ class Row(AbstractControlsLayout):
                 self._set_child_position(ctrl, x, y)
                 x += sizes[i]
             else:
+                # TODO should we instead fully render control but not display it ?
+                # Because, sometimes control rendering may also imply
+                # further control state changes, so it may better
+                # better to fully render control, even if it
+                # must not be displayed in the layout.
                 controls[i].flush_changes()
         return row
