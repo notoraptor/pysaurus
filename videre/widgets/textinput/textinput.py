@@ -37,7 +37,7 @@ class _CursorEvent(ABC):
         return _CursorDefinition(x=0, y=rendered.font_sizes.height_delta, pos=0)
 
 
-class _CursorMouseEvent(_CursorEvent):
+class _CursorMouseEvent:
     __slots__ = ("x", "y")
 
     def __init__(self, x: int, y: int):
@@ -86,15 +86,6 @@ class _CursorMouseEvent(_CursorEvent):
             chosen_charpos = char.pos + 1
 
         return line, chosen_charpos, left, right, to_right
-
-    def handle(self, rendered: RenderedText) -> _CursorDefinition:
-        output = self._handle(rendered)
-        if output is None:
-            return self.null(rendered)
-        line, chosen_charpos, left, right, to_right = output
-        cursor_x = right if to_right else left
-        cursor_y = line.y - rendered.font_sizes.ascender
-        return _CursorDefinition(x=cursor_x, y=cursor_y, pos=chosen_charpos)
 
     def to_pos(self, rendered: RenderedText) -> int:
         output = self._handle(rendered)

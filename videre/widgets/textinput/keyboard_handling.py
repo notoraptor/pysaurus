@@ -151,7 +151,6 @@ def compute_key_x(
         proc_3_move_cursor,
         proc_4_update_select,
     ]
-    print(pp)
     for proc in pp.out_procedure:
         proc()
 
