@@ -1,4 +1,5 @@
 import logging
+from collections import namedtuple
 
 import videre
 from pysaurus.core.constants import LOREM_IPSUM
@@ -6,6 +7,11 @@ from pysaurus.core.functions import get_tagged_methods
 from videre.layouts.div import Div
 
 logger = logging.getLogger(__name__)
+
+
+class DemoTitle(namedtuple("DemoTitle", ("rank", "name"))):
+    def __repr__(self):
+        return f"({self.rank}) {self.name}"
 
 
 class DemoDecorator:
@@ -18,7 +24,7 @@ class DemoDecorator:
 
         def decorator(function):
             name = title or function.__name__.replace("_", " ")
-            function.demo_title = f"({order}) {name}"
+            function.demo_title = DemoTitle(order, name)
             return function
 
         return decorator
@@ -36,7 +42,7 @@ class Demo:
 
         self.demos = get_tagged_methods(self, "demo_title")
         buttons = [
-            videre.Button(title, on_click=self._demo_from(function))
+            videre.Button(str(title), on_click=self._demo_from(function))
             for title, function in sorted(self.demos.items())
         ]
         self.window.controls = [
@@ -231,6 +237,68 @@ class Demo:
     @on_demo("alert")
     def on_alert(self, *args):
         self.window.alert("You have an alert")
+
+    @on_demo("choose file")
+    def on_choose_file(self, *args):
+        text = videre.Text("no file chosen ...")
+
+        def on_click(*args):
+            path = videre.Dialog.select_file_to_open()
+            if path:
+                text.text = "File chosen: " + path
+            else:
+                text.text = "You have not chosen any file!"
+
+        button = videre.Button("Choose file", on_click=on_click)
+        return videre.Column([button, text])
+
+    @on_demo("choose file with lambda")
+    def on_choose_file_with_lambda(self, *args):
+        from wip.symthon.symthon import Lambda, E, V
+
+        text = videre.Text("no file chosen ...")
+
+        on_click = Lambda[
+            E.set(V.path, V[videre.Dialog].select_file_to_open()),
+            E.if_(V.path, [E.setattr(text, text="File chosen: " + V.path)]).else_(
+                E.setattr(text, text="You have not chosen any file!")
+            ),
+        ]
+
+        button = videre.Button("Choose file", on_click=on_click)
+        return videre.Column([button, text])
+
+    @on_demo("dropdown")
+    def on_dropdown(self, *args):
+        return videre.Column(
+            [
+                videre.TextInput(),
+                videre.Container(background_color="green", weight=0.5),
+                videre.TextInput(),
+                videre.Row(
+                    [
+                        videre.Dropdown([1, 2, 3, 4, 100_000]),
+                        videre.Container(
+                            Div(videre.Text("Hello", height_delta=0)),
+                            padding=videre.Padding(left=10),
+                        ),
+                        videre.Container(
+                            videre.Button("Hello"), padding=videre.Padding(left=10)
+                        ),
+                    ]
+                ),
+                videre.Container(
+                    videre.Text(
+                        "Hello, World! How are you? ", wrap=videre.TextWrap.WORD
+                    ),
+                    background_color="yellow",
+                    weight=0.5,
+                    horizontal_alignment=videre.Alignment.CENTER,
+                    padding=videre.Padding.all(50),
+                ),
+                videre.Button("Hello, World! How are you? ", weight=0.5),
+            ]
+        )
 
 
 def main():

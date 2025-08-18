@@ -17,7 +17,6 @@ _irrelevant_ = [
 
 _to_do_ = [ft.MenuBar, ft.MenuItemButton, ft.SubmenuButton]
 _doing_ = [
-    ft.TextField,
     ft.Markdown,
     # Notes:
     # A Text can set color, strong, italic and underline.
@@ -39,4 +38,5 @@ _done_ = [
     ft.Row,
     ft.Text,
     ft.Dropdown,  # <select>options...</select>
+    ft.TextField,
 ]
