@@ -49,10 +49,10 @@ class AbstractLayout(Widget):
             return get_top_mouse_wheel_owner(local_x, local_y, self._controls())
         return None
 
-    def collect_matchs(self, callback: Callable[[Widget], bool]) -> list[Widget]:
-        matchs = super().collect_matchs(callback)
+    def collect_matches(self, callback: Callable[[Widget], bool]) -> list[Widget]:
+        matchs = super().collect_matches(callback)
         for control in self._controls():
-            matchs.extend(control.collect_matchs(callback))
+            matchs.extend(control.collect_matches(callback))
         return matchs
 
     def has_changed(self) -> bool:

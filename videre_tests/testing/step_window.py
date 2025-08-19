@@ -48,7 +48,7 @@ class StepWindow(Window):
             pygame.quit()
 
     def find(self, widget_cls, **wprops):
-        return self._layout.collect_matchs(
+        return self._layout.collect_matches(
             lambda w: isinstance(w, widget_cls)
             and all(getattr(w, key) == value for key, value in wprops.items())
         )

@@ -57,7 +57,7 @@ class RadioGroup(AbstractLayout):
         if new_value == self._get_wprop("value"):
             return
         self._set_wprop("value", new_value)
-        for radio in self.collect_matchs(is_radio):
+        for radio in self.collect_matches(is_radio):
             radio._set_checked(radio.value == new_value)
         if react:
             on_change = self.on_change

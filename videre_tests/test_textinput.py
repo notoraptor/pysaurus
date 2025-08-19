@@ -137,6 +137,26 @@ def test_cursor_move_by_keyboard(fake_win, fake_user):
     assert ti._get_cursor() == 0
 
 
+def test_cursor_mouse_on_empty(fake_win, fake_user):
+    ti = videre.TextInput(text="", weight=1)
+    placeholder = videre.Container(width=100, height=100, background_color="green")
+    fake_win.controls = [
+        videre.Container(
+            videre.Column([ti, placeholder]),
+            padding=videre.Padding.all(20),
+            background_color=videre.Colors.red,
+        )
+    ]
+    fake_win.check("cursor_none")
+    assert ti._get_cursor() == 0
+    assert ti._get_selection() is None
+
+    fake_user.click(ti)
+    fake_win.check("cursor_0")
+    assert ti._get_cursor() == 0
+    assert ti._get_selection() == (0, 0)
+
+
 def test_cursor_move_by_mouse(fake_win, fake_user):
     string = "Hello, world!"
     ti = videre.TextInput(text=string)

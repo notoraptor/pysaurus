@@ -60,7 +60,7 @@ class App:
         self._display(
             videre.Column(
                 [
-                    videre.Text("Open database", strong=True, align=videre.TextAlign.center),
+                    videre.Text("Open database", strong=True),
                     videre.Text("Choose a database:"),
                     videre.Dropdown(database_names),
                     videre.Row(

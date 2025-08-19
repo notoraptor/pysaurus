@@ -21,7 +21,7 @@ class Label(Text):
 
     def _get_button(self) -> Widget:
         if self._for_button is None:
-            candidates = self.get_root().collect_matchs(
+            candidates = self.get_root().collect_matches(
                 lambda w: w.key == self._for_key
             )
             if len(candidates) == 1:

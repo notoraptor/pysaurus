@@ -47,9 +47,6 @@ class _CursorMouseEvent:
     def __repr__(self):
         return f"{type(self).__name__}({self.x}, {self.y})"
 
-    def __eq__(self, other):
-        return isinstance(other, type(self)) and self.x == other.x and self.y == other.y
-
     def _handle(self, rendered: RenderedText) -> Any:
         x = self.x
         y = self.y

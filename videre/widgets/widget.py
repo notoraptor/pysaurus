@@ -178,7 +178,7 @@ class Widget(PygameUtils):
             return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
 
-    def collect_matchs(self, callback: Callable[["Widget"], bool]) -> list["Widget"]:
+    def collect_matches(self, callback: Callable[["Widget"], bool]) -> list["Widget"]:
         return [self] if callback(self) else []
 
     def get_mouse_wheel_owner(

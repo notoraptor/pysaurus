@@ -615,22 +615,6 @@ class TestWindowEvents:
         assert event.args == ("arg1", "arg2")
         assert event.kwargs == {"key": "value"}
 
-    @patch("videre.windowing.window.Window.run_later")
-    @patch("videre.windowing.window.launch_thread")
-    def test_run_async_method(self, mock_launch_thread, mock_run_later):
-        """Test run_async method uses launch_thread"""
-
-        def test_func(a, b):
-            pass
-
-        # Test
-        self.window.run_async(test_func, "arg1", "arg2")
-
-        # Verify run_later was called with launch_thread
-        mock_run_later.assert_called_once_with(
-            mock_launch_thread, test_func, "arg1", "arg2"
-        )
-
     def test_thread_safety_of_post_event(self):
         """Test thread safety of _post_event method"""
         # Create multiple threads that post events
@@ -677,3 +661,46 @@ class TestWindowEvents:
             mock_get_focused.return_value = True
             fake_win.render()
             mock_layout_get_mouse_owner.assert_called_once_with(0, 0)
+
+
+def test_run_async(fake_win):
+    data = SimpleNamespace(value=1)
+
+    def function(a, b):
+        data.value += a * b
+        function.called += 1
+
+    function.called = 0
+
+    fake_win.run_async(function, 6, 7)
+    # This render() will push call event into manual events queue
+    fake_win.render()
+    # This render() will handle manual events queue
+    fake_win.render()
+    # Let's wait a little, to let thread run.
+    time.sleep(0.25)
+    assert function.called == 1
+    assert data.value == 43
+    assert fake_win._exit_code == 0
+
+
+def test_run_async_with_error(fake_win):
+    data = SimpleNamespace(value=1)
+
+    def function(a, b):
+        function.called += 1
+        raise Exception("function error")
+        data.value += a * b
+
+    function.called = 0
+
+    fake_win.run_async(function, 6, 7)
+    # This render() will push call event into manual events queue
+    fake_win.render()
+    # This render() will handle manual events queue
+    fake_win.render()
+    # Let's wait a little, to let thread run.
+    time.sleep(0.25)
+    assert function.called == 1
+    assert data.value == 1
+    assert fake_win._exit_code == -1

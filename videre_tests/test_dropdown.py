@@ -105,7 +105,7 @@ def test_dropdown_click_to_option(fake_win, fake_user):
     fake_win.render()
     assert dropdown._context is not None
     assert dropdown.selected == "Apple"
-    (option,) = dropdown._context.collect_matchs(
+    (option,) = dropdown._context.collect_matches(
         lambda widget: isinstance(widget, _OptionWidget) and widget._index == 1
     )
     assert dropdown.options[option._index] == "Banana"
