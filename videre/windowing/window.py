@@ -30,8 +30,21 @@ logger = logging.getLogger(__name__)
 NotificationCallback = Callable[[Any], None]
 
 
+def _handle_exception(on_except, function, *args, **kwargs):
+
+    def wrapper():
+        try:
+            return function(*args, **kwargs)
+        except Exception as e:
+            if not on_except(e):
+                raise e
+
+    return wrapper
+
+
 class Window(PygameUtils, Clipboard):
     __slots__ = (
+        "_exit_code",
         "_title",
         "_width",
         "_height",
@@ -65,6 +78,7 @@ class Window(PygameUtils, Clipboard):
         hide=False,
     ):
         super().__init__()
+        self._exit_code = 0
 
         self._lock = threading.Lock()
 
@@ -167,7 +181,7 @@ class Window(PygameUtils, Clipboard):
             height_delta=height_delta,
         )
 
-    def run(self):
+    def run(self) -> int:
         if not self._running:
             raise RuntimeError("Window has already run. Cannot run again.")
 
@@ -178,6 +192,7 @@ class Window(PygameUtils, Clipboard):
             self._render()
             clock.tick(WINDOW_FPS)
         pygame.quit()
+        return self._exit_code
 
     def _init_display(self):
         flags = pygame.RESIZABLE
@@ -246,7 +261,12 @@ class Window(PygameUtils, Clipboard):
         self._post_event(CustomEvents.callback_event(function, args, kwargs))
 
     def run_async(self, function, *args, **kwargs):
-        return self.run_later(launch_thread, function, *args, **kwargs)
+        wrapper = _handle_exception(self._force_quit, function, *args, **kwargs)
+        return self.run_later(launch_thread, wrapper)
+
+    def _force_quit(self, exception: Exception = None):
+        self._exit_code = -int(exception is not None)
+        self._post_event(pygame.event.Event(pygame.QUIT))
 
     def _post_event(self, event: Event):
         with self._lock:
