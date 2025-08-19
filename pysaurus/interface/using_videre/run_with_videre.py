@@ -1,4 +1,4 @@
-import time
+import sys
 
 import videre
 from pysaurus.core.informer import Informer
@@ -23,7 +23,12 @@ class App:
         self.window = videre.Window("Pysaurus")
 
     def _display(self, widget: Widget):
-        self.window.controls = [videre.ScrollView(widget, wrap_horizontal=True)]
+        self.window.controls = [
+            videre.ScrollView(
+                videre.Container(widget, padding=videre.Padding.all(5)),
+                wrap_horizontal=True,
+            )
+        ]
 
     def display_test_page(self):
         constants = self.backend.get_constants()
@@ -51,25 +56,37 @@ class App:
         self.window.run_async(self._goto_homepage)
 
     def _goto_homepage(self):
-        time.sleep(4)
         database_names = self.backend.get_database_names()
         self._display(
             videre.Column(
-                [videre.Text("Choose a database:"), videre.Dropdown(database_names)]
+                [
+                    videre.Text("Open database", strong=True, align=videre.TextAlign.center),
+                    videre.Text("Choose a database:"),
+                    videre.Dropdown(database_names),
+                    videre.Row(
+                        [
+                            videre.Checkbox(key="update"),
+                            videre.Label(for_button="update", text="Update on load"),
+                        ],
+                        vertical_alignment=videre.Alignment.CENTER,
+                    ),
+                    videre.Button("Open"),
+                ],
+                space=5,
             )
         )
 
-    def start(self):
+    def start(self) -> int:
         with Informer.default():
             try:
                 self.welcome()
-                self.window.run()
+                return self.window.run()
             finally:
                 self.backend.api.close_app()
 
 
 def main():
-    App().start()
+    sys.exit(App().start())
 
 
 if __name__ == "__main__":
