@@ -4,11 +4,12 @@ import pygame
 
 from videre.core.constants import Alignment
 from videre.layouts.abstract_controls_layout import AbstractControlsLayout
+from videre.layouts.container import Container
 from videre.widgets.widget import Widget
 
 
 class Column(AbstractControlsLayout):
-    __wprops__ = {"horizontal_alignment", "expand_horizontal"}
+    __wprops__ = {"horizontal_alignment", "expand_horizontal", "space"}
     __slots__ = ()
 
     def __init__(
@@ -16,11 +17,13 @@ class Column(AbstractControlsLayout):
         controls: Sequence[Widget],
         horizontal_alignment=Alignment.START,
         expand_horizontal=True,
+        space: int = 0,
         **kwargs
     ):
         super().__init__(controls, **kwargs)
         self.expand_horizontal = expand_horizontal
         self.horizontal_alignment = horizontal_alignment
+        self.space = space
 
     @property
     def horizontal_alignment(self) -> Alignment:
@@ -38,11 +41,28 @@ class Column(AbstractControlsLayout):
     def expand_horizontal(self, value):
         self._set_wprop("expand_horizontal", bool(value))
 
+    @property
+    def space(self) -> int:
+        return self._get_wprop("space")
+
+    @space.setter
+    def space(self, space: int):
+        self._set_wprop("space", space)
+
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         w_hint = width if self.expand_horizontal else None
         max_width = 0
         total_height = 0
         controls = self.controls
+
+        space = self.space
+        if len(controls) > 1 and space > 0:
+            new_controls = [controls[0]]
+            for i in range(1, len(controls)):
+                new_controls.append(Container(height=space))
+                new_controls.append(controls[i])
+            controls = new_controls
+
         rendered: list[tuple[Widget, pygame.Surface] | None] = [None] * len(controls)
         sizes: list[int | None] = [None] * len(controls)
 
