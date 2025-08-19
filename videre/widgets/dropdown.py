@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Any, Self
 
 import pygame
 
@@ -85,7 +85,7 @@ class Dropdown(Div):
         self._close_context()
 
     @property
-    def selected(self):
+    def selected(self) -> Any:
         return self.options[self.index]
 
     def handle_mouse_down(self, event: MouseEvent):

@@ -8,6 +8,7 @@ from .layouts.animator import Animator
 from .layouts.column import Column
 from .layouts.container import Container
 from .layouts.div import Div, Style, StyleDef
+from .layouts.form import Form
 from .layouts.radiogroup import RadioGroup
 from .layouts.row import Row
 from .layouts.scroll.scrollview import ScrollView

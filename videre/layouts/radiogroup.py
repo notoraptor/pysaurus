@@ -1,20 +1,17 @@
 from typing import Any, Callable, Self
 
-import pygame
-
-from videre.layouts.abstractlayout import AbstractLayout
+from videre.layouts.control_layout import ControlLayout
 from videre.widgets.widget import Widget
 
 
-class RadioGroup(AbstractLayout):
+class RadioGroup(ControlLayout):
     __wprops__ = {"value", "on_change", "can_deselect"}
-    __size__ = 1
     __slots__ = ()
 
     def __init__(
         self, control: Widget, value=None, on_change=None, can_deselect=False, **kwargs
     ):
-        super().__init__([control], **kwargs)
+        super().__init__(control, **kwargs)
         self.on_change = on_change
         self._set_wprop("can_deselect", bool(can_deselect))
         self._set_new_value(value, react=False)
@@ -63,9 +60,6 @@ class RadioGroup(AbstractLayout):
             on_change = self.on_change
             if on_change:
                 on_change(self)
-
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
-        return self.control.render(window, width, height)
 
 
 def is_radio(widget) -> bool:

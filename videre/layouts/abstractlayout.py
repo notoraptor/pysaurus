@@ -50,10 +50,10 @@ class AbstractLayout(Widget):
         return None
 
     def collect_matches(self, callback: Callable[[Widget], bool]) -> list[Widget]:
-        matchs = super().collect_matches(callback)
+        matches = super().collect_matches(callback)
         for control in self._controls():
-            matchs.extend(control.collect_matches(callback))
-        return matchs
+            matches.extend(control.collect_matches(callback))
+        return matches
 
     def has_changed(self) -> bool:
         return super().has_changed() or any(

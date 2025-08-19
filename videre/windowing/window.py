@@ -22,7 +22,7 @@ from videre.windowing.context import Context
 from videre.windowing.event_propagator import EventPropagator
 from videre.windowing.fancybox import Fancybox
 from videre.windowing.windowlayout import WindowLayout
-from videre.windowing.windowutils import on_event
+from videre.windowing.windowutils import WidgetByKeyGetter, on_event
 
 logger = logging.getLogger(__name__)
 
@@ -312,6 +312,10 @@ class Window(PygameUtils, Clipboard):
 
     def set_notification_callback(self, callback: NotificationCallback | None):
         self._notification_callback = callback
+
+    def get_element_by_key(self, key: str) -> Widget | None:
+        results = self._layout.collect_matches(WidgetByKeyGetter(key))
+        return results[0] if results else None
 
     def __on_event(self, event: Event):
         """
