@@ -973,6 +973,17 @@ signals = ["blinker (>=1.4.0)"]
 signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
+name = "ovld"
+version = "0.5.11"
+description = "Overloading Python functions"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "ovld-0.5.11-py3-none-any.whl", hash = "sha256:c83627bc8cfa79353046692265865aef44ec05372a4b87a758d4ae8a051d25dc"},
+    {file = "ovld-0.5.11.tar.gz", hash = "sha256:d0064873721645cbe789b1832536aabc392b9165cba02636599e0b3c78348f26"},
+]
+
+[[package]]
 name = "packaging"
 version = "25.0"
 description = "Core utilities for Python packages"
@@ -2031,4 +2042,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.13"
-content-hash = "c6739717f1852296690e88a3975d9277dacf8520a8db792b444dc26e0a79da7c"
+content-hash = "7685c66012238f682015417eb2fcd091f5b0f296a01f4a24c7b75197411093b1"
