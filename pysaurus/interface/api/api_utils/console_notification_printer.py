@@ -1,36 +1,46 @@
-from pysaurus.core.job_notifications import ConsoleJobProgress, JobStep, JobToDo
-from pysaurus.core.notifications import ProfilingEnd, ProfilingStart
+import sys
+
+from pysaurus.core.job_notifications import (
+    JobProgressDisplay,
+    JobToDo,
+    NotificationDisplay,
+)
+from pysaurus.core.notifications import Notification
 
 
-class ConsoleNotificationPrinter:
-    __slots__ = ("_prev_profiling_start", "progress")
+class ConsoleJobProgress(JobProgressDisplay):
+    __slots__ = ("shift",)
 
-    def __init__(self):
-        self._prev_profiling_start: ProfilingStart | None = None
-        self.progress: ConsoleJobProgress | None = None
+    def __init__(self, job_to_do: JobToDo):
+        self.shift = 0
+        super().__init__(job_to_do)
 
-    def print(self, notification):
-        prev_profiling_start = self._prev_profiling_start
-        self._prev_profiling_start = None
-        if isinstance(notification, ProfilingStart):
-            if prev_profiling_start:
-                print("!", prev_profiling_start)
-            self._prev_profiling_start = notification
-        elif isinstance(notification, ProfilingEnd):
-            if prev_profiling_start:
-                assert prev_profiling_start.name == notification.name
-                print(f"Profiled({notification.name}, {notification.time})")
-            else:
-                print(notification)
-        else:
-            if prev_profiling_start:
-                print("?", prev_profiling_start)
+    def _progress(self, step: int):
+        """Manual console progress bar.
 
-            if isinstance(notification, JobToDo):
-                progress = self.progress
-                assert not progress or progress.done
-                self.progress = ConsoleJobProgress(notification)
-            elif isinstance(notification, JobStep):
-                self.progress.update(notification)
-            else:
-                print(notification)
+        NB: We cannot use tqdm here, because:
+        - tqdm object cannot be pickled across processes.
+        - I don't know how to recreate a tqdm attached to previous bar
+          (new tqdm object will automatically write on next line).
+        """
+        total = self.job_to_do.total
+        length_bar = 30
+        length_done = int(length_bar * step / total) if total else length_bar
+        output = (
+            f"|{'█' * length_done}{' ' * (length_bar - length_done)}| "
+            f"{step}/{total} {self.job_to_do.title}"
+        )
+        sys.stdout.write(("\r" * self.shift) + output)
+        self.shift = len(output)
+        if step == total:
+            sys.stdout.write("\r\n")
+
+
+class ConsoleNotificationPrinter(NotificationDisplay):
+    __slots__ = ("progressions", "profiles", "nb_notifications")
+
+    def _display_notification(self, notification: Notification):
+        print(notification)
+
+    def _new_progress(self, job_to_do: JobToDo):
+        return ConsoleJobProgress(job_to_do)

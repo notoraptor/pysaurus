@@ -1,7 +1,12 @@
-import sys
+from abc import ABC, abstractmethod
 
 from pysaurus.core.functions import camel_case_to_snake_case
-from pysaurus.core.notifications import Notification
+from pysaurus.core.notifications import (
+    Notification,
+    Profiled,
+    ProfilingEnd,
+    ProfilingStart,
+)
 
 
 class JobToDo(Notification):
@@ -31,46 +36,6 @@ class JobStep(Notification):
         self.step = step
         self.total = total
         self.title = title
-
-
-class ConsoleJobProgress:
-    __slots__ = "job_to_do", "channels", "shift"
-
-    def __init__(self, job_to_do: JobToDo):
-        self.job_to_do = job_to_do
-        self.channels = {}
-        self.shift = 0
-        print(job_to_do)
-        self._progress(0)
-
-    @property
-    def done(self):
-        return self.job_to_do.total == sum(self.channels.values(), start=0)
-
-    def update(self, job_step: JobStep):
-        assert self.job_to_do.name == job_step.name
-        self.channels[job_step.channel] = job_step.step
-        self._progress(sum(self.channels.values()))
-
-    def _progress(self, step: int):
-        """Manual console progress bar.
-
-        NB: We cannot use tqdm here, because:
-        - tqdm object cannot be pickled across processes.
-        - I don't know how to recreate a tqdm attached to previous bar
-          (new tqdm object will automatically write on next line).
-        """
-        total = self.job_to_do.total
-        length_bar = 30
-        length_done = int(length_bar * step / total) if total else length_bar
-        output = (
-            f"|{'█' * length_done}{' ' * (length_bar - length_done)}| "
-            f"{step}/{total} {self.job_to_do.title}"
-        )
-        sys.stdout.write(("\r" * self.shift) + output)
-        self.shift = len(output)
-        if step == total:
-            sys.stdout.write("\r\n")
 
 
 def _get_job_name(fn_or_name):
@@ -116,3 +81,99 @@ def notify_job_progress(
             _get_job_name(function), channel, channel_step, channel_size, title=title
         )
     )
+
+
+class JobProgressDisplay(ABC):
+    __slots__ = "job_to_do", "channels"
+
+    def __init__(self, job_to_do: JobToDo):
+        self.job_to_do = job_to_do
+        self.channels = {}
+        print(job_to_do)
+        self._progress(0)
+
+    @property
+    def done(self) -> bool:
+        return self.job_to_do.total == self.current
+
+    @property
+    def current(self) -> int:
+        return sum(self.channels.values(), start=0)
+
+    @property
+    def total(self) -> int:
+        return self.job_to_do.total
+
+    @property
+    def title(self) -> str:
+        return self.job_to_do.title
+
+    def update(self, job_step: JobStep):
+        assert self.job_to_do.name == job_step.name
+        self.channels[job_step.channel] = job_step.step
+        self._progress(sum(self.channels.values()))
+
+    @abstractmethod
+    def _progress(self, step: int):
+        raise NotImplementedError()
+
+
+class NotificationDisplay(ABC):
+    __slots__ = ("progressions", "profiles", "nb_notifications", "views")
+
+    def __init__(self):
+        self.profiles: dict[str, int] = {}
+        self.progressions: dict[str, JobProgressDisplay] = {}
+        self.nb_notifications: int = 0
+        self.views = []
+
+    def print(self, notification):
+        self.nb_notifications += 1
+
+        if isinstance(notification, ProfilingStart):
+            assert notification.name not in self.profiles
+            self.profiles[notification.name] = self.nb_notifications
+        elif isinstance(notification, ProfilingEnd):
+            assert notification.name in self.profiles
+            index_start = self.profiles.pop(notification.name)
+            if self.nb_notifications == index_start + 1:
+                # ProfilingEnd just follows ProfilingStart
+                # We just display profiling as profiled
+                self.display_profiled(notification)
+            else:
+                # ProfilingStart and ProfilingEnd separated with other notifications
+                # We just display ProfilingEnd.
+                self.display_notification(notification)
+        elif isinstance(notification, JobToDo):
+            assert notification.name not in self.progressions
+            self.progressions[notification.name] = self.new_progress(notification)
+        elif isinstance(notification, JobStep):
+            assert notification.name in self.progressions
+            progress = self.progressions[notification.name]
+            progress.update(notification)
+            if progress.done:
+                del self.progressions[notification.name]
+        else:
+            self.display_notification(notification)
+
+    def display_profiled(self, notification: ProfilingEnd):
+        profiled = Profiled(notification.name, notification.time)
+        self.views.append(profiled)
+        self._display_notification(profiled)
+
+    def display_notification(self, notification: Notification):
+        self.views.append(notification)
+        self._display_notification(notification)
+
+    def new_progress(self, job_to_do: JobToDo) -> JobProgressDisplay:
+        progress = self._new_progress(job_to_do)
+        self.views.append(progress)
+        return progress
+
+    @abstractmethod
+    def _display_notification(self, notification: Notification):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _new_progress(self, job_to_do: JobToDo) -> JobProgressDisplay:
+        raise NotImplementedError()
