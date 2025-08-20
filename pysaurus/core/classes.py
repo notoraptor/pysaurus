@@ -64,7 +64,7 @@ class ToDict:
         dct.update(extra)
         return dct
 
-    def __str__(self):
+    def __repr__(self):
         values = []
         for name in self.get_slots():
             value = getattr(self, name)
@@ -77,8 +77,6 @@ class ToDict:
                 for name, value in values
             ),
         )
-
-    __repr__ = __str__
 
     def __eq__(self, other):
         return type(self) is type(other) and all(

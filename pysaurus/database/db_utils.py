@@ -1,5 +1,6 @@
 import logging
 
+from pysaurus.core.functions import camel_case_to_snake_case
 from pysaurus.core.notifications import Notification
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,18 @@ class DatabaseLoaded(Notification):
             "readable", "found", "without_thumbnails"
         )
         self.valid = database.count_videos("readable", "found", "with_thumbnails")
+
+    def __str__(self):
+        name = camel_case_to_snake_case(type(self).__name__).replace("_", " ")
+        name = name[0].upper() + name[1:]
+        return (
+            f"{name}: {self.entries} entries, {self.discarded} discarded, "
+            f"{self.unreadable_not_found} unreadable not found, "
+            f"{self.unreadable_found} unreadable found, "
+            f"{self.readable_not_found} readable not found, "
+            f"{self.readable_found_without_thumbnails} readble found without thumbnails, "
+            f"{self.valid} valid"
+        )
 
 
 class DatabaseSaved(DatabaseLoaded):

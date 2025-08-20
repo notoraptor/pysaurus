@@ -1,4 +1,5 @@
 from pysaurus.core.classes import StringPrinter, ToDict
+from pysaurus.core.functions import camel_case_to_snake_case
 
 
 class Notification(ToDict):
@@ -78,6 +79,11 @@ class Message(Notification):
 
 class End(Message):
     __slots__ = ()
+
+    def __str__(self):
+        name = camel_case_to_snake_case(type(self).__name__).replace("_", " ")
+        name = name[0].upper() + name[1:]
+        return name + "!"
 
 
 class Done(End):
