@@ -2,13 +2,27 @@ import sys
 
 import videre
 from pysaurus.core.informer import Informer
+from pysaurus.core.notifications import Notification
 from pysaurus.interface.api.gui_api import GuiAPI
+from pysaurus.interface.using_videre.process_page import ProcessPage
 from videre.widgets.widget import Widget
+
+
+class _VidereGuiAPI(GuiAPI):
+    __slots__ = ("window",)
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.window: videre.Window | None = None
+
+    def _notify(self, notification: Notification) -> None:
+        if self.window:
+            self.window.notify(notification)
 
 
 class PysaurusBackend:
     def __init__(self):
-        self.api = GuiAPI()
+        self.api = _VidereGuiAPI()
 
     def get_constants(self):
         return self.api.get_constants()
@@ -21,14 +35,13 @@ class App:
     def __init__(self):
         self.backend = PysaurusBackend()
         self.window = videre.Window("Pysaurus")
+        self.backend.api.window = self.window
 
     def _display(self, widget: Widget):
-        self.window.controls = [
-            videre.ScrollView(
-                videre.Container(widget, padding=videre.Padding.all(5)),
-                wrap_horizontal=True,
-            )
-        ]
+        # Clear notification callback before displaying new page
+        self.window.set_notification_callback(None)
+        # Set new page to display
+        self.window.controls = [videre.Container(widget, padding=videre.Padding.all(5))]
 
     def display_test_page(self):
         constants = self.backend.get_constants()
@@ -60,7 +73,8 @@ class App:
 
         def _get_form(*args):
             form: videre.Form = self.window.get_element_by_key("form")
-            print(form.values())
+            fields = form.values()
+            self._goto_database_page(name=fields["name"], update=fields["update"])
 
         self._display(
             videre.Form(
@@ -68,10 +82,10 @@ class App:
                     [
                         videre.Text("Open database", strong=True),
                         videre.Text("Choose a database:"),
-                        videre.Dropdown(database_names),
+                        videre.Dropdown(database_names, name="name"),
                         videre.Row(
                             [
-                                videre.Checkbox(key="update"),
+                                videre.Checkbox(key="update", name="update"),
                                 videre.Label(
                                     for_button="update", text="Update on load"
                                 ),
@@ -85,6 +99,12 @@ class App:
                 key="form",
             )
         )
+
+    def _goto_database_page(self, name: str, update: bool):
+        process_page = ProcessPage("Opening database ...")
+        self._display(process_page)
+        self.window.set_notification_callback(process_page.on_notification)
+        self.window.run_async(self.backend.api.open_database, name, update)
 
     def start(self) -> int:
         with Informer.default():
