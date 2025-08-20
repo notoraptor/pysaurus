@@ -16,6 +16,7 @@ class ScrollView(AbstractLayout):
         "vertical_scroll",
         "wrap_horizontal",
         "wrap_vertical",
+        "default_bottom",
     }
     __size__ = 3
     __slots__ = ("_ctrl", "_hscrollbar", "_vscrollbar")
@@ -29,6 +30,7 @@ class ScrollView(AbstractLayout):
         vertical_scroll=True,
         wrap_horizontal=False,
         wrap_vertical=False,
+        default_bottom=False,
         **kwargs,
     ):
         self._ctrl = control
@@ -44,6 +46,7 @@ class ScrollView(AbstractLayout):
         self.vertical_scroll = vertical_scroll
         self.wrap_horizontal = wrap_horizontal
         self.wrap_vertical = wrap_vertical
+        self.default_bottom = default_bottom
 
     @property
     def scroll_thickness(self) -> int:
@@ -86,6 +89,14 @@ class ScrollView(AbstractLayout):
         self._set_wprop("wrap_vertical", bool(value))
 
     @property
+    def default_bottom(self) -> bool:
+        return self._get_wprop("default_bottom")
+
+    @default_bottom.setter
+    def default_bottom(self, value):
+        self._set_wprop("default_bottom", bool(value))
+
+    @property
     def control(self) -> Widget:
         return self._ctrl
 
@@ -114,9 +125,18 @@ class ScrollView(AbstractLayout):
         self._content_x = -content_x
         self.update()
 
+    def _add_scroll_event_y(self):
+        self._transient_state["scroll_event_y"] = True
+
+    def _has_scroll_event_y(self) -> bool:
+        return self._transient_state.get("scroll_event_y")
+
     def on_jump_y(self, content_y: int):
-        self._content_y = -content_y
-        self.update()
+        prev = self._content_y
+        if prev != -content_y:
+            self._content_y = -content_y
+            self.update()
+            self._add_scroll_event_y()
 
     def get_mouse_wheel_owner(
         self, x_in_parent: int, y_in_parent: int
@@ -160,6 +180,7 @@ class ScrollView(AbstractLayout):
             self._content_y,
         ):
             self._transient_state["v"] = vertical
+            self._add_scroll_event_y()
 
     @classmethod
     def _can_scroll(
@@ -215,6 +236,19 @@ class ScrollView(AbstractLayout):
             self.vertical_scroll,
         )
 
+        if has_v_scroll and self.default_bottom:
+            end_pos = height - content_h
+            if self._has_scroll_event_y():
+                # We got a vertical scroll event
+                # Does this event set content_y anywhere else than bottom
+                if self._content_y != end_pos:
+                    # content_y moved off from bottom.
+                    # cancel default_bottom
+                    self.default_bottom = False
+            else:
+                # set content_y to bottom
+                self._content_y = end_pos
+
         view = pygame.Surface((width, height), flags=pygame.SRCALPHA)
         view.blit(content, (self._content_x, self._content_y))
 
@@ -253,10 +287,10 @@ class ScrollView(AbstractLayout):
         if step_count is not None:
             step = cls._SCROLL_STEP * step_count
             if step > 0:
-                # scroll left
+                # move to bottom of view
                 content_pos = min(content_pos + step, 0)
             else:
-                # scroll right
+                # move to top of view
                 content_pos = max(content_pos + step, view_length - content_length)
 
         scrollbar_is_visible = content_length > view_length and scroll_allowed
