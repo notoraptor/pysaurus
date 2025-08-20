@@ -49,7 +49,7 @@ class _OptionWidget(Div):
 
 class Dropdown(Div):
     __slots__ = ("_context", "_text", "_arrow")
-    __wprops__ = {"options", "index"}
+    __wprops__ = {"options", "index", "name"}
     ARROW_DOWN = "▼"
 
     def __init__(self, options=(), **kwargs):

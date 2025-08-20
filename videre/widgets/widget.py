@@ -29,12 +29,24 @@ class Widget(PygameUtils):
         "_children_pos",
     )
 
-    def __init__(self, weight=0, parent: Self | None = None, key=None):
+    def __init__(
+        self,
+        weight: int = 0,
+        parent: Self | None = None,
+        key: str | None = None,
+        name: str | None = None,
+    ):
         super().__init__()
+
+        new: dict = {"weight": weight}
+        if self._has_wprop("name"):
+            if not isinstance(name, str):
+                name = ""
+            new["name"] = name
 
         self._key = key or id(self)
         self._old = {}
-        self._new = {"weight": weight}
+        self._new = new
         self._old_update = ()
         self._transient_state = {}
         self._surface: pygame.Surface | None = None
@@ -46,6 +58,8 @@ class Widget(PygameUtils):
             self.with_parent(parent)
 
     def with_parent(self, parent):
+        # todo code should forbid adding same widget to many parents
+        # todo note that we may need to care about child order/rank in parent
         if self._parent != parent:
             if self._parent is not None:
                 self._parent.remove_child(self)
@@ -77,6 +91,10 @@ class Widget(PygameUtils):
                 ancestors.append(widget)
                 widget = widget.parent
         return ancestors
+
+    @property
+    def name(self) -> str | None:
+        return self._get_wprop("name") if self._has_wprop("name") else None
 
     @property
     def key(self) -> str:

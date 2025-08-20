@@ -20,7 +20,7 @@ from videre.widgets.abstract_check_button import AbstractCheckButton
 
 
 class Checkbox(AbstractCheckButton):
-    __wprops__ = {}
+    __wprops__ = {"name"}
     __slots__ = ()
 
     def __init__(self, checked=False, on_change: OnClickType = None, **kwargs):

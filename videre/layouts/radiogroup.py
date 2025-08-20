@@ -5,7 +5,7 @@ from videre.widgets.widget import Widget
 
 
 class RadioGroup(ControlLayout):
-    __wprops__ = {"value", "on_change", "can_deselect"}
+    __wprops__ = {"value", "on_change", "can_deselect", "name"}
     __slots__ = ()
 
     def __init__(

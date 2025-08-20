@@ -152,7 +152,7 @@ class _InputText(Text):
 
 
 class TextInput(AbstractLayout):
-    __wprops__ = {"has_focus"}
+    __wprops__ = {"has_focus", "name"}
     __slots__ = ("_text", "_container", "_cursor_event", "_selecting_pivot")
     __size__ = 1
     __capture_mouse__ = True
