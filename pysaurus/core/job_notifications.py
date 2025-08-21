@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from pysaurus.core.functions import camel_case_to_snake_case
 from pysaurus.core.notifications import (
@@ -83,14 +83,14 @@ def notify_job_progress(
     )
 
 
-class JobProgressDisplay(ABC):
+class JobProgressDisplay:
     __slots__ = "job_to_do", "channels"
 
     def __init__(self, job_to_do: JobToDo):
         self.job_to_do = job_to_do
         self.channels = {}
         print(job_to_do)
-        self._progress(0)
+        self._display(0)
 
     @property
     def done(self) -> bool:
@@ -111,11 +111,10 @@ class JobProgressDisplay(ABC):
     def update(self, job_step: JobStep):
         assert self.job_to_do.name == job_step.name
         self.channels[job_step.channel] = job_step.step
-        self._progress(sum(self.channels.values()))
+        self._display(sum(self.channels.values()))
 
-    @abstractmethod
-    def _progress(self, step: int):
-        raise NotImplementedError()
+    def _display(self, step: int):
+        pass
 
 
 class NotificationDisplay(ABC):
@@ -139,7 +138,9 @@ class NotificationDisplay(ABC):
             if self.nb_notifications == index_start + 1:
                 # ProfilingEnd just follows ProfilingStart
                 # We just display profiling as profiled
-                self.display_profiled(notification)
+                self.display_notification(
+                    Profiled(notification.name, notification.time)
+                )
             else:
                 # ProfilingStart and ProfilingEnd separated with other notifications
                 # We just display ProfilingEnd.
@@ -156,11 +157,6 @@ class NotificationDisplay(ABC):
         else:
             self.display_notification(notification)
 
-    def display_profiled(self, notification: ProfilingEnd):
-        profiled = Profiled(notification.name, notification.time)
-        self.views.append(profiled)
-        self._display_notification(profiled)
-
     def display_notification(self, notification: Notification):
         self.views.append(notification)
         self._display_notification(notification)
@@ -170,10 +166,8 @@ class NotificationDisplay(ABC):
         self.views.append(progress)
         return progress
 
-    @abstractmethod
     def _display_notification(self, notification: Notification):
-        raise NotImplementedError()
+        pass
 
-    @abstractmethod
     def _new_progress(self, job_to_do: JobToDo) -> JobProgressDisplay:
-        raise NotImplementedError()
+        return JobProgressDisplay(job_to_do)

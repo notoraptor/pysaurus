@@ -15,7 +15,7 @@ class ConsoleJobProgress(JobProgressDisplay):
         self.shift = 0
         super().__init__(job_to_do)
 
-    def _progress(self, step: int):
+    def _display(self, step: int):
         """Manual console progress bar.
 
         NB: We cannot use tqdm here, because:
