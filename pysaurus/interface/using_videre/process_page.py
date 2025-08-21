@@ -15,9 +15,6 @@ class VidereJobProgressDisplay(JobProgressDisplay):
     def _progress(self, step: int):
         pass
 
-    def __repr__(self):
-        return f"Progress: {self.title}: {self.current} / {self.total}"
-
 
 class VidereNotificationDisplay(NotificationDisplay):
     __slots__ = ()

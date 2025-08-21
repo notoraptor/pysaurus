@@ -104,7 +104,7 @@ class App:
         process_page = ProcessPage("Opening database ...")
         self._display(process_page)
         self.window.set_notification_callback(process_page.on_notification)
-        self.window.run_async(self.backend.api.open_database, name, update)
+        self.window.run_later(self.backend.api.open_database, name, update)
 
     def start(self) -> int:
         with Informer.default():
