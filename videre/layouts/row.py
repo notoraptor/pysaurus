@@ -114,7 +114,7 @@ class Row(AbstractControlsLayout):
         else:
             choice = min if alignment == Alignment.START else max
             height = choice(height, max_height)
-        row = self._new_surface(width, height)
+        row = window.new_surface(width, height)
         x = 0
         for i, render in enumerate(rendered):
             if render:

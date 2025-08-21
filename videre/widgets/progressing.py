@@ -30,7 +30,7 @@ class Progressing(AbstractAnimation):
         inner_max_x = bg_w - 2 - inner_w
         inner_x = int(self._get_wprop("_cursor") * inner_max_x / self._max_cursor)
 
-        bg = self._new_surface(bg_w, bg_h)
+        bg = window.new_surface(bg_w, bg_h)
         pygame.gfxdraw.rectangle(bg, pygame.Rect(0, 0, bg_w, bg_h), Colors.black)
         if inner_w:
             pygame.gfxdraw.box(

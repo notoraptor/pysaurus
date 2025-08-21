@@ -9,12 +9,11 @@ from videre.core.constants import MouseButton
 from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.mouse_ownership import MouseOwnership
 from videre.core.position_mapping import Position, PositionMapping
-from videre.core.pygame_utils import PygameUtils
 
 logger = logging.getLogger(__name__)
 
 
-class Widget(PygameUtils):
+class Widget:
     __wprops__ = ("weight",)
 
     __slots__ = (

@@ -65,7 +65,7 @@ class Fancybox(AbstractLayout):
         dialog_surface = dialog.render(window, dialog_width, dialog_height)
         dialog_x = (width - dialog_width) // 2
         dialog_y = (height - dialog_height) // 2
-        surface = self._new_surface(width, height)
+        surface = window.new_surface(width, height)
         surface.fill(pygame.Color(0, 0, 0, 64))
         surface.fill(
             Colors.white, pygame.Rect(dialog_x, dialog_y, dialog_width, dialog_height)

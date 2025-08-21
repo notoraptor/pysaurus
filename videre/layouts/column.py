@@ -114,7 +114,7 @@ class Column(AbstractControlsLayout):
             height = total_height
         else:
             height = min(height, total_height)
-        column = self._new_surface(width, height)
+        column = window.new_surface(width, height)
         y = 0
         for i, render in enumerate(rendered):
             if render:

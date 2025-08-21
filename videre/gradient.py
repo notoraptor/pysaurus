@@ -33,7 +33,7 @@ class Gradient(PygameUtils):
         return pygame.Color(r, g, b, a)
 
     def generate(self, width: int, height: int) -> pygame.Surface:
-        surface = self._new_surface(width, height)
+        surface = self.new_surface(width, height)
 
         if len(self._colors) == 1:
             surface.fill(self._colors[0])

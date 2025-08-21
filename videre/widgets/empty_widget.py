@@ -8,4 +8,4 @@ class EmptyWidget(Widget):
     __slots__ = ()
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
-        return self._new_surface(0, 0)
+        return window.new_surface(0, 0)

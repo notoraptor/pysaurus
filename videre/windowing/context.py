@@ -33,7 +33,7 @@ class Context(AbstractLayout):
         y = self._relative.global_y + self._relative.rendered_height + self._y
 
         control_surface = container.render(window, None, None)
-        surface = self._new_surface(width, height)
+        surface = window.new_surface(width, height)
         surface.blit(control_surface, (x, y))
         self._set_child_position(container, x, y)
         return surface
