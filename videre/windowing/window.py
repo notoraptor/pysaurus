@@ -1,3 +1,4 @@
+import functools
 import logging
 import threading
 from typing import Any, Callable, Sequence, TypeVar
@@ -33,9 +34,10 @@ NotificationCallback = Callable[[Any], None]
 WidgetBase = TypeVar("WidgetBase", bound=Widget)
 
 
-def _handle_exception(on_except, function, *args, **kwargs):
+def _handle_exception(on_except, function):
 
-    def wrapper():
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
         try:
             return function(*args, **kwargs)
         except Exception as e:
@@ -261,11 +263,14 @@ class Window(PygameUtils, Clipboard):
         self._post_event(CustomEvents.notification_event(notification))
 
     def run_later(self, function, *args, **kwargs):
-        self._post_event(CustomEvents.callback_event(function, args, kwargs))
+        wrapper = _handle_exception(self._force_quit, function)
+        self._post_event(CustomEvents.callback_event(wrapper, *args, **kwargs))
 
     def run_async(self, function, *args, **kwargs):
-        wrapper = _handle_exception(self._force_quit, function, *args, **kwargs)
-        return self.run_later(launch_thread, wrapper)
+        wrapper = _handle_exception(self._force_quit, function)
+        self._post_event(
+            CustomEvents.callback_event(launch_thread, wrapper, *args, **kwargs)
+        )
 
     def _force_quit(self, exception: Exception = None):
         self._exit_code = -int(exception is not None)

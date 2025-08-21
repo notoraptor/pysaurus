@@ -543,7 +543,7 @@ class TestWindowEvents:
 
         # Create custom callback event
         callback_event = CustomEvents.callback_event(
-            test_callback, ("arg1", "arg2"), {"key": "value"}
+            test_callback, "arg1", "arg2", key="value"
         )
 
         # Test
@@ -611,7 +611,7 @@ class TestWindowEvents:
         mock_post.assert_called_once()
         event = mock_post.call_args[0][0]
         assert event.type == CustomEvents.CALLBACK_EVENT
-        assert event.function is test_func
+        assert event.function.__name__ == "test_func"
         assert event.args == ("arg1", "arg2")
         assert event.kwargs == {"key": "value"}
 

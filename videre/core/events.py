@@ -114,7 +114,7 @@ class CustomEvents:
     NOTIFICATION_EVENT = pygame.event.custom_type()
 
     @classmethod
-    def callback_event(cls, function, args: tuple, kwargs: dict):
+    def callback_event(cls, function, *args, **kwargs):
         return Event(
             cls.CALLBACK_EVENT, {"function": function, "args": args, "kwargs": kwargs}
         )
