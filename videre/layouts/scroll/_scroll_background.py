@@ -1,13 +1,12 @@
-import pygame
-
+from videre.core.pygame_utils import Color, Surface
 from videre.widgets.widget import Widget
 
 
 class _ScrollBackground(Widget):
     __wprops__ = {"thickness", "both", "hover"}
     __slots__ = ("_h",)
-    _COLOR_HOVER = pygame.Color(0, 0, 0, 16)
-    _COLOR_NORMAL = pygame.Color(0, 0, 0, 0)
+    _COLOR_HOVER = Color(0, 0, 0, 16)
+    _COLOR_NORMAL = Color(0, 0, 0, 0)
 
     def __init__(self, horizontal=True, **kwargs):
         super().__init__(**kwargs)
@@ -16,7 +15,7 @@ class _ScrollBackground(Widget):
     def configure(self, thickness: int, both: bool, hover: bool):
         self._set_wprops(thickness=thickness, both=both, hover=hover)
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         assert width and height
 
         thickness = self._get_wprop("thickness")
@@ -34,6 +33,6 @@ class _ScrollBackground(Widget):
 
         self._parent._set_child_position(self, x, y)
 
-        surface = pygame.Surface((b_width, b_height), flags=pygame.SRCALPHA)
+        surface = window.new_surface(b_width, b_height)
         surface.fill(self._COLOR_HOVER if hover else self._COLOR_NORMAL)
         return surface

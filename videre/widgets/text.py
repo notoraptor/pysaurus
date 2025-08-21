@@ -1,10 +1,9 @@
 from typing import Any
 
-import pygame
-
 from videre.colors import ColorDef, parse_color
 from videre.core.constants import TextAlign, TextWrap
 from videre.core.fontfactory.pygame_text_rendering import RenderedText
+from videre.core.pygame_utils import Color, Surface
 from videre.widgets.widget import Widget
 
 
@@ -91,7 +90,7 @@ class Text(Widget):
         self._set_wprop("align", align)
 
     @property
-    def color(self) -> pygame.Color | None:
+    def color(self) -> Color | None:
         return self._get_wprop("color")
 
     @color.setter
@@ -150,7 +149,7 @@ class Text(Widget):
             height_delta=self.height_delta,
         )
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         wrap = self.wrap
         self._rendered = self._text_rendering(window).render_text(
             text=self.text,

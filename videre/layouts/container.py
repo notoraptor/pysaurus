@@ -2,6 +2,7 @@ import pygame
 import pygame.gfxdraw
 
 from videre.core.constants import Alignment
+from videre.core.pygame_utils import Surface
 from videre.core.sides.border import Border
 from videre.core.sides.padding import Padding
 from videre.gradient import ColoringDefinition, Gradient
@@ -121,7 +122,7 @@ class Container(AbstractLayout):
     def square(self, square: bool):
         self._set_wprop("square", bool(square))
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         square = self.square
         width = _resolve_size(self.width, width)
         height = _resolve_size(self.height, height)

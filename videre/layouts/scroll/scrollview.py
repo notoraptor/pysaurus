@@ -1,8 +1,7 @@
 import logging
 
-import pygame
-
 from videre.core.mouse_ownership import MouseOwnership
+from videre.core.pygame_utils import Surface
 from videre.layouts.abstractlayout import AbstractLayout, get_top_mouse_wheel_owner
 from videre.layouts.scroll._h_scroll_bar import _HScrollBar
 from videre.layouts.scroll._v_scroll_bar import _VScrollBar
@@ -200,7 +199,7 @@ class ScrollView(AbstractLayout):
             # scroll bottom
             return content_pos > view_length - content_length
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         thickness = self.scroll_thickness
         c_w_hint = width if self.wrap_horizontal else None
         c_h_hint = height if self.wrap_vertical else None
@@ -249,7 +248,7 @@ class ScrollView(AbstractLayout):
                 # set content_y to bottom
                 self._content_y = end_pos
 
-        view = pygame.Surface((width, height), flags=pygame.SRCALPHA)
+        view = window.new_surface(width, height)
         view.blit(content, (self._content_x, self._content_y))
 
         both = has_h_scroll and has_v_scroll

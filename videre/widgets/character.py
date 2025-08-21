@@ -1,6 +1,5 @@
-import pygame
-
 from videre.colors import ColorDef, parse_color
+from videre.core.pygame_utils import Color, Surface
 from videre.widgets.widget import Widget
 
 
@@ -44,7 +43,7 @@ class Character(Widget):
         self._set_wprop("size", size)
 
     @property
-    def color(self) -> pygame.Color:
+    def color(self) -> Color:
         return self._get_wprop("color")
 
     @color.setter
@@ -87,5 +86,5 @@ class Character(Widget):
         )
         return rendering
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         return self._text_rendering(window).render_char(self.text, color=self.color)

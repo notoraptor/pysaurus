@@ -1,6 +1,5 @@
-import pygame
-
 from videre.colors import ColorDef, parse_color, stringify_color
+from videre.core.pygame_utils import Color
 from videre.core.sides.abstract_sides import AbstractSides
 from videre.core.sides.margin import Margin
 
@@ -124,7 +123,7 @@ class Border(AbstractSides[BorderType, BorderSide]):
 
     def describe_borders(
         self, width: int, height: int
-    ) -> list[tuple[pygame.Color, list[tuple[int, int]]]]:
+    ) -> list[tuple[Color, list[tuple[int, int]]]]:
         return [
             (self.top.color, self.get_top_points(width, height)),
             (self.right.color, self.get_right_points(width, height)),

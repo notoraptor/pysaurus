@@ -1,6 +1,10 @@
 import pygame
 
 
+Color = pygame.Color
+Surface = pygame.Surface
+
+
 class PygameUtils:
     __slots__ = ()
 
@@ -9,5 +13,5 @@ class PygameUtils:
         pygame.init()
 
     @classmethod
-    def new_surface(cls, width: int, height: int) -> pygame.Surface:
-        return pygame.Surface((width, height), flags=pygame.SRCALPHA)
+    def new_surface(cls, width: int, height: int) -> Surface:
+        return Surface((width, height), flags=pygame.SRCALPHA)

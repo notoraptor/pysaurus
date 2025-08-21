@@ -1,6 +1,7 @@
 import pygame.gfxdraw
 
 from videre.colors import Colors
+from videre.core.pygame_utils import Surface
 from videre.widgets.abstractanimation import AbstractAnimation, AbstractFraming, FPS
 
 
@@ -21,7 +22,7 @@ class Progressing(AbstractAnimation):
             next_direction = -curr_direction
         self._set_wprops(_cursor=next_cursor, _direction=next_direction)
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         bg_w = 102 if width is None else max(width, 2)
         bg_h = window.fonts.font_height
         inner_w = (bg_w - 2) // 2

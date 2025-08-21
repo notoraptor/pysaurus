@@ -1,8 +1,7 @@
-import pygame
-
 from videre.core.constants import MouseButton
 from videre.core.events import MouseEvent
 from videre.core.mouse_ownership import MouseOwnership
+from videre.core.pygame_utils import Color, Surface
 from videre.layouts.scroll._scroll_background import _ScrollBackground
 from videre.widgets.widget import Widget
 
@@ -11,8 +10,8 @@ class _HScrollBar(Widget):
     __wprops__ = {"content_length", "content_pos", "thickness", "both", "color"}
     __slots__ = ("on_jump", "_grabbed", "_hover", "background")
     __is_horizontal__ = True
-    _SCROLL_COLOR_HOVER = pygame.Color(216, 216, 216, 255)
-    _SCROLL_COLOR = pygame.Color(216, 216, 216, 128)
+    _SCROLL_COLOR_HOVER = Color(216, 216, 216, 255)
+    _SCROLL_COLOR = Color(216, 216, 216, 128)
 
     def __init__(self, thickness=18, on_jump=None, **kwargs):
         super().__init__(**kwargs)
@@ -57,7 +56,7 @@ class _HScrollBar(Widget):
         return self._get_wprop("both")
 
     @property
-    def color(self) -> pygame.Color:
+    def color(self) -> Color:
         return self._get_wprop("color")
 
     def _set_color(self):
@@ -134,8 +133,8 @@ class _HScrollBar(Widget):
             self.on_jump(round(content_pos))
 
     def _compute(
-        self, view_width: int, view_height: int
-    ) -> tuple[pygame.Surface, tuple[int, int]]:
+        self, window, view_width: int, view_height: int
+    ) -> tuple[Surface, tuple[int, int]]:
         thickness = self.thickness
         h_scroll_x, h_scroll_width = self._compute_scroll_metrics(
             view_width,
@@ -143,7 +142,7 @@ class _HScrollBar(Widget):
             self.content_pos,
             scrollbar_length=(max(0, view_width - thickness) if self.both else None),
         )
-        h_scroll = pygame.Surface((h_scroll_width, thickness), flags=pygame.SRCALPHA)
+        h_scroll = window.new_surface(h_scroll_width, thickness)
         h_scroll.fill(self.color)
         pos = (h_scroll_x, view_height - thickness)
         return h_scroll, pos
@@ -158,10 +157,8 @@ class _HScrollBar(Widget):
         scroll_length = (scrollbar_length * view_length) / content_length
         return round(scroll_pos), round(scroll_length)
 
-    def draw(
-        self, window, view_width: int = None, view_height: int = None
-    ) -> pygame.Surface:
+    def draw(self, window, view_width: int = None, view_height: int = None) -> Surface:
         assert view_width and view_height
-        scroll, pos = self._compute(view_width, view_height)
+        scroll, pos = self._compute(window, view_width, view_height)
         self._parent._set_child_position(self, *pos)
         return scroll

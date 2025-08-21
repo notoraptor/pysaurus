@@ -14,7 +14,7 @@ from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
 from videre.core.events import CustomEvents, KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
-from videre.core.pygame_utils import PygameUtils
+from videre.core.pygame_utils import Color, PygameUtils, Surface
 from videre.layouts.container import Container
 from videre.widgets.button import Button
 from videre.widgets.text import Text
@@ -93,7 +93,7 @@ class Window(PygameUtils, Clipboard):
         self._hide = bool(hide)
 
         self._running = True
-        self._screen: pygame.Surface | None = None
+        self._screen: Surface | None = None
 
         self._down: dict[MouseButton, Widget | None] = {
             button: None for button in MouseButton
@@ -133,7 +133,7 @@ class Window(PygameUtils, Clipboard):
         pygame.mouse.set_cursor(*self._default_cursor)
 
     @property
-    def background(self) -> pygame.Color:
+    def background(self) -> Color:
         return self._layout.background
 
     @background.setter
@@ -165,7 +165,7 @@ class Window(PygameUtils, Clipboard):
     def height(self) -> int:
         return self._height
 
-    def get_screen(self) -> pygame.Surface:
+    def get_screen(self) -> Surface:
         assert self._screen is not None
         return self._screen
 

@@ -6,6 +6,7 @@ from typing import BinaryIO
 
 import pygame
 
+from videre.core.pygame_utils import Surface
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
 
@@ -49,7 +50,7 @@ class Picture(Widget):
             print(f"Cannot load an image: {type(exc).__name__}: {exc}", file=sys.stderr)
             return None
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         surface = self._src_to_surface()
         if surface is None:
             surface = Text(self.alt).render(window, width, height)

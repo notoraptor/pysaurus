@@ -3,12 +3,11 @@ import sys
 from abc import abstractmethod
 from typing import Any, Callable, Self
 
-import pygame
-
 from videre.core.constants import MouseButton
 from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.mouse_ownership import MouseOwnership
 from videre.core.position_mapping import Position, PositionMapping
+from videre.core.pygame_utils import Surface
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ class Widget:
         self._new = new
         self._old_update = ()
         self._transient_state = {}
-        self._surface: pygame.Surface | None = None
+        self._surface: Surface | None = None
         self._rc = 0
 
         self._children_pos = PositionMapping()
@@ -259,7 +258,7 @@ class Widget:
         self._old = self._new.copy()
         self._transient_state.clear()
 
-    def render(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def render(self, window, width: int = None, height: int = None) -> Surface:
         new_update = (window, width, height)
         if (
             self._surface is None
@@ -275,7 +274,7 @@ class Widget:
         return self._surface
 
     @abstractmethod
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         raise NotImplementedError()
 
     def handle_mouse_wheel(self, x: int, y: int, shift: bool):

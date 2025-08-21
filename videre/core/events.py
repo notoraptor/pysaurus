@@ -56,7 +56,7 @@ class MouseEvent:
 class KeyboardEntry:
     __slots__ = ("_mod", "_key", "unicode")
 
-    def __init__(self, event: pygame.event.Event):
+    def __init__(self, event: Event):
         self._mod = event.mod
         self._key = event.key
         self.unicode = event.unicode

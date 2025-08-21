@@ -18,6 +18,7 @@ from videre.core.fontfactory.font_factory_utils import (
     align_words,
 )
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
+from videre.core.pygame_utils import Color, PygameUtils, Surface
 
 
 class FontSizes:
@@ -44,7 +45,7 @@ class FontSizes:
 @dataclass(slots=True)
 class RenderedText:
     lines: list[Line[WordTask]]
-    surface: pygame.Surface
+    surface: Surface
     font_sizes: FontSizes
 
     def first_x(self) -> int:
@@ -55,7 +56,7 @@ class RenderedText:
         return 0
 
 
-class PygameTextRendering:
+class PygameTextRendering(PygameUtils):
 
     def __init__(
         self,
@@ -66,6 +67,8 @@ class PygameTextRendering:
         underline=False,
         height_delta=2,
     ):
+        super().__init__()
+
         size = size or fonts.size
         height_delta = 2 if height_delta is None else height_delta
 
@@ -90,7 +93,7 @@ class PygameTextRendering:
             )
         return font
 
-    def render_char(self, c: str, color: pygame.Color = None) -> pygame.Surface:
+    def render_char(self, c: str, color: Color = None) -> Surface:
         surface, box = self._get_font(c).render(c, size=self._size, fgcolor=color)
         return surface
 
@@ -100,7 +103,7 @@ class PygameTextRendering:
         width: int = None,
         *,
         compact=True,
-        color: pygame.Color = None,
+        color: Color = None,
         align=TextAlign.LEFT,
         wrap_words=False,
         selection: tuple[int, int] | None = None,
@@ -121,12 +124,12 @@ class PygameTextRendering:
         height: int,
         lines: list[Line[WordTask]],
         align: TextAlign,
-        color: pygame.Color,
+        color: Color,
         selection: tuple[int, int] | None = None,
-    ) -> pygame.Surface:
+    ) -> Surface:
         align_words(lines, width, align)
         size = self._size
-        out = pygame.Surface((width, height), flags=pygame.SRCALPHA)
+        out = self.new_surface(width, height)
         for rect in self._get_selection_rects(lines, selection):
             pygame.gfxdraw.box(out, rect, (100, 100, 255, 100))
         for line in lines:
@@ -213,7 +216,7 @@ class PygameTextRendering:
 
         return rects
 
-    def _draw_underline(self, line: Line[WordTask], out: pygame.Surface, color):
+    def _draw_underline(self, line: Line[WordTask], out: Surface, color):
         if self._underline and line:
             c = "_"
             x1 = line.elements[0].x + line.elements[0].tasks[0].bounds.x

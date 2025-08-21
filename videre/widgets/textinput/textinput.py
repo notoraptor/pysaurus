@@ -11,6 +11,7 @@ from videre.colors import Colors
 from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_text_rendering import RenderedText
 from videre.core.mouse_ownership import MouseOwnership
+from videre.core.pygame_utils import Surface
 from videre.layouts.abstractlayout import AbstractLayout
 from videre.layouts.container import Container
 from videre.widgets.text import Text
@@ -396,7 +397,7 @@ class TextInput(AbstractLayout):
         cursor_height = rendered.font_sizes.ascender + rendered.font_sizes.descender
         return pygame.Rect(cursor.x, cursor.y, cursor_width, cursor_height)
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         text_surface = self._control.render(window, width, height)
         rendered = self._text._rendered
         surface = text_surface.copy()

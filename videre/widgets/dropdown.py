@@ -1,9 +1,8 @@
 from typing import Any, Self
 
-import pygame
-
 from videre.core.constants import Alignment
 from videre.core.events import MouseEvent
+from videre.core.pygame_utils import Surface
 from videre.core.sides.border import Border
 from videre.layouts.column import Column
 from videre.layouts.container import Container
@@ -133,6 +132,6 @@ class Dropdown(Div):
             margin = margin + container.border.margin()
         return margin.left + text_width + margin.right
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         self._container().width = self._compute_width(window)
         return super().draw(window, width, None)

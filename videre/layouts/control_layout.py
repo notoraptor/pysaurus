@@ -1,5 +1,4 @@
-import pygame
-
+from videre.core.pygame_utils import Surface
 from videre.layouts.abstractlayout import AbstractLayout
 from videre.widgets.widget import Widget
 
@@ -12,6 +11,6 @@ class ControlLayout(AbstractLayout):
     def __init__(self, control: Widget, **kwargs):
         super().__init__([control], **kwargs)
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         (control,) = self._controls()
         return control.render(window, width, height)

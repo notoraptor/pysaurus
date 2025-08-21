@@ -1,4 +1,4 @@
-import pygame.event
+from pygame.event import Event
 
 from videre import MouseButton
 from videre.core.events import MouseEvent
@@ -80,9 +80,7 @@ class EventPropagator:
         return cls._handle(widget, Widget.handle_mouse_down_canceled.__name__, button)
 
     @classmethod
-    def manage_mouse_motion(
-        cls, event: pygame.event.Event, owner: MouseOwnership, previous: Widget
-    ):
+    def manage_mouse_motion(cls, event: Event, owner: MouseOwnership, previous: Widget):
         # Get potential exited widgets
         exited = set(previous.get_lineage())
 

@@ -4,6 +4,7 @@ import pygame
 
 from videre.colors import Colors
 from videre.core.mouse_ownership import MouseOwnership
+from videre.core.pygame_utils import Color, Surface
 from videre.layouts.abstractlayout import AbstractLayout
 from videre.layouts.column import Column
 from videre.layouts.container import Container
@@ -55,7 +56,7 @@ class Fancybox(AbstractLayout):
         owner = super().get_mouse_owner(x_in_parent, y_in_parent)
         return owner or MouseOwnership(self, x_in_parent, y_in_parent)
 
-    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
         assert width is not None
         assert height is not None
         dialog_part = 0.8
@@ -66,7 +67,7 @@ class Fancybox(AbstractLayout):
         dialog_x = (width - dialog_width) // 2
         dialog_y = (height - dialog_height) // 2
         surface = window.new_surface(width, height)
-        surface.fill(pygame.Color(0, 0, 0, 64))
+        surface.fill(Color(0, 0, 0, 64))
         surface.fill(
             Colors.white, pygame.Rect(dialog_x, dialog_y, dialog_width, dialog_height)
         )

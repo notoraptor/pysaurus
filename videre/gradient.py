@@ -3,7 +3,7 @@ from typing import Self
 import pygame
 
 from videre.colors import ColorDef, Colors, parse_color
-from videre.core.pygame_utils import PygameUtils
+from videre.core.pygame_utils import Color, PygameUtils, Surface
 
 
 class Gradient(PygameUtils):
@@ -16,23 +16,21 @@ class Gradient(PygameUtils):
 
     __slots__ = ("_colors", "_vertical")
 
-    def __init__(self, *colors: pygame.Color, vertical=False):
+    def __init__(self, *colors: Color, vertical=False):
         super().__init__()
 
         self._colors = colors or [Colors.transparent]
         self._vertical: bool = vertical
 
-    def _interpolate_color(
-        self, color1: pygame.Color, color2: pygame.Color, factor: float
-    ) -> pygame.Color:
+    def _interpolate_color(self, color1: Color, color2: Color, factor: float) -> Color:
         """Interpolate between two colors based on a factor (0.0 to 1.0)."""
         r = int(color1.r + (color2.r - color1.r) * factor)
         g = int(color1.g + (color2.g - color1.g) * factor)
         b = int(color1.b + (color2.b - color1.b) * factor)
         a = int(color1.a + (color2.a - color1.a) * factor)
-        return pygame.Color(r, g, b, a)
+        return Color(r, g, b, a)
 
-    def generate(self, width: int, height: int) -> pygame.Surface:
+    def generate(self, width: int, height: int) -> Surface:
         surface = self.new_surface(width, height)
 
         if len(self._colors) == 1:
