@@ -30,10 +30,11 @@ class ConsoleJobProgress(JobProgressDisplay):
             f"|{'█' * length_done}{' ' * (length_bar - length_done)}| "
             f"{step}/{total} {self.job_to_do.title}"
         )
-        sys.stdout.write(("\r" * self.shift) + output)
+        written = ("\r" * self.shift) + output
         self.shift = len(output)
         if step == total:
-            sys.stdout.write("\r\n")
+            written += "\r\n"
+        sys.stdout.write(written)
 
 
 class ConsoleNotificationPrinter(NotificationDisplay):
