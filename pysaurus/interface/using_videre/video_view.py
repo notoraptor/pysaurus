@@ -19,11 +19,10 @@ class VideoAttributesView(videre.Column):
     __slots__ = ()
 
     def __init__(self, video: VideoPattern, **kwargs):
-        attributes = [videre.Text(str(video.title), strong=True)]
-        if video.meta_title:
-            attributes.append(videre.Text(str(video.file_title)))
-        attributes.extend(
-            (
+        super().__init__(
+            [videre.Text(str(video.title), strong=True)]
+            + ([videre.Text(str(video.file_title))] if video.meta_title else [])
+            + [
                 videre.Text(
                     str(video.filename),
                     wrap=videre.TextWrap.CHAR,
@@ -38,7 +37,7 @@ class VideoAttributesView(videre.Column):
                 ),
                 videre.Text(
                     f"{video.length} | "
-                    f"{video.width} x {video.height} @ {video.frame_rate} fps, "
+                    f"{video.width} x {video.height} @ {round(video.frame_rate)} fps, "
                     f"{video.bit_depth} bits | "
                     f"{video.sample_rate} Hz x {video.audio_bits or '32?'} bits "
                     f"({video.channels} channels), "
@@ -51,9 +50,10 @@ class VideoAttributesView(videre.Column):
                     f"(opened) {video.date_entry_opened}",
                     wrap=videre.TextWrap.WORD,
                 ),
-            )
+            ],
+            space=2,
+            **kwargs,
         )
-        super().__init__(attributes, space=2, **kwargs)
 
 
 class VideoView(videre.Container):
