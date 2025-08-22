@@ -513,7 +513,7 @@ def _compute_results_and_stats(
         ]
     )
 
-    context.result_page = _get_videos(
+    context.result = _get_videos(
         db, *query_maker_page.to_sql(), include=include, with_moves=context.with_moves
     )
 

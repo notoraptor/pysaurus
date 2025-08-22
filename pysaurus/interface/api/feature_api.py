@@ -14,6 +14,7 @@ from pysaurus.interface.api.api_utils.proxy_feature import (
     FromView,
     ProxyFeature,
 )
+from pysaurus.video.database_context import DatabaseContext
 from pysaurus.video.video_constants import COMMON_FIELDS
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video_provider.abstract_video_provider import (
@@ -112,7 +113,7 @@ class FeatureAPI:
             page_size, page_number, selector
         )
         group_def = self.database.provider.get_group_def()
-        videos = context.result_page
+        videos = context.result
         if len(videos) and group_def and group_def["field"] == "similarity_id":
             group_def["common"] = VideoFeatures.get_common_fields(
                 videos, fields=COMMON_FIELDS
@@ -128,6 +129,21 @@ class FeatureAPI:
             "groupDef": group_def,
             **context.json(),
         }
+
+    def get_python_backend(
+        self, page_size: int, page_number: int, selector: dict | None = None
+    ) -> DatabaseContext:
+        if selector is not None and isinstance(selector, dict):
+            selector = Selector.parse_dict(selector)
+        context = self.database.provider.get_current_state(
+            page_size, page_number, selector
+        )
+        return DatabaseContext(
+            name=self.database.get_name(),
+            folders=list(self.database.get_folders()),
+            prop_types=self.database.get_prop_types(),
+            view=context,
+        )
 
     # cannot make proxy ?
     def classifier_concatenate_path(self, to_property) -> None:

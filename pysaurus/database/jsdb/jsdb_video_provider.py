@@ -12,6 +12,7 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
+from pysaurus.video_provider.field_stat import FieldStat
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
 from pysaurus.video_provider.source_def import SourceDef
 from pysaurus.video_provider.view_tools import Group, GroupArray, GroupDef, SearchDef
@@ -448,6 +449,8 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
             page_number=page_number,
             with_moves=grouped_by_moves,
             result=videos,
+            classifier_stats=self.get_classifier_stats(),
+            source_count=self.count_source_videos(),
         )
         output.nb_pages = nb_pages
         output.view_count = len(raw_view_indices)
@@ -545,6 +548,14 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
             converter = str
         return [
             {"value": converter(g.field_value), "count": len(g.videos)}
+            for g in layer.output
+        ]
+
+    def get_classifier_stats(self) -> list[FieldStat]:
+        layer: LayerClassifier = self.layers[LayerClassifier]
+        is_property = layer.output.field and layer.output.is_property
+        return [
+            FieldStat(is_property=is_property, value=g.field_value, count=len(g.videos))
             for g in layer.output
         ]
 

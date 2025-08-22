@@ -1,8 +1,9 @@
 import sys
 
 import videre
+from pysaurus.core.constants import VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE
 from pysaurus.core.informer import Informer
-from pysaurus.core.notifications import Notification
+from pysaurus.core.notifications import DatabaseReady, End, Notification
 from pysaurus.interface.api.gui_api import GuiAPI
 from pysaurus.interface.using_videre.process_page import ProcessPage
 from videre.widgets.widget import Widget
@@ -11,9 +12,9 @@ from videre.widgets.widget import Widget
 class _VidereGuiAPI(GuiAPI):
     __slots__ = ("window",)
 
-    def __init__(self) -> None:
+    def __init__(self, window: videre.Window) -> None:
         super().__init__()
-        self.window: videre.Window | None = None
+        self.window = window
 
     def _notify(self, notification: Notification) -> None:
         if self.window:
@@ -21,60 +22,49 @@ class _VidereGuiAPI(GuiAPI):
 
 
 class PysaurusBackend:
-    def __init__(self):
-        self.api = _VidereGuiAPI()
-
-    def get_constants(self):
-        return self.api.get_constants()
-
-    def get_database_names(self):
-        return self.api.application.get_database_names()
+    def __init__(self, window: videre.Window) -> None:
+        self.__api = _VidereGuiAPI(window)
+        self.get_constants = self.__api.get_constants
+        self.get_database_names = self.__api.application.get_database_names
+        self.open_database = self.__api.open_database
+        self.close_app = self.__api.close_app
+        self.get_python_backend = self.__api.get_python_backend
 
 
 class App:
     def __init__(self):
-        self.backend = PysaurusBackend()
+        self.container = videre.Container(padding=videre.Padding.all(5))
         self.window = videre.Window("Pysaurus")
-        self.backend.api.window = self.window
+        self.window.controls = [self.container]
+        self.backend = PysaurusBackend(self.window)
+
+    def start(self) -> int:
+        with Informer.default():
+            try:
+                self.welcome_page()
+                return self.window.run()
+            finally:
+                self.backend.close_app()
 
     def _display(self, widget: Widget):
         # Clear notification callback before displaying new page
         self.window.set_notification_callback(None)
         # Set new page to display
-        self.window.controls = [videre.Container(widget, padding=videre.Padding.all(5))]
+        self.container.control = widget
 
-    def display_test_page(self):
-        constants = self.backend.get_constants()
-        self._display(
-            videre.Column(
-                [
-                    videre.Row(
-                        [
-                            videre.Text(f"{key}: ", weight=1),
-                            videre.Text(
-                                repr(value), wrap=videre.TextWrap.WORD, weight=1
-                            ),
-                        ]
-                    )
-                    for key, value in constants.items()
-                ],
-                expand_horizontal=True,
-            )
-        )
-
-    def welcome(self):
+    def welcome_page(self):
         self._display(
             videre.Column([videre.Text("Welcome to Pysaurus!"), videre.Progressing()])
         )
-        self.window.run_async(self._goto_homepage)
+        self.window.run_async(self.home_page)
 
-    def _goto_homepage(self):
+    def home_page(self):
         database_names = self.backend.get_database_names()
 
         def _get_form(*args):
             form: videre.Form = self.window.get_element_by_key("form")
             fields = form.values()
-            self._goto_database_page(name=fields["name"], update=fields["update"])
+            self.database_page(name=fields["name"], update=fields["update"])
 
         self._display(
             videre.Form(
@@ -100,19 +90,18 @@ class App:
             )
         )
 
-    def _goto_database_page(self, name: str, update: bool):
-        process_page = ProcessPage("Opening database ...")
+    def database_page(self, name: str, update: bool):
+        process_page = ProcessPage("Open database", callback=self.videos_page)
         self._display(process_page)
         self.window.set_notification_callback(process_page.on_notification)
-        self.window.run_later(self.backend.api.open_database, name, update)
+        self.window.run_later(self.backend.open_database, name, update)
 
-    def start(self) -> int:
-        with Informer.default():
-            try:
-                self.welcome()
-                return self.window.run()
-            finally:
-                self.backend.api.close_app()
+    def videos_page(self, end_notification: End):
+        assert isinstance(end_notification, DatabaseReady)
+        context = self.backend.get_python_backend(
+            VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER
+        )
+        self._display(videre.Text(f"Videos: {len(context.view.result)}"))
 
 
 def main():

@@ -1,5 +1,3 @@
-from abc import ABC
-
 from pysaurus.core.functions import camel_case_to_snake_case
 from pysaurus.core.notifications import (
     Notification,
@@ -117,7 +115,7 @@ class JobProgressDisplay:
         pass
 
 
-class NotificationDisplay(ABC):
+class NotificationCollector:
     __slots__ = ("progressions", "profiles", "nb_notifications", "views")
 
     def __init__(self):
@@ -126,7 +124,7 @@ class NotificationDisplay(ABC):
         self.nb_notifications: int = 0
         self.views = []
 
-    def print(self, notification):
+    def collect(self, notification):
         self.nb_notifications += 1
 
         if isinstance(notification, ProfilingStart):

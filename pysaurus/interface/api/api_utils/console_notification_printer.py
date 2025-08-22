@@ -3,7 +3,7 @@ import sys
 from pysaurus.core.job_notifications import (
     JobProgressDisplay,
     JobToDo,
-    NotificationDisplay,
+    NotificationCollector,
 )
 from pysaurus.core.notifications import Notification
 
@@ -37,7 +37,7 @@ class ConsoleJobProgress(JobProgressDisplay):
         sys.stdout.write(written)
 
 
-class ConsoleNotificationPrinter(NotificationDisplay):
+class ConsoleNotificationPrinter(NotificationCollector):
     __slots__ = ("progressions", "profiles", "nb_notifications")
 
     def _display_notification(self, notification: Notification):

@@ -1,8 +1,9 @@
-from typing import Sequence
+from typing import Any, Sequence
 
 from pysaurus.core.classes import Selector
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
+from pysaurus.video_provider.field_stat import FieldStat
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
 from pysaurus.video_provider.view_tools import GroupDef, LookupArray, SearchDef
 from saurus.sql.saurus_provider_utils import GroupCount
@@ -51,7 +52,7 @@ class SaurusProvider(AbstractVideoProvider):
         )
         self.group = output.group_id
         self._groups = output.result_groups
-        self._view_indices = [video.video_id for video in output.result_page]
+        self._view_indices = [video.video_id for video in output.result]
 
     def get_current_state(
         self, page_size: int, page_number: int, selector: Selector = None
@@ -71,9 +72,11 @@ class SaurusProvider(AbstractVideoProvider):
             page_number=page_number,
             with_moves=grouped_by_moves,
         )
+        output.classifier_stats = self.get_classifier_stats()
+        output.source_count = self.count_source_videos()
         self.group = output.group_id
         self._groups = output.result_groups
-        self._view_indices = [video.video_id for video in output.result_page]
+        self._view_indices = [video.video_id for video in output.result]
         return output
 
     def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
@@ -144,9 +147,15 @@ class SaurusProvider(AbstractVideoProvider):
     def _force_update(self, *layer_names: str):
         self._to_update = True
 
-    def _get_classifier_stats(self):
+    def _get_classifier_stats(self) -> list[dict[str, Any]]:
         return [
             {"value": group.get_printable_value(), "count": group.count}
+            for group in self._groups
+        ]
+
+    def get_classifier_stats(self) -> list[FieldStat]:
+        return [
+            FieldStat(value=group.get_value(), count=group.count, is_property=False)
             for group in self._groups
         ]
 

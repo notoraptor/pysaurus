@@ -1,11 +1,12 @@
 import random
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.classes import Selector
 from pysaurus.video.video_search_context import VideoSearchContext
+from pysaurus.video_provider.field_stat import FieldStat
 from pysaurus.video_provider.view_tools import GroupDef, SearchDef
 
 
@@ -116,7 +117,11 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _get_classifier_stats(self):
+    def _get_classifier_stats(self) -> list[dict[str, Any]]:
+        pass
+
+    @abstractmethod
+    def get_classifier_stats(self) -> list[FieldStat]:
         pass
 
     @abstractmethod

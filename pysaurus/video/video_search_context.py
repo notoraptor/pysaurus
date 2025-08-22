@@ -1,70 +1,52 @@
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from typing import Any
+
 from pysaurus.core.classes import Selector
+from pysaurus.core.components import Duration, FileSize
+from pysaurus.video.video_constants import COMMON_FIELDS
+from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_pattern import VideoPattern
+from pysaurus.video_provider.field_stat import FieldStat
 from pysaurus.video_provider.view_tools import GroupDef, SearchDef
 
 
+@dataclass(slots=True)
 class VideoSearchContext:
-    __slots__ = (
-        "sources",
-        "grouping",
-        "classifier",
-        "group_id",
-        "search",
-        "sorting",
-        "selector",
-        "page_size",
-        "page_number",
-        "nb_pages",
-        "with_moves",
-        "view_count",
-        "selection_count",
-        "selection_duration",
-        "selection_file_size",
-        "result_page",
-        "result_groups",
-    )
+    # Initialization
+    sources: Sequence[list[str]] | None = None
+    grouping: GroupDef | None = None
+    classifier: Sequence[str] | None = None
+    group_id: Any = None
+    search: SearchDef = None
+    sorting: Sequence[str] = None
+    selector: Selector = None
+    page_size: int = None
+    page_number: int = 0
+    with_moves: bool = False
+    result: list[VideoPattern] | None = None
+    # Post-initialization
+    nb_pages: int | None = None
+    view_count: int = 0
+    selection_count: int = 0
+    selection_duration: Duration | None = None
+    selection_file_size: FileSize | None = None
+    # Special fields (?)
+    result_groups: Any = None
+    classifier_stats: list[FieldStat] = field(default_factory=list)
+    common_fields: dict[str, bool] = field(default_factory=dict)
+    source_count: int = 0
 
-    def __init__(
-        self,
-        *,
-        sources=None,
-        grouping: GroupDef = None,
-        classifier=None,
-        group_id=None,
-        search: SearchDef = None,
-        sorting=None,
-        selector: Selector = None,
-        page_size: int = None,
-        page_number: int = 0,
-        with_moves=False,
-        result_groups=None,
-        result=None,
-    ):
-        self.sources = sources
-        self.grouping = grouping
-        self.classifier = classifier
-        self.group_id = group_id
-        self.search = search
-        self.sorting = sorting
-
-        self.selector = selector
-        self.page_size = page_size
-        self.page_number = page_number
-        self.nb_pages = None
-        self.with_moves = with_moves
-
-        self.result_groups = result_groups
-
-        self.view_count = 0
-        self.selection_count = 0
-        self.selection_duration = None
-        self.selection_file_size = None
-        self.result_page: list[VideoPattern] = result
+    def __post_init__(self):
+        if self.result and self.grouping.field == "similarity_id":
+            self.common_fields = VideoFeatures.get_common_fields(
+                self.result, fields=COMMON_FIELDS
+            )
 
     def json(self) -> dict:
         with_moves = self.with_moves
         return {
-            "videos": [video.json(with_moves) for video in self.result_page],
+            "videos": [video.json(with_moves) for video in self.result],
             "pageSize": self.page_size,
             "pageNumber": self.page_number,
             "nbPages": self.nb_pages,

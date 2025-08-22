@@ -83,7 +83,7 @@ class Informer(AbstractNotifier):
             notification = self.__queue.get()
             if notification is None:
                 break
-            notification_printer.print(notification)
+            notification_printer.collect(notification)
             INFORMER_CALLBACK.manage(notification)
         print("End monitoring.")
 

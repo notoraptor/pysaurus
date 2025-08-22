@@ -4,7 +4,8 @@ from typing import Iterable
 class VideoFeatures:
     @staticmethod
     def get_common_fields(videos: Iterable, *, fields: Iterable[str], getfield=getattr):
-        videos = list(videos)
+        if not hasattr(videos, "__len__"):
+            videos = list(videos)
         if len(videos) < 2:
             return {}
         first_video, *other_videos = videos
