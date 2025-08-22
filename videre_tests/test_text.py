@@ -137,3 +137,17 @@ def test_text_styles(fake_win):
         )
     ]
     fake_win.check()
+
+
+def test_text_wrap_spaces(fake_win):
+    """
+    Test that text rendering is the same when wrapping None, characters and words,
+    as long as there are no multiple spaces and no line breaks.
+    """
+    text = videre.Text("Hello World, how are you?\n\n\nI am fine, thanks!")
+    fake_win.controls = [text]
+    fake_win.check()
+    text.wrap = videre.TextWrap.CHAR
+    fake_win.check()
+    text.wrap = videre.TextWrap.WORD
+    fake_win.check()
