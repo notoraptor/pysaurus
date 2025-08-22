@@ -244,6 +244,26 @@ class VideoPattern(ABC):
     def size(self) -> FileSize:
         return FileSize(self.file_size)
 
+    @property
+    def frame_rate(self) -> float:
+        return self.frame_rate_num / (self.frame_rate_den or 1)
+
+    @property
+    def extension(self) -> str:
+        return self.filename.extension
+
+    @property
+    def file_title(self):
+        return self.filename.file_title
+
+    @property
+    def title(self) -> str:
+        return self.meta_title or self.file_title
+
+    @property
+    def audio_bit_rate_kbps(self) -> int:
+        return round(self.audio_bit_rate / 1000)
+
     def json(self, with_moves=False) -> dict:
         filename = self.filename
         standard_path = filename.standard_path

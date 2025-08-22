@@ -1,4 +1,4 @@
-from .colors import Colors
+from .colors import Colors, parse_color
 from .core.constants import *
 from .core.sides.border import Border
 from .core.sides.padding import Padding

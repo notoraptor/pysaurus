@@ -6,6 +6,7 @@ from pysaurus.core.informer import Informer
 from pysaurus.core.notifications import DatabaseReady, End, Notification
 from pysaurus.interface.api.gui_api import GuiAPI
 from pysaurus.interface.using_videre.process_page import ProcessPage
+from pysaurus.interface.using_videre.videos_page import VideosPage
 from videre.widgets.widget import Widget
 
 
@@ -101,7 +102,7 @@ class App:
         context = self.backend.get_python_backend(
             VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER
         )
-        self._display(videre.Text(f"Videos: {len(context.view.result)}"))
+        self._display(VideosPage(context))
 
 
 def main():
