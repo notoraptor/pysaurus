@@ -5,6 +5,7 @@ from typing import Any, Callable, Self
 from videre import Alignment, Border, Colors
 from videre.core.constants import MouseButton
 from videre.core.events import MouseEvent
+from videre.core.pygame_utils import Color
 from videre.core.sides.padding import Padding
 from videre.gradient import ColoringDefinition
 from videre.layouts.container import Container
@@ -22,6 +23,7 @@ class Style:
     width: int | None = None
     height: int | None = None
     square: bool | None = None
+    color: Color | None = None
 
     def fill_with(self, other: "Style"):
         for key in (
@@ -33,6 +35,7 @@ class Style:
             "width",
             "height",
             "square",
+            "color",
         ):
             if getattr(self, key) is None:
                 setattr(self, key, getattr(other, key))
@@ -48,6 +51,14 @@ class Style:
 
     def to_dict(self):
         return dataclasses.asdict(self)
+
+    def container_styles(self) -> dict:
+        style = dataclasses.asdict(self)
+        del style["color"]
+        return style
+
+    def copy(self, **changes) -> Self:
+        return dataclasses.replace(self, **changes)
 
 
 @dataclass(slots=True)
@@ -119,12 +130,12 @@ class Div(ControlLayout):
         on_click: OnClickType = None,
         **kwargs,
     ):
-        style = self.__style__.merged_with(style)
-        super().__init__(Container(control, **style.default.to_dict()), **kwargs)
+        self._style = self.__style__.merged_with(style)
+        super().__init__(Container(control), **kwargs)
         self._hover = False
         self._down = False
-        self._style = style
         self._on_click = on_click
+        self._set_style()
 
     def _container(self) -> Container:
         (container,) = self._controls()
@@ -153,13 +164,16 @@ class Div(ControlLayout):
         if button == MouseButton.BUTTON_LEFT and self._on_click is not None:
             self._on_click(self)
 
-    def _set_style(self):
+    def _get_style(self) -> Style:
         if self._down:
             style = self._style.click
         elif self._hover:
             style = self._style.hover
         else:
             style = self._style.default
+        return style
+
+    def _set_style(self):
         (container,) = self._controls()
-        for key, value in style.to_dict().items():
+        for key, value in self._get_style().container_styles().items():
             setattr(container, key, value)
