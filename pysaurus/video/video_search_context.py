@@ -44,6 +44,18 @@ class VideoSearchContext:
             )
 
     def json(self) -> dict:
+        grouping = self.grouping
+        group_def = (
+            grouping.to_dict(
+                group_id=self.group_id,
+                groups=[st.to_dict() for st in self.classifier_stats],
+            )
+            if grouping
+            else None
+        )
+        if self.common_fields:
+            group_def["common"] = self.common_fields
+
         with_moves = self.with_moves
         return {
             "videos": [video.json(with_moves) for video in self.result],
@@ -58,4 +70,6 @@ class VideoSearchContext:
             "path": self.classifier,
             "searchDef": self.search.to_dict() if self.search else None,
             "sorting": self.sorting,
+            "nbSourceVideos": self.source_count,
+            "groupDef": group_def,
         }

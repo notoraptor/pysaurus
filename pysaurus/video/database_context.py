@@ -10,3 +10,13 @@ class DatabaseContext:
     folders: list[AbsolutePath]
     prop_types: list[dict]
     view: VideoSearchContext
+
+    def json(self):
+        return {
+            "database": {
+                "name": self.name,
+                "folders": [str(path) for path in self.folders],
+            },
+            "prop_types": self.prop_types,
+            **self.view.json(),
+        }

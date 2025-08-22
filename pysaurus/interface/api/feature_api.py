@@ -105,25 +105,8 @@ class FeatureAPI:
     # cannot make proxy ?
     def backend(self, page_size, page_number, selector=None) -> dict[str, Any]:
         """Return backend state."""
-        if selector is not None and isinstance(selector, dict):
-            selector = Selector.parse_dict(selector)
-        context = self.database.provider.get_current_state(
-            page_size, page_number, selector
-        )
-        group_def = self.database.provider.get_group_def()
-        if context.common_fields:
-            group_def["common"] = context.common_fields
-
-        return {
-            "database": {
-                "name": self.database.get_name(),
-                "folders": sorted(str(path) for path in self.database.get_folders()),
-            },
-            "prop_types": self.database.get_prop_types(),
-            "nbSourceVideos": context.source_count,
-            "groupDef": group_def,
-            **context.json(),
-        }
+        database_context = self.get_python_backend(page_size, page_number, selector)
+        return database_context.json()
 
     def get_python_backend(
         self, page_size: int, page_number: int, selector: dict | None = None
@@ -135,7 +118,7 @@ class FeatureAPI:
         )
         return DatabaseContext(
             name=self.database.get_name(),
-            folders=list(self.database.get_folders()),
+            folders=sorted(self.database.get_folders()),
             prop_types=self.database.get_prop_types(),
             view=context,
         )
