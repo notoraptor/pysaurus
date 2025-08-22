@@ -15,8 +15,6 @@ from pysaurus.interface.api.api_utils.proxy_feature import (
     ProxyFeature,
 )
 from pysaurus.video.database_context import DatabaseContext
-from pysaurus.video.video_constants import COMMON_FIELDS
-from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video_provider.abstract_video_provider import (
     AbstractVideoProvider as View,
 )
@@ -113,11 +111,8 @@ class FeatureAPI:
             page_size, page_number, selector
         )
         group_def = self.database.provider.get_group_def()
-        videos = context.result
-        if len(videos) and group_def and group_def["field"] == "similarity_id":
-            group_def["common"] = VideoFeatures.get_common_fields(
-                videos, fields=COMMON_FIELDS
-            )
+        if context.common_fields:
+            group_def["common"] = context.common_fields
 
         return {
             "database": {
@@ -125,7 +120,7 @@ class FeatureAPI:
                 "folders": sorted(str(path) for path in self.database.get_folders()),
             },
             "prop_types": self.database.get_prop_types(),
-            "nbSourceVideos": self.database.provider.count_source_videos(),
+            "nbSourceVideos": context.source_count,
             "groupDef": group_def,
             **context.json(),
         }
