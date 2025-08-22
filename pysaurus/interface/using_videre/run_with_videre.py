@@ -4,6 +4,7 @@ import videre
 from pysaurus.core.constants import VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE
 from pysaurus.core.informer import Informer
 from pysaurus.core.notifications import DatabaseReady, End, Notification
+from pysaurus.core.profiling import Profiler
 from pysaurus.interface.api.gui_api import GuiAPI
 from pysaurus.interface.using_videre.process_page import ProcessPage
 from pysaurus.interface.using_videre.videos_page import VideosPage
@@ -29,7 +30,7 @@ class PysaurusBackend:
         self.get_database_names = self.__api.application.get_database_names
         self.open_database = self.__api.open_database
         self.close_app = self.__api.close_app
-        self.get_python_backend = self.__api.get_python_backend
+        self.get_python_backend = Profiler.profile()(self.__api.get_python_backend)
 
 
 class App:
@@ -102,7 +103,7 @@ class App:
         context = self.backend.get_python_backend(
             VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER
         )
-        self._display(VideosPage(context))
+        self._display(VideosPage(context, updater=self.backend.get_python_backend))
 
 
 def main():
