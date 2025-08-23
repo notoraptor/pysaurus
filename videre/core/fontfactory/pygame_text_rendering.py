@@ -269,12 +269,12 @@ class PygameTextRendering(PygameUtils):
     def _get_char_tasks(
         self, text: str, width: int | None, compact: bool
     ) -> tuple[int, int, list[Line[CharTask]]]:
-        return self._get_tasks(self.get_chars, self.parse_char, text, width, compact)
+        return self._get_tasks(self._get_chars, self._parse_char, text, width, compact)
 
     def _get_word_tasks(
         self, text: str, width: int, compact: bool
     ) -> tuple[int, int, list[Line[WordTask]]]:
-        return self._get_tasks(self.get_words, self.parse_word, text, width, compact)
+        return self._get_tasks(self._get_words, self._parse_word, text, width, compact)
 
     def _get_tasks[
         T
@@ -328,11 +328,11 @@ class PygameTextRendering(PygameUtils):
         return new_width, height
 
     @classmethod
-    def get_chars(cls, text: str) -> Iterable[tuple[int, str]]:
+    def _get_chars(cls, text: str) -> Iterable[tuple[int, str]]:
         return enumerate(text)
 
     @classmethod
-    def get_words(cls, text: str) -> Iterable[str]:
+    def _get_words(cls, text: str) -> Iterable[str]:
         first_line, *next_lines = text.split("\n")
         words = [word for word in first_line.split(" ") if word]
         for line in next_lines:
@@ -340,7 +340,7 @@ class PygameTextRendering(PygameUtils):
             words.extend(word for word in line.split(" ") if word)
         return words
 
-    def parse_char(self, ic: tuple[int, str]):
+    def _parse_char(self, ic: tuple[int, str]):
         charpos, c = ic
         font = self._get_font(c)
 
@@ -352,7 +352,7 @@ class PygameTextRendering(PygameUtils):
 
         return CharTask(c, font, width, horizontal_shift, bounds, charpos)
 
-    def parse_word(self, word: str):
+    def _parse_word(self, word: str):
         width, height, lines = self._get_char_tasks(word, None, False)
         if width:
             (line,) = lines

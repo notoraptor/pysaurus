@@ -23,7 +23,7 @@ class Checkbox(AbstractCheckButton):
     __wprops__ = {"name"}
     __slots__ = ()
 
-    def __init__(self, checked=False, on_change: OnClickType = None, **kwargs):
+    def __init__(self, checked=False, on_change: OnClickType | None = None, **kwargs):
         super().__init__(**kwargs)
         self.checked = checked
         self.on_change = on_change
@@ -41,11 +41,11 @@ class Checkbox(AbstractCheckButton):
                 self._on_click(self)
 
     @property
-    def on_change(self) -> OnClickType:
+    def on_change(self) -> OnClickType | None:
         return self._on_click
 
     @on_change.setter
-    def on_change(self, callback: OnClickType):
+    def on_change(self, callback: OnClickType | None):
         if self._on_click is not callback:
             self._on_click = callback
             self.update()

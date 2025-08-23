@@ -1,6 +1,6 @@
 import dataclasses
 from dataclasses import dataclass
-from typing import Any, Callable, Self
+from typing import Any, Callable, Self, TypeAlias
 
 from videre import Alignment, Border, Colors
 from videre.core.constants import MouseButton
@@ -77,7 +77,7 @@ class StyleDef:
         else:
             self.click.fill_with(self.default)
 
-    def merged_with(self, style: "StyleType") -> Self:
+    def merged_with(self, style: "StyleType | None") -> Self:
         base_style = self
         if style is None:
             return base_style
@@ -104,8 +104,8 @@ class StyleDef:
             return StyleDef(**output)
 
 
-StyleType = StyleDef | dict[str, dict[str, Any]] | None
-OnClickType = Callable[[Widget], None] | None
+StyleType: TypeAlias = StyleDef | dict[str, dict[str, Any]]
+OnClickType: TypeAlias = Callable[[Widget], None]
 
 
 class Div(ControlLayout):
@@ -126,8 +126,8 @@ class Div(ControlLayout):
     def __init__(
         self,
         control: Widget | None = None,
-        style: StyleType = None,
-        on_click: OnClickType = None,
+        style: StyleType | None = None,
+        on_click: OnClickType | None = None,
         **kwargs,
     ):
         self._style = self.__style__.merged_with(style)
