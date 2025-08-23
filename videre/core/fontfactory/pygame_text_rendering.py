@@ -238,19 +238,6 @@ class PygameTextRendering(PygameUtils):
             else:
                 end_x = line.elements[-1].x + line.elements[-1].width
 
-            print(
-                "sel pos",
-                start,
-                end,
-                "line pos",
-                line_start,
-                line_end,
-                "coords",
-                start_x,
-                end_x,
-                "limit",
-                line.limit(),
-            )
             # Create selection rectangle for this line
             rect = pygame.Rect(
                 start_x,
