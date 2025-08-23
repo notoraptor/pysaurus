@@ -19,8 +19,23 @@ class VideoAttributesView(videre.Column):
     __slots__ = ()
 
     def __init__(self, video: VideoPattern, **kwargs):
+        checkbox = videre.Checkbox()
         super().__init__(
-            [videre.Text(str(video.title), strong=True)]
+            [
+                videre.Row(
+                    [
+                        videre.ContextButton(
+                            " \u2630 ", ["action 1", "act 2", "act 3"]
+                        ),
+                        checkbox,
+                        videre.Label(
+                            for_button=checkbox, text=str(video.title), strong=True
+                        ),
+                    ],
+                    vertical_alignment=videre.Alignment.CENTER,
+                    space=5,
+                )
+            ]
             + ([videre.Text(str(video.file_title))] if video.meta_title else [])
             + [
                 videre.Text(

@@ -74,6 +74,16 @@ class Demo:
     def clear(self, *args):
         self.work.control = None
 
+    @on_demo("context button")
+    def on_context_button(self, *args):
+        total = 10
+        actions = [f"Item {i+1}/{total}" for i in range(total)]
+
+        return videre.Column(
+            [videre.ContextButton("context button", actions=actions)],
+            expand_horizontal=False,
+        )
+
     @on_demo("text input")
     def on_text_input(self, *args):
         return videre.Container(videre.TextInput(), padding=videre.Padding.all(20))
