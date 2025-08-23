@@ -71,6 +71,7 @@ class Window(PygameUtils, Clipboard):
         "_nb_frames",
         "_text_cursor",
         "_default_cursor",
+        "data",
     )
 
     def __init__(
@@ -122,6 +123,8 @@ class Window(PygameUtils, Clipboard):
 
         self._default_cursor = pygame.mouse.get_cursor()
         self._text_cursor = pygame.cursors.compile(pygame.cursors.textmarker_strings)
+
+        self.data = None
 
     def __repr__(self):
         return f"[{type(self).__name__}][{id(self)}]"
