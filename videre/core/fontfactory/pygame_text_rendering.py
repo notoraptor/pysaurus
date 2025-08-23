@@ -349,7 +349,7 @@ class PygameTextRendering(PygameUtils):
         width = bounds.x + bounds.width
 
         (metric,) = font.get_metrics(c, size=self._size)
-        horizontal_shift = metric[4] if metric else bounds.width
+        horizontal_shift = metric[4] if metric else width
 
         return CharTask(c, font, width, horizontal_shift, bounds, charpos)
 
