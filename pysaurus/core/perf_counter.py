@@ -17,3 +17,7 @@ class PerfCounter:
     @property
     def nanoseconds(self) -> int:
         return self.nanoseconds_end - self.nanoseconds_start
+
+    @property
+    def microseconds(self) -> float:
+        return self.nanoseconds / 1000
