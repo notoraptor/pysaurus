@@ -25,7 +25,7 @@ class VideoAttributesView(videre.Column):
                 videre.Row(
                     [
                         videre.ContextButton(
-                            " \u2630 ", ["action 1", "act 2", "act 3"]
+                            " \u2630 ", ["action 1", "act 2", "act 3"], square=True
                         ),
                         checkbox,
                         videre.Label(
