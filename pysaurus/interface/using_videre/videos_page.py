@@ -3,8 +3,10 @@ from collections.abc import Callable
 from typing_extensions import TypeAlias
 
 import videre
+from pysaurus.core.profiling import Profiler
 from pysaurus.interface.using_videre.video_view import VideoView
 from pysaurus.video.database_context import DatabaseContext
+from videre.core.pygame_utils import Surface
 from videre.widgets.widget import Widget
 
 
@@ -86,3 +88,7 @@ class VideosPage(videre.Column):
         context = self.context_updater(self.context.view.page_size, page_number, None)
         self.context = context
         self.controls = self._build()
+
+    @Profiler.profile("videos_page")
+    def draw(self, window, width: int = None, height: int = None) -> Surface:
+        return super().draw(window, width, height)
