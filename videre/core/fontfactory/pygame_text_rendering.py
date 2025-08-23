@@ -1,7 +1,6 @@
 import logging
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 import pygame
 import pygame.freetype
@@ -284,33 +283,36 @@ class PygameTextRendering(PygameUtils):
         self, text: str, width: int | None, compact: bool
     ) -> tuple[int, int, list[Line[CharTask]]]:
         width = float("inf") if width is None else width
-        text_factory = Characters(self)
-        return self._get_tasks(text_factory, text, width, compact)
+        return self._get_tasks(self.get_chars, self.parse_char, text, width, compact)
 
     def _get_word_tasks(
         self, text: str, width: int, compact: bool
     ) -> tuple[int, int, list[Line[WordTask]]]:
-        text_factory = Words(self)
-        return self._get_tasks(text_factory, text, width, compact)
+        return self._get_tasks(self.get_words, self.parse_word, text, width, compact)
 
     def _get_tasks[
         T
-    ](self, tel: "TextElements[T]", text: str, width: int, compact: bool) -> tuple[
-        int, int, list[Line[T]]
-    ]:
+    ](
+        self,
+        get_elements: Callable[[str], Iterable[Any]],
+        parse_element: Callable[[Any], T],
+        text: str,
+        width: int,
+        compact: bool,
+    ) -> tuple[int, int, list[Line[T]]]:
         lines = []
-        task_line = tel.newline()
+        task_line = Line[T]()
         x = 0
-        for el in tel.text_to_elements(text):
-            info = tel.parse_element(el)
+        for el in get_elements(text):
+            info = parse_element(el)
             if info.is_newline():
                 lines.append(task_line)
-                task_line = tel.newline(newline=True)
+                task_line = Line[T](newline=True)
                 x = 0
             elif info.is_printable():
                 if x and x + info.width > width:
                     lines.append(task_line)
-                    task_line = tel.newline()
+                    task_line = Line[T]()
                     x = 0
                 task_line.add(info.at(x))
                 x += info.horizontal_shift
@@ -339,6 +341,19 @@ class PygameTextRendering(PygameUtils):
             )
         return new_width, height
 
+    @classmethod
+    def get_chars(cls, text: str) -> Iterable[tuple[int, str]]:
+        return enumerate(text)
+
+    @classmethod
+    def get_words(cls, text: str) -> Iterable[str]:
+        first_line, *next_lines = text.split("\n")
+        words = [word for word in first_line.split(" ") if word]
+        for line in next_lines:
+            words.append("\n")
+            words.extend(word for word in line.split(" ") if word)
+        return words
+
     def parse_char(self, ic: tuple[int, str]):
         charpos, c = ic
         font = self._get_font(c)
@@ -362,46 +377,3 @@ class PygameTextRendering(PygameUtils):
             tasks = []
             shift = 0
         return WordTask(width, 0, tasks, height, shift + self._font_sizes.space_shift)
-
-
-class TextElements[T](ABC):
-    __slots__ = ("rendering",)
-
-    def __init__(self, rendering: PygameTextRendering):
-        self.rendering = rendering
-
-    @abstractmethod
-    def text_to_elements(self, text: str) -> Iterable[Any]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def parse_element(self, element: str) -> T:
-        raise NotImplementedError()
-
-    def newline(self, newline=False) -> Line[T]:
-        return Line[T](newline=newline)
-
-
-class Characters(TextElements[CharTask]):
-    __slots__ = ()
-
-    def text_to_elements(self, text: str) -> Iterable[tuple[int, str]]:
-        return enumerate(text)
-
-    def parse_element(self, ic: tuple[int, str]) -> CharTask:
-        return self.rendering.parse_char(ic)
-
-
-class Words(TextElements[WordTask]):
-    __slots__ = ()
-
-    def text_to_elements(self, text: str) -> Iterable[str]:
-        first_line, *next_lines = text.split("\n")
-        words = [word for word in first_line.split(" ") if word]
-        for line in next_lines:
-            words.append("\n")
-            words.extend(word for word in line.split(" ") if word)
-        return words
-
-    def parse_element(self, word: str) -> WordTask:
-        return self.rendering.parse_word(word)
