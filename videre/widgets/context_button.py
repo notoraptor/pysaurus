@@ -53,7 +53,8 @@ class ContextButton(AbstractButton):
         actions: Sequence[str | tuple[str, ActionFunction]] = (),
         **kwargs
     ):
-        super().__init__(text, square=True, **kwargs)
+        kwargs.pop("on_click", None)
+        super().__init__(text, **kwargs)
         self._context: Widget | None = None
         self._actions: Sequence[tuple[str, ActionFunction | None]] = [
             (action, None) if isinstance(action, str) else action for action in actions
@@ -74,7 +75,7 @@ class ContextButton(AbstractButton):
         self._close_context()
 
     def _open_context(self):
-        if self._actions:
+        if not self.disabled and self._actions:
             width = self._compute_width(self.get_window())
             self._context = Column(
                 [
