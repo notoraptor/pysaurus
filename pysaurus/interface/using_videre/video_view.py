@@ -1,4 +1,5 @@
 import videre
+from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_pattern import VideoPattern
 
@@ -16,17 +17,20 @@ class VideoPropertyView(videre.Column):
 
 class VideoAttributesView(videre.Column):
     __wprops__ = {}
-    __slots__ = ()
+    __slots__ = ("_video",)
 
     def __init__(self, video: VideoPattern, **kwargs):
+        actions = [
+            ("Open file", self._open_file),
+            ("Open containing folder", self._open_containing_folder),
+        ]
         checkbox = videre.Checkbox()
+        self._video = video
         super().__init__(
             [
                 videre.Row(
                     [
-                        videre.ContextButton(
-                            " \u2630 ", ["action 1", "act 2", "act 3"], square=True
-                        ),
+                        videre.ContextButton(" \u2630 ", actions, square=True),
                         checkbox,
                         videre.Label(
                             for_button=checkbox, text=str(video.title), strong=True
@@ -69,6 +73,13 @@ class VideoAttributesView(videre.Column):
             space=2,
             **kwargs,
         )
+
+    def _open_file(self):
+        get_backend(self).open_video(self._video.video_id)
+
+    def _open_containing_folder(self):
+        ret = get_backend(self).open_containing_folder(self._video.video_id)
+        print("Opened:", ret)
 
 
 class VideoView(videre.Container):

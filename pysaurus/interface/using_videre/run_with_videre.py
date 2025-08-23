@@ -3,34 +3,11 @@ import sys
 import videre
 from pysaurus.core.constants import VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE
 from pysaurus.core.informer import Informer
-from pysaurus.core.notifications import DatabaseReady, End, Notification
-from pysaurus.core.profiling import Profiler
-from pysaurus.interface.api.gui_api import GuiAPI
+from pysaurus.core.notifications import DatabaseReady, End
+from pysaurus.interface.using_videre.backend import PysaurusBackend
 from pysaurus.interface.using_videre.process_page import ProcessPage
 from pysaurus.interface.using_videre.videos_page import VideosPage
 from videre.widgets.widget import Widget
-
-
-class _VidereGuiAPI(GuiAPI):
-    __slots__ = ("window",)
-
-    def __init__(self, window: videre.Window) -> None:
-        super().__init__()
-        self.window = window
-
-    def _notify(self, notification: Notification) -> None:
-        if self.window:
-            self.window.notify(notification)
-
-
-class PysaurusBackend:
-    def __init__(self, window: videre.Window) -> None:
-        self.__api = _VidereGuiAPI(window)
-        self.get_constants = self.__api.get_constants
-        self.get_database_names = self.__api.application.get_database_names
-        self.open_database = self.__api.open_database
-        self.close_app = self.__api.close_app
-        self.get_python_backend = Profiler.profile()(self.__api.get_python_backend)
 
 
 class App:

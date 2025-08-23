@@ -1,0 +1,40 @@
+import videre
+from pysaurus.core.notifications import Notification
+from pysaurus.core.profiling import Profiler
+from pysaurus.interface.api.gui_api import GuiAPI
+from videre.widgets.widget import Widget
+
+
+class _VidereGuiAPI(GuiAPI):
+    __slots__ = ("window",)
+
+    def __init__(self, window: videre.Window) -> None:
+        super().__init__()
+        self.window = window
+
+    def _notify(self, notification: Notification) -> None:
+        self.window.notify(notification)
+
+
+class PysaurusBackend:
+    def __init__(self, window: videre.Window) -> None:
+        window.data = self
+
+        self.__api = _VidereGuiAPI(window)
+        self.get_constants = self.__api.get_constants
+        self.get_database_names = self.__api.application.get_database_names
+        self.open_database = self.__api.open_database
+        self.close_app = self.__api.close_app
+        self.get_python_backend = Profiler.profile()(self.__api.get_python_backend)
+
+    def open_video(self, video_id: int):
+        self.__api.database.open_video(video_id)
+
+    def open_containing_folder(self, video_id: int) -> str:
+        return self.__api.open_containing_folder(video_id)
+
+
+def get_backend(widget: Widget) -> PysaurusBackend:
+    data = widget.get_window().data
+    assert isinstance(data, PysaurusBackend)
+    return data
