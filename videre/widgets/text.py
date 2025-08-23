@@ -50,6 +50,7 @@ class Text(Widget):
         self.strong = strong
         self.italic = italic
         self.underline = underline
+        self.selection = selection
 
     def _set_wprop(self, name: str, value: Any):
         if value != self._get_wprop(name):
