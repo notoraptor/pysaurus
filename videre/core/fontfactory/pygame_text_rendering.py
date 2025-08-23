@@ -269,7 +269,6 @@ class PygameTextRendering(PygameUtils):
     def _get_char_tasks(
         self, text: str, width: int | None, compact: bool
     ) -> tuple[int, int, list[Line[CharTask]]]:
-        width = float("inf") if width is None else width
         return self._get_tasks(self.get_chars, self.parse_char, text, width, compact)
 
     def _get_word_tasks(
@@ -284,7 +283,7 @@ class PygameTextRendering(PygameUtils):
         get_elements: Callable[[str], Iterable[Any]],
         parse_element: Callable[[Any], T],
         text: str,
-        width: int,
+        width: int | None,
         compact: bool,
     ) -> tuple[int, int, list[Line[T]]]:
         lines = []
@@ -297,7 +296,7 @@ class PygameTextRendering(PygameUtils):
                 task_line = Line[T](newline=True)
                 x = 0
             elif info.is_printable():
-                if x and x + info.width > width:
+                if width is not None and x and x + info.width > width:
                     lines.append(task_line)
                     task_line = Line[T]()
                     x = 0
