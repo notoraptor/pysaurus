@@ -80,6 +80,7 @@ class PygameTextRendering(PygameUtils):
 
         self._height_delta = height_delta
         self._font_sizes = FontSizes(fonts.base_font, size, height_delta)
+        self._render_word_lines = self._render_word_lines_old
 
     def _get_font(self, text: str):
         font = self._fonts.get_font(text)
@@ -118,7 +119,7 @@ class PygameTextRendering(PygameUtils):
         )
         return RenderedText(lines, surface, self._font_sizes)
 
-    def _render_word_lines(
+    def _render_word_lines_old(
         self,
         width: int,
         height: int,
@@ -135,13 +136,59 @@ class PygameTextRendering(PygameUtils):
         for line in lines:
             self._draw_underline(line, out, color)
             y = line.y
+            s = line.x
             for word in line.elements:
-                x = word.x
+                x = s + word.x
                 for ch in word.tasks:
                     ch.font.render_to(
                         out, (x + ch.x, y), ch.el, size=size, fgcolor=color
                     )
         return out
+
+    def _render_word_lines_new(
+        self,
+        width: int,
+        height: int,
+        lines: list[Line[WordTask]],
+        align: TextAlign,
+        color: Color,
+        selection: tuple[int, int] | None = None,
+    ) -> Surface:
+        align_words(lines, width, align)
+        size = self._size
+        out = self.new_surface(width, height)
+        if selection:
+            for rect in self._get_selection_rects(lines, selection):
+                pygame.gfxdraw.box(out, rect, (100, 100, 255, 100))
+        for ly, lx, wx, chars in self._get_rendering_blocks(lines):
+            first = chars[0]
+            s = "".join(ch.el for ch in chars)
+            first.font.render_to(
+                out, (lx + wx + first.x, ly), s, size=size, fgcolor=color
+            )
+        if self._underline:
+            for line in lines:
+                self._draw_underline(line, out, color)
+        return out
+
+    @classmethod
+    def _get_rendering_blocks(cls, lines: list[Line[WordTask]]):
+        nb_chars = 0
+        blocks: list[tuple[int, int, int, list[CharTask]]] = []
+        for line in lines:
+            for word in line.elements:
+                nb_chars += len(word.tasks)
+                current: list[CharTask] = []
+                for char in word.tasks:
+                    if not current or current[0].font == char.font:
+                        current.append(char)
+                    else:
+                        blocks.append((line.y, line.x, word.x, current))
+                        current = [char]
+                if current:
+                    blocks.append((line.y, line.x, word.x, current))
+        # print(f"Blocks: {len(blocks)} vs characters: {nb_chars}")
+        return blocks
 
     def _get_selection_rects(
         self, lines: list[Line[WordTask]], selection: tuple[int, int] | None
@@ -300,7 +347,7 @@ class PygameTextRendering(PygameUtils):
         width = bounds.x + bounds.width
 
         (metric,) = font.get_metrics(c, size=self._size)
-        horizontal_shift = metric[4] if metric else bounds.width
+        horizontal_shift = round(metric[4]) if metric else bounds.width
 
         return CharTask(c, font, width, horizontal_shift, bounds, charpos)
 

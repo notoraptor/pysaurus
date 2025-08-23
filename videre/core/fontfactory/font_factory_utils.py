@@ -79,9 +79,10 @@ class WordTask(AbstractTextElement):
 
 
 class Line[T: AbstractTextElement]:
-    __slots__ = ("y", "newline", "elements")
+    __slots__ = ("x", "y", "newline", "elements")
 
     def __init__(self, y=0, newline=False):
+        self.x = 0
         self.y = y
         self.newline = newline
         self.elements: list[T] = []
@@ -161,8 +162,7 @@ def align_words(lines: list[Line[WordTask]], width: int, align=TextAlign.LEFT) -
             if remaining:
                 if align == TextAlign.CENTER:
                     remaining /= 2
-                for wt in line.elements:
-                    wt.x += remaining
+                line.x = remaining
 
 
 def justify_words(lines: list[Line[WordTask]], width: int) -> None:
