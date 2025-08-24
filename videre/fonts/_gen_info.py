@@ -2,8 +2,6 @@ import json
 import os.path
 from collections import Counter
 
-from pysaurus.core.functions import get_percent
-from pysaurus.core.modules import System
 from videre.fonts import FOLDER_FONT, FONT_BABEL_STONE, FONT_NOTO_REGULAR
 from videre.fonts._gen_char_cov import _load_fonts
 from videre.fonts.font_utils import FontUtils
@@ -12,19 +10,20 @@ from videre.fonts.unicode_utils import Unicode
 LEAST_FONT = FONT_BABEL_STONE.name
 
 
+def get_percent(a, b, decimals=2):
+    return round(a * 100 / b, decimals)
+
+
 # unused
 def save_fonts(fonts: dict[str, str]):
-    if System.is_windows():
-        assert not FOLDER_FONT.endswith("\\")
-    else:
-        assert not FOLDER_FONT.endswith("/")
+    assert not FOLDER_FONT.endswith(os.sep)
     base_path = FOLDER_FONT + os.sep
     fonts_with_relative_paths = {}
     for name, path in fonts.items():
         assert path.startswith(base_path)
         relative_path = path[len(base_path) :]
-        if System.is_windows():
-            relative_path = relative_path.replace("\\", "/")
+        if os.sep != "/":
+            relative_path = relative_path.replace(os.sep, "/")
         fonts_with_relative_paths[name] = relative_path
     output_path = os.path.join(FOLDER_FONT, "font-to-path.json")
     with open(output_path, "w") as file:

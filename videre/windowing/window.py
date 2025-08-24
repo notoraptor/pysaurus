@@ -1,13 +1,12 @@
 import functools
 import logging
-import pprint
 import threading
 from typing import Any, Callable, Sequence, TypeVar
 
 import pygame
 from pygame.event import Event
 
-from pysaurus.core.functions import get_tagged_methods, launch_thread
+from pysaurus.core.functions import launch_thread
 from videre.colors import ColorDef, Colors, parse_color
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
@@ -23,7 +22,7 @@ from videre.windowing.context import Context
 from videre.windowing.event_propagator import EventPropagator
 from videre.windowing.fancybox import Fancybox
 from videre.windowing.windowlayout import WindowLayout
-from videre.windowing.windowutils import WidgetByKeyGetter, on_event
+from videre.windowing.windowutils import OnEvent, WidgetByKeyGetter
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +63,6 @@ class Window(PygameUtils, Clipboard):
         "_fancybox",
         "_context",
         "_fonts",
-        "_event_callbacks",
         "_hide",
         "_notification_callback",
         "_lock",
@@ -109,16 +107,6 @@ class Window(PygameUtils, Clipboard):
         self._context = None
 
         self._fonts = PygameFontFactory(size=font_size)
-
-        self._event_callbacks = get_tagged_methods(self, "event_type")
-        logger.debug(
-            pprint.pformat(
-                {
-                    pygame.event.event_name(t): c.__name__
-                    for t, c in self._event_callbacks.items()
-                }
-            )
-        )
 
         self._notification_callback: NotificationCallback | None = None
         self._nb_frames = 0
@@ -344,14 +332,16 @@ class Window(PygameUtils, Clipboard):
 
             NB: Returned value is not yet used.
         """
-        callback = self._event_callbacks.get(event.type)
+        callback = self.on_event.get(event.type)
         if callback:
-            return callback(event)
+            return callback(self, event)
         else:
             logger.debug(
                 f"Unhandled pygame event: {pygame.event.event_name(event.type)}"
             )
             return True
+
+    on_event = OnEvent()
 
     @on_event(pygame.QUIT)
     def _on_quit(self, event: Event):
