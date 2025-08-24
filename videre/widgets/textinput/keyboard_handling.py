@@ -1,4 +1,4 @@
-from pysaurus.core.stringsplit import get_next_word_position, get_previous_word_position
+from cursword import get_next_word_end_position, get_previous_word_start_position
 
 
 class Pipeline:
@@ -65,10 +65,10 @@ class Pipeline:
         self.out_pos = max(0, self._in_pos - 1)
 
     def move_to_next_word(self):
-        self.out_pos = get_next_word_position(self._in_text, self._in_pos)
+        self.out_pos = get_next_word_end_position(self._in_text, self._in_pos)
 
     def move_to_previous_word(self):
-        self.out_pos = get_previous_word_position(self._in_text, self._in_pos)
+        self.out_pos = get_previous_word_start_position(self._in_text, self._in_pos)
 
     def move_to_select_end(self):
         selection = self._out_selection or self._in_selection

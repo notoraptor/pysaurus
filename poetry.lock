@@ -420,6 +420,17 @@ files = [
 toml = ["tomli"]
 
 [[package]]
+name = "cursword"
+version = "0.1.1"
+description = "Simple functions to move by words in a string"
+optional = false
+python-versions = ">=3.13"
+files = [
+    {file = "cursword-0.1.1-py3-none-any.whl", hash = "sha256:794b8de4a49ffb47e081a4959d4cc6c588bad960af01f3f41592ddd854ac0a78"},
+    {file = "cursword-0.1.1.tar.gz", hash = "sha256:d033248fde226cf4b71f950a141c2d74eabc2b86a2ff7f179ff89b13a21c746e"},
+]
+
+[[package]]
 name = "decorator"
 version = "5.2.1"
 description = "Decorators for Humans"
@@ -2042,4 +2053,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.13"
-content-hash = "7685c66012238f682015417eb2fcd091f5b0f296a01f4a24c7b75197411093b1"
+content-hash = "48ef1a5439925abcaeeee6ab3f89fb2683b15f1dac93001eae80acb1b1daa6d8"

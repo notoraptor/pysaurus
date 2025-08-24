@@ -5,8 +5,8 @@ from typing import Any
 
 import pygame
 import pygame.gfxdraw
+from cursword import get_next_word_end_position, get_previous_word_start_position
 
-from pysaurus.core.stringsplit import get_next_word_position, get_previous_word_position
 from videre.colors import Colors
 from videre.core.events import KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_text_rendering import RenderedText
@@ -330,14 +330,14 @@ class TextInput(AbstractLayout):
                 in_pos = self._get_cursor()
                 if key.backspace:
                     if key.ctrl:
-                        out_pos = get_previous_word_position(in_text, in_pos)
+                        out_pos = get_previous_word_start_position(in_text, in_pos)
                     else:
                         out_pos = max(0, in_pos - 1)
                     next_pos = in_pos
                 else:
                     out_pos = in_pos
                     if key.ctrl:
-                        next_pos = get_next_word_position(in_text, in_pos)
+                        next_pos = get_next_word_end_position(in_text, in_pos)
                     else:
                         next_pos = in_pos + 1
                 out_text = in_text[:out_pos] + in_text[next_pos:]
