@@ -2,8 +2,8 @@ import logging
 
 import videre
 from videre.layouts.div import Div
+from videre.testing import LOREM_IPSUM
 from videre.windowing.windowutils import OnEvent
-from videre_tests.testing import LOREM_IPSUM
 
 logger = logging.getLogger(__name__)
 
