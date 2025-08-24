@@ -1,8 +1,10 @@
 from collections.abc import Callable
 
+from ovld import OvldMC
 from typing_extensions import TypeAlias
 
 import videre
+from pysaurus.core import notifications
 from pysaurus.core.profiling import Profiler
 from pysaurus.interface.using_videre.video_view import VideoView
 from pysaurus.video.database_context import DatabaseContext
@@ -55,17 +57,19 @@ class Pagination(videre.Row):
 BackendUpdater: TypeAlias = Callable[[int, int, dict | None], DatabaseContext]
 
 
-class VideosPage(videre.Column):
+class VideosPage(videre.Column, metaclass=OvldMC):
     __wprops__ = {}
-    __slots__ = ("context", "context_updater")
+    __slots__ = ("context", "context_updater", "status_bar")
 
     def __init__(self, context: DatabaseContext, updater: BackendUpdater):
         self.context = context
         self.context_updater = updater
+        self.status_bar = videre.Text("Ready.")
         super().__init__(self._build())
 
     def _build(self) -> list[Widget]:
         context = self.context
+        view = context.view
 
         videos_view = videre.Column(
             [VideoView(video, i) for i, video in enumerate(context.view.result)]
@@ -80,7 +84,17 @@ class VideosPage(videre.Column):
         )
         top_bar = videre.Row([database_title, videre.Container(weight=1), pagination])
         center_bar = videre.Row([left_bar, right_view], weight=1)
-        bottom_bar = videre.Text("bottom bar")
+        bottom_bar = videre.Row(
+            [
+                self.status_bar,
+                videre.Container(weight=1),
+                videre.Text(
+                    f"{view.selection_count} videos | "
+                    f"{view.selection_file_size} | "
+                    f"{view.selection_duration}"
+                ),
+            ]
+        )
 
         return [top_bar, center_bar, bottom_bar]
 
@@ -88,6 +102,12 @@ class VideosPage(videre.Column):
         context = self.context_updater(self.context.view.page_size, page_number, None)
         self.context = context
         self.controls = self._build()
+
+    def on_notification(self, notification: notifications.Notification):
+        pass
+
+    def on_notification(self, notification: notifications.Message):
+        self.status_bar.text = notification.message
 
     @Profiler.profile("videos_page")
     def draw(self, window, width: int = None, height: int = None) -> Surface:

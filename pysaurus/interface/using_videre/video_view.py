@@ -1,4 +1,5 @@
 import videre
+from pysaurus.core import notifications
 from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_pattern import VideoPattern
@@ -76,10 +77,11 @@ class VideoAttributesView(videre.Column):
 
     def _open_file(self):
         get_backend(self).open_video(self._video.video_id)
+        self.get_window().notify(notifications.Message("Opened:", self._video.filename))
 
     def _open_containing_folder(self):
         ret = get_backend(self).open_containing_folder(self._video.video_id)
-        print("Opened:", ret)
+        self.get_window().notify(notifications.Message("Opened folder:", ret))
 
 
 class VideoView(videre.Container):
