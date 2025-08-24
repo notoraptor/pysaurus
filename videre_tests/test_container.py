@@ -4,8 +4,8 @@ import pytest
 
 import videre
 from videre.core.sides.padding import Padding
+from videre.testing.utils import LD
 from videre.widgets.empty_widget import EmptyWidget
-from videre_tests.testing.utils import LD
 
 
 @pytest.mark.parametrize("border_size", [1, 2, 3])

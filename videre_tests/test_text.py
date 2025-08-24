@@ -3,8 +3,7 @@ import itertools
 import pytest
 
 import videre
-from videre.testing import LOREM_IPSUM
-from videre_tests.testing.utils import SD
+from videre.testing.utils import LOREM_IPSUM, SD
 
 NB_LINES = (0, 1, 2)
 WRAP = list(videre.TextWrap)

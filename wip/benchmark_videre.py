@@ -7,7 +7,7 @@ from pysaurus.core.perf_counter import PerfCounter
 from videre import Colors, Gradient
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
-from videre.testing import LOREM_IPSUM
+from videre.testing.utils import LOREM_IPSUM
 
 
 def stress_render_text(batch=200):
