@@ -6,6 +6,7 @@ import sys
 import tempfile
 import threading
 import types
+from collections.abc import Callable
 from typing import Any, Collection, Iterable, Sequence
 
 logger = logging.getLogger(__name__)
@@ -347,9 +348,9 @@ def get_percent(a, b, decimals=2):
     return round(a * 100 / b, decimals)
 
 
-def get_tagged_methods(obj, key: str) -> dict[Any, callable]:
+def get_tagged_methods(obj, key: str) -> dict[Any, Callable]:
     """
-    Collect methods from given object which have an attribute named "key"
+    Collect methods from given object which have an attribute named `key`
     :param obj: object to inspect
     :param key: attribute to lookup in object
     :return: a dictionary mapping key value to method
