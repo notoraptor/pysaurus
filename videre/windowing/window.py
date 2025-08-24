@@ -1,5 +1,6 @@
 import functools
 import logging
+import pprint
 import threading
 from typing import Any, Callable, Sequence, TypeVar
 
@@ -7,7 +8,6 @@ import pygame
 from pygame.event import Event
 
 from pysaurus.core.functions import get_tagged_methods, launch_thread
-from pysaurus.core.prettylogging import PrettyLogging
 from videre.colors import ColorDef, Colors, parse_color
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
@@ -111,11 +111,13 @@ class Window(PygameUtils, Clipboard):
         self._fonts = PygameFontFactory(size=font_size)
 
         self._event_callbacks = get_tagged_methods(self, "event_type")
-        PrettyLogging.pinfo(
-            {
-                pygame.event.event_name(t): c.__name__
-                for t, c in self._event_callbacks.items()
-            }
+        logger.debug(
+            pprint.pformat(
+                {
+                    pygame.event.event_name(t): c.__name__
+                    for t, c in self._event_callbacks.items()
+                }
+            )
         )
 
         self._notification_callback: NotificationCallback | None = None

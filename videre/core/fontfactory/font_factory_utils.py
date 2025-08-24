@@ -3,8 +3,8 @@ from typing import Self
 
 import pygame
 
-from pysaurus.core.unicode_utils import Unicode
 from videre import TextAlign
+from videre.fonts.unicode_utils import Unicode
 
 
 class AbstractTextElement(ABC):

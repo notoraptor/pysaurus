@@ -1,6 +1,6 @@
 from fontTools.ttLib import TTFont
 
-from pysaurus.core.unicode_utils import Unicode
+from videre.fonts.unicode_utils import Unicode
 
 
 class FontUtils:

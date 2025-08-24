@@ -4,10 +4,10 @@ from collections import Counter
 
 from pysaurus.core.functions import get_percent
 from pysaurus.core.modules import System
-from pysaurus.core.unicode_utils import Unicode
 from videre.fonts import FOLDER_FONT, FONT_BABEL_STONE, FONT_NOTO_REGULAR
 from videre.fonts._gen_char_cov import _load_fonts
 from videre.fonts.font_utils import FontUtils
+from videre.fonts.unicode_utils import Unicode
 
 LEAST_FONT = FONT_BABEL_STONE.name
 

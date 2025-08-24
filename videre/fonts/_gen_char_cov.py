@@ -5,9 +5,9 @@ from typing import Self, Sequence
 from fontTools.ttLib import TTCollection
 from tqdm import tqdm
 
-from pysaurus.core.unicode_utils import Unicode
 from videre.fonts import FOLDER_FONT, FONT_NOTO_REGULAR, get_fonts
 from videre.fonts.font_utils import FontUtils
+from videre.fonts.unicode_utils import Unicode
 
 
 def check_characters_coverage(characters: str):
