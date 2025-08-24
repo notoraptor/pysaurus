@@ -6,10 +6,10 @@ import threading
 from abc import abstractmethod
 from typing import Callable, Sequence
 
+import filedial
 import pyperclip
 
 from pysaurus.application import exceptions
-from pysaurus.core import tk_utils
 from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
@@ -70,8 +70,8 @@ class GuiAPI(FeatureAPI):
         self._proxies.update(
             {
                 "clipboard": FromPyperclip(pyperclip.copy),
-                "select_directory": FromTk(tk_utils.select_directory, True),
-                "select_file": FromTk(tk_utils.select_file_to_open, True),
+                "select_directory": FromTk(filedial.select_directory, True),
+                "select_file": FromTk(filedial.select_file_to_open, True),
             }
         )
 

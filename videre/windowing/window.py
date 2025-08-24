@@ -6,7 +6,6 @@ from typing import Any, Callable, Sequence, TypeVar
 import pygame
 from pygame.event import Event
 
-from pysaurus.core.functions import launch_thread
 from videre.colors import ColorDef, Colors, parse_color
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
@@ -14,6 +13,7 @@ from videre.core.events import CustomEvents, KeyboardEntry, MouseEvent
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
 from videre.core.pygame_utils import Color, PygameUtils, Surface
+from videre.core.utils import launch_thread
 from videre.layouts.container import Container
 from videre.widgets.button import Button
 from videre.widgets.text import Text
@@ -341,7 +341,7 @@ class Window(PygameUtils, Clipboard):
             )
             return True
 
-    on_event = OnEvent()
+    on_event = OnEvent[int]()
 
     @on_event(pygame.QUIT)
     def _on_quit(self, event: Event):

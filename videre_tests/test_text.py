@@ -3,7 +3,7 @@ import itertools
 import pytest
 
 import videre
-from pysaurus.core.constants import LOREM_IPSUM
+from videre_tests.testing import LOREM_IPSUM
 from videre_tests.testing.utils import SD
 
 NB_LINES = (0, 1, 2)

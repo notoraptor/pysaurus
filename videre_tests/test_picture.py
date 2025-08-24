@@ -2,8 +2,8 @@ import io
 import pathlib
 
 import pytest
+from PIL import Image
 
-from pysaurus.core.modules import ImageUtils
 from videre import Picture
 from videre_tests.testing.utils import IMAGE_EXAMPLE
 
@@ -20,7 +20,7 @@ class SrcProvider:
 
     def bytes(self) -> bytes:
         output = io.BytesIO()
-        image = ImageUtils.open_rgb_image(self._string)
+        image = Image.open(self._string)
         image.save(output, format=image.format)
         return output.getvalue()
 

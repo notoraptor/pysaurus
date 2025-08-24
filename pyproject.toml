@@ -26,6 +26,7 @@ pywebview = "^5.4"
 strarr = "^0.1.1"
 ovld = "^0.5.11"
 cursword = "^0.1.1"
+filedial = "^0.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"

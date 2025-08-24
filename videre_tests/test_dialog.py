@@ -59,9 +59,9 @@ def test_dialog_select_file_to_save(mock_select_file):
 
 def test_dialog_methods_are_references():
     """Test that Dialog methods are proper references to tk_utils functions"""
-    from pysaurus.core import tk_utils
+    import filedial
 
-    assert videre.Dialog.select_directory is tk_utils.select_directory
-    assert videre.Dialog.select_file_to_open is tk_utils.select_file_to_open
-    assert videre.Dialog.select_many_files is tk_utils.select_many_files_to_open
-    assert videre.Dialog.select_file_to_save is tk_utils.select_file_to_save
+    assert videre.Dialog.select_directory is filedial.select_directory
+    assert videre.Dialog.select_file_to_open is filedial.select_file_to_open
+    assert videre.Dialog.select_many_files is filedial.select_many_files_to_open
+    assert videre.Dialog.select_file_to_save is filedial.select_file_to_save

@@ -1,6 +1,4 @@
-from typing import Any, Callable, Literal
-
-from videre.core.pygame_utils import Event
+from typing import Callable, Iterable
 
 
 def on_event(event_type: int):
@@ -19,18 +17,18 @@ def on_event(event_type: int):
     return decorator
 
 
-class OnEvent:
+class OnEvent[K]:
     __slots__ = ("_callbacks",)
 
     def __init__(self) -> None:
-        self._callbacks: dict[int, Callable[[Any, Event], Literal[True] | None]] = {}
+        self._callbacks: dict[K, Callable] = {}
 
-    def __call__(self, event_type: int):
-        assert event_type not in self._callbacks
+    def __call__(self, key: K):
+        assert key not in self._callbacks
 
         def decorator(function):
-            function.event_type = event_type
-            self._callbacks[event_type] = function
+            function.key = key
+            self._callbacks[key] = function
             return function
 
         return decorator
@@ -41,8 +39,17 @@ class OnEvent:
     def __len__(self):
         return len(self._callbacks)
 
-    def get(self, event_type: int) -> Callable[[Any, Event], bool] | None:
-        return self._callbacks.get(event_type, None)
+    def __getitem__(self, key) -> Callable:
+        return self._callbacks[key]
+
+    def get(self, key: K) -> Callable | None:
+        return self._callbacks.get(key, None)
+
+    def keys(self) -> Iterable[K]:
+        return self._callbacks.keys()
+
+    def items(self) -> Iterable[tuple[K, Callable]]:
+        return self._callbacks.items()
 
 
 class WidgetByKeyGetter:

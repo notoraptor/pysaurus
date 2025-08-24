@@ -1,8 +1,8 @@
-from pysaurus.core import tk_utils
+import filedial
 
 
 class Dialog:
-    select_directory = tk_utils.select_directory
-    select_file_to_open = tk_utils.select_file_to_open
-    select_many_files = tk_utils.select_many_files_to_open
-    select_file_to_save = tk_utils.select_file_to_save
+    select_directory = filedial.select_directory
+    select_file_to_open = filedial.select_file_to_open
+    select_many_files = filedial.select_many_files_to_open
+    select_file_to_save = filedial.select_file_to_save

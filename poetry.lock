@@ -442,6 +442,17 @@ files = [
 ]
 
 [[package]]
+name = "filedial"
+version = "0.1.0"
+description = "Cross-platform file dialogs using tkinter"
+optional = false
+python-versions = ">=3.13"
+files = [
+    {file = "filedial-0.1.0-py3-none-any.whl", hash = "sha256:ab91981cb6e00030b8ebeacf0951bb49cd91f0380556491771c6c64d0a51be0b"},
+    {file = "filedial-0.1.0.tar.gz", hash = "sha256:708ebb5ea3d208626d8347e8a9960e1029a472d0c376d04c4eb2ca236ed09a1b"},
+]
+
+[[package]]
 name = "flake8"
 version = "3.9.2"
 description = "the modular source code checker: pep8 pyflakes and co"
@@ -2053,4 +2064,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.13"
-content-hash = "48ef1a5439925abcaeeee6ab3f89fb2683b15f1dac93001eae80acb1b1daa6d8"
+content-hash = "ccbdabf234c286483198c76b0e97798dc4ddacf1c370d7788fa4d73071cf07d4"

@@ -1,36 +1,11 @@
 import logging
-from collections import namedtuple
 
 import videre
-from pysaurus.core.constants import LOREM_IPSUM
-from pysaurus.core.functions import get_tagged_methods
 from videre.layouts.div import Div
+from videre.windowing.windowutils import OnEvent
+from videre_tests.testing import LOREM_IPSUM
 
 logger = logging.getLogger(__name__)
-
-
-class DemoTitle(namedtuple("DemoTitle", ("rank", "name"))):
-    def __repr__(self):
-        return f"({self.rank}) {self.name}"
-
-
-class DemoDecorator:
-    def __init__(self):
-        self.rank = 0
-
-    def __call__(self, title=""):
-        order = self.rank + 1
-        self.rank += 1
-
-        def decorator(function):
-            name = title or function.__name__.replace("_", " ")
-            function.demo_title = DemoTitle(order, name)
-            return function
-
-        return decorator
-
-
-on_demo = DemoDecorator()
 
 
 class Demo:
@@ -40,10 +15,10 @@ class Demo:
         self.window = videre.Window()
         self.work = videre.Container(padding=videre.Padding.all(10), weight=1)
 
-        self.demos = get_tagged_methods(self, "demo_title")
+        self.demos = self.on_demo
         buttons = [
             videre.Button(str(title), on_click=self._demo_from(function))
-            for title, function in sorted(self.demos.items())
+            for title, function in self.demos.items()
         ]
         self.window.controls = [
             videre.Column(
@@ -58,14 +33,14 @@ class Demo:
 
     def _demo_from(self, function):
         def wrapper(*args):
-            ret = function(*args)
+            ret = function(self, *args)
             if ret is not None:
                 self.work.control = ret
 
         return wrapper
 
     def start(self):
-        first_demo_title = sorted(self.demos.keys())[0]
+        first_demo_title = list(self.demos.keys())[0]
         first_demo = self.demos[first_demo_title]
         # self._demo_from(self.on_text_input)()
         self._demo_from(first_demo)()
@@ -73,6 +48,8 @@ class Demo:
 
     def clear(self, *args):
         self.work.control = None
+
+    on_demo = OnEvent[str]()
 
     @on_demo("context button")
     def on_context_button(self, *args):

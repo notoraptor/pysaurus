@@ -1,5 +1,4 @@
 import videre
-from pysaurus.core.constants import LOREM_IPSUM
 from videre import TextAlign, TextWrap
 from videre.layouts.column import Column
 from videre.layouts.row import Row
@@ -7,6 +6,7 @@ from videre.layouts.scroll.scrollview import ScrollView
 from videre.widgets.button import Button
 from videre.widgets.text import Text
 from videre.windowing.window import Window
+from videre_tests.testing import LOREM_IPSUM
 from wip.symthon.symthon import E, Lambda, V
 
 

@@ -1,7 +1,7 @@
 import inspect
 from typing import Any, Callable
 
-from pysaurus.core import tk_utils
+import filedial
 
 
 class ProxyFeature:
@@ -67,7 +67,7 @@ class FromTk(ProxyFeature):
     __slots__ = ()
 
     def __init__(self, method, returns=False):
-        super().__init__(getter=lambda: tk_utils, method=method, returns=returns)
+        super().__init__(getter=lambda: filedial, method=method, returns=returns)
 
 
 class FromPyperclip(ProxyFeature):
