@@ -4,8 +4,8 @@ import pygame
 import pygame.freetype
 
 from pysaurus.core.unicode_utils import Unicode
-from resource.fonts import FontProvider
 from videre.core.pygame_utils import PygameUtils
+from videre.fonts import FontProvider
 
 
 class PygameFontFactory(PygameUtils):
