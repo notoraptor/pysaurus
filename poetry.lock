@@ -2045,6 +2045,19 @@ files = [
 ]
 
 [[package]]
+name = "videre"
+version = "0.1.0"
+description = "Simple GUI framework based on Pygame"
+optional = false
+python-versions = ">=3.13"
+files = []
+develop = true
+
+[package.source]
+type = "directory"
+url = "../videre"
+
+[[package]]
 name = "werkzeug"
 version = "3.1.3"
 description = "The comprehensive WSGI web application library."
@@ -2064,4 +2077,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.13"
-content-hash = "ccbdabf234c286483198c76b0e97798dc4ddacf1c370d7788fa4d73071cf07d4"
+content-hash = "69bb81336d8f59677e321d057cc18317fea6ffb1b39e8d52a7bcdec36f01bcfc"
