@@ -1,4 +1,5 @@
 from tkinter import Tk, filedialog
+from typing import Literal
 
 
 class TkContext:
@@ -9,19 +10,6 @@ class TkContext:
         self.root.withdraw()
         if topmost:
             self.root.attributes("-topmost", True)
-
-    def get_display_size(self) -> tuple[int, int]:
-        """
-        (2024/05/22)
-        https://stackoverflow.com/a/66248631
-        """
-        self.root.update_idletasks()
-        self.root.attributes("-fullscreen", True)
-        self.root.state("iconic")
-        # width, height = self.root.maxsize()
-        width = self.root.winfo_screenwidth()
-        height = self.root.winfo_screenheight()
-        return width, height
 
     def close(self):
         self.root.destroy()
@@ -53,7 +41,7 @@ def select_file_to_open() -> str:
         return _string_or_empty(filedialog.askopenfilename())
 
 
-def select_many_files_to_open():
+def select_many_files_to_open() -> Literal[""] | tuple[str, ...]:
     with TkContext():
         return filedialog.askopenfilenames()
 
@@ -61,22 +49,3 @@ def select_many_files_to_open():
 def select_file_to_save() -> str:
     with TkContext():
         return _string_or_empty(filedialog.asksaveasfilename())
-
-
-def clipboard_set(text: str) -> None:
-    with TkContext() as ctx:
-        ctx.root.clipboard_clear()
-        ctx.root.clipboard_append(text)
-        ctx.root.update()
-
-
-def clipboard_get() -> str:
-    with TkContext() as ctx:
-        return ctx.root.clipboard_get()
-
-
-# unused
-def get_screen_size() -> tuple[int, int]:
-    """Return (width, height) of screen."""
-    with TkContext() as ctx:
-        return ctx.get_display_size()
