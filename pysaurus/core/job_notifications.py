@@ -130,6 +130,9 @@ class NotificationCollector:
         if isinstance(notification, ProfilingStart):
             assert notification.name not in self.profiles
             self.profiles[notification.name] = self.nb_notifications
+        elif isinstance(notification, Profiled):
+            assert notification.name not in self.profiles
+            self.display_notification(notification)
         elif isinstance(notification, ProfilingEnd):
             assert notification.name in self.profiles
             index_start = self.profiles.pop(notification.name)
