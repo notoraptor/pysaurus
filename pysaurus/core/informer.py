@@ -94,8 +94,3 @@ class Informer(AbstractNotifier):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__queue.put(None)
-
-    @classmethod
-    def contextualize(cls, function, *args, **kwargs):
-        with cls.default():
-            function(*args, **kwargs)
