@@ -3,7 +3,6 @@ import functools
 from pysaurus.core.components import Duration
 from pysaurus.core.informer import Informer
 from pysaurus.core.notifications import ProfilingEnd, ProfilingStart
-from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.perf_counter import PerfCounter
 
 
@@ -54,17 +53,3 @@ class Profiler(PerfCounter):
             return wrapper
 
         return decorator_profile
-
-
-class ConsoleProfiler(Profiler):
-    __slots__ = ()
-
-    def __init__(self, title, stderr=False):
-        super().__init__(title, notifier=((stderr and DEFAULT_NOTIFIER) or Notifier()))
-
-
-class InlineProfiler(Profiler):
-    __slots__ = ()
-
-    def __init__(self, title, notifier=DEFAULT_NOTIFIER):
-        super().__init__(title, notifier)
