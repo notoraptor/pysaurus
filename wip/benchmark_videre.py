@@ -1,9 +1,8 @@
 import sys
 
-from tqdm import trange
-
 from pysaurus.core.components import Duration
 from pysaurus.core.perf_counter import PerfCounter
+from tqdm import trange
 from videre import Colors, Gradient
 from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.fontfactory.pygame_text_rendering import PygameTextRendering
@@ -38,9 +37,9 @@ def benchmark(function):
         function(batch)
     print(
         "Time:",
-        Duration(pc.nanoseconds / 1000),
+        Duration(pc.microseconds),
         "Unit:",
-        Duration(pc.nanoseconds / 1000 / batch),
+        Duration(pc.microseconds / batch),
         file=sys.stderr,
     )
 

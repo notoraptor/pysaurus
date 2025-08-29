@@ -4,7 +4,7 @@ from typing import Any, Iterable
 
 from pysaurus.core.components import Duration
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.notifications import Profiled
+from pysaurus.core.notifications import ProfilingEnd
 from pysaurus.core.perf_counter import PerfCounter
 
 
@@ -35,4 +35,6 @@ class AbstractNotifier(ABC):
                 yield element
                 if total <= 1_000 or (i + 1) % 200 == 0 or i + 1 == total:
                     self.progress(desc, i + 1, total)
-        self.notify(Profiled(desc, Duration(perf_counter.nanoseconds / 1000)))
+        self.notify(
+            ProfilingEnd(desc, Duration(perf_counter.microseconds), inline=True)
+        )

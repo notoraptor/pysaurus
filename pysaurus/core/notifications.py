@@ -1,3 +1,5 @@
+from typing import Self
+
 from pysaurus.core.classes import StringPrinter, ToDict
 from pysaurus.core.functions import camel_case_to_snake_case
 
@@ -111,18 +113,16 @@ class ProfilingStart(Notification):
 
 
 class ProfilingEnd(Notification):
-    __slots__ = "name", "time"
+    __slots__ = "name", "time", "inline"
 
-    def __init__(self, name, duration):
+    def __init__(self, name, duration, *, inline=False):
         self.name = name
         self.time = str(duration)
+        self.inline = inline
+
+    def with_inline(self, inline: bool) -> Self:
+        return ProfilingEnd(self.name, self.time, inline=inline)
 
     def __str__(self):
-        return f"ProfilingEnded({self.name}, {self.time})"
-
-
-class Profiled(ProfilingEnd):
-    __slots__ = ()
-
-    def __str__(self):
-        return f"Profiled({self.name}, {self.time})"
+        classname = "Profiled" if self.inline else "ProfilingEnded"
+        return f"{classname}({self.name}, {self.time})"

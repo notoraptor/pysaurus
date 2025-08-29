@@ -101,7 +101,7 @@ def main():
             elif choice in commands:
                 with PerfCounter() as pc:
                     commands[choice](**args)
-                print(f"[{choice}] executed in: {Duration(pc.nanoseconds / 1000)}")
+                print(f"[{choice}] executed in: {Duration(pc.microseconds)}")
             elif choice in exit_keywords:
                 print("Exiting...")
                 break

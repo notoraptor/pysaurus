@@ -1,58 +1,31 @@
 import functools
-import time
-from datetime import timedelta
 
 from pysaurus.core.components import Duration
 from pysaurus.core.informer import Informer
-from pysaurus.core.notifications import Notification, ProfilingEnd, ProfilingStart
+from pysaurus.core.notifications import ProfilingEnd, ProfilingStart
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.perf_counter import PerfCounter
 
 
-class _Profile(Duration):
-    __slots__ = ()
-
-    def __init__(self, difference: timedelta):
-        super().__init__(
-            (difference.seconds + difference.days * 24 * 3600) * 1_000_000
-            + difference.microseconds
-        )
-
-
-class _InlineProfile(Notification):
-    __slots__ = "title", "time"
-
-    def __init__(self, title, duration):
-        self.title = title
-        self.time = duration
-
-    def __str__(self):
-        return f"Profiled({self.title}, {self.time})"
-
-
-class Profiler:
-    __slots__ = "__title", "__time_start", "__time_end", "__notifier", "__inline"
+class Profiler(PerfCounter):
+    __slots__ = "_title", "_notifier", "_inline"
 
     def __init__(self, title, notifier=None, inline=False):
-        self.__title = title
-        self.__notifier = notifier or Informer.default()
-        self.__time_start = None
-        self.__time_end = None
-        self.__inline = inline
+        self._title = title
+        self._notifier = notifier or Informer.default()
+        self._inline = inline
+        super().__init__()
 
     def __enter__(self):
-        if not self.__inline:
-            self.__notifier.notify(ProfilingStart(self.__title))
-        self.__time_start = time.perf_counter_ns()
+        if not self._inline:
+            self._notifier.notify(ProfilingStart(self._title))
+        return super().__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.__time_end = time.perf_counter_ns()
-        profiling = _Profile(
-            timedelta(microseconds=(self.__time_end - self.__time_start) / 1000)
+        super().__exit__(exc_type, exc_val, exc_tb)
+        self._notifier.notify(
+            ProfilingEnd(self._title, Duration(self.microseconds), inline=self._inline)
         )
-        if self.__inline:
-            self.__notifier.notify(_InlineProfile(self.__title, profiling))
-        else:
-            self.__notifier.notify(ProfilingEnd(self.__title, profiling))
 
     @staticmethod
     def profile(title=None):

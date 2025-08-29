@@ -1,10 +1,5 @@
 from pysaurus.core.functions import camel_case_to_snake_case
-from pysaurus.core.notifications import (
-    Notification,
-    Profiled,
-    ProfilingEnd,
-    ProfilingStart,
-)
+from pysaurus.core.notifications import Notification, ProfilingEnd, ProfilingStart
 
 
 class JobToDo(Notification):
@@ -130,22 +125,18 @@ class NotificationCollector:
         if isinstance(notification, ProfilingStart):
             assert notification.name not in self.profiles
             self.profiles[notification.name] = self.nb_notifications
-        elif isinstance(notification, Profiled):
-            assert notification.name not in self.profiles
-            self.display_notification(notification)
         elif isinstance(notification, ProfilingEnd):
-            assert notification.name in self.profiles
-            index_start = self.profiles.pop(notification.name)
-            if self.nb_notifications == index_start + 1:
-                # ProfilingEnd just follows ProfilingStart
-                # We just display profiling as profiled
-                self.display_notification(
-                    Profiled(notification.name, notification.time)
-                )
+            if notification.inline:
+                assert notification.name not in self.profiles, notification
             else:
-                # ProfilingStart and ProfilingEnd separated with other notifications
-                # We just display ProfilingEnd.
-                self.display_notification(notification)
+                assert notification.name in self.profiles
+                index_start = self.profiles.pop(notification.name)
+                # If ProfilingEnd just follows ProfilingStart,
+                # we want to inline notification.
+                notification = notification.with_inline(
+                    self.nb_notifications == index_start + 1
+                )
+            self.display_notification(notification)
         elif isinstance(notification, JobToDo):
             assert notification.name not in self.progressions
             self.progressions[notification.name] = self.new_progress(notification)
