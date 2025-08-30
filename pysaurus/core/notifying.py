@@ -1,8 +1,8 @@
 import sys
 from typing import Callable, TypeVar
 
-from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import Date
+from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.core.notifications import Notification
 
 N = TypeVar("N", bound=Notification)

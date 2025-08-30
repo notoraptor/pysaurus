@@ -1,5 +1,11 @@
+import sys
+from abc import ABC, abstractmethod
+from typing import Any, Iterable
+
+from pysaurus.core.components import Duration
 from pysaurus.core.functions import camel_case_to_snake_case
 from pysaurus.core.notifications import Notification, ProfilingEnd, ProfilingStart
+from pysaurus.core.perf_counter import PerfCounter
 
 
 class JobToDo(Notification):
@@ -50,30 +56,6 @@ def _compute_job_title(title, description, expectation, total, kind):
             expectation = f"{total} {kind}"
         title = f"{description} ({expectation})"
     return title
-
-
-def notify_job_start(notifier, identiifier, total, kind, expectation=None, title=None):
-    name = _get_job_name(identiifier)
-    job_title = _compute_job_title(title, name, expectation, total, kind)
-    notifier.notify(JobToDo(name, total, job_title))
-    if total:
-        notifier.notify(JobStep(name, None, 0, total, title=job_title))
-
-
-def notify_job_progress(
-    notifier,
-    function,
-    channel: str | None,
-    channel_step: int,
-    channel_size: int,
-    *,
-    title: str = None,
-):
-    notifier.notify(
-        JobStep(
-            _get_job_name(function), channel, channel_step, channel_size, title=title
-        )
-    )
 
 
 class JobProgressDisplay:
@@ -163,3 +145,43 @@ class NotificationCollector:
 
     def _new_progress(self, job_to_do: JobToDo) -> JobProgressDisplay:
         return JobProgressDisplay(job_to_do)
+
+
+class AbstractNotifier(ABC):
+    __slots__ = ()
+
+    @abstractmethod
+    def notify(self, notification):
+        pass
+
+    def task(
+        self, identifier, total: int, kind="item(s)", expectation=None, title=None
+    ):
+        """Job start"""
+        name = _get_job_name(identifier)
+        job_title = _compute_job_title(title, name, expectation, total, kind)
+        self.notify(JobToDo(name, total, job_title))
+        if total:
+            self.notify(JobStep(name, None, 0, total, title=job_title))
+
+    def progress(self, identifier, step: int, size=1, channel=None, title=None):
+        """Job progress"""
+        self.notify(
+            JobStep(_get_job_name(identifier), channel, step, size, title=title)
+        )
+
+    def tasks(self, iterable: Iterable, desc: Any, total: int = None, kind="item(s)"):
+        if total is None:
+            if not hasattr(iterable, "__len__"):
+                print("[task_range] converting iterable to list", file=sys.stderr)
+                iterable = list(iterable)
+            total = len(iterable)
+        self.task(desc, total, kind)
+        with PerfCounter() as perf_counter:
+            for i, element in enumerate(iterable):
+                yield element
+                if total <= 1_000 or (i + 1) % 200 == 0 or i + 1 == total:
+                    self.progress(desc, i + 1, total)
+        self.notify(
+            ProfilingEnd(desc, Duration(perf_counter.microseconds), inline=True)
+        )

@@ -3,8 +3,8 @@ import sys
 import threading
 from typing import Callable
 
-from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import Date
+from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.core.notifications import Notification
 from pysaurus.interface.api.api_utils.console_notification_printer import (
     ConsoleNotificationPrinter,
@@ -48,12 +48,11 @@ INFORMER_CALLBACK = InformerCallbackFactory()
 
 
 class Informer(AbstractNotifier):
-    __slots__ = ("__queue", "_thread_stop_flag")
+    __slots__ = ("__queue",)
     __default__ = None
 
     def __init__(self):
         self.__queue = ManagerFactory.default().Queue()
-        self._thread_stop_flag = False
 
     def __call__(self, something):
         return self.notify(something)

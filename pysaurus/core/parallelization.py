@@ -1,9 +1,9 @@
 import inspect
 import os
 from multiprocessing import Pool
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
-from pysaurus.core.abstract_notifier import AbstractNotifier
+from pysaurus.core.job_notifications import AbstractNotifier
 
 
 class Job:
@@ -74,7 +74,7 @@ class _Unpacker:
 class _NotifiedFunction:
     __slots__ = ("function", "notifier", "__name__")
 
-    def __init__(self, function: callable, notifier: AbstractNotifier):
+    def __init__(self, function: Callable, notifier: AbstractNotifier):
         self.function = function
         self.notifier = notifier
         self.__name__ = self.function.__name__
@@ -91,7 +91,7 @@ class _StepNotifiedFunction(_NotifiedFunction):
 
     def __init__(
         self,
-        function: callable,
+        function: Callable,
         notifier: AbstractNotifier,
         progress_step=1,
         nb_tasks=0,

@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from pysaurus.core.abstract_notifier import AbstractNotifier
+from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.core.miniature import Miniature, NumpyMiniature
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
