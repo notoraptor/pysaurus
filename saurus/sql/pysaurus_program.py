@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from pysaurus.application.application import Config

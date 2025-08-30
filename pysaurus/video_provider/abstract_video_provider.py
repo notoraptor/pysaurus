@@ -236,7 +236,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         }
         return callable_methods[db_fn_name](
             functions.apply_selector_to_data(selector, self.get_view_indices()),
-            *db_fn_args
+            *db_fn_args,
         )
 
     def manage_attributes_modified(self, properties: Sequence[str], is_property=True):

@@ -95,7 +95,7 @@ class DatabasePaths:
                 dec = len(self.db_folder.title)
                 np = AbsolutePath.join(
                     new_paths.db_folder,
-                    f"{new_paths.db_folder.title}.{remaining_name[(dec + 1):]}",
+                    f"{new_paths.db_folder.title}.{remaining_name[(dec + 1) :]}",
                 )
             else:
                 np = AbsolutePath.join(new_paths.db_folder, remaining_name)

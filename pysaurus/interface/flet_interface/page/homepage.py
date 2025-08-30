@@ -26,7 +26,7 @@ class Homepage(ft.Column):
             disabled=True,
         )
         self.button_open_database = ft.ElevatedButton(
-            content=Title2(f"Open a database"),
+            content=Title2("Open a database"),
             on_click=self.on_open_database,
             disabled=True,
         )

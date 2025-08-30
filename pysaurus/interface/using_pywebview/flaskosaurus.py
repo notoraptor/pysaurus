@@ -51,7 +51,6 @@ def home():
 @server.route("/call/<json_command>")
 @verify_token
 def call(json_command):
-
     try:
         name, args = json.loads(json_command)
         result = {"error": False, "data": server.api.__run_feature__(name, *args)}

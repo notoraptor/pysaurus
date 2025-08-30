@@ -71,13 +71,13 @@ def main():
             except RuntimeError as exc:
                 raise Exception(str(individual.protein)) from exc
         if not survival:
-            print(f"\textinction./.")
+            print("\textinction./.")
             break
-        print(f"\tsurvive:", len(survival))
+        print("\tsurvive:", len(survival))
 
         survival.sort()
         best_distance = survival[0].instability
-        print(f"\tbest:", best_distance)
+        print("\tbest:", best_distance)
 
         survivants: list[Individual] = [
             srv.individual for srv in survival[: min(selection_size, len(survival))]

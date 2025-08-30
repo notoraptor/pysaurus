@@ -27,17 +27,17 @@ def check(cases: Sequence[Case], criterions: Sequence[str]) -> None:
     nb_criterions = len(criterions)
     nb_combinaisons = 2**nb_criterions
     nb_per_criteria = nb_combinaisons // 2
-    assert (
-        len(cases) == nb_combinaisons
-    ), f"Expected {nb_combinaisons} cases, got {len(cases)}"
+    assert len(cases) == nb_combinaisons, (
+        f"Expected {nb_combinaisons} cases, got {len(cases)}"
+    )
 
     proc_to_cases: dict[str, list[tuple[int, ...]]] = {}
     proc_to_2_cases: dict[str, dict[tuple, list[tuple[int, ...]]]] = {}
     names_cases = []
     for case in cases:
-        assert (
-            len(case.case) == nb_criterions
-        ), f"Case {case.case} does not match the number of criterions {nb_criterions}"
+        assert len(case.case) == nb_criterions, (
+            f"Case {case.case} does not match the number of criterions {nb_criterions}"
+        )
         named_case = {name: val for (name, val) in zip(criterions, case.case)} | {
             "sequence": Procedure(case.sequence)
         }

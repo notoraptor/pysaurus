@@ -6,7 +6,7 @@ from typing import Iterable
 class CharClass:
     __slots__ = "char", "cls", "rank", "lower_rank"
     DIGITS = "0123456789"
-    SUP_DIGITS = "\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079"
+    SUP_DIGITS = "\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079"
     SUB_DIGITS = "\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089"
     CLS_DIG = DIGITS[0]
     CLS_SUP = SUP_DIGITS[0]

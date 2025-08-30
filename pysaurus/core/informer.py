@@ -73,7 +73,6 @@ class Informer(AbstractNotifier):
             file.write(f"[{Date.now()}] {something}\n")
 
     def _monitor(self):
-
         # We are in a thread, with notifications handled sequentially,
         # thus no need to be process-safe.
         print("Monitoring notifications ...")

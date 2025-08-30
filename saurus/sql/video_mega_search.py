@@ -137,9 +137,9 @@ def _get_videos(
             properties[row[0]].setdefault(row[1], []).append(row[2])
         json_properties = {
             video_id: {
-                prop_types[property_id]
-                .name: prop_types[property_id]
-                .from_strings(values)
+                prop_types[property_id].name: prop_types[property_id].from_strings(
+                    values
+                )
                 for property_id, values in raw_properties.items()
             }
             for video_id, raw_properties in properties.items()
@@ -279,7 +279,7 @@ def video_mega_group(
                 LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
                 WHERE
                 v.discarded = 0 AND {source_query} AND p.name = ?
-                AND vv.property_value IN ({','.join(placeholders)})
+                AND vv.property_value IN ({",".join(placeholders)})
                 GROUP BY vv.video_id
                 HAVING COUNT(vv.property_value) = ?
                 """
@@ -299,13 +299,13 @@ def video_mega_group(
                 LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
                 WHERE
                 v.discarded = 0 AND {source_query} AND p.name = ?
-                AND vv.property_value IN ({','.join(placeholders)})
+                AND vv.property_value IN ({",".join(placeholders)})
                 GROUP BY vv.video_id
                 HAVING COUNT(vv.property_value) = ?)
                 AS x
                 JOIN video_property_value AS xv ON x.video_id = xv.video_id
                 JOIN property AS xp ON xv.property_id = xp.property_id
-                WHERE xp.name = ? AND value NOT IN ({','.join(placeholders)})
+                WHERE xp.name = ? AND value NOT IN ({",".join(placeholders)})
                 GROUP BY value {without_singletons}
                 ORDER BY {order_field} {order_direction}
                 """
@@ -395,7 +395,7 @@ def video_mega_group(
                 ON v.property_id = p.property_id
                 WHERE
                 p.name = ?
-                AND v.property_value IN ({','.join(placeholders)})
+                AND v.property_value IN ({",".join(placeholders)})
                 GROUP BY v.video_id
                 HAVING COUNT(v.property_value) = ?
                 """

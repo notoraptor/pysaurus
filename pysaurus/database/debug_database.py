@@ -1,9 +1,8 @@
 import logging
 import multiprocessing
-from typing import Iterable
 
-from pysaurus.core.components import AbsolutePath, PathType
-from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.components import AbsolutePath
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database import BaseDatabase
 
 logger = logging.getLogger(__name__)

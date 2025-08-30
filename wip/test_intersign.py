@@ -35,10 +35,7 @@ def test_multiple_threads():
     with Intersign.receiver():
         Intersign.handle_with(handler)
 
-        threads = [
-            threading.Thread(target=run)
-            for _ in range(5)
-        ]
+        threads = [threading.Thread(target=run) for _ in range(5)]
         for thread in threads:
             thread.start()
         for thread in threads:
@@ -60,10 +57,7 @@ def test_multiple_processes():
     with Intersign.receiver():
         Intersign.handle_with(handler)
 
-        processes = [
-            multiprocessing.Process(target=run_process)
-            for _ in range(5)
-        ]
+        processes = [multiprocessing.Process(target=run_process) for _ in range(5)]
         for process in processes:
             process.start()
         for process in processes:

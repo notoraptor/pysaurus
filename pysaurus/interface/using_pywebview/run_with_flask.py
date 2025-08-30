@@ -89,7 +89,7 @@ def main():
         backend = Backend()
         window = webview.create_window(
             "Local Files",
-            f"http://localhost:5000",
+            "http://localhost:5000",
             width=1500,
             height=1000,
             resizable=True,

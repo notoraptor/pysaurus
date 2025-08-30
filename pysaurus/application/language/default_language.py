@@ -55,8 +55,8 @@ class DefaultLanguage:
     error_moving_file = "Error {name}: {message}"
 
     player_title = "Media Player"
-    player_text_play = "\u25B6"
-    player_text_pause = "\u23F8"
+    player_text_play = "\u25b6"
+    player_text_pause = "\u23f8"
     player_text_next = "Next"
     player_text_repeat = "Repeat"
     player_tooltip_play = "Play"
