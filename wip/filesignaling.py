@@ -27,7 +27,7 @@ def _get_lock_file_path() -> Path:
     return file_path.with_stem(f"{file_path.stem}.lock")
 
 
-class FileSignalMonitoring:
+class _FileMonitoring:
     __slots__ = ("_handler", "_thread")
     __file_path__ = _get_file_path()
     __lock_path__ = _get_lock_file_path()
@@ -104,31 +104,18 @@ class FileSignalMonitoring:
         return str(message)
 
 
-def filesignaling(handler: Callable[[Any], None] | None = None) -> FileSignalMonitoring:
-    if FileSignalMonitoring.__monitor__ is None:
-        FileSignalMonitoring.__monitor__ = FileSignalMonitoring()
-    monitor = FileSignalMonitoring.__monitor__
-    monitor.set_handler(handler)
-    return monitor
+class Watching:
+    @classmethod
+    def listen(cls, handler: Callable[[Any], None] | None = None) -> _FileMonitoring:
+        if _FileMonitoring.__monitor__ is None:
+            _FileMonitoring.__monitor__ = _FileMonitoring()
+        monitor = _FileMonitoring.__monitor__
+        monitor.set_handler(handler)
+        return monitor
 
-
-def filesignal(message: Any):
-    if FileSignalMonitoring.__file_path__.is_file():
-        FileSignalMonitoring.notify(message)
-    else:
-        print("[filesignal]", message)
-
-
-def main():
-    filesignal(0)
-    with filesignaling():
-        filesignal(0)
-        filesignal(1)
-        filesignal(2)
-        filesignal(3)
-        filesignal(4)
-    filesignal(0)
-
-
-if __name__ == "__main__":
-    main()
+    @classmethod
+    def notify(cls, message: Any):
+        if _FileMonitoring.__file_path__.is_file():
+            _FileMonitoring.notify(message)
+        else:
+            print("[watching]", message)
