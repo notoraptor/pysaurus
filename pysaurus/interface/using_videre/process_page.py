@@ -1,8 +1,8 @@
 from typing import Callable
 
+import videre
 from ovld import OvldMC
 
-import videre
 from pysaurus.core.job_notifications import JobProgressDisplay, NotificationCollector
 from pysaurus.core.notifications import End, Notification
 

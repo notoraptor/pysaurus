@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from wip.adnoide.adnoide import (
-    AbstractFunctionNode,
-    CODONS,
     CODON_TO_FUNCTION,
+    CODONS,
+    AbstractFunctionNode,
     Constant,
     ConstantNode,
     Feed,

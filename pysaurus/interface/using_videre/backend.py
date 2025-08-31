@@ -1,8 +1,9 @@
 import videre
+from videre.widgets.widget import Widget
+
 from pysaurus.core.notifications import Notification
 from pysaurus.core.profiling import Profiler
 from pysaurus.interface.api.gui_api import GuiAPI
-from videre.widgets.widget import Widget
 
 
 class _VidereGuiAPI(GuiAPI):

@@ -1,13 +1,14 @@
 import sys
 
 import videre
+from videre.widgets.widget import Widget
+
 from pysaurus.core.constants import VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE
 from pysaurus.core.informer import Informer
 from pysaurus.core.notifications import DatabaseReady, End
 from pysaurus.interface.using_videre.backend import PysaurusBackend
 from pysaurus.interface.using_videre.process_page import ProcessPage
 from pysaurus.interface.using_videre.videos_page import VideosPage
-from videre.widgets.widget import Widget
 
 
 class App:

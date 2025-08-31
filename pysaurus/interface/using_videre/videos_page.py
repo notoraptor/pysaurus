@@ -1,15 +1,15 @@
 from collections.abc import Callable
 
+import videre
 from ovld import OvldMC
 from typing_extensions import TypeAlias
+from videre.core.pygame_utils import Surface
+from videre.widgets.widget import Widget
 
-import videre
 from pysaurus.core import notifications
 from pysaurus.core.profiling import Profiler
 from pysaurus.interface.using_videre.video_view import VideoView
 from pysaurus.video.database_context import DatabaseContext
-from videre.core.pygame_utils import Surface
-from videre.widgets.widget import Widget
 
 
 class Pagination(videre.Row):

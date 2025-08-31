@@ -1,4 +1,5 @@
 import videre
+
 from pysaurus.core import notifications
 from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.properties.properties import PropUnitType

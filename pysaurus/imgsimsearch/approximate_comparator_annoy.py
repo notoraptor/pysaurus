@@ -1,8 +1,8 @@
 import math
 from typing import Any
 
-from PIL import ImageFilter
 from annoy import AnnoyIndex
+from PIL import ImageFilter
 
 from pysaurus.core.informer import Informer
 from pysaurus.core.notifications import Message

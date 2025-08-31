@@ -2,7 +2,7 @@ import os
 from copy import deepcopy
 from typing import Any
 
-from pysaurus.core.classes import StringPrinter, StringedTuple, Text
+from pysaurus.core.classes import StringedTuple, StringPrinter, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
 from pysaurus.core.constants import UNDEFINED

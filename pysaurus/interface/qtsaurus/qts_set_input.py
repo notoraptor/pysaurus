@@ -2,7 +2,7 @@ from typing import Sequence, Type
 
 from PySide6.QtWidgets import QGridLayout, QLineEdit, QPushButton, QWidget
 
-from pysaurus.interface.common.qt_utils import Callback, TYPE_VALIDATORS
+from pysaurus.interface.common.qt_utils import TYPE_VALIDATORS, Callback
 from pysaurus.interface.qtsaurus.qts_alerter import QtsAlerter
 from pysaurus.interface.qtsaurus.qts_elided_label import QtsElidedLabel
 
