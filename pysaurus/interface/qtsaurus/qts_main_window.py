@@ -23,20 +23,12 @@ class QtsAPI(GuiAPI):
         self.interface.notified.emit(notification)
 
 
-class _LocalNotifier(Notifier):
-    __slots__ = ()
-
-    def __init__(self):
-        super().__init__()
-        self.never_call_default_manager()
-
-
 class QtsMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.interface = Interface()
         self.api = QtsAPI(self.interface)
-        self.gui_notifier = _LocalNotifier()
+        self.gui_notifier = Notifier(manager_policy=Notifier.DM_NO_CALL)
         self.interface.notified.connect(self.notify)
 
     def call(self, name: str, *args):

@@ -16,6 +16,7 @@ class Notifier(AbstractNotifier):
         "__default_manager_policy",
         "__log_path",
         "__log_written",
+        "__out",
     )
 
     DM_NO_CALL = 0
@@ -24,14 +25,15 @@ class Notifier(AbstractNotifier):
     DM_CALL_LATER = 3
 
     def manage(self, notification):
-        print(notification)
+        print(notification, file=self.__out)
 
-    def __init__(self):
+    def __init__(self, stderr=False, manager_policy=DM_CALL_SOONER):
         self.__managers: dict[type, ManagerType] = {}
         self.__default_manager: Callable[[Notification], None] | None = None
-        self.__default_manager_policy = Notifier.DM_CALL_SOONER
+        self.__default_manager_policy = manager_policy
         self.__log_path = None
         self.__log_written = False
+        self.__out = sys.stderr if stderr else sys.stdout
 
     def __call__(self, notification):
         return self.notify(notification)
@@ -95,11 +97,4 @@ class Notifier(AbstractNotifier):
             default_manager(notification)
 
 
-class _StderrNotifier(Notifier):
-    __slots__ = ()
-
-    def manage(self, notification):
-        print(notification, file=sys.stderr)
-
-
-DEFAULT_NOTIFIER = _StderrNotifier()
+DEFAULT_NOTIFIER = Notifier(stderr=True)
