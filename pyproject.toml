@@ -23,6 +23,7 @@ dependencies = [
     "ovld>=0.5.11",
     "filedial>=0.1.0",
     "videre",
+    "filelock>=3.19.1",
 ]
 
 [dependency-groups]

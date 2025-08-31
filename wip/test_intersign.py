@@ -2,7 +2,13 @@ import multiprocessing
 import threading
 from types import SimpleNamespace
 
-from wip.intersign import Intersign
+from wip import filesignal
+
+
+class Intersign:
+    receiver = filesignal.filesignaling
+    handle_with = receiver
+    send = filesignal.filesignal
 
 
 def test_simple():
@@ -41,7 +47,7 @@ def test_multiple_threads():
         for thread in threads:
             thread.join()
 
-        assert counter.value == 5
+    assert counter.value == 5
 
 
 def run_process():
@@ -63,4 +69,4 @@ def test_multiple_processes():
         for process in processes:
             process.join()
 
-        assert counter.value == 5
+    assert counter.value == 5
