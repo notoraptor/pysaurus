@@ -38,20 +38,22 @@ def _get_config() -> _Config:
     return config
 
 
+__sentinel__ = _get_sentinel_path()
+__address__ = _get_config().to_tuple()
+
+
 class _Monitoring:
-    __sentinel__ = _get_sentinel_path()
-    __address__ = _get_config().to_tuple()
     __monitor__ = None
 
     @classmethod
     def _create_sentinel(cls):
-        with open(cls.__sentinel__, mode="w"):
+        with open(__sentinel__, mode="w"):
             pass
 
     @classmethod
     def _remove_sentinel(cls):
-        if cls.__sentinel__.exists():
-            cls.__sentinel__.unlink()
+        if __sentinel__.exists():
+            __sentinel__.unlink()
 
     def __init__(self):
         self._handler = None
@@ -65,7 +67,7 @@ class _Monitoring:
 
     def __enter__(self):
         if self._thread is None:
-            self._listener = Listener(address=self.__address__)
+            self._listener = Listener(address=__address__)
             self._create_sentinel()
             self._thread = threading.Thread(target=self._monitor)
             self._thread.start()
@@ -73,7 +75,7 @@ class _Monitoring:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         assert self._thread is not None
-        self.notify(None)
+        Talk.notify(None)
         self._thread.join()
         self._listener.close()
         self._listener = None
@@ -92,21 +94,6 @@ class _Monitoring:
             self._remove_sentinel()
             print("... Monitored")
 
-    @classmethod
-    def notify(cls, message: Any):
-        if cls.__sentinel__.exists():
-            try:
-                with Client(address=cls.__address__) as conn:
-                    conn.send(message)
-            except ConnectionRefusedError:
-                cls._fallback(message)
-        else:
-            cls._fallback(message)
-
-    @classmethod
-    def _fallback(cls, message: Any):
-        print("[talk]", message)
-
 
 class Talk:
     @classmethod
@@ -119,4 +106,23 @@ class Talk:
 
     @classmethod
     def notify(cls, message: Any):
-        _Monitoring.notify(message)
+        """
+        Generate a notification.
+
+        This function uses only global variables,
+        which are basical easy-to-pick variables.
+        So, using this function in a process is pickle-safe,
+        as no complex unpickable variable will be shared.
+        """
+        if __sentinel__.exists():
+            try:
+                with Client(address=__address__) as conn:
+                    conn.send(message)
+            except ConnectionRefusedError:
+                cls._fallback(message)
+        else:
+            cls._fallback(message)
+
+    @classmethod
+    def _fallback(cls, message: Any):
+        print("[talk]", message)
