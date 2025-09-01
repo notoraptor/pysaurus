@@ -19,20 +19,34 @@ class VideoPropertyView(videre.Column):
 
 class VideoAttributesView(videre.Column):
     __wprops__ = {}
-    __slots__ = ("_video",)
+    __slots__ = ("_video", "_menu", "_text_path")
 
     def __init__(self, video: VideoPattern, **kwargs):
-        actions = [
-            ("Open file", self._open_file),
-            ("Open containing folder", self._open_containing_folder),
-        ]
         checkbox = videre.Checkbox()
         self._video = video
+        self._menu = videre.ContextButton(
+            " \u2630 ",
+            actions=[
+                (
+                    f"Mark as {'unwatched' if video.watched else 'watched'}",
+                    self._change_watched,
+                ),
+                ("Open file", self._open_file),
+                ("Open containing folder", self._open_containing_folder),
+            ],
+            square=True,
+        )
+        self._text_path = videre.Text(
+            str(video.filename),
+            wrap=videre.TextWrap.CHAR,
+            color=videre.Colors.lightgray if video.watched else videre.Colors.blue,
+            strong=video.watched,
+        )
         super().__init__(
             [
                 videre.Row(
                     [
-                        videre.ContextButton(" \u2630 ", actions, square=True),
+                        self._menu,
                         checkbox,
                         videre.Label(
                             for_button=checkbox, text=str(video.title), strong=True
@@ -44,11 +58,7 @@ class VideoAttributesView(videre.Column):
             ]
             + ([videre.Text(str(video.file_title))] if video.meta_title else [])
             + [
-                videre.Text(
-                    str(video.filename),
-                    wrap=videre.TextWrap.CHAR,
-                    color=videre.Colors.blue,
-                ),
+                self._text_path,
                 videre.Text(
                     f"{video.extension.upper()} {video.size} / "
                     f"{video.container_format} /"
@@ -88,6 +98,25 @@ class VideoAttributesView(videre.Column):
     def _open_containing_folder(self):
         ret = get_backend(self).open_containing_folder(self._video.video_id)
         self.get_window().notify(notifications.Message("Opened folder:", ret))
+
+    def _change_watched(self):
+        backend = get_backend(self)
+        watched = backend.mark_as_read(self._video.video_id)
+        video = backend.get_video(self._video.video_id)
+        assert video.watched is watched
+        self._video = video
+        self._text_path.color = (
+            videre.Colors.lightgray if video.watched else videre.Colors.blue
+        )
+        self._text_path.strong = watched
+        self._menu.actions = [
+            (
+                f"Mark as {'unwatched' if video.watched else 'watched'}",
+                self._change_watched,
+            ),
+            ("Open file", self._open_file),
+            ("Open containing folder", self._open_containing_folder),
+        ]
 
 
 class VideoView(videre.Container):

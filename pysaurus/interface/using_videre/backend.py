@@ -4,6 +4,7 @@ from videre.widgets.widget import Widget
 from pysaurus.core.notifications import Notification
 from pysaurus.core.profiling import Profiler
 from pysaurus.interface.api.gui_api import GuiAPI
+from pysaurus.video.video_pattern import VideoPattern
 
 
 class _VidereGuiAPI(GuiAPI):
@@ -28,11 +29,18 @@ class PysaurusBackend:
         self.close_app = self.__api.close_app
         self.get_python_backend = Profiler.profile()(self.__api.get_python_backend)
 
+    def get_video(self, video_id: int) -> VideoPattern:
+        (video,) = self.__api.database.get_videos(where={"video_id": video_id})
+        return video
+
     def open_video(self, video_id: int):
         self.__api.database.open_video(video_id)
 
     def open_containing_folder(self, video_id: int) -> str:
         return self.__api.open_containing_folder(video_id)
+
+    def mark_as_read(self, video_id: int) -> bool:
+        return self.__api.database.mark_as_read(video_id)
 
 
 def get_backend(widget: Widget) -> PysaurusBackend:
