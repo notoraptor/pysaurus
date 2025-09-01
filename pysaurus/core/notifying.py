@@ -35,9 +35,6 @@ class Notifier(AbstractNotifier):
         self.__log_written = False
         self.__out = sys.stderr if stderr else sys.stdout
 
-    def __call__(self, notification):
-        return self.notify(notification)
-
     def set_log_path(self, path: str | None):
         if self.__log_path != path:
             self.__log_written = False

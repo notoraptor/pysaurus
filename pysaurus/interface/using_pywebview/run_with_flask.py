@@ -4,7 +4,7 @@ import threading
 import webview
 from flask import Flask, send_from_directory
 
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.interface.using_pywebview.webview_server import Backend
 
 # Définir le répertoire à servir
@@ -82,7 +82,7 @@ def inject_console_interceptor(window):
 
 
 def main():
-    with Informer.default():
+    with Information():
         server_thread = threading.Thread(target=start_flask_server, daemon=True)
         server_thread.start()
 

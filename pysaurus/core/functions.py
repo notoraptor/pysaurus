@@ -120,6 +120,10 @@ def identity(value):
     return value
 
 
+def do_nothing(*args, **kwargs):
+    pass
+
+
 get_start_index = bisect.bisect_left
 get_end_index = bisect.bisect_right
 

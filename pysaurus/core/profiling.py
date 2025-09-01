@@ -1,7 +1,7 @@
 import functools
 
 from pysaurus.core.components import Duration
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.core.notifications import ProfilingEnd, ProfilingStart
 from pysaurus.core.perf_counter import PerfCounter
 
@@ -11,7 +11,7 @@ class Profiler(PerfCounter):
 
     def __init__(self, title, notifier=None, inline=False):
         self._title = title
-        self._notifier = notifier or Informer.default()
+        self._notifier = notifier or Information.notifier()
         self._inline = inline
         super().__init__()
 

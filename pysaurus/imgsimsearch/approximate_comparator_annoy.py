@@ -4,7 +4,7 @@ from typing import Any
 from annoy import AnnoyIndex
 from PIL import ImageFilter
 
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.core.notifications import Message
 from pysaurus.core.profiling import Profiler
 from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
@@ -22,7 +22,7 @@ class ApproximateComparatorAnnoy:
 
     def __init__(self, imp: AbstractImageProvider):
         weight_length = self.WEIGHT_LENGTH
-        self.notifier = Informer.default()
+        self.notifier = Information.notifier()
         blur = ImageFilter.BoxBlur(1)
         vector_size = 3 * self.DIM * self.DIM + weight_length
         vectors = []

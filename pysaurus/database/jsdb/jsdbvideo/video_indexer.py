@@ -2,7 +2,7 @@ import pickle
 from typing import Iterable, Sequence
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.jsdb.jsdbvideo.abstract_video_indexer import AbstractVideoIndexer
@@ -50,7 +50,7 @@ class VideoIndexer(AbstractVideoIndexer):
 
     @Profiler.profile_method("indexer_build")
     def build(self, videos: Iterable[Video]):
-        notifier = Informer.default()
+        notifier = Information.notifier()
         if self.index_path and self.index_path.isfile():
             self._load()
         videos = [

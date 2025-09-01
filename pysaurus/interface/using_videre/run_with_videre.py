@@ -4,7 +4,7 @@ import videre
 from videre.widgets.widget import Widget
 
 from pysaurus.core.constants import VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.core.notifications import DatabaseReady, End
 from pysaurus.interface.using_videre.backend import PysaurusBackend
 from pysaurus.interface.using_videre.process_page import ProcessPage
@@ -19,7 +19,7 @@ class App:
         self.backend = PysaurusBackend(self.window)
 
     def start(self) -> int:
-        with Informer.default():
+        with Information():
             try:
                 self.welcome_page()
                 return self.window.run()

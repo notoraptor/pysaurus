@@ -14,7 +14,7 @@ from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
-from pysaurus.core.informer import INFORMER_CALLBACK, Informer
+from pysaurus.core.informer import Information
 from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
     Cancelled,
@@ -48,13 +48,13 @@ class GuiAPI(FeatureAPI):
         database may contain data that can't be pickled.
         E.g. Do not share database provider.
         """
-        super().__init__(notifier=Informer.default())
+        super().__init__(notifier=Information.notifier())
         self.launched_thread: threading.Thread | None = None
         self.copy_work: FileCopier | None = None
         self.server = ServerLauncher(lambda: self.database)
         self._closed = False
 
-        INFORMER_CALLBACK.set_manager(self._notification_callback)
+        Information.handle_with(self._notification_callback)
 
         self.server.start()
         # TODO Check runtime VLC for other operating systems ?
@@ -153,7 +153,7 @@ class GuiAPI(FeatureAPI):
 
     def _notification_callback(self, notification: Notification):
         if self.database:
-            Informer.log(str(self.database.ways.db_log_path), notification)
+            Information.log(str(self.database.ways.db_log_path), notification)
         self._notify(notification)
 
     @abstractmethod

@@ -5,7 +5,7 @@ from pysaurus import package_dir
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.enumeration import EnumerationError
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.core.modules import System
 from pysaurus.interface.api.gui_api import GuiAPI
 from pysaurus.interface.common.qt_saurus_utils import PysaurusQtExceptHook
@@ -195,7 +195,7 @@ def main():
 
 
 def main_with_context():
-    with Informer.default():
+    with Information():
         main()
 
 

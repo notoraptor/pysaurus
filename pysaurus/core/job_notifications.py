@@ -154,6 +154,9 @@ class AbstractNotifier(ABC):
     def notify(self, notification):
         pass
 
+    def __call__(self, something):
+        return self.notify(something)
+
     def task(
         self, identifier, total: int, kind="item(s)", expectation=None, title=None
     ):

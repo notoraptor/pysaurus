@@ -1,11 +1,11 @@
 import logging
 
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.interface.using_pywebview.webview_server import WebviewServer
 
 
 def main():
-    with Informer.default():
+    with Information():
         # Configure logging
         logging.basicConfig(
             level=logging.INFO,

@@ -2,7 +2,7 @@ from typing import Iterable
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.core.modules import FNV64
 from pysaurus.core.parallelization import parallelize
 from pysaurus.core.profiling import Profiler
@@ -22,7 +22,7 @@ class Videos:
         cls, folders: Iterable[AbsolutePath]
     ) -> dict[AbsolutePath, VideoRuntimeInfo]:
         sources = list(folders)
-        notifier = Informer.default()
+        notifier = Information.notifier()
         paths: dict[AbsolutePath, VideoRuntimeInfo] = {}
         with Profiler(title=say("Collect videos"), notifier=notifier):
             for local_result in parallelize(
@@ -78,7 +78,7 @@ class Videos:
         if not tasks:
             return []
 
-        notifier = Informer.default()
+        notifier = Information.notifier()
         raptor = PythonVideoRaptor()
         with Profiler(say("Collect videos info"), notifier=notifier):
             results: list[VideoTaskResult] = list(

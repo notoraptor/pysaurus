@@ -4,6 +4,7 @@ import threading
 from typing import Callable
 
 from pysaurus.core.components import Date
+from pysaurus.core.functions import do_nothing
 from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.core.notifications import Notification
 from pysaurus.interface.api.api_utils.console_notification_printer import (
@@ -11,66 +12,47 @@ from pysaurus.interface.api.api_utils.console_notification_printer import (
 )
 
 
-class ManagerFactory:
-    """
-    Static class to provide a multiprocessing manager
-    generated once and stored in a class static attribute.
-    Used in class below.
-    """
+class _InformationNotifier(AbstractNotifier):
+    __slots__ = ("_queue",)
 
+    def __init__(self, shared_queue):
+        self._queue = shared_queue
+
+    def notify(self, notification):
+        self._queue.put_nowait(notification)
+
+
+class Information:
+    __slots__ = ("_manager", "_queue", "_thread", "_callback")
     __default__ = None
 
-    @classmethod
-    def default(cls):
+    def __new__(cls, *args, **kwargs):
         if cls.__default__ is None:
-            print("INIT MANAGER", file=sys.stderr)
-            cls.__default__ = multiprocessing.Manager()
+            print("INIT INFORMATION", file=sys.stderr)
+            cls.__default__ = super().__new__(cls, *args, **kwargs)
         return cls.__default__
 
-
-class InformerCallbackFactory:
-    __slots__ = ("_callback",)
-
     def __init__(self):
-        self._callback = self._default_callback
+        self._manager = multiprocessing.Manager()
+        self._queue = self._manager.Queue()
+        self._thread = None
+        self._callback = do_nothing
 
-    def _default_callback(self, notification: Notification):
-        pass
+    def _set_callback(self, callback: Callable[[Notification], None]):
+        self._callback = callback or do_nothing
 
-    def set_manager(self, callback: Callable[[Notification], None]):
-        self._callback = callback or self._default_callback
+    def __enter__(self):
+        if self._thread is None:
+            th = threading.Thread(target=self._monitor)
+            th.start()
+            self._thread = th
+        return self
 
-    def manage(self, notification: Notification):
-        self._callback(notification)
-
-
-INFORMER_CALLBACK = InformerCallbackFactory()
-
-
-class Informer(AbstractNotifier):
-    __slots__ = ("__queue",)
-    __default__ = None
-
-    def __init__(self):
-        self.__queue = ManagerFactory.default().Queue()
-
-    def __call__(self, something):
-        return self.notify(something)
-
-    def notify(self, something):
-        self.__queue.put_nowait(something)
-
-    @classmethod
-    def default(cls):
-        if cls.__default__ is None:
-            print("INIT INFORMER", file=sys.stderr)
-            cls.__default__ = cls()
-        return cls.__default__
-
-    @staticmethod
-    def log(filename: str, something):
-        with open(filename, "a", encoding="utf-8") as file:
-            file.write(f"[{Date.now()}] {something}\n")
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        assert self._thread
+        self._queue.put(None)
+        self._thread.join()
+        self._thread = None
 
     def _monitor(self):
         # We are in a thread, with notifications handled sequentially,
@@ -78,17 +60,28 @@ class Informer(AbstractNotifier):
         print("Monitoring notifications ...")
         notification_printer = ConsoleNotificationPrinter()
         while True:
-            notification = self.__queue.get()
+            notification = self._queue.get()
             if notification is None:
                 break
             notification_printer.collect(notification)
-            INFORMER_CALLBACK.manage(notification)
+            self._callback(notification)
         print("End monitoring.")
 
-    def __enter__(self):
-        th = threading.Thread(target=self._monitor)
-        th.start()
-        return self
+    @classmethod
+    def _get(cls):
+        if cls.__default__ is None:
+            cls.__default__ = cls()
+        return cls.__default__
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.__queue.put(None)
+    @classmethod
+    def handle_with(cls, callback: Callable[[Notification], None]):
+        cls._get()._set_callback(callback)
+
+    @classmethod
+    def notifier(cls) -> _InformationNotifier:
+        return _InformationNotifier(cls._get()._queue)
+
+    @staticmethod
+    def log(filename: str, something):
+        with open(filename, "a", encoding="utf-8") as file:
+            file.write(f"[{Date.now()}] {something}\n")

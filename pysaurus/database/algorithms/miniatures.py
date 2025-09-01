@@ -4,7 +4,7 @@ import ujson as json
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.parallelization import parallelize
@@ -34,7 +34,7 @@ class Miniatures:
             parallelize(
                 cls._gen_miniature,
                 named_thumbnails,
-                notifier=Informer.default(),
+                notifier=Information.notifier(),
                 kind="video miniature(s)",
                 progress_step=100,
             )

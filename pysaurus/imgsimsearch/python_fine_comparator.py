@@ -1,7 +1,7 @@
 from typing import Any, Sequence
 
 from pysaurus.core.graph import Graph
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import Information
 from pysaurus.core.miniature import Miniature, NumpyMiniature
 from pysaurus.imgsimsearch.backend_numpy import SimilarityComparator
 from pysaurus.imgsimsearch.common import THUMBNAIL_DIMENSION
@@ -12,7 +12,7 @@ def compare_miniatures(
     comparisons: dict[Any, Sequence[Any]],
     sim_limit: float,
 ) -> list[set[Any]]:
-    notifier = Informer.default()
+    notifier = Information.notifier()
 
     all_filenames = set(comparisons)
     for filenames in comparisons.values():
