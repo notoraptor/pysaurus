@@ -436,6 +436,9 @@ class AbstractDatabase(ABC):
     def open_video(self, video_id: int):
         (video,) = self.get_videos(include=["filename"], where={"video_id": video_id})
         video.filename.open()
+        self.mark_as_watched(video_id)
+
+    def mark_as_watched(self, video_id: int):
         self.videos_set_field("date_entry_opened", {video_id: Date.now().time})
         self.videos_set_field("watched", {video_id: True})
 

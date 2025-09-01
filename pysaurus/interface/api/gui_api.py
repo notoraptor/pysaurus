@@ -1,6 +1,5 @@
 import functools
 import logging
-import os
 import subprocess
 import threading
 from abc import abstractmethod
@@ -15,7 +14,6 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.informer import Information
-from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
     Cancelled,
     DatabaseReady,
@@ -28,7 +26,7 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
 from pysaurus.interface.api.api_utils.proxy_feature import FromPyperclip, FromTk
-from pysaurus.interface.api.api_utils.vlc_path import VLC_PATH
+from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC, VLC_PATH
 from pysaurus.interface.api.feature_api import FeatureAPI
 from saurus.language import say
 
@@ -60,9 +58,7 @@ class GuiAPI(FeatureAPI):
         # TODO Check runtime VLC for other operating systems ?
         self._constants.update(
             {
-                "PYTHON_HAS_RUNTIME_VLC": (
-                    System.is_windows() and os.path.isfile(VLC_PATH)
-                ),
+                "PYTHON_HAS_RUNTIME_VLC": PYTHON_HAS_RUNTIME_VLC,
                 "PYTHON_SERVER_HOSTNAME": self.server.server_thread.hostname,
                 "PYTHON_SERVER_PORT": self.server.server_thread.port,
             }
@@ -81,6 +77,7 @@ class GuiAPI(FeatureAPI):
         url = f"http://{hostname}:{port}/video/{video_id}"
         logger.debug(f"Running {VLC_PATH} {url}")
         self._run_thread(subprocess.run, [VLC_PATH, url])
+        self.database.mark_as_watched(video_id)
         return url
 
     def cancel_copy(self) -> None:

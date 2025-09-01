@@ -13,8 +13,10 @@ class _ServerThread(threading.Thread):
         # (2022/12/29) https://stackoverflow.com/a/38805873
         super().__init__(daemon=True)
         self.hostname = "127.0.0.1"
-        self.port = 5000
+        self.port = 0  # Set port to 0 so that system chooses a port dynamically
         self.server = make_server(self.hostname, self.port, appl, threaded=True)
+        # Save back opened port
+        self.port = self.server.server_port
 
         # Create an application context for this thread
         # App context is crucial for Flask to work properly in a separate thread
