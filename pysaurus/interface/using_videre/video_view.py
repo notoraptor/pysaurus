@@ -1,8 +1,10 @@
 from typing import Callable
 
+import pyperclip
 import videre
 
 from pysaurus.core import notifications
+from pysaurus.core.functions import string_to_pieces
 from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC
 from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.properties.properties import PropUnitType
@@ -139,6 +141,24 @@ class VideoAttributesView(videre.Column):
         self._text_path.strong = watched
         self._menu.actions = self._get_menu_actions(video)
 
+    def _action_copy_meta_title(self):
+        self._action_copy("meta_title")
+
+    def _action_copy_file_title(self):
+        self._action_copy("file_title")
+
+    def _action_copy_path(self):
+        self._action_copy("filename", "path")
+
+    def _action_copy_video_id(self):
+        self._action_copy("video_id", "video ID")
+
+    def _action_copy(self, field: str, title=None):
+        title = title or " ".join(string_to_pieces(field))
+        value = getattr(self._video, field)
+        pyperclip.copy(str(value))
+        self.get_window().notify(notifications.Message(f"Copied {title}:", value))
+
     def _get_menu_actions(self, video: VideoPattern) -> list[tuple[str, Callable]]:
         actions = []
         if video.found:
@@ -161,6 +181,15 @@ class VideoAttributesView(videre.Column):
                     ("Open containing folder", self._action_open_containing_folder),
                 ]
             )
+        if video.meta_title:
+            actions.extend([("Copy meta title", self._action_copy_meta_title)])
+        actions.extend(
+            [
+                ("Copy file title", self._action_copy_file_title),
+                ("Copy path", self._action_copy_path),
+                ("Copy video ID", self._action_copy_video_id),
+            ]
+        )
         return actions
 
 
