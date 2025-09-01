@@ -57,7 +57,7 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
           const meta_title = title === file_title ? null : title;
           const hasThumbnail = data.with_thumbnails;
           const htmlID = `video-${data.video_id}`;
-          const alreadyOpened = data.date != data.date_entry_opened;
+          const alreadyOpened = data.watched;
           const common = this.props.groupDef && this.props.groupDef.common || {};
           const groupedBySimilarityID = this.props.groupDef && this.props.groupDef.field === "similarity_id";
           const errors = data.errors.slice();
@@ -83,7 +83,9 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
             title: `${Characters.SETTINGS}`
           }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.markAsRead
-          }, tr("Mark as read")) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Mark as {read}", {
+            read: alreadyOpened ? "unwatched" : "watched"
+          })) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
           }, tr("Open file")) : /*#__PURE__*/React.createElement("div", {
             className: "text-center"
@@ -298,14 +300,18 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
           }));
         }
         markAsRead() {
-          Backend.mark_as_read(this.props.data.video_id).then(() => {
-            APP_STATE.videoHistory.add(this.props.data.filename);
-            this.props.onInfo(tr("Marked as read: {path}", {
+          Backend.mark_as_read(this.props.data.video_id).then(newWatched => {
+            const status = newWatched ? "watched" : "unwatched";
+            this.props.data.watched = newWatched;
+            this.props.onInfo(tr("Marked as {read}: {path}", {
+              read: status,
               path: this.props.data.filename
             }), true);
           }).catch(error => {
             backend_error(error);
-            this.props.onInfo(tr("Unable to mark as read: {path}", {
+            const status = newWatched ? "watched" : "unwatched";
+            this.props.onInfo(tr("Unable to mark as {read}: {path}", {
+              read: status,
               path: this.props.data.filename
             }));
           });

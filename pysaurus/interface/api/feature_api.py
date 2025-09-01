@@ -56,7 +56,7 @@ class FeatureAPI:
             "move_property_values": FromDb(self, Db.move_property_values),
             "open_random_video": FromView(self, View.choose_random_video, True),
             "open_video": FromDb(self, Db.open_video),
-            "mark_as_read": FromDb(self, Db.mark_as_read),
+            "mark_as_read": FromDb(self, Db.mark_as_read, True),
             "remove_prop_type": FromDb(self, Db.prop_type_del),
             "rename_database": FromDb(self, Db.rename),
             "rename_prop_type": FromDb(self, Db.prop_type_set_name),

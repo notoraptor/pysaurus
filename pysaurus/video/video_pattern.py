@@ -198,6 +198,11 @@ class VideoPattern(ABC):
         raise NotImplementedError()
 
     @property
+    @abstractmethod
+    def watched(self) -> bool:
+        raise NotImplementedError()
+
+    @property
     def thumbnail_base64(self):
         # Return thumbnail as HTML, base64 encoded image data
         data: bytes = self.thumbnail
@@ -331,4 +336,5 @@ class VideoPattern(ABC):
             "video_id": self.video_id,
             "width": self.width,
             "with_thumbnails": self.with_thumbnails,
+            "watched": self.watched,
         }

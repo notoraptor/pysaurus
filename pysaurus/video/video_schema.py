@@ -34,5 +34,6 @@ VIDEO_SCHEMA = Schema(
         Type("video_codec", "v", ""),
         Type("video_codec_description", "V", ""),
         Type("width", "w", 0),
+        Type("watched", "O", False),
     ]
 )

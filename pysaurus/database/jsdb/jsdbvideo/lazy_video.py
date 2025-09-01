@@ -162,6 +162,15 @@ class LazyVideo(WithSchema, VideoPattern):
         if self._set("similarity_id", data):
             self._save_date_entry_modified()
 
+    @property
+    def watched(self) -> bool:
+        return self._get("watched")
+
+    @watched.setter
+    def watched(self, data):
+        if self._set("watched", bool(data)):
+            self._save_date_entry_modified()
+
     video_codec = property(lambda self: Text(self._get("video_codec")))
     video_codec_description = property(
         lambda self: Text(self._get("video_codec_description"))

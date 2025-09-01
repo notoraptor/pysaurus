@@ -36,7 +36,7 @@ export class Video extends BaseComponent {
 		const meta_title = title === file_title ? null : title;
 		const hasThumbnail = data.with_thumbnails;
 		const htmlID = `video-${data.video_id}`;
-		const alreadyOpened = data.date != data.date_entry_opened;
+		const alreadyOpened = data.watched;
 		const common = (this.props.groupDef && this.props.groupDef.common) || {};
 		const groupedBySimilarityID = this.props.groupDef && this.props.groupDef.field === "similarity_id";
 		const errors = data.errors.slice();
@@ -57,7 +57,9 @@ export class Video extends BaseComponent {
 							<div className="options horizontal">
 								<MenuPack title={`${Characters.SETTINGS}`}>
 									{data.found ? (
-										<MenuItem action={this.markAsRead}>{tr("Mark as read")}</MenuItem>
+										<MenuItem action={this.markAsRead}>
+											{tr("Mark as {read}", { read: alreadyOpened ? "unwatched" : "watched" })}
+										</MenuItem>
 									) : (
 										""
 									)}
@@ -444,10 +446,12 @@ export class Video extends BaseComponent {
 
 	markAsRead() {
 		Backend.mark_as_read(this.props.data.video_id)
-			.then(() => {
-				APP_STATE.videoHistory.add(this.props.data.filename);
+			.then((newWatched) => {
+				const status = newWatched ? "watched" : "unwatched";
+				this.props.data.watched = newWatched;
 				this.props.onInfo(
-					tr("Marked as read: {path}", {
+					tr("Marked as {read}: {path}", {
+						read: status,
 						path: this.props.data.filename,
 					}),
 					true,
@@ -455,8 +459,10 @@ export class Video extends BaseComponent {
 			})
 			.catch((error) => {
 				backend_error(error);
+				const status = newWatched ? "watched" : "unwatched";
 				this.props.onInfo(
-					tr("Unable to mark as read: {path}", {
+					tr("Unable to mark as {read}: {path}", {
+						read: status,
 						path: this.props.data.filename,
 					}),
 				);

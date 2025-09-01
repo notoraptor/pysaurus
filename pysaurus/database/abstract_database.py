@@ -438,8 +438,11 @@ class AbstractDatabase(ABC):
         video.filename.open()
         self.videos_set_field("date_entry_opened", {video_id: Date.now().time})
 
-    def mark_as_read(self, video_id: int):
-        self.videos_set_field("date_entry_opened", {video_id: Date.now().time})
+    def mark_as_read(self, video_id: int) -> bool:
+        (row,) = self.get_videos(where={"video_id": video_id})
+        self.videos_set_field("watched", {video_id: not row.watched})
+        (row,) = self.get_videos(where={"video_id": video_id})
+        return row.watched
 
     def delete_video(self, video_id: int) -> AbsolutePath:
         video_filename = self.get_video_filename(video_id)

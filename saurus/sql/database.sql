@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS video (
 	date_entry_modified DOUBLE,
 	date_entry_opened DOUBLE,
 	similarity_id INTEGER,
+	watched INTEGER NOT NULL DEFAULT 0,
 	-- virtual columns
 	readable INTEGER GENERATED ALWAYS AS (1 - unreadable) VIRTUAL,
 	found INTEGER GENERATED ALWAYS AS (is_file) VIRTUAL,
