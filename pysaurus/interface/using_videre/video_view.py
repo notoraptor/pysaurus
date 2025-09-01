@@ -3,6 +3,7 @@ from typing import Callable
 import videre
 
 from pysaurus.core import notifications
+from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC
 from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_pattern import VideoPattern
@@ -118,6 +119,10 @@ class VideoAttributesView(videre.Column):
         get_backend(self).open_video(self._video.video_id)
         self.get_window().notify(notifications.Message("Opened:", self._video.filename))
 
+    def _action_open_from_local_server(self):
+        ret = get_backend(self).open_from_server(self._video.video_id)
+        self.get_window().notify(notifications.Message("Opened:", ret))
+
     def _action_open_containing_folder(self):
         ret = get_backend(self).open_containing_folder(self._video.video_id)
         self.get_window().notify(notifications.Message("Opened folder:", ret))
@@ -135,14 +140,28 @@ class VideoAttributesView(videre.Column):
         self._menu.actions = self._get_menu_actions(video)
 
     def _get_menu_actions(self, video: VideoPattern) -> list[tuple[str, Callable]]:
-        return [
-            (
-                f"Mark as {'unwatched' if video.watched else 'watched'}",
-                self._action_change_watched,
-            ),
-            ("Open file", self._action_open_file),
-            ("Open containing folder", self._action_open_containing_folder),
-        ]
+        actions = []
+        if video.found:
+            actions.extend(
+                [
+                    (
+                        f"Mark as {'unwatched' if video.watched else 'watched'}",
+                        self._action_change_watched,
+                    ),
+                    ("Open file", self._action_open_file),
+                ]
+            )
+        if PYTHON_HAS_RUNTIME_VLC:
+            actions.extend(
+                [("Open from local server", self._action_open_from_local_server)]
+            )
+        if video.found:
+            actions.extend(
+                [
+                    ("Open containing folder", self._action_open_containing_folder),
+                ]
+            )
+        return actions
 
 
 class VideoView(videre.Container):
