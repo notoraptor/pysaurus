@@ -23,20 +23,24 @@ class _InformationNotifier(AbstractNotifier):
 
 
 class Information:
-    __slots__ = ("_manager", "_queue", "_thread", "_callback")
+    __slots__ = ("_manager", "_queue", "_thread", "_callback", "_initialized")
     __default__ = None
 
     def __new__(cls, *args, **kwargs):
         if cls.__default__ is None:
-            print("INIT INFORMATION", file=sys.stderr)
+            print("NEW INFORMATION", file=sys.stderr)
             cls.__default__ = super().__new__(cls, *args, **kwargs)
+            cls.__default__._initialized = False
         return cls.__default__
 
     def __init__(self):
-        self._manager = multiprocessing.Manager()
-        self._queue = self._manager.Queue()
-        self._thread = None
-        self._callback = do_nothing
+        if not getattr(self, "_initialized", False):
+            print("INIT INFORMATION", file=sys.stderr)
+            self._manager = multiprocessing.Manager()
+            self._queue = self._manager.Queue()
+            self._thread = None
+            self._callback = do_nothing
+            self._initialized = True
 
     def _set_callback(self, callback: Callable[[Notification], None]):
         self._callback = callback or do_nothing
