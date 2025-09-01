@@ -71,6 +71,11 @@ class VideoAttributesView(videre.Column):
                     f"(opened) {video.date_entry_opened}",
                     wrap=videre.TextWrap.WORD,
                 ),
+                videre.Text(
+                    f"Audio: {', '.join(video.audio_languages or ['(none)'])} | "
+                    f"Subtitles: {', '.join(video.subtitle_languages or ['(none)'])}"
+                ),
+                videre.Text(f"Similarity: {video.similarity}"),
             ],
             space=2,
             **kwargs,

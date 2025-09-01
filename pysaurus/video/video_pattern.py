@@ -134,7 +134,7 @@ class VideoPattern(ABC):
 
     @property
     @abstractmethod
-    def similarity_id(self) -> int:
+    def similarity_id(self) -> int | None:
         raise NotImplementedError()
 
     @property
@@ -263,6 +263,14 @@ class VideoPattern(ABC):
     @property
     def audio_bit_rate_kbps(self) -> int:
         return round(self.audio_bit_rate / 1000)
+
+    @property
+    def similarity(self) -> str:
+        return (
+            "not compared"
+            if self.similarity_id is None
+            else ("none" if self.similarity_id < 0 else str(self.similarity_id))
+        )
 
     def json(self, with_moves=False) -> dict:
         filename = self.filename
