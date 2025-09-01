@@ -437,6 +437,7 @@ class AbstractDatabase(ABC):
         (video,) = self.get_videos(include=["filename"], where={"video_id": video_id})
         video.filename.open()
         self.videos_set_field("date_entry_opened", {video_id: Date.now().time})
+        self.videos_set_field("watched", {video_id: True})
 
     def mark_as_read(self, video_id: int) -> bool:
         (row,) = self.get_videos(where={"video_id": video_id})
