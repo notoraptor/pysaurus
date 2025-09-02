@@ -2,31 +2,49 @@ from typing import Callable
 
 import pyperclip
 import videre
+from videre.widgets.widget import Widget
 
 from pysaurus.core import notifications
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC
 from pysaurus.interface.using_videre.backend import get_backend
-from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_pattern import VideoPattern
 
 LIGHT_GREY = videre.parse_color((240, 240, 240))
 
 
-class VideoPropertyView(videre.Column):
+class DialogRenameVideo(videre.Column):
     __wprops__ = {}
-    __slots__ = ()
+    __slots__ = ("entry",)
 
-    def __init__(self, name: str, values: list[PropUnitType]):
-        super().__init__(
-            [videre.Text(name, strong=True)]
-            + [videre.Text(str(value)) for value in values]
+    def __init__(self, video: VideoPattern) -> None:
+        filename = videre.Text(
+            str(video.filename), wrap=videre.TextWrap.CHAR, strong=True
         )
+        entry = videre.TextInput(str(video.file_title))
+        entry_wrapper = videre.Container(entry, border=videre.Border.all(1))
+        self.entry = entry
+        super().__init__(
+            [filename, entry_wrapper],
+            horizontal_alignment=videre.Alignment.CENTER,
+            expand_horizontal=True,
+            space=10,
+        )
+
+    def get_value(self) -> str:
+        return self.entry.value
 
 
 class VideoAttributesView(videre.Column):
     __wprops__ = {}
-    __slots__ = ("_video", "_menu", "_text_path")
+    __slots__ = (
+        "_video",
+        "_menu",
+        "_text_path",
+        "_label_title",
+        "_text_meta_title",
+        "_hold_file_title",
+    )
 
     def __init__(self, video: VideoPattern, **kwargs):
         checkbox = videre.Checkbox()
@@ -37,28 +55,27 @@ class VideoAttributesView(videre.Column):
             actions=self._get_menu_actions(video),
             square=True,
         )
+        self._label_title = videre.Label(
+            for_button=checkbox, text=str(video.title), strong=True
+        )
         self._text_path = videre.Text(
             str(video.filename),
             wrap=videre.TextWrap.CHAR,
             color=videre.Colors.lightgray if video.watched else videre.Colors.blue,
             strong=video.watched,
         )
+        # videre.Text(str(video.file_title))
+        self._hold_file_title = videre.Container(
+            videre.Text(str(video.file_title)) if video.meta_title else None
+        )
         super().__init__(
             [
                 videre.Row(
-                    [
-                        self._menu,
-                        checkbox,
-                        videre.Label(
-                            for_button=checkbox, text=str(video.title), strong=True
-                        ),
-                    ],
+                    [self._menu, checkbox, self._label_title],
                     vertical_alignment=videre.Alignment.CENTER,
                     space=5,
-                )
-            ]
-            + ([videre.Text(str(video.file_title))] if video.meta_title else [])
-            + [
+                ),
+                self._hold_file_title,
                 self._text_path,
                 videre.Text(
                     f"{video.extension.upper()} {video.size} / "
@@ -99,7 +116,7 @@ class VideoAttributesView(videre.Column):
                                     videre.Container(
                                         videre.Text(str(value), italic=True),
                                         background_color=LIGHT_GREY,
-                                        padding=videre.Padding.axis(2, 4),
+                                        padding=videre.Padding.axis(2, 10),
                                     )
                                     for value in values
                                 ),
@@ -159,6 +176,28 @@ class VideoAttributesView(videre.Column):
         pyperclip.copy(str(value))
         self.get_window().notify(notifications.Message(f"Copied {title}:", value))
 
+    def _action_rename(self):
+        dialog = DialogRenameVideo(self._video)
+        button = videre.Button("rename", on_click=self._on_rename, data=dialog)
+        self.get_window().set_fancybox(dialog, title="Rename Video", buttons=[button])
+
+    def _on_rename(self, widget: Widget):
+        dialog: DialogRenameVideo = widget.data
+        new_title = dialog.get_value()
+        widget.data = None
+        backend = get_backend(self)
+        backend.rename_video(self._video.video_id, new_title)
+        video = backend.get_video(self._video.video_id)
+        self._video = video
+        self._label_title.text = str(video.title)
+        self._text_path.text = str(video.filename)
+        self._hold_file_title.control = (
+            videre.Text(str(video.file_title)) if video.meta_title else None
+        )
+        window = self.get_window()
+        window.clear_fancybox()
+        window.notify(notifications.Message(f"Renamed to: {new_title}:"))
+
     def _get_menu_actions(self, video: VideoPattern) -> list[tuple[str, Callable]]:
         actions = []
         if video.found:
@@ -188,6 +227,7 @@ class VideoAttributesView(videre.Column):
                 ("Copy file title", self._action_copy_file_title),
                 ("Copy path", self._action_copy_path),
                 ("Copy video ID", self._action_copy_video_id),
+                ("Rename video", self._action_rename),
             ]
         )
         return actions

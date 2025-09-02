@@ -43,6 +43,9 @@ class PysaurusBackend:
     def mark_as_read(self, video_id: int) -> bool:
         return self.__api.database.mark_as_read(video_id)
 
+    def rename_video(self, video_id: int, new_title: str) -> None:
+        return self.__api.database.change_video_file_title(video_id, new_title)
+
 
 def get_backend(widget: Widget) -> PysaurusBackend:
     data = widget.get_window().data
