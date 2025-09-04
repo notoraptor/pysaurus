@@ -6,7 +6,8 @@ from typing import Any, Sequence
 from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.classes import Selector
-from pysaurus.core.components import Duration, FileSize
+from pysaurus.core.components import FileSize
+from pysaurus.core.duration import Duration
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.core.profiling import Profiler
 from pysaurus.video.video_search_context import VideoSearchContext

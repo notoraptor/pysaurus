@@ -1,6 +1,6 @@
 import functools
 
-from pysaurus.core.components import Duration
+from pysaurus.core.duration import Duration
 from pysaurus.core.informer import Information
 from pysaurus.core.notifications import ProfilingEnd, ProfilingStart
 from pysaurus.core.perf_counter import PerfCounter

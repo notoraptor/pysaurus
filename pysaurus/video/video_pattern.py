@@ -2,7 +2,8 @@ import base64
 from abc import ABC, abstractmethod
 from typing import TypedDict
 
-from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
+from pysaurus.core.components import AbsolutePath, Date, FileSize
+from pysaurus.core.duration import Duration
 from pysaurus.properties.properties import PropUnitType
 
 

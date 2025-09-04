@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from pysaurus.core.components import Duration
+from pysaurus.core.duration import Duration
 from pysaurus.core.perf_counter import PerfCounter
 
 inf = float("inf")

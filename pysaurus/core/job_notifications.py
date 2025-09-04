@@ -2,7 +2,7 @@ import sys
 from abc import ABC, abstractmethod
 from typing import Any, Iterable
 
-from pysaurus.core.components import Duration
+from pysaurus.core.duration import Duration
 from pysaurus.core.functions import camel_case_to_snake_case
 from pysaurus.core.notifications import Notification, ProfilingEnd, ProfilingStart
 from pysaurus.core.perf_counter import PerfCounter

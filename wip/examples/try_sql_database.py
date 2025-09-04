@@ -2,7 +2,7 @@ import inspect
 import json
 import os
 
-from pysaurus.core.components import Duration
+from pysaurus.core.duration import Duration
 from pysaurus.core.perf_counter import PerfCounter
 from pysaurus.database.db_utils import DatabaseLoaded
 from saurus.sql.pysaurus_collection import PysaurusCollection
