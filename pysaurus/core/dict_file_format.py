@@ -1,7 +1,9 @@
+from typing import Any
+
 from pysaurus.core.classes import StringPrinter
 
 
-def dff_dumps(dictionary: dict) -> str:
+def dff_dumps(dictionary: dict[str, Any]) -> str:
     with StringPrinter() as writer:
         for key, value in dictionary.items():
             if not isinstance(value, str):
