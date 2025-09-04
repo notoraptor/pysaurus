@@ -1,7 +1,7 @@
 import pickle
 from typing import Iterable, Sequence
 
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.informer import Information
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler

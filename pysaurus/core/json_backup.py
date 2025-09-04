@@ -1,6 +1,6 @@
 import ujson as json
 
-from pysaurus.core.components import AbsolutePath, PathType
+from pysaurus.core.absolute_path import AbsolutePath, PathType
 from pysaurus.core.informer import Information
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.profiling import Profiler

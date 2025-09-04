@@ -9,8 +9,8 @@ import filedial
 import pyperclip
 
 from pysaurus.application import exceptions
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import Runnable
-from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.informer import Information

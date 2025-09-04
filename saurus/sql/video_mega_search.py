@@ -1,8 +1,8 @@
 from collections import defaultdict
 from typing import Iterable, Sequence
 
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import Selector
-from pysaurus.core.components import AbsolutePath
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages

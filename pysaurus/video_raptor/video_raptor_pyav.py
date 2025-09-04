@@ -7,7 +7,7 @@ from dataclasses import field as dataclass_field
 import av
 from PIL import Image
 
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.fraction import Fraction
 from pysaurus.video.video_entry import VideoEntry
 

@@ -2,9 +2,9 @@ import os
 from copy import deepcopy
 from typing import Any
 
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import StringedTuple, StringPrinter, Text
 from pysaurus.core.compare import to_comparable
-from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import UNDEFINED
 from pysaurus.core.datestring import Date
 from pysaurus.core.duration import Duration

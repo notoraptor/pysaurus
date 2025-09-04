@@ -16,9 +16,10 @@ sudo apt install libmpv1
 ## Qt / QWebEnginePage
 
 Code:
+
 ```python
 from PyQt6.QtWebEngineCore import QWebEnginePage
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 ```
 Error:
 ```
@@ -29,7 +30,7 @@ Fix:
 Import QWebEnginePage after Pysaurus symbols
 
 ```python
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from PyQt6.QtWebEngineCore import QWebEnginePage
 ```
 

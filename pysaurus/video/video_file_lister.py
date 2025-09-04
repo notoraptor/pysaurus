@@ -1,7 +1,7 @@
 import os
 
 from pysaurus.core import constants
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.modules import FileSystem
 from pysaurus.video import VideoRuntimeInfo
 

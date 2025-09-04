@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from pysaurus.application.application import Config
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.modules import FileSystem
 from saurus.language import say

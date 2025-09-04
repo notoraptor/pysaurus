@@ -1,4 +1,4 @@
-from pysaurus.core.components import PathType
+from pysaurus.core.absolute_path import PathType
 from pysaurus.database.db_paths import DatabasePathDef, DatabasePaths
 
 DB_JSON_PATH = DatabasePathDef("json_path", "json")

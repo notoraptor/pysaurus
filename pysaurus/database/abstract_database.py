@@ -8,7 +8,7 @@ import ujson as json
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
-from pysaurus.core.components import AbsolutePath, PathType
+from pysaurus.core.absolute_path import AbsolutePath, PathType
 from pysaurus.core.datestring import Date
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils

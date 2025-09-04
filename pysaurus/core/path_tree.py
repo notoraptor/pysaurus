@@ -1,8 +1,8 @@
 import os
 from typing import Self
 
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.components import AbsolutePath
 
 
 class PathTreeNode:

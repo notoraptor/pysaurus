@@ -3,7 +3,7 @@ from typing import Any, Collection, Iterable, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
-from pysaurus.core.components import AbsolutePath, PathType
+from pysaurus.core.absolute_path import AbsolutePath, PathType
 from pysaurus.core.datestring import Date
 from pysaurus.core.functions import make_collection
 from pysaurus.core.json_backup import JsonBackup

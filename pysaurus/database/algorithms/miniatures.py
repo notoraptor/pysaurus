@@ -3,7 +3,7 @@ from typing import Sequence
 import ujson as json
 
 from pysaurus.application import exceptions
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.informer import Information
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils

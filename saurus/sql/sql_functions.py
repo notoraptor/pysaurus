@@ -1,4 +1,4 @@
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.semantic_text import pad_numbers_in_string
 
 

@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from pysaurus.core import notifications
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.informer import Information
 from pysaurus.core.modules import FNV64
 from pysaurus.core.parallelization import parallelize

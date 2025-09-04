@@ -1,7 +1,7 @@
 import logging
 import multiprocessing
 
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database import BaseDatabase
 

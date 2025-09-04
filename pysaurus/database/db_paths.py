@@ -2,7 +2,7 @@ import logging
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
-from pysaurus.core.components import AbsolutePath, PathType
+from pysaurus.core.absolute_path import AbsolutePath, PathType
 from pysaurus.core.modules import FileSystem
 
 logger = logging.getLogger(__name__)

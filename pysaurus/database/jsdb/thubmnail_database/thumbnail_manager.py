@@ -1,7 +1,7 @@
 import base64
 from typing import Iterable
 
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_database import (
     ThumbnailDatabase,
 )

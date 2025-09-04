@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from saurus.sql.sql_video_wrapper import F
 
 

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from pysaurus.core.components import AbsolutePath, PathType
+from pysaurus.core.absolute_path import AbsolutePath, PathType
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 from pysaurus.interface.common.qt_utils import Callback
 from pysaurus.interface.qtsaurus.qts_elided_label import QtsElidedLabel

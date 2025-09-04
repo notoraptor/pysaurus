@@ -7,7 +7,7 @@ from typing import Self
 
 from pysaurus.core import core_exceptions
 from pysaurus.core.datestring import Date
-from pysaurus.core.modules import FileSystem, System
+from pysaurus.core.modules import System
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class AbsolutePath:
         return self.__path[self.__len_prefix :] if self.__len_prefix else self.__path
 
     @property
-    def best_path(self):
+    def best_path(self) -> str:
         if System.is_windows():
             from pysaurus.core.native.windows import get_short_path_name
 
@@ -40,15 +40,15 @@ class AbsolutePath:
         return self.__path
 
     @property
-    def path(self):
+    def path(self) -> str:
         return self.__path
 
     @property
-    def uri(self):
+    def uri(self) -> str:
         return pathlib.Path(self.standard_path).as_uri()
 
     @property
-    def title(self):
+    def title(self) -> str:
         """Get path title.
 
         For a directory, returns basename.
@@ -58,7 +58,7 @@ class AbsolutePath:
         return os.path.basename(self.__path) if self.isdir() else self.file_title
 
     @property
-    def file_title(self):
+    def file_title(self) -> str:
         """Get title for a file path.
 
         You can use it instead of `self.title` if you are already sure that
@@ -84,40 +84,45 @@ class AbsolutePath:
         return hash(self.standard_path)
 
     def __eq__(self, other):
-        return self.standard_path == other.standard_path
+        return (
+            isinstance(other, AbsolutePath)
+            and self.standard_path == other.standard_path
+        )
 
     def __lt__(self, other):
-        return self.standard_path < other.standard_path
+        return (
+            isinstance(other, AbsolutePath) and self.standard_path < other.standard_path
+        )
 
     def __len__(self):
         return len(self.__path)
 
-    def exists(self):
-        return FileSystem.path.exists(self.__path)
+    def exists(self) -> bool:
+        return os.path.exists(self.__path)
 
-    def isfile(self):
-        return FileSystem.path.isfile(self.__path)
+    def isfile(self) -> bool:
+        return os.path.isfile(self.__path)
 
-    def isdir(self):
-        return FileSystem.path.isdir(self.__path)
+    def isdir(self) -> bool:
+        return os.path.isdir(self.__path)
 
-    def listdir(self):
-        return FileSystem.listdir(self.__path)
+    def listdir(self) -> list[str]:
+        return os.listdir(self.__path)
 
     def walk(self):
-        return FileSystem.walk(self.__path)
+        return os.walk(self.__path)
 
-    def get_basename(self):
+    def get_basename(self) -> str:
         return os.path.basename(self.__path)
 
-    def get_directory(self):
+    def get_directory(self) -> Self:
         return AbsolutePath(os.path.dirname(self.__path))
 
-    def get_date_modified(self):
+    def get_date_modified(self) -> Date:
         return Date(self.get_mtime())
 
-    def get_mtime(self):
-        return FileSystem.path.getmtime(self.__path)
+    def get_mtime(self) -> float:
+        return os.path.getmtime(self.__path)
 
     def get_drive_name(self):
         drive_name = os.path.splitdrive(self.standard_path)[0]
@@ -125,24 +130,24 @@ class AbsolutePath:
             drive_name = drive_name + os.path.sep
         return drive_name
 
-    def get_size(self):
-        return FileSystem.path.getsize(self.__path)
+    def get_size(self) -> int:
+        return os.path.getsize(self.__path)
 
-    def mkdir(self):
-        FileSystem.makedirs(self.__path, exist_ok=True)
-        if not FileSystem.path.isdir(self.__path):
+    def mkdir(self) -> Self:
+        os.makedirs(self.__path, exist_ok=True)
+        if not os.path.isdir(self.__path):
             raise NotADirectoryError(self.__path)
         return self
 
-    def delete(self):
+    def delete(self) -> None:
         if self.isfile():
-            FileSystem.unlink(self.__path)
+            os.unlink(self.__path)
         elif self.isdir():
             shutil.rmtree(self.__path)
         if self.exists():
             raise FileExistsError(self.__path)
 
-    def copy_file_to(self, dst):
+    def copy_file_to(self, dst: Self | str):
         if not self.isfile():
             raise core_exceptions.NotAFileError(self)
         dst = self.ensure(dst)
@@ -156,17 +161,14 @@ class AbsolutePath:
         new_path = AbsolutePath.file_path(self.get_directory(), title, self.extension)
         if new_path.exists():
             raise FileExistsError(new_path)
-        FileSystem.rename(self.__path, new_path.path)
+        os.rename(self.__path, new_path.path)
         if self.exists():
             raise FileExistsError(self.__path)
         if not new_path.exists():
             raise core_exceptions.NotAFileError(new_path)
         return new_path
 
-    def to_json(self):
-        return str(self)
-
-    def open(self):
+    def open(self) -> Self:
         """Open path with default OS program."""
         if System.is_linux():
             subprocess.run(["xdg-open", self.__path])
@@ -182,12 +184,12 @@ class AbsolutePath:
                 logger.debug(f"AbsolutePath: opening Windows short path {path}")
             else:
                 path = self.__path
-            FileSystem.startfile(path)
+            os.startfile(path)
         else:
             raise core_exceptions.UnsupportedSystemError(System.platform())
         return self
 
-    def locate_file_old(self):
+    def _locate_file_old(self):
         # NB: Windows: does not work with very long paths in exFAT file systems.
         if System.is_windows():
             command = f'explorer /select,"{self.__path}"'
@@ -234,7 +236,7 @@ STDERR: {stderr.strip()}"""
             raise core_exceptions.NotAFileError(self)
         return self
 
-    def read_binary_file(self):
+    def read_binary_file(self) -> bytes:
         with open(self.__path, "rb") as file:
             return file.read()
 
@@ -242,28 +244,28 @@ STDERR: {stderr.strip()}"""
     def ensure(cls, path: str | Self) -> Self:
         return path if isinstance(path, AbsolutePath) else AbsolutePath(str(path))
 
-    @staticmethod
-    def map(iterable):
-        return map(AbsolutePath.ensure, iterable)
+    @classmethod
+    def map(cls, iterable):
+        return map(cls.ensure, iterable)
 
-    @staticmethod
-    def ensure_directory(path):
-        path = AbsolutePath.ensure(path)
+    @classmethod
+    def ensure_directory(cls, path: Self | str) -> Self:
+        path = cls.ensure(path)
         if not path.isdir():
             raise NotADirectoryError(path)
         return path
 
     @classmethod
-    def join(cls, *args):
+    def join(cls, *args) -> Self:
         """Join pieces to create an absolute path (similar to os.path.join(...)).
         :param args: pieces of path to join (each converted to a string).
         :return: a new absolute path.
         :rtype: AbsolutePath
         """
-        return AbsolutePath(os.path.join(*(str(piece) for piece in args)))
+        return cls(os.path.join(*(str(piece) for piece in args)))
 
     @classmethod
-    def file_path(cls, folder_path, file_title, file_extension):
+    def file_path(cls, folder_path, file_title, file_extension) -> Self:
         """Create a new file path with a folder, a file title and a file extension.
             Each piece will be converted to a string.
         :param folder_path: folder path.

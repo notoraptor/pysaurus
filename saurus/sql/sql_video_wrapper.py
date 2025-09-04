@@ -1,7 +1,7 @@
 from typing import Iterable
 
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import StringedTuple
-from pysaurus.core.components import AbsolutePath
 from pysaurus.core.datestring import Date
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_pattern import MoveType, VideoPattern

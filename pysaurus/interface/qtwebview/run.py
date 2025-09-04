@@ -3,7 +3,7 @@ import sys
 
 from pysaurus import package_dir
 from pysaurus.application import exceptions
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.informer import Information
 from pysaurus.core.modules import System

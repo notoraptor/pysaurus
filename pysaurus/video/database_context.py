@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.video.video_search_context import VideoSearchContext
 
 

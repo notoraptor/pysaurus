@@ -13,7 +13,7 @@ from pysaurus.application.language.default_language import (
 )
 from pysaurus.application.language.language import Language
 from pysaurus.core import functions
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.dict_file_format import dff_dump, dff_load
 from pysaurus.core.json_type import Type

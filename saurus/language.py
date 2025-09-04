@@ -1,5 +1,5 @@
 from pysaurus.core import dict_file_format as dff
-from pysaurus.core.components import AbsolutePath, PathType
+from pysaurus.core.absolute_path import AbsolutePath, PathType
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.modules import FNV64
 
