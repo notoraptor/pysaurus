@@ -24,8 +24,8 @@ class Graph:
             groups.append(group)
         return groups
 
-    # Unused
     def __remove(self, a):
+        """Unused"""
         for b in self.edges.pop(a):
             self.edges[b].remove(a)
             if not self.edges[b]:
