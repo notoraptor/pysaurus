@@ -1,6 +1,7 @@
 from typing import Iterable
 
-from pysaurus.core.components import AbsolutePath, Date
+from pysaurus.core.components import AbsolutePath
+from pysaurus.core.datestring import Date
 from pysaurus.core.functions import generate_temporary_file
 from pysaurus.core.modules import FileSystem
 

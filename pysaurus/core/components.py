@@ -3,10 +3,10 @@ import os
 import pathlib
 import shutil
 import subprocess
-from datetime import datetime
 from typing import Self
 
 from pysaurus.core import core_exceptions
+from pysaurus.core.datestring import Date
 from pysaurus.core.modules import FileSystem, System
 
 logger = logging.getLogger(__name__)
@@ -274,43 +274,3 @@ STDERR: {stderr.strip()}"""
 
 
 PathType = AbsolutePath | str
-
-
-class Date:
-    __slots__ = ("time",)
-
-    def __init__(self, float_timestamp: float):
-        self.time: float = float_timestamp
-
-    def __str__(self):
-        return datetime.fromtimestamp(self.time).strftime("%Y-%m-%d %H:%M:%S")
-
-    def __hash__(self):
-        return hash(self.time)
-
-    def __float__(self):
-        return self.time
-
-    def __eq__(self, other):
-        return self.time == other.time
-
-    def __lt__(self, other):
-        return self.time < other.time
-
-    def __ge__(self, other):
-        return self.time >= other.time
-
-    def to_json(self):
-        return str(self)
-
-    @property
-    def day(self):
-        return datetime.fromtimestamp(self.time).strftime("%Y-%m-%d")
-
-    @property
-    def year(self) -> int:
-        return int(datetime.fromtimestamp(self.time).strftime("%Y"))
-
-    @staticmethod
-    def now():
-        return Date(datetime.now().timestamp())

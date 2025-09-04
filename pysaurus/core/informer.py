@@ -3,7 +3,7 @@ import sys
 import threading
 from typing import Callable
 
-from pysaurus.core.components import Date
+from pysaurus.core.datestring import Date
 from pysaurus.core.functions import do_nothing
 from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.core.notifications import Notification

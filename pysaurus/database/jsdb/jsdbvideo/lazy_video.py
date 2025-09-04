@@ -4,8 +4,9 @@ from typing import Any
 
 from pysaurus.core.classes import StringedTuple, StringPrinter, Text
 from pysaurus.core.compare import to_comparable
-from pysaurus.core.components import AbsolutePath, Date
+from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import UNDEFINED
+from pysaurus.core.datestring import Date
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
