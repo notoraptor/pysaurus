@@ -1,5 +1,4 @@
 import logging
-import math
 import os
 import pathlib
 import shutil
@@ -315,34 +314,3 @@ class Date:
     @staticmethod
     def now():
         return Date(datetime.now().timestamp())
-
-
-class FileSize:
-    BYTES = 1
-    KILO_BYTES = 1024
-    MEGA_BYTES = KILO_BYTES * KILO_BYTES
-    GIGA_BYTES = KILO_BYTES * MEGA_BYTES
-    TERA_BYTES = KILO_BYTES * GIGA_BYTES
-    BASES = [BYTES, KILO_BYTES, MEGA_BYTES, GIGA_BYTES, TERA_BYTES]
-    NAMES = ["b", "Kb", "Mb", "Gb", "Tb"]
-
-    __slots__ = ("value", "__base")
-
-    def __init__(self, size: int):
-        self.value = size
-        self.__base = (size and min(4, int(math.log(size, 1024)))) or 0
-
-    def __hash__(self):
-        return hash(self.value)
-
-    def __eq__(self, other):
-        return isinstance(other, FileSize) and self.value == other.value
-
-    def __lt__(self, other):
-        return isinstance(other, FileSize) and self.value < other.value
-
-    def __str__(self):
-        return f"{round(self.value / self.BASES[self.__base], 2)} {self.NAMES[self.__base]}"
-
-    def to_json(self):
-        return str(self)

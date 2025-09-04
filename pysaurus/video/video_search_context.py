@@ -3,8 +3,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from pysaurus.core.classes import Selector
-from pysaurus.core.components import FileSize
 from pysaurus.core.duration import Duration
+from pysaurus.core.file_size import FileSize
 from pysaurus.video.video_constants import COMMON_FIELDS
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_pattern import VideoPattern

@@ -2,8 +2,9 @@ from collections import defaultdict
 from typing import Iterable, Sequence
 
 from pysaurus.core.classes import Selector
-from pysaurus.core.components import AbsolutePath, FileSize
+from pysaurus.core.components import AbsolutePath
 from pysaurus.core.duration import Duration
+from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.properties.properties import PropTypeValidator
 from pysaurus.video.video_pattern import VideoPattern
