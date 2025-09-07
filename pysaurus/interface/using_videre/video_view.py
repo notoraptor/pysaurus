@@ -35,21 +35,21 @@ class DialogRenameVideo(videre.Column):
         return self.entry.value
 
 
-class VideoAttributesView(videre.Column):
+class VideoView(videre.Container):
     __wprops__ = {}
     __slots__ = (
         "_video",
         "_menu",
         "_text_path",
         "_label_title",
-        "_text_meta_title",
         "_hold_file_title",
     )
+    __BACKGROUND_EVEN__ = videre.parse_color((240, 240, 240))
 
-    def __init__(self, video: VideoPattern, **kwargs):
+    def __init__(self, video: VideoPattern, index: int):
+        self._video = video
         checkbox = videre.Checkbox()
         properties = video.properties
-        self._video = video
         self._menu = videre.ContextButton(
             " \u2630 ",
             actions=self._get_menu_actions(video),
@@ -58,17 +58,16 @@ class VideoAttributesView(videre.Column):
         self._label_title = videre.Label(
             for_button=checkbox, text=str(video.title), strong=True
         )
+        self._hold_file_title = videre.Container(
+            videre.Text(str(video.file_title)) if video.meta_title else None
+        )
         self._text_path = videre.Text(
             str(video.filename),
             wrap=videre.TextWrap.CHAR,
             color=videre.Colors.lightgray if video.watched else videre.Colors.blue,
             strong=video.watched,
         )
-        # videre.Text(str(video.file_title))
-        self._hold_file_title = videre.Container(
-            videre.Text(str(video.file_title)) if video.meta_title else None
-        )
-        super().__init__(
+        attributes = videre.Column(
             [
                 videre.Row(
                     [self._menu, checkbox, self._label_title],
@@ -131,20 +130,57 @@ class VideoAttributesView(videre.Column):
                 else []
             ),
             space=2,
-            **kwargs,
+            weight=1,
+        )
+        super().__init__(
+            videre.Row(
+                [
+                    videre.Container(
+                        videre.Picture(video.thumbnail),
+                        width=300,
+                        horizontal_alignment=videre.Alignment.CENTER,
+                    ),
+                    attributes,
+                ],
+                space=6,
+            ),
+            padding=videre.Padding.axis(vertical=10),
+            background_color=(self.__BACKGROUND_EVEN__ if index % 2 == 1 else None),
         )
 
-    def _action_open_file(self):
-        get_backend(self).open_video(self._video.video_id)
-        self.get_window().notify(notifications.Message("Opened:", self._video.filename))
-
-    def _action_open_from_local_server(self):
-        ret = get_backend(self).open_from_server(self._video.video_id)
-        self.get_window().notify(notifications.Message("Opened:", ret))
-
-    def _action_open_containing_folder(self):
-        ret = get_backend(self).open_containing_folder(self._video.video_id)
-        self.get_window().notify(notifications.Message("Opened folder:", ret))
+    def _get_menu_actions(self, video: VideoPattern) -> list[tuple[str, Callable]]:
+        actions = []
+        if video.found:
+            actions.extend(
+                [
+                    (
+                        f"Mark as {'unwatched' if video.watched else 'watched'}",
+                        self._action_change_watched,
+                    ),
+                    ("Open file", self._action_open_file),
+                ]
+            )
+        if PYTHON_HAS_RUNTIME_VLC:
+            actions.extend(
+                [("Open from local server", self._action_open_from_local_server)]
+            )
+        if video.found:
+            actions.extend(
+                [
+                    ("Open containing folder", self._action_open_containing_folder),
+                ]
+            )
+        if video.meta_title:
+            actions.extend([("Copy meta title", self._action_copy_meta_title)])
+        actions.extend(
+            [
+                ("Copy file title", self._action_copy_file_title),
+                ("Copy path", self._action_copy_path),
+                ("Copy video ID", self._action_copy_video_id),
+                ("Rename video", self._action_rename),
+            ]
+        )
+        return actions
 
     def _action_change_watched(self):
         backend = get_backend(self)
@@ -157,6 +193,18 @@ class VideoAttributesView(videre.Column):
         )
         self._text_path.strong = watched
         self._menu.actions = self._get_menu_actions(video)
+
+    def _action_open_file(self):
+        get_backend(self).open_video(self._video.video_id)
+        self.get_window().notify(notifications.Message("Opened:", self._video.filename))
+
+    def _action_open_from_local_server(self):
+        ret = get_backend(self).open_from_server(self._video.video_id)
+        self.get_window().notify(notifications.Message("Opened:", ret))
+
+    def _action_open_containing_folder(self):
+        ret = get_backend(self).open_containing_folder(self._video.video_id)
+        self.get_window().notify(notifications.Message("Opened folder:", ret))
 
     def _action_copy_meta_title(self):
         self._action_copy("meta_title")
@@ -197,56 +245,3 @@ class VideoAttributesView(videre.Column):
         window = self.get_window()
         window.clear_fancybox()
         window.notify(notifications.Message(f"Renamed to: {new_title}:"))
-
-    def _get_menu_actions(self, video: VideoPattern) -> list[tuple[str, Callable]]:
-        actions = []
-        if video.found:
-            actions.extend(
-                [
-                    (
-                        f"Mark as {'unwatched' if video.watched else 'watched'}",
-                        self._action_change_watched,
-                    ),
-                    ("Open file", self._action_open_file),
-                ]
-            )
-        if PYTHON_HAS_RUNTIME_VLC:
-            actions.extend(
-                [("Open from local server", self._action_open_from_local_server)]
-            )
-        if video.found:
-            actions.extend(
-                [
-                    ("Open containing folder", self._action_open_containing_folder),
-                ]
-            )
-        if video.meta_title:
-            actions.extend([("Copy meta title", self._action_copy_meta_title)])
-        actions.extend(
-            [
-                ("Copy file title", self._action_copy_file_title),
-                ("Copy path", self._action_copy_path),
-                ("Copy video ID", self._action_copy_video_id),
-                ("Rename video", self._action_rename),
-            ]
-        )
-        return actions
-
-
-class VideoView(videre.Container):
-    __wprops__ = {}
-    __slots__ = ("video",)
-    __BACKGROUND_EVEN__ = videre.parse_color((240, 240, 240))
-
-    def __init__(self, video: VideoPattern, index: int):
-        self.video = video
-        thumbnail = videre.Container(
-            videre.Picture(video.thumbnail),
-            width=300,
-            horizontal_alignment=videre.Alignment.CENTER,
-        )
-        attributes = VideoAttributesView(video, weight=1)
-        layout = videre.Row([thumbnail, attributes], space=6)
-        super().__init__(layout, padding=videre.Padding.axis(vertical=10))
-        if index % 2 == 1:
-            self.background_color = self.__BACKGROUND_EVEN__
