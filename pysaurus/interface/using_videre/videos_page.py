@@ -8,62 +8,20 @@ from videre.widgets.widget import Widget
 
 from pysaurus.core import notifications
 from pysaurus.core.profiling import Profiler
+from pysaurus.interface.using_videre.backend import get_backend
+from pysaurus.interface.using_videre.pagination import Pagination
 from pysaurus.interface.using_videre.video_view import VideoView
 from pysaurus.video.database_context import DatabaseContext
-
-
-class Pagination(videre.Row):
-    __wprops__ = {}
-    __slots__ = ("_on_change", "_page_number", "_nb_pages")
-
-    def __init__(
-        self, nb_pages: int, page_number: int, on_change: Callable[[int], None]
-    ):
-        self._on_change = on_change
-        self._page_number = page_number
-        self._nb_pages = nb_pages
-        b_start = videre.Button(
-            "<<", on_click=self._on_first, disabled=page_number == 0
-        )
-        b_prev = videre.Button(
-            "<", on_click=self._on_previous, disabled=page_number == 0
-        )
-        b_next = videre.Button(
-            ">", on_click=self._on_next, disabled=page_number == nb_pages - 1
-        )
-        b_last = videre.Button(
-            ">>", on_click=self._on_last, disabled=page_number == nb_pages - 1
-        )
-        info = videre.Text(f"Page {page_number + 1}/{nb_pages}")
-        super().__init__([b_start, b_prev, info, b_next, b_last], space=10)
-
-    def _on_first(self, *args):
-        if self._page_number != 0:
-            self._on_change(0)
-
-    def _on_last(self, *args):
-        if self._page_number != self._nb_pages - 1:
-            self._on_change(self._nb_pages - 1)
-
-    def _on_previous(self, *args):
-        if self._page_number > 0:
-            self._on_change(self._page_number - 1)
-
-    def _on_next(self, *args):
-        if self._page_number < self._nb_pages - 1:
-            self._on_change(self._page_number + 1)
-
 
 BackendUpdater: TypeAlias = Callable[[int, int, dict | None], DatabaseContext]
 
 
 class VideosPage(videre.Column, metaclass=OvldMC):
     __wprops__ = {}
-    __slots__ = ("context", "context_updater", "status_bar")
+    __slots__ = ("context", "status_bar")
 
-    def __init__(self, context: DatabaseContext, updater: BackendUpdater):
+    def __init__(self, context: DatabaseContext):
         self.context = context
-        self.context_updater = updater
         self.status_bar = videre.Text("Ready.")
         super().__init__(self._build())
 
@@ -99,7 +57,9 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         return [top_bar, center_bar, bottom_bar]
 
     def _change_page(self, page_number: int):
-        context = self.context_updater(self.context.view.page_size, page_number, None)
+        context = get_backend(self).get_python_backend(
+            self.context.view.page_size, page_number, None
+        )
         self.context = context
         self.controls = self._build()
 

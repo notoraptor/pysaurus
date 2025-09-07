@@ -82,7 +82,7 @@ class App:
         context = self.backend.get_python_backend(
             VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER
         )
-        videos_page = VideosPage(context, updater=self.backend.get_python_backend)
+        videos_page = VideosPage(context)
         self._display(videos_page)
         self.window.set_notification_callback(videos_page.on_notification)
 
