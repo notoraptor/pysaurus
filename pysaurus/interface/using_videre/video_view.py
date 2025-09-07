@@ -43,8 +43,16 @@ class VideoView(videre.Container):
         "_text_path",
         "_label_title",
         "_hold_file_title",
+        "_similarity",
     )
     __BACKGROUND_EVEN__ = videre.parse_color((240, 240, 240))
+
+    def _get_thumbnail(self) -> videre.Container:
+        return videre.Container(
+            videre.Picture(self._video.thumbnail),
+            width=300,
+            horizontal_alignment=videre.Alignment.CENTER,
+        )
 
     def __init__(self, video: VideoPattern, index: int):
         self._video = video
@@ -67,11 +75,8 @@ class VideoView(videre.Container):
             color=videre.Colors.lightgray if video.watched else videre.Colors.blue,
             strong=video.watched,
         )
-        thumbnail = videre.Container(
-            videre.Picture(video.thumbnail),
-            width=300,
-            horizontal_alignment=videre.Alignment.CENTER,
-        )
+        self._similarity = videre.Text(f"Similarity: {video.similarity}")
+        thumbnail = self._get_thumbnail()
         attributes = videre.Column(
             [
                 videre.Row(
@@ -107,7 +112,7 @@ class VideoView(videre.Container):
                     f"Audio: {', '.join(video.audio_languages or ['(none)'])} | "
                     f"Subtitles: {', '.join(video.subtitle_languages or ['(none)'])}"
                 ),
-                videre.Text(f"Similarity: {video.similarity}"),
+                self._similarity,
             ]
             + (
                 [
@@ -179,6 +184,7 @@ class VideoView(videre.Container):
                 ("Copy path", self._action_copy_path),
                 ("Copy video ID", self._action_copy_video_id),
                 ("Rename video", self._action_rename),
+                ("Reset similarity", self._action_reset_similarity),
             ]
         )
         return actions
@@ -246,3 +252,46 @@ class VideoView(videre.Container):
             videre.Text(str(video.file_title)) if video.meta_title else None
         )
         self.get_window().notify(notifications.Message(f"Renamed to: {new_title}:"))
+
+    def _action_reset_similarity(self):
+        self.get_window().confirm(
+            videre.ScrollView(
+                videre.Column(
+                    [
+                        videre.Text(
+                            "Are you sure you want to reset similarity for this video?",
+                            wrap=videre.TextWrap.WORD,
+                            strong=True,
+                        ),
+                        videre.Text(
+                            "Video will then be re-compared at next similarity search",
+                            wrap=videre.TextWrap.WORD,
+                        ),
+                        videre.Text(
+                            str(self._video.filename),
+                            wrap=videre.TextWrap.CHAR,
+                            align=videre.TextAlign.CENTER,
+                            color=videre.Colors.red,
+                        ),
+                        self._get_thumbnail(),
+                    ],
+                    space=10,
+                    horizontal_alignment=videre.Alignment.CENTER,
+                ),
+                wrap_horizontal=True,
+            ),
+            "Reset similarity",
+            on_confirm=self._on_reset_similarity,
+        )
+
+    def _on_reset_similarity(self):
+        backend = get_backend(self)
+        backend.set_similarities([self._video.video_id], [None])
+        video = backend.get_video(self._video.video_id)
+        self._video = video
+        self._similarity.text = f"Similarity: {video.similarity}"
+        self.get_window().notify(
+            notifications.Message(
+                f"New similarity ({video.similarity}) for: {video.filename}"
+            )
+        )

@@ -423,7 +423,9 @@ class AbstractDatabase(ABC):
         self.videos_set_field("similarity_id", similarities)
         self._notify_fields_modified(["similarity_id"])
 
-    def set_similarities_from_list(self, video_indices: list, similarities: list):
+    def set_similarities_from_list(
+        self, video_indices: list[int], similarities: list[int | None]
+    ):
         return self.set_similarities(
             {
                 video_id: similarity_id

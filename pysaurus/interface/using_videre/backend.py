@@ -46,6 +46,13 @@ class PysaurusBackend:
     def rename_video(self, video_id: int, new_title: str) -> None:
         return self.__api.database.change_video_file_title(video_id, new_title)
 
+    def set_similarities(
+        self, video_indices: list[int], similariti_indices: list[int | None]
+    ):
+        return self.__api.database.set_similarities_from_list(
+            video_indices, similariti_indices
+        )
+
 
 def get_backend(widget: Widget) -> PysaurusBackend:
     data = widget.get_window().data
