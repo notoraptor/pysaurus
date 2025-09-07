@@ -67,6 +67,11 @@ class VideoView(videre.Container):
             color=videre.Colors.lightgray if video.watched else videre.Colors.blue,
             strong=video.watched,
         )
+        thumbnail = videre.Container(
+            videre.Picture(video.thumbnail),
+            width=300,
+            horizontal_alignment=videre.Alignment.CENTER,
+        )
         attributes = videre.Column(
             [
                 videre.Row(
@@ -135,11 +140,7 @@ class VideoView(videre.Container):
         super().__init__(
             videre.Row(
                 [
-                    videre.Container(
-                        videre.Picture(video.thumbnail),
-                        width=300,
-                        horizontal_alignment=videre.Alignment.CENTER,
-                    ),
+                    thumbnail,
                     attributes,
                 ],
                 space=6,
@@ -226,7 +227,9 @@ class VideoView(videre.Container):
 
     def _action_rename(self):
         dialog = DialogRenameVideo(self._video)
-        button = videre.Button("rename", on_click=self._on_rename, data=dialog)
+        button = videre.FancyCloseButton(
+            "rename", on_click=self._on_rename, data=dialog
+        )
         self.get_window().set_fancybox(dialog, title="Rename Video", buttons=[button])
 
     def _on_rename(self, widget: Widget):
@@ -242,6 +245,4 @@ class VideoView(videre.Container):
         self._hold_file_title.control = (
             videre.Text(str(video.file_title)) if video.meta_title else None
         )
-        window = self.get_window()
-        window.clear_fancybox()
-        window.notify(notifications.Message(f"Renamed to: {new_title}:"))
+        self.get_window().notify(notifications.Message(f"Renamed to: {new_title}:"))
