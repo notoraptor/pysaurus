@@ -1,8 +1,6 @@
-from collections.abc import Callable
 
 import videre
 from ovld import OvldMC
-from typing_extensions import TypeAlias
 from videre.core.pygame_utils import Surface
 from videre.widgets.widget import Widget
 
@@ -12,8 +10,6 @@ from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.interface.using_videre.pagination import Pagination
 from pysaurus.interface.using_videre.video_view import VideoView
 from pysaurus.video.database_context import DatabaseContext
-
-BackendUpdater: TypeAlias = Callable[[int, int, dict | None], DatabaseContext]
 
 
 class VideosPage(videre.Column, metaclass=OvldMC):
