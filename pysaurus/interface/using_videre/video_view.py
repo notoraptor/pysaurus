@@ -47,13 +47,6 @@ class VideoView(videre.Container):
     )
     __BACKGROUND_EVEN__ = videre.parse_color((240, 240, 240))
 
-    def _get_thumbnail(self) -> videre.Container:
-        return videre.Container(
-            videre.Picture(self._video.thumbnail),
-            width=300,
-            horizontal_alignment=videre.Alignment.CENTER,
-        )
-
     def __init__(self, video: VideoPattern, index: int):
         self._video = video
         checkbox = videre.Checkbox()
@@ -152,6 +145,13 @@ class VideoView(videre.Container):
             ),
             padding=videre.Padding.axis(vertical=10),
             background_color=(self.__BACKGROUND_EVEN__ if index % 2 == 1 else None),
+        )
+
+    def _get_thumbnail(self) -> videre.Container:
+        return videre.Container(
+            videre.Picture(self._video.thumbnail),
+            width=300,
+            horizontal_alignment=videre.Alignment.CENTER,
         )
 
     def _get_menu_actions(self, video: VideoPattern) -> list[tuple[str, Callable]]:

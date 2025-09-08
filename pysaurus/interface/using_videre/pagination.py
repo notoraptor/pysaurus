@@ -27,6 +27,7 @@ class Pagination(videre.Row):
                     ">>", on_click=self._on_last, disabled=page_number == nb_pages - 1
                 ),
             ],
+            vertical_alignment=videre.Alignment.CENTER,
             space=10,
         )
 

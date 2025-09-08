@@ -44,6 +44,9 @@ class VideoSearchContext:
                 self.result, fields=COMMON_FIELDS
             )
 
+    def grouped_by_moves(self) -> bool:
+        return self.grouping.field == "move_id"
+
     def json(self) -> dict:
         grouping = self.grouping
         group_def = (
