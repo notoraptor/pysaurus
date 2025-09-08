@@ -52,9 +52,7 @@ class VideoView(videre.Container):
         checkbox = videre.Checkbox()
         properties = video.properties
         self._menu = videre.ContextButton(
-            " \u2630 ",
-            actions=self._get_menu_actions(video),
-            square=True,
+            " \u2630 ", actions=self._get_menu_actions(video), square=True
         )
         self._label_title = videre.Label(
             for_button=checkbox, text=str(video.title), strong=True
@@ -136,13 +134,7 @@ class VideoView(videre.Container):
             weight=1,
         )
         super().__init__(
-            videre.Row(
-                [
-                    thumbnail,
-                    attributes,
-                ],
-                space=6,
-            ),
+            videre.Row([thumbnail, attributes], space=6),
             padding=videre.Padding.axis(vertical=10),
             background_color=(self.__BACKGROUND_EVEN__ if index % 2 == 1 else None),
         )
@@ -172,9 +164,7 @@ class VideoView(videre.Container):
             )
         if video.found:
             actions.extend(
-                [
-                    ("Open containing folder", self._action_open_containing_folder),
-                ]
+                [("Open containing folder", self._action_open_containing_folder)]
             )
         if video.meta_title:
             actions.extend([("Copy meta title", self._action_copy_meta_title)])

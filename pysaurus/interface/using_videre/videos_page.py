@@ -8,6 +8,7 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.interface.using_videre.pagination import Pagination
 from pysaurus.interface.using_videre.video_view import VideoView
+from pysaurus.interface.using_videre.videre_notifications import RequestedDatabaseUpdate
 from pysaurus.video.database_context import DatabaseContext
 
 
@@ -88,12 +89,7 @@ class VideosPage(videre.Column, metaclass=OvldMC):
                 else []
             )
             + (
-                [
-                    (
-                        "Confirm all unique moves ...",
-                        self._action_make_unique_moves,
-                    )
-                ]
+                [("Confirm all unique moves ...", self._action_make_unique_moves)]
                 if self.context.view.grouped_by_moves()
                 else []
             )
@@ -104,12 +100,7 @@ class VideosPage(videre.Column, metaclass=OvldMC):
             )
         )
         if actions_videos:
-            menus.append(
-                videre.ContextButton(
-                    "Videos ...",
-                    actions=actions_videos,
-                )
-            )
+            menus.append(videre.ContextButton("Videos ...", actions=actions_videos))
         menus.extend(
             [
                 videre.ContextButton(
@@ -167,8 +158,7 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         return bool(self.context.view.source_count)
 
     def _action_reload_database(self):
-        # todo
-        pass
+        self.get_window().notify(RequestedDatabaseUpdate())
 
     def _action_rename_database(self):
         # todo

@@ -53,6 +53,9 @@ class PysaurusBackend:
             video_indices, similariti_indices
         )
 
+    def update_database(self):
+        self.__api.update_database()
+
 
 def get_backend(widget: Widget) -> PysaurusBackend:
     data = widget.get_window().data
