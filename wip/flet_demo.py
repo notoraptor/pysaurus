@@ -17,7 +17,7 @@ _irrelevant_ = [
 
 _to_do_ = [ft.MenuBar, ft.MenuItemButton, ft.SubmenuButton]
 _doing_ = [
-    ft.Markdown,
+    ft.Markdown
     # Notes:
     # A Text can set color, strong, italic and underline.
     # Markdown not yet parsed.

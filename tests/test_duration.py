@@ -255,11 +255,7 @@ class TestDurationComparison:
         assert not d1 >= d2
 
     def test_sorting(self):
-        durations = [
-            Duration(3_000_000),
-            Duration(1_000_000),
-            Duration(2_000_000),
-        ]
+        durations = [Duration(3_000_000), Duration(1_000_000), Duration(2_000_000)]
         sorted_durations = sorted(durations)
 
         assert sorted_durations[0].t == 1_000_000
@@ -476,16 +472,7 @@ class TestEdgeCases:
         assert d2.t == 1_000_002  # Should round to even
 
     @pytest.mark.parametrize(
-        "value",
-        [
-            0,
-            1,
-            999_999,
-            1_000_000,
-            60_000_000,
-            3_600_000_000,
-            86_400_000_000,
-        ],
+        "value", [0, 1, 999_999, 1_000_000, 60_000_000, 3_600_000_000, 86_400_000_000]
     )
     def test_various_values(self, value):
         d = Duration(value)
