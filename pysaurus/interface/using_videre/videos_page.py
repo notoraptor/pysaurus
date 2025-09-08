@@ -110,6 +110,38 @@ class VideosPage(videre.Column, metaclass=OvldMC):
                     actions=actions_videos,
                 )
             )
+        menus.extend(
+            [
+                videre.ContextButton(
+                    "Proerties ...",
+                    actions=[
+                        ("Manage properties", self._action_manage_properties),
+                        (
+                            "Put keywords into a property ...",
+                            self._action_fill_with_keywords,
+                        ),
+                        (
+                            "Convert values to lowercase for ...",
+                            self._action_props_to_lowercase,
+                        ),
+                        (
+                            "Convert values to uppercase for ...",
+                            self._action_props_to_uppercase,
+                        ),
+                    ],
+                ),
+                videre.ContextButton(
+                    "Options ...",
+                    actions=[
+                        ("Set page size ...", self._action_set_page_size),
+                        (
+                            "Confirm deletion for entries not found",
+                            self._action_on_not_found_deletion,
+                        ),
+                    ],
+                ),
+            ]
+        )
         return menus
 
     def _change_page(self, page_number: int):
@@ -167,6 +199,30 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         pass
 
     def _action_play_list(self):
+        # todo
+        pass
+
+    def _action_manage_properties(self):
+        # todo
+        pass
+
+    def _action_fill_with_keywords(self):
+        # todo
+        pass
+
+    def _action_props_to_lowercase(self):
+        # todo
+        pass
+
+    def _action_props_to_uppercase(self):
+        # todo
+        pass
+
+    def _action_set_page_size(self):
+        # todo
+        pass
+
+    def _action_on_not_found_deletion(self):
         # todo
         pass
 
