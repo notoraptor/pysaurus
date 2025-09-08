@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 
 import videre
 from videre.widgets.widget import Widget
@@ -42,11 +43,6 @@ class App:
     def home_page(self):
         database_names = self.backend.get_database_names()
 
-        def _get_form(*args):
-            form: videre.Form = self.window.get_element_by_key("form")
-            fields = form.values()
-            self.database_page(name=fields["name"], update=fields["update"])
-
         self._display(
             videre.Form(
                 videre.Column(
@@ -63,13 +59,16 @@ class App:
                             ],
                             vertical_alignment=videre.Alignment.CENTER,
                         ),
-                        videre.Button("Open", on_click=_get_form),
+                        videre.SubmitButton("Open", on_submit=self._open_database_page),
                     ],
                     space=5,
                 ),
                 key="form",
             )
         )
+
+    def _open_database_page(self, fields: dict[str, Any]):
+        self.database_page(name=fields["name"], update=fields["update"])
 
     def database_page(self, name: str, update: bool):
         process_page = ProcessPage("Open database", callback=self.videos_page)
