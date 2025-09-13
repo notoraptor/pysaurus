@@ -29,6 +29,7 @@ class PysaurusBackend:
         self.close_app = self.__api.close_app
         self.get_python_backend = Profiler.profile()(self.__api.get_python_backend)
         self.open_from_server = self.__api.open_from_server
+        self.close_database = self.__api.close_database
 
     def get_video(self, video_id: int) -> VideoPattern:
         (video,) = self.__api.database.get_videos(where={"video_id": video_id})

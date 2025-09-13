@@ -11,7 +11,10 @@ from pysaurus.core.notifications import DatabaseReady, End, Notification
 from pysaurus.interface.using_videre.backend import PysaurusBackend
 from pysaurus.interface.using_videre.process_page import ProcessPage
 from pysaurus.interface.using_videre.videos_page import VideosPage
-from pysaurus.interface.using_videre.videre_notifications import RequestedDatabaseUpdate
+from pysaurus.interface.using_videre.videre_notifications import (
+    RequestedDatabaseUpdate,
+    RequestedHomePage,
+)
 
 
 class App(metaclass=OvldMC):
@@ -43,6 +46,9 @@ class App(metaclass=OvldMC):
 
     def on_notification(self, notification: RequestedDatabaseUpdate):
         self.database_update_page()
+
+    def on_notification(self, notification: RequestedHomePage):
+        self.home_page()
 
     def welcome_page(self):
         self._display(

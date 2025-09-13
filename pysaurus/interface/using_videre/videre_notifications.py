@@ -7,3 +7,7 @@ class PageNotification(Notification):
 
 class RequestedDatabaseUpdate(PageNotification):
     __slots__ = ()
+
+
+class RequestedHomePage(PageNotification):
+    __slots__ = ()

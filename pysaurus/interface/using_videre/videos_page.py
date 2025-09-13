@@ -8,7 +8,10 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.interface.using_videre.pagination import Pagination
 from pysaurus.interface.using_videre.video_view import VideoView
-from pysaurus.interface.using_videre.videre_notifications import RequestedDatabaseUpdate
+from pysaurus.interface.using_videre.videre_notifications import (
+    RequestedDatabaseUpdate,
+    RequestedHomePage,
+)
 from pysaurus.video.database_context import DatabaseContext
 
 
@@ -213,8 +216,15 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         pass
 
     def _action_close_database(self):
-        # todo
-        pass
+        self.get_window().confirm(
+            f"Do you want to close database [{self.context.name}] now?",
+            title="Close database",
+            on_confirm=self._on_close_database,
+        )
+
+    def _on_close_database(self):
+        get_backend(self).close_database()
+        self.get_window().notify(RequestedHomePage())
 
     def _action_delete_database(self):
         # todo
