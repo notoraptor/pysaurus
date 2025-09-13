@@ -9,26 +9,21 @@ from pysaurus.core.absolute_path import AbsolutePath, PathType
 logger = logging.getLogger(__name__)
 
 
-class DatabasePathDef:
-    __slots__ = ("name", "suffix")
-
-    def __init__(self, name: str, suffix: str):
-        self.name = name
-        self.suffix = suffix
-
-    def __str__(self):
-        return self.name
-
-
-DatabasePathName = str | DatabasePathDef
-
-
-class DatabasePath(DatabasePathDef):
-    __slots__ = ("is_folder", "create", "_path", "parent", "simple_path")
+class DatabasePath:
+    __slots__ = (
+        "name",
+        "suffix",
+        "is_folder",
+        "create",
+        "_path",
+        "parent",
+        "simple_path",
+    )
 
     def __init__(self, folder, name, suffix, is_folder=False, create_folder=False):
-        super().__init__(name, suffix)
         self.parent = AbsolutePath.ensure(folder).assert_dir()
+        self.name = name
+        self.suffix = suffix
         self.is_folder = is_folder
         self.create = create_folder
         if self.is_folder:
@@ -96,15 +91,17 @@ class DatabasePaths:
         return self.paths[name].path
 
     def define(
-        self, definition: DatabasePathDef, is_folder=False, create_folder=False
+        self, definition: tuple[str, str], is_folder=False, create_folder=False
     ) -> AbsolutePath:
+        name, suffix = definition
         if is_folder:
-            return self.define_folder(definition.name, definition.suffix, create_folder)
+            return self.define_folder(name, suffix, create_folder)
         else:
-            return self.define_file(definition.name, definition.suffix)
+            return self.define_file(name, suffix)
 
-    def get(self, name: DatabasePathName) -> AbsolutePath:
-        return self.paths[str(name)].path
+    def get(self, definition: tuple[str, str]) -> AbsolutePath:
+        name, _ = definition
+        return self.paths[name].path
 
     def renamed(self, new_name: str) -> Self:
         new_name = new_name.strip()

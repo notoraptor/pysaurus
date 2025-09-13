@@ -20,6 +20,8 @@ from pysaurus.updates.video_inliner import (
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.pysaurus_program import PysaurusProgram
 
+DB_THUMB_FOLDER = ("thumb_folder", "thumbnails")
+
 
 def main(notifier):
     application = PysaurusProgram()
@@ -34,9 +36,10 @@ def main(notifier):
 def export_db_to_sql(db_path: AbsolutePath, notifier):
     db_name = db_path.title
     ways = DbWays(db_path)
+    ways.define(DB_THUMB_FOLDER, is_folder=True, create_folder=False)
 
     # Clean thumb folder if empty
-    thumb_folder = ways.db_thumb_folder
+    thumb_folder = ways.get(DB_THUMB_FOLDER)
     if thumb_folder.isdir():
         if not thumb_folder.listdir():
             print(f"[{db_name}] Thumb folder is empty, deleting", file=sys.stderr)
