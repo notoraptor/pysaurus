@@ -183,9 +183,7 @@ class AbsolutePath:
             subprocess.run(["open", self.__path])
         elif System.is_windows():
             if self.__path.startswith(self.WIN_PREFIX):
-                from pysaurus.core.native.windows import get_short_path_name
-
-                path = get_short_path_name(self.standard_path)
+                path = self.best_path
                 if path is None:
                     raise core_exceptions.NoShortPathError(self.__path)
                 logger.debug(f"AbsolutePath: opening Windows short path {path}")
