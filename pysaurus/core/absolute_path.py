@@ -13,23 +13,27 @@ logger = logging.getLogger(__name__)
 
 
 class AbsolutePath:
-    WINDOWS_PATH_PREFIX = "\\\\?\\"
-    __slots__ = ("__path", "__len_prefix")
+    WIN_PREFIX = "\\\\?\\"
+    LEN_WIN_PREFIX = len(WIN_PREFIX)
+    __slots__ = ("__path",)
 
     def __init__(self, path: str):
         path = os.path.abspath(path)
-        len_prefix = 0
-        if path.startswith(self.WINDOWS_PATH_PREFIX):
-            len_prefix = len(self.WINDOWS_PATH_PREFIX)
-        elif len(path) >= 260 and System.is_windows():
-            path = self.WINDOWS_PATH_PREFIX + path
-            len_prefix = len(self.WINDOWS_PATH_PREFIX)
+        if (
+            len(path) >= 260
+            and System.is_windows()
+            and not path.startswith(self.WIN_PREFIX)
+        ):
+            path = self.WIN_PREFIX + path
         self.__path = path
-        self.__len_prefix = len_prefix
 
     @property
     def standard_path(self):
-        return self.__path[self.__len_prefix :] if self.__len_prefix else self.__path
+        return (
+            self.__path[self.LEN_WIN_PREFIX :]
+            if self.__path.startswith(self.WIN_PREFIX)
+            else self.__path
+        )
 
     @property
     def best_path(self) -> str:
@@ -97,6 +101,9 @@ class AbsolutePath:
     def __len__(self):
         return len(self.__path)
 
+    def __truediv__(self, other) -> Self:
+        return AbsolutePath(os.path.join(self.__path, str(other)))
+
     def exists(self) -> bool:
         return os.path.exists(self.__path)
 
@@ -158,7 +165,7 @@ class AbsolutePath:
             raise FileNotFoundError(dst)
 
     def new_title(self, title: str) -> Self:
-        new_path = AbsolutePath.file_path(self.get_directory(), title, self.extension)
+        new_path = AbsolutePath.compose(self.get_directory(), title, self.extension)
         if new_path.exists():
             raise FileExistsError(new_path)
         os.rename(self.__path, new_path.path)
@@ -175,7 +182,7 @@ class AbsolutePath:
         elif System.is_mac():
             subprocess.run(["open", self.__path])
         elif System.is_windows():
-            if self.__len_prefix:
+            if self.__path.startswith(self.WIN_PREFIX):
                 from pysaurus.core.native.windows import get_short_path_name
 
                 path = get_short_path_name(self.standard_path)
@@ -258,14 +265,16 @@ STDERR: {stderr.strip()}"""
         return cls(os.path.join(*(str(piece) for piece in args)))
 
     @classmethod
-    def file_path(cls, folder_path, file_title, file_extension) -> Self:
-        """Create a new file path with a folder, a file title and a file extension.
-            Each piece will be converted to a string.
-        :param folder_path: folder path.
-        :param file_title: file title.
-        :param file_extension: file extension.
+    def compose(cls, folder, name, suffix, sep=".") -> Self:
         """
-        return cls(os.path.join(str(folder_path), f"{file_title}.{file_extension}"))
+        Create a new path with syntax <folder>/<name><sep><suffix>
+        :param folder: folder path
+        :param name: path name
+        :param suffix: path suffix
+        :param sep: separator between name and suffix
+        :return: a new absolute path.
+        """
+        return cls(os.path.join(str(folder), f"{name}{sep}{suffix}"))
 
 
 PathType = AbsolutePath | str

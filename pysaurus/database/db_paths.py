@@ -35,10 +35,9 @@ class DatabasePath(DatabasePathDef):
             path = new_sub_folder(folder, self.suffix)
             if self.create:
                 path.mkdir()
-            simple_path = self.get_simple_folder()
         else:
             path = new_sub_file(folder, self.suffix)
-            simple_path = self.get_simple_file()
+        simple_path = AbsolutePath.compose(self.parent, self.name, self.suffix)
         self._path = path
         self.simple_path = simple_path
         # Make sure we use simple path instead of old path.
@@ -72,12 +71,6 @@ class DatabasePath(DatabasePathDef):
                 create_folder=self.create if create is None else create,
             )
         )
-
-    def get_simple_folder(self, sep=".") -> AbsolutePath:
-        return AbsolutePath.join(self.parent, f"{self.name}{sep}{self.suffix}")
-
-    def get_simple_file(self) -> AbsolutePath:
-        return AbsolutePath.file_path(self.parent, self.name, self.suffix)
 
 
 class DatabasePaths:
@@ -119,7 +112,7 @@ class DatabasePaths:
             return self
         if functions.has_discarded_characters(new_name):
             raise exceptions.InvalidDatabaseName(new_name)
-        new_db_folder = AbsolutePath.join(self.db_folder.get_directory(), new_name)
+        new_db_folder = self.db_folder.get_directory() / new_name
         if new_db_folder.exists():
             raise exceptions.DatabaseAlreadyExists(new_db_folder)
         new_paths = type(self)(new_db_folder.mkdir())
@@ -129,8 +122,8 @@ class DatabasePaths:
             if old_path.path.exists():
                 os.rename(old_path.path.path, np.path.path)
         for remaining_name in self.db_folder.listdir():
-            op = AbsolutePath.join(self.db_folder, remaining_name)
-            np = AbsolutePath.join(new_paths.db_folder, remaining_name)
+            op = self.db_folder / remaining_name
+            np = new_paths.db_folder / remaining_name
             os.rename(op.path, np.path)
         assert not list(self.db_folder.listdir())
         self.db_folder.delete()
@@ -139,8 +132,8 @@ class DatabasePaths:
 
 
 def new_sub_file(folder: AbsolutePath, extension: str) -> AbsolutePath:
-    return AbsolutePath.file_path(folder, folder.title, extension)
+    return AbsolutePath.compose(folder, folder.title, extension)
 
 
 def new_sub_folder(folder: AbsolutePath, suffix: str, sep=".") -> AbsolutePath:
-    return AbsolutePath.join(folder, f"{folder.title}{sep}{suffix}")
+    return AbsolutePath.compose(folder, folder.title, suffix, sep)

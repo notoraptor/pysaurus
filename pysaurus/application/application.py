@@ -57,10 +57,10 @@ class Application:
 
     def __init__(self, notifier=DEFAULT_NOTIFIER):
         self.home_dir = AbsolutePath(str(Path.home()))
-        self.app_dir = AbsolutePath.join(self.home_dir, f".{self.app_name}").mkdir()
-        self.dbs_dir = AbsolutePath.join(self.app_dir, "databases").mkdir()
-        self.lang_dir = AbsolutePath.join(self.app_dir, "languages").mkdir()
-        self.config_path = AbsolutePath.join(self.app_dir, "config.json")
+        self.app_dir = (self.home_dir / f".{self.app_name}").mkdir()
+        self.dbs_dir = (self.app_dir / "databases").mkdir()
+        self.lang_dir = (self.app_dir / "languages").mkdir()
+        self.config_path = self.app_dir / "config.json"
         self.config = Config()
         self.databases: dict[AbsolutePath, AbstractDatabase | None] = {}
         self.languages: dict[AbsolutePath, DefaultLanguage | None] = {}
@@ -81,7 +81,7 @@ class Application:
             path = AbsolutePath(entry.path)
             if path.isfile() and path.extension == "txt":
                 logger.info(f"Checking embedded language {path.title}")
-                user_path = AbsolutePath.join(self.lang_dir, path.get_basename())
+                user_path = self.lang_dir / path.get_basename()
                 if user_path in self.languages:
                     if user_path.get_date_modified() < path.get_date_modified():
                         user_path.delete()
@@ -98,7 +98,7 @@ class Application:
             assert self.config_path.isfile()
             self.config = Config(parse_json(self.config_path))
         # Load language.
-        lang_path = AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")
+        lang_path = self.lang_dir / f"{self.config.language}.txt"
         if lang_path not in self.languages:
             if self.config.language == DefaultLanguage.__language__:
                 logger.debug(f"[Default language] {DefaultLanguage.__language__}")
@@ -107,7 +107,7 @@ class Application:
                 raise exceptions.MissingLanguageFile(self.config.language)
         self.languages[lang_path] = self._load_lang(lang_path)
         say.set_language(self.config.language)
-        say.set_folder(AbsolutePath.join(self.app_dir, "lang").mkdir())
+        say.set_folder((self.app_dir / "lang").mkdir())
 
     def _load_lang(self, lang_path: AbsolutePath):
         lang = Language(dff_load(lang_path), self.config.language)
@@ -118,16 +118,14 @@ class Application:
 
     @property
     def lang(self) -> DefaultLanguage:
-        return self.languages[
-            AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")
-        ]
+        return self.languages[(self.lang_dir / f"{self.config.language}.txt")]
 
     def get_database_names(self) -> list[str]:
         return sorted(path.title for path in self.databases.keys())
 
     @Profiler.profile_method()
     def open_database_from_name(self, name: str, update=False) -> AbstractDatabase:
-        path = AbsolutePath.join(self.dbs_dir, name)
+        path = self.dbs_dir / name
         assert path in self.databases
         if not self.databases[path]:
             self.databases[path] = Database(path, notifier=self.notifier)
@@ -141,7 +139,7 @@ class Application:
     def new_database(self, name, folders: Iterable[AbsolutePath], update=False):
         if functions.has_discarded_characters(name):
             raise exceptions.InvalidDatabaseName(name)
-        path = AbsolutePath.join(self.dbs_dir, name)
+        path = self.dbs_dir / name
         if path.title != name:
             raise exceptions.InvalidDatabaseName(name)
         if path in self.databases:
@@ -156,7 +154,7 @@ class Application:
         return self.databases[path]
 
     def delete_database_from_name(self, name: str):
-        path = AbsolutePath.join(self.dbs_dir, name)
+        path = self.dbs_dir / name
         if path in self.databases:
             self.databases.pop(path)
             path.delete()
@@ -178,7 +176,7 @@ class Application:
         return self.lang
 
     def open_language_from_name(self, name: str) -> DefaultLanguage:
-        return self.open_language(AbsolutePath.join(self.lang_dir, f"{name}.txt"))
+        return self.open_language(self.lang_dir / f"{name}.txt")
 
     def save_config(self):
         with open(self.config_path.path, "w") as file:

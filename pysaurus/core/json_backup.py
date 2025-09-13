@@ -22,7 +22,7 @@ class JsonBackup:
 
     @Profiler.profile_method("JsonBackup.save")
     def save(self, data):
-        prev_path = AbsolutePath.file_path(
+        prev_path = AbsolutePath.compose(
             self.path.get_directory(), self.path.title, "prev.json"
         )
         # Remove previous file

@@ -189,7 +189,7 @@ class GuiAPI(FeatureAPI):
                 raise exceptions.ForbiddenVideoFolder(
                     directory, list(self.database.get_folders())
                 )
-            dst = AbsolutePath.file_path(
+            dst = AbsolutePath.compose(
                 directory, filename.file_title, filename.extension
             )
             self.copy_work = FileCopier(

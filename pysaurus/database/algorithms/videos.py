@@ -59,7 +59,7 @@ class Videos:
                 VideoTask(
                     filename,
                     need_info=True,
-                    thumb_path=AbsolutePath.file_path(
+                    thumb_path=AbsolutePath.compose(
                         working_directory, hasher(filename.path), "jpg"
                     ).path,
                 )
@@ -69,7 +69,7 @@ class Videos:
             tasks.append(
                 VideoTask(
                     filename_no_thumb,
-                    thumb_path=AbsolutePath.file_path(
+                    thumb_path=AbsolutePath.compose(
                         working_directory, hasher(filename_no_thumb.path), "jpg"
                     ).path,
                 )
