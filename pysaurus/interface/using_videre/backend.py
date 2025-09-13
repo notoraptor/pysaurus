@@ -56,6 +56,9 @@ class PysaurusBackend:
     def update_database(self):
         self.__api.update_database()
 
+    def rename_database(self, new_name: str) -> None:
+        self.__api.database.rename(new_name)
+
 
 def get_backend(widget: Widget) -> PysaurusBackend:
     data = widget.get_window().data

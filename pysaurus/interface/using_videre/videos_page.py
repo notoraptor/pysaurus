@@ -12,6 +12,28 @@ from pysaurus.interface.using_videre.videre_notifications import RequestedDataba
 from pysaurus.video.database_context import DatabaseContext
 
 
+class DialogRenameDatabase(videre.Column):
+    __wprops__ = {}
+    __slots__ = ("_entry",)
+
+    def __init__(self, old_name: str):
+        self._entry = videre.TextInput(old_name, border=True)
+        super().__init__(
+            [
+                videre.Text("Old name:"),
+                videre.Text(old_name),
+                videre.Text("New name:"),
+                self._entry,
+            ],
+            horizontal_alignment=videre.Alignment.CENTER,
+            expand_horizontal=True,
+            space=10,
+        )
+
+    def get_value(self) -> str:
+        return self._entry.value
+
+
 class VideosPage(videre.Column, metaclass=OvldMC):
     __wprops__ = {}
     __slots__ = ("context", "status_bar")
@@ -136,6 +158,9 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         return menus
 
     def _change_page(self, page_number: int):
+        self._reload(page_number)
+
+    def _reload(self, page_number: int = 0):
         context = get_backend(self).get_python_backend(
             self.context.view.page_size, page_number, None
         )
@@ -158,11 +183,30 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         return bool(self.context.view.source_count)
 
     def _action_reload_database(self):
+        self.get_window().confirm(
+            f"Do you want to reload database [{self.context.name}] now?",
+            title="Reload database",
+            on_confirm=self._on_reload_database,
+        )
+
+    def _on_reload_database(self):
         self.get_window().notify(RequestedDatabaseUpdate())
 
     def _action_rename_database(self):
-        # todo
-        pass
+        dialog = DialogRenameDatabase(self.context.name)
+        button = videre.FancyCloseButton(
+            "Rename database", on_click=self._on_rename_database, data=dialog
+        )
+        self.get_window().set_fancybox(
+            dialog, title="Rename Database", buttons=[button]
+        )
+
+    def _on_rename_database(self, widget: Widget):
+        dialog: DialogRenameDatabase = widget.data
+        new_name = dialog.get_value()
+        print("New database name:", new_name)
+        get_backend(self).rename_database(new_name)
+        self._reload()
 
     def _action_edit_database_folders(self):
         # todo
