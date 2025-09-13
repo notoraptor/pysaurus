@@ -226,12 +226,12 @@ STDERR: {stderr.strip()}"""
     def open_containing_folder(self):
         return self.locate_file() or self.get_directory().open()
 
-    def assert_dir(self):
+    def assert_dir(self) -> Self:
         if not self.isdir():
             raise NotADirectoryError(self)
         return self
 
-    def assert_file(self):
+    def assert_file(self) -> Self:
         if not self.isfile():
             raise core_exceptions.NotAFileError(self)
         return self
@@ -247,13 +247,6 @@ STDERR: {stderr.strip()}"""
     @classmethod
     def map(cls, iterable):
         return map(cls.ensure, iterable)
-
-    @classmethod
-    def ensure_directory(cls, path: Self | str) -> Self:
-        path = cls.ensure(path)
-        if not path.isdir():
-            raise NotADirectoryError(path)
-        return path
 
     @classmethod
     def join(cls, *args) -> Self:

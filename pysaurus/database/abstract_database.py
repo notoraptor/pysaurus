@@ -43,7 +43,7 @@ class AbstractDatabase(ABC):
         provider: AbstractVideoProvider,
         notifier=DEFAULT_NOTIFIER,
     ):
-        db_folder = AbsolutePath.ensure_directory(db_folder)
+        db_folder = AbsolutePath.ensure(db_folder).assert_dir()
         self.ways = DbWays(db_folder)
         self.notifier = notifier
         self.in_save_context = False

@@ -28,7 +28,7 @@ class DatabasePath(DatabasePathDef):
 
     def __init__(self, folder, name, suffix, is_folder=False, create_folder=False):
         super().__init__(name, suffix)
-        self.parent = AbsolutePath.ensure_directory(folder)
+        self.parent = AbsolutePath.ensure(folder).assert_dir()
         self.is_folder = is_folder
         self.create = create_folder
         if self.is_folder:
@@ -84,7 +84,7 @@ class DatabasePaths:
     __slots__ = ("db_folder", "paths")
 
     def __init__(self, folder: PathType):
-        self.db_folder: AbsolutePath = AbsolutePath.ensure_directory(folder)
+        self.db_folder: AbsolutePath = AbsolutePath.ensure(folder).assert_dir()
         self.paths: dict[str, DatabasePath] = {}
 
     def __iter__(self):

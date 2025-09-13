@@ -55,7 +55,7 @@ class Language:
             self.dictionary[self.K_FOLDER] = None
             self._update_data()
         else:
-            folder = str(AbsolutePath.ensure_directory(folder))
+            folder = str(AbsolutePath.ensure(folder).assert_dir())
             if (
                 self.dictionary[self.K_FOLDER] is None
                 or self.dictionary[self.K_FOLDER] != folder
