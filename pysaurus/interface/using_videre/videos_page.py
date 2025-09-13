@@ -17,7 +17,7 @@ class DialogRenameDatabase(videre.Column):
     __slots__ = ("_entry",)
 
     def __init__(self, old_name: str):
-        self._entry = videre.TextInput(old_name, border=True)
+        self._entry = videre.TextInput(old_name)
         super().__init__(
             [
                 videre.Text("Old name:"),

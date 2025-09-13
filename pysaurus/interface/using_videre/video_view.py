@@ -21,11 +21,9 @@ class DialogRenameVideo(videre.Column):
         filename = videre.Text(
             str(video.filename), wrap=videre.TextWrap.CHAR, strong=True
         )
-        entry = videre.TextInput(str(video.file_title))
-        entry_wrapper = videre.Container(entry, border=videre.Border.all(1))
-        self.entry = entry
+        self.entry = videre.TextInput(str(video.file_title))
         super().__init__(
-            [filename, entry_wrapper],
+            [filename, self.entry],
             horizontal_alignment=videre.Alignment.CENTER,
             expand_horizontal=True,
             space=10,
