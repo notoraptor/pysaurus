@@ -83,6 +83,10 @@ class JsonDatabase(AbstractDatabase):
         # Initialize
         self.__jsondb_load(folders)
 
+    def rename(self, new_name: str) -> None:
+        super().rename(new_name)
+        self._thumb_mgr = ThumbnailManager(self.ways.db_thumb_sql_path)
+
     @Profiler.profile_method()
     def __jsondb_load(self, folders: Iterable[PathType] | None = None):
         to_save = False

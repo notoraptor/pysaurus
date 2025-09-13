@@ -20,7 +20,7 @@ class DbID(int):
 
 
 class SaurusSQLiteConnection:
-    __slots__ = ("connection", "cursor", "debug", "lock")
+    __slots__ = ("debug", "lock", "db_path")
 
     def __init__(self, script_path: str, db_path: str):
         """
@@ -32,16 +32,101 @@ class SaurusSQLiteConnection:
         # So, we use a lock to execute SELECT queries.
         # todo use lock for modification queries too (insert, update, etc.).
         self.lock = threading.Lock()
+        self.debug = False
+        self.db_path = db_path
+        with self.connect() as connection:
+            connection.script(script_path)
+
+    def connect(self):
+        return _SaurusSQLiteConnection(self.db_path, self.lock, self.debug)
+
+    def modify(self, query, parameters=(), many=False) -> DbID:
+        with self.connect() as connection:
+            return connection.modify(query, parameters, many)
+
+    def modify_many(self, query, parameters=()) -> DbID:
+        return self.modify(query, parameters, many=True)
+
+    def query(self, query, parameters=()):
+        with self.connect() as connection:
+            return connection.query(query, parameters)
+
+    def query_one(self, query, parameters=()):
+        with self.connect() as connection:
+            return connection.query_one(query, parameters)
+
+    def query_all(self, query, parameters=()):
+        with self.connect() as connection:
+            return connection.query_all(query, parameters)
+
+    def insert(self, table: str, **kwargs):
+        """Insert a row in a table and return new row ID."""
+        columns = list(kwargs)
+        values = [kwargs[column] for column in columns]
+        return self.modify(
+            f"INSERT INTO {table} ({', '.join(columns)}) "
+            f"VALUES ({', '.join('?' * len(columns))})",
+            values,
+        )
+
+    def insert_or_ignore(self, table: str, **kwargs):
+        """Insert a row in a table and return new row ID."""
+        columns = list(kwargs)
+        values = [kwargs[column] for column in columns]
+        return self.modify(
+            f"INSERT OR IGNORE INTO {table} ({', '.join(columns)}) "
+            f"VALUES ({', '.join('?' * len(columns))})",
+            values,
+        )
+
+    def select_id(self, table, column, where_query, where_parameters=()):
+        with self.connect() as connection:
+            return connection.select_id(table, column, where_query, where_parameters)
+
+    def select_id_from_values(self, table, column, **values):
+        with self.connect() as connection:
+            return connection.select_id_from_values(table, column, **values)
+
+    def count(self, table, column, where_query, where_parameters=()):
+        with self.connect() as connection:
+            return connection.count(table, column, where_query, where_parameters)
+
+    def count_from_values(self, table, column, **values):
+        with self.connect() as connection:
+            return connection.count_from_values(table, column, **values)
+
+
+class _SaurusSQLiteConnection:
+    __slots__ = ("connection", "cursor", "debug", "lock")
+
+    def __init__(self, db_path: str, lock: threading.Lock, debug=False):
+        """
+        Open (or create) and populate tables (if necessary)
+        in database at given path.
+        """
+        # SQLite does not like sharing cursors across threads.
+        # But we may use many threads, e.g. if opening a video from local server.
+        # So, we use a lock to execute SELECT queries.
+        # todo use lock for modification queries too (insert, update, etc.).
+        self.lock = lock
         # NB: We must set check_same_thread to False, otherwise
         # we may get following error:
         # sqlite3.ProgrammingError:
         # SQLite objects created in a thread can only be used in that same thread.
         # The object was created in thread id <> and this is thread id <>.
-        self.debug = False
+        self.debug = debug
         self.connection = sqlite3.connect(db_path, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
         self.cursor = self.connection.cursor()
         self.cursor.arraysize = 1000
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.connection.close()
+
+    def script(self, script_path: str):
         with open(script_path) as script_file:
             self.cursor.executescript(script_file.read())
             self.connection.commit()
@@ -58,9 +143,6 @@ class SaurusSQLiteConnection:
         self.connection.commit()
         last_id = self.cursor.lastrowid
         return last_id if last_id is None else DbID(last_id)
-
-    def modify_many(self, query, parameters=()) -> DbID:
-        return self.modify(query, parameters, many=True)
 
     def query(self, query, parameters=()):
         if self.debug:
@@ -88,26 +170,6 @@ class SaurusSQLiteConnection:
             print(f"[params] {parameters}")
         self.cursor.execute(query, parameters)
         return self.cursor.fetchall()
-
-    def insert(self, table: str, **kwargs):
-        """Insert a row in a table and return new row ID."""
-        columns = list(kwargs)
-        values = [kwargs[column] for column in columns]
-        return self.modify(
-            f"INSERT INTO {table} ({', '.join(columns)}) "
-            f"VALUES ({', '.join('?' * len(columns))})",
-            values,
-        )
-
-    def insert_or_ignore(self, table: str, **kwargs):
-        """Insert a row in a table and return new row ID."""
-        columns = list(kwargs)
-        values = [kwargs[column] for column in columns]
-        return self.modify(
-            f"INSERT OR IGNORE INTO {table} ({', '.join(columns)}) "
-            f"VALUES ({', '.join('?' * len(columns))})",
-            values,
-        )
 
     def select_id(self, table, column, where_query, where_parameters=()):
         """

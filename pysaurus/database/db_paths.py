@@ -1,9 +1,10 @@
 import logging
+import os
+from typing import Self
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.absolute_path import AbsolutePath, PathType
-from pysaurus.core.modules import FileSystem
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +24,60 @@ DatabasePathName = str | DatabasePathDef
 
 
 class DatabasePath(DatabasePathDef):
-    __slots__ = ("is_folder", "create", "path")
+    __slots__ = ("is_folder", "create", "_path", "parent", "simple_path")
 
     def __init__(self, folder, name, suffix, is_folder=False, create_folder=False):
         super().__init__(name, suffix)
+        self.parent = AbsolutePath.ensure_directory(folder)
         self.is_folder = is_folder
         self.create = create_folder
         if self.is_folder:
             path = new_sub_folder(folder, self.suffix)
             if self.create:
                 path.mkdir()
+            simple_path = self.get_simple_folder()
         else:
             path = new_sub_file(folder, self.suffix)
-        self.path = path
+            simple_path = self.get_simple_file()
+        self._path = path
+        self.simple_path = simple_path
+        # Make sure we use simple path instead of old path.
+        # Old path is based on database folder, more complicated to maintain
+        # (e.g: mydb1/mydb1.file, mydb2/mydb2.file)
+        # Simple path is based on path name, same for all database folders
+        # (e.g: mydb1/standardname.file, mydb2/standardname.file)
+        if self._path.exists():
+            assert not self.simple_path.exists()
+            os.rename(self._path.path, self.simple_path.path)
+            assert self.simple_path.exists()
+            assert not self._path.exists()
+        elif self.simple_path.exists():
+            assert not self._path.exists()
+
+    @property
+    def path(self) -> AbsolutePath:
+        return self.simple_path
+
+    def with_new_parent(
+        self, parent: AbsolutePath, create: bool | None = False
+    ) -> Self:
+        return (
+            self
+            if self.parent == parent
+            else DatabasePath(
+                parent,
+                self.name,
+                self.suffix,
+                is_folder=self.is_folder,
+                create_folder=self.create if create is None else create,
+            )
+        )
+
+    def get_simple_folder(self, sep=".") -> AbsolutePath:
+        return AbsolutePath.join(self.parent, f"{self.name}{sep}{self.suffix}")
+
+    def get_simple_file(self) -> AbsolutePath:
+        return AbsolutePath.file_path(self.parent, self.name, self.suffix)
 
 
 class DatabasePaths:
@@ -71,7 +113,7 @@ class DatabasePaths:
     def get(self, name: DatabasePathName) -> AbsolutePath:
         return self.paths[str(name)].path
 
-    def renamed(self, new_name: str):
+    def renamed(self, new_name: str) -> Self:
         new_name = new_name.strip()
         if new_name == self.db_folder.title:
             return self
@@ -80,26 +122,16 @@ class DatabasePaths:
         new_db_folder = AbsolutePath.join(self.db_folder.get_directory(), new_name)
         if new_db_folder.exists():
             raise exceptions.DatabaseAlreadyExists(new_db_folder)
-        new_paths = DatabasePaths(new_db_folder.mkdir())
-        for path in self.paths.values():
-            path_exists = path.path.exists()
-            if path.is_folder:
-                np = new_paths.define_folder(path.name, path.suffix, not path_exists)
-            else:
-                np = new_paths.define_file(path.name, path.suffix)
-            if path_exists:
-                FileSystem.rename(path.path.path, np.path)
+        new_paths = type(self)(new_db_folder.mkdir())
+        for old_path in self.paths.values():
+            np = old_path.with_new_parent(new_paths.db_folder)
+            new_paths.paths[np.name] = np
+            if old_path.path.exists():
+                os.rename(old_path.path.path, np.path.path)
         for remaining_name in self.db_folder.listdir():
             op = AbsolutePath.join(self.db_folder, remaining_name)
-            if remaining_name.startswith(f"{self.db_folder.title}."):
-                dec = len(self.db_folder.title)
-                np = AbsolutePath.join(
-                    new_paths.db_folder,
-                    f"{new_paths.db_folder.title}.{remaining_name[(dec + 1) :]}",
-                )
-            else:
-                np = AbsolutePath.join(new_paths.db_folder, remaining_name)
-            FileSystem.rename(op.path, np.path)
+            np = AbsolutePath.join(new_paths.db_folder, remaining_name)
+            os.rename(op.path, np.path)
         assert not list(self.db_folder.listdir())
         self.db_folder.delete()
         logger.debug(f"Deleted {self.db_folder}")
