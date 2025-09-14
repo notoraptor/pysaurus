@@ -270,8 +270,9 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         pass
 
     def _action_open_random_video(self):
-        # todo
-        pass
+        path = get_backend(self).open_random_video()
+        self.status_bar.text = f"Randomly opened: {path}"
+        self._reload()
 
     def _action_find_similar_videos(self):
         # todo
