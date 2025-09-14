@@ -4,9 +4,11 @@ from videre.core.pygame_utils import Surface
 from videre.widgets.widget import Widget
 
 from pysaurus.core import notifications
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.profiling import Profiler
 from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.interface.using_videre.pagination import Pagination
+from pysaurus.interface.using_videre.path_set_view import PathSetView
 from pysaurus.interface.using_videre.video_view import VideoView
 from pysaurus.interface.using_videre.videre_notifications import (
     RequestedDatabaseUpdate,
@@ -37,14 +39,30 @@ class DialogRenameDatabase(videre.Column):
         return self._entry.value
 
 
+class DialogEditDatabaseFolders(videre.Column):
+    __wprops__ = {}
+    __slots__ = ("_view",)
+
+    def __init__(self, paths: list[AbsolutePath], title=""):
+        self._view = PathSetView(paths, title=title, weight=1)
+        super().__init__([videre.Text("Edit database folders:"), self._view])
+
+    def get_paths(self) -> list[AbsolutePath]:
+        return self._view.paths
+
+
 class VideosPage(videre.Column, metaclass=OvldMC):
     __wprops__ = {}
-    __slots__ = ("context", "status_bar")
+    __slots__ = ("context", "status_bar", "_info_folders")
 
     def __init__(self, context: DatabaseContext):
         self.context = context
         self.status_bar = videre.Text("Ready.")
+        self._info_folders = videre.Text()
         super().__init__(self._build())
+
+    def _update_info_folders(self):
+        self._info_folders.text = f"{len(self.context.folders)} folder(s)"
 
     def _build(self) -> list[Widget]:
         context = self.context
@@ -61,12 +79,13 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         pagination = Pagination(
             context.view.nb_pages, context.view.page_number, on_change=self._change_page
         )
+        self._update_info_folders()
         top_bar = videre.Row(
             [
                 videre.Text("Database:"),
                 videre.Text(context.name, strong=True),
                 videre.Text("|"),
-                videre.Text(f"{len(self.context.folders)} folder(s)"),
+                self._info_folders,
                 *menus,
                 videre.Container(weight=1),
                 pagination,
@@ -212,8 +231,28 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         self._reload()
 
     def _action_edit_database_folders(self):
-        # todo
-        pass
+        paths = self.context.folders
+        dialog = DialogEditDatabaseFolders(
+            paths,
+            title=(
+                f"Edit {len(self.context.folders)} initial folders"
+                f" for database: {self.context.name}"
+            ),
+        )
+        button = videre.FancyCloseButton(
+            "edit folders", on_click=self._on_edit_database_folders, data=dialog
+        )
+        self.get_window().set_fancybox(
+            dialog, title="Edit Database Folders", buttons=[button]
+        )
+
+    def _on_edit_database_folders(self, widget: Widget):
+        dialog: DialogEditDatabaseFolders = widget.data
+        paths = dialog.get_paths()
+        backend = get_backend(self)
+        backend.set_video_folders(paths)
+        self.context.folders = paths
+        self._update_info_folders()
 
     def _action_close_database(self):
         self.get_window().confirm(

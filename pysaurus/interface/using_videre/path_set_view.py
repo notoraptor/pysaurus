@@ -11,7 +11,8 @@ class PathSetView(videre.Container):
     __wprops__ = {}
     __slots__ = ("_paths", "_input", "_message", "_paths_view")
 
-    def __init__(self, paths: Sequence[AbsolutePath] = ()):
+    def __init__(self, paths: Sequence[AbsolutePath] = (), title="Path set", **kwargs):
+        title = title or "Path set"
         self._paths = set(paths)
         self._input = videre.TextInput(weight=1)
         self._message = videre.Text("", color=videre.Colors.red, strong=True)
@@ -20,7 +21,7 @@ class PathSetView(videre.Container):
             videre.Column(
                 [
                     videre.Container(
-                        videre.Text("Path set", strong=True, color=videre.Colors.white),
+                        videre.Text(title, strong=True, color=videre.Colors.white),
                         background_color=videre.Colors.black,
                         padding=videre.Div.__style__.default.padding,
                     ),
@@ -53,6 +54,7 @@ class PathSetView(videre.Container):
             background_color=None,
             border=self._border,
             padding=videre.Padding.all(10),
+            **kwargs,
         )
         self._update_view()
 

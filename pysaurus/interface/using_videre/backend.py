@@ -1,6 +1,7 @@
 import videre
 from videre.widgets.widget import Widget
 
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.notifications import Notification
 from pysaurus.core.profiling import Profiler
 from pysaurus.interface.api.gui_api import GuiAPI
@@ -59,6 +60,9 @@ class PysaurusBackend:
 
     def rename_database(self, new_name: str) -> None:
         self.__api.database.rename(new_name)
+
+    def set_video_folders(self, folders: list[AbsolutePath]):
+        self.__api.database.set_folders(folders)
 
 
 def get_backend(widget: Widget) -> PysaurusBackend:
