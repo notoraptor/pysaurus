@@ -1,5 +1,6 @@
 from typing import Sequence
 
+from pysaurus.core.constants import VIDEO_DEFAULT_SORTING
 from pysaurus.video.video_constants import VIDEO_FLAGS
 
 
@@ -19,4 +20,4 @@ def parse_sources(paths: Sequence[Sequence[str]]) -> list[list[str]]:
 
 
 def parse_sorting(sorting: Sequence[str]) -> list[str]:
-    return list(sorting) if sorting else ["-date"]
+    return list(sorting) if sorting else VIDEO_DEFAULT_SORTING

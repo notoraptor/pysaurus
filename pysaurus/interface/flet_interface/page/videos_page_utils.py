@@ -2,7 +2,7 @@ from typing import Callable, Sequence
 
 import flet as ft
 
-from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
+from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.properties.properties import PropTypeDesc
 from pysaurus.video.javascript_video import JavascriptVideo
 
@@ -102,7 +102,7 @@ class StateWrapper:
         return bool(self.search_def)
 
     def sort_is_set(self) -> bool:
-        return self.sorting != ["-date"]
+        return self.sorting != VIDEO_DEFAULT_SORTING
 
     def is_filtered(self) -> bool:
         return (

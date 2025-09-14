@@ -5,6 +5,7 @@ from typing import Any, Optional, Sequence
 from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.classes import Selector
+from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video_provider.field_stat import FieldStat
 from pysaurus.video_provider.view_tools import GroupDef, SearchDef
@@ -27,12 +28,12 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         LAYER_SORT,
     }
     DEFAULT_PARAMS = {
-        LAYER_SOURCE: [["readable"]],
+        LAYER_SOURCE: PYTHON_DEFAULT_SOURCES,
         LAYER_GROUPING: None,
         LAYER_CLASSIFIER: [],
         LAYER_GROUP: 0,
         LAYER_SEARCH: "",
-        LAYER_SORT: ["-date"],
+        LAYER_SORT: VIDEO_DEFAULT_SORTING,
     }
 
     def __init__(self, database):

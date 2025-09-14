@@ -6,6 +6,7 @@ from typing import Any, Sequence
 from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.classes import Selector
+from pysaurus.core.constants import VIDEO_DEFAULT_SORTING
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages
@@ -361,7 +362,7 @@ class LayerSort(Layer):
         super().set_params(sorting=parse_sorting(sorting))
 
     def default_params(self) -> dict:
-        return {"sorting": ["-date"]}
+        return {"sorting": VIDEO_DEFAULT_SORTING}
 
     def run(self):
         sorting = VideoSorting(self.params["sorting"])
