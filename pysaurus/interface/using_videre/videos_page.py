@@ -7,7 +7,13 @@ from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.profiling import Profiler
 from pysaurus.interface.using_videre.backend import get_backend
-from pysaurus.interface.using_videre.constants import FIELD_MAP, Uniconst
+from pysaurus.interface.using_videre.common import (
+    FIELD_MAP,
+    SEARCH_COND_TITLE,
+    Uniconst,
+    pretty_grouping,
+    pretty_quote,
+)
 from pysaurus.interface.using_videre.pagination import Pagination
 from pysaurus.interface.using_videre.path_set_view import PathSetView
 from pysaurus.interface.using_videre.video_view import VideoView
@@ -60,7 +66,7 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         self.context = context
         self.status_bar = videre.Text("Ready.")
         self._info_folders = videre.Text()
-        super().__init__(self._build())
+        super().__init__(self._build(), space=5)
 
     def _update_info_folders(self):
         self._info_folders.text = f"{len(self.context.folders)} folder(s)"
@@ -73,8 +79,11 @@ class VideosPage(videre.Column, metaclass=OvldMC):
             [VideoView(video, i) for i, video in enumerate(context.view.result)]
         )
 
-        left_bar = videre.Container(
-            self._render_filters(), background_color=videre.Colors.lightblue, weight=1
+        center_border_color = videre.Colors.lightgray
+        left_view = videre.Container(
+            self._render_filters(),
+            weight=1,
+            border=videre.Border(right=(1, center_border_color)),
         )
         right_view = videre.ScrollView(videos_view, wrap_horizontal=True, weight=4)
 
@@ -96,7 +105,11 @@ class VideosPage(videre.Column, metaclass=OvldMC):
             space=10,
             vertical_alignment=videre.Alignment.CENTER,
         )
-        center_bar = videre.Row([left_bar, right_view], weight=1)
+        center_bar = videre.Container(
+            videre.Row([left_view, right_view], space=5),
+            weight=1,
+            border=videre.Border.all(1, center_border_color),
+        )
         bottom_bar = videre.Row(
             [
                 self.status_bar,
@@ -112,23 +125,27 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         return [top_bar, center_bar, bottom_bar]
 
     def _render_filters(self) -> Widget:
+        color_none = videre.Colors.gray
         view = self.context.view
         return videre.Column(
             [
-                videre.Text("Filter", strong=True),
-                videre.Text("Sources", strong=True),
+                videre.Text("FILTER", strong=True, italic=False, underline=True),
+                videre.Text("Sources", strong=True, italic=True),
                 *[videre.Text(" ".join(source)) for source in view.sources],
                 videre.Text("Grouping", strong=True),
                 *[
-                    videre.Text("Grouped")
+                    videre.Text(pretty_grouping(view.grouping))
                     if view.grouping
-                    else videre.Text("Ungrouped", italic=True)
+                    else videre.Text("Ungrouped", italic=True, color=color_none)
                 ],
                 videre.Text("Search", strong=True),
                 *(
-                    [videre.Text("Searched")]
+                    [
+                        videre.Text(f"Searched {SEARCH_COND_TITLE[view.search.cond]}:"),
+                        videre.Text(pretty_quote(view.search.text)),
+                    ]
                     if view.search
-                    else [videre.Text("No search", italic=True)]
+                    else [videre.Text("No search", italic=True, color=color_none)]
                 ),
                 videre.Text("Sorted by", strong=True),
                 *[
@@ -139,7 +156,8 @@ class VideosPage(videre.Column, metaclass=OvldMC):
                     for field, reverse in view.get_video_sorting()
                 ],
                 videre.Text("Selection", strong=True),
-            ]
+            ],
+            horizontal_alignment=videre.Alignment.CENTER,
         )
 
     def _get_menus(self):

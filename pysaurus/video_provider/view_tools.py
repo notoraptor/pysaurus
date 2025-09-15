@@ -69,6 +69,7 @@ class GroupDef(ToDict):
         self.sorting = sorting.strip() if sorting else self.FIELD
         self.reverse = bool(reverse)
         self.allow_singletons = bool(allow_singletons)
+
         self._int_reverse = -1 if self.reverse else 1
         self._fn_reverse = NegativeComparator if self.reverse else identity
         assert self.sorting in (self.FIELD, self.LENGTH, self.COUNT)

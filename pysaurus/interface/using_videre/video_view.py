@@ -8,7 +8,7 @@ from pysaurus.core import notifications
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC
 from pysaurus.interface.using_videre.backend import get_backend
-from pysaurus.interface.using_videre.constants import Uniconst
+from pysaurus.interface.using_videre.common import Uniconst
 from pysaurus.video.video_pattern import VideoPattern
 
 LIGHT_GREY = videre.parse_color((240, 240, 240))

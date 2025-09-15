@@ -1,4 +1,7 @@
 from enum import IntEnum
+from typing import Any
+
+from pysaurus.video_provider.view_tools import GroupDef
 
 
 class GroupPerm(IntEnum):
@@ -159,7 +162,7 @@ SOURCE_TREE = {
     },
 }
 
-SEARCH_TYPE_TITLE = {
+SEARCH_COND_TITLE = {
     "exact": "exactly",
     "and": "all terms",
     "or": "any term",
@@ -175,3 +178,46 @@ class Uniconst:
     SMART_ARROW_LEFT = "\u2b9c"
     SMART_ARROW_RIGHT = "\u2b9e"
     WARNING_SIGN = "\u26a0"  # ⚠
+    JAPANESE_SINGLE_QUOTATION_START = "「"
+    JAPANESE_SINGLE_QUOTATION_END = "」"
+    JAPANESE_DOUBLE_QUOTATION_START = "『"
+    JAPANESE_DOUBLE_QUOTATION_END = "』"
+    DOUBLE_BAR = "‖"
+
+    QUOTATION_MARKS = (
+        ("«", "»"),
+        (JAPANESE_SINGLE_QUOTATION_START, JAPANESE_SINGLE_QUOTATION_END),
+        (JAPANESE_DOUBLE_QUOTATION_START, JAPANESE_DOUBLE_QUOTATION_END),
+        ("“", "”"),
+        ("[", "]"),
+        ('"', '"'),
+        ("'", "'"),
+        ("(", ")"),
+    )
+
+
+def pretty_quote(text: Any) -> str:
+    if not isinstance(text, str):
+        text = str(text)
+    for mark_left, mark_right in Uniconst.QUOTATION_MARKS:
+        if mark_left not in text and mark_right not in text:
+            return f"{mark_left}{text}{mark_right}"
+    else:
+        return repr(text)
+
+
+def pretty_grouping(grouping: GroupDef) -> str:
+    title = (
+        pretty_quote(FIELD_MAP.get_title(grouping.field))
+        + " "
+        + (Uniconst.ARROW_DOWN if grouping.reverse else Uniconst.ARROW_UP)
+    )
+    if grouping.is_property:
+        title = f"property: {title}"
+    if grouping.sorting == grouping.LENGTH:
+        title = f"{Uniconst.DOUBLE_BAR} {title} {Uniconst.DOUBLE_BAR}"
+    elif grouping.sorting == grouping.COUNT:
+        title = f"# {title}"
+    if grouping.allow_singletons:
+        title = f"many {title}"
+    return title

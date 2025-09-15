@@ -2,7 +2,7 @@ import inspect
 
 import videre
 
-from pysaurus.interface.using_videre.constants import (
+from pysaurus.interface.using_videre.common import (
     FIELD_MAP,
     FieldInfo,
     FieldType,
