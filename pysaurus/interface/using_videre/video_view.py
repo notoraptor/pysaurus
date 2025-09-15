@@ -8,6 +8,7 @@ from pysaurus.core import notifications
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC
 from pysaurus.interface.using_videre.backend import get_backend
+from pysaurus.interface.using_videre.constants import Uniconst
 from pysaurus.video.video_pattern import VideoPattern
 
 LIGHT_GREY = videre.parse_color((240, 240, 240))
@@ -50,7 +51,7 @@ class VideoView(videre.Container):
         checkbox = videre.Checkbox()
         properties = video.properties
         self._menu = videre.ContextButton(
-            " \u2630 ", actions=self._get_menu_actions(video), square=True
+            Uniconst.SETTINGS, actions=self._get_menu_actions(video), square=True
         )
         self._label_title = videre.Label(
             for_button=checkbox, text=str(video.title), strong=True

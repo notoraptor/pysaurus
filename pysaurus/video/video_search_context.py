@@ -8,6 +8,7 @@ from pysaurus.core.file_size import FileSize
 from pysaurus.video.video_constants import COMMON_FIELDS
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_pattern import VideoPattern
+from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.video_provider.field_stat import FieldStat
 from pysaurus.video_provider.view_tools import GroupDef, SearchDef
 
@@ -46,6 +47,9 @@ class VideoSearchContext:
 
     def grouped_by_moves(self) -> bool:
         return self.grouping.field == "move_id"
+
+    def get_video_sorting(self) -> VideoSorting:
+        return VideoSorting(self.sorting)
 
     def json(self) -> dict:
         grouping = self.grouping

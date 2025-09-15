@@ -7,6 +7,7 @@ from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.profiling import Profiler
 from pysaurus.interface.using_videre.backend import get_backend
+from pysaurus.interface.using_videre.constants import FIELD_MAP, Uniconst
 from pysaurus.interface.using_videre.pagination import Pagination
 from pysaurus.interface.using_videre.path_set_view import PathSetView
 from pysaurus.interface.using_videre.video_view import VideoView
@@ -72,7 +73,9 @@ class VideosPage(videre.Column, metaclass=OvldMC):
             [VideoView(video, i) for i, video in enumerate(context.view.result)]
         )
 
-        left_bar = videre.Text("view parameters", weight=1)
+        left_bar = videre.Container(
+            self._render_filters(), background_color=videre.Colors.lightblue, weight=1
+        )
         right_view = videre.ScrollView(videos_view, wrap_horizontal=True, weight=4)
 
         menus = self._get_menus()
@@ -107,6 +110,37 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         )
 
         return [top_bar, center_bar, bottom_bar]
+
+    def _render_filters(self) -> Widget:
+        view = self.context.view
+        return videre.Column(
+            [
+                videre.Text("Filter", strong=True),
+                videre.Text("Sources", strong=True),
+                *[videre.Text(" ".join(source)) for source in view.sources],
+                videre.Text("Grouping", strong=True),
+                *[
+                    videre.Text("Grouped")
+                    if view.grouping
+                    else videre.Text("Ungrouped", italic=True)
+                ],
+                videre.Text("Search", strong=True),
+                *(
+                    [videre.Text("Searched")]
+                    if view.search
+                    else [videre.Text("No search", italic=True)]
+                ),
+                videre.Text("Sorted by", strong=True),
+                *[
+                    videre.Text(
+                        f"{FIELD_MAP.get_title(field)} "
+                        f"{Uniconst.ARROW_DOWN if reverse else Uniconst.ARROW_UP}"
+                    )
+                    for field, reverse in view.get_video_sorting()
+                ],
+                videre.Text("Selection", strong=True),
+            ]
+        )
 
     def _get_menus(self):
         menus = [
