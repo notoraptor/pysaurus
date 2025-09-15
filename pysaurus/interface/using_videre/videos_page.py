@@ -75,41 +75,55 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         context = self.context
         view = context.view
 
-        videos_view = videre.Column(
-            [VideoView(video, i) for i, video in enumerate(context.view.result)]
-        )
-
-        center_border_color = videre.Colors.lightgray
-        left_view = videre.Container(
-            self._render_filters(),
-            weight=1,
-            border=videre.Border(right=(1, center_border_color)),
-        )
-        right_view = videre.ScrollView(videos_view, wrap_horizontal=True, weight=4)
-
-        menus = self._get_menus()
-        pagination = Pagination(
-            context.view.nb_pages, context.view.page_number, on_change=self._change_page
-        )
-        self._update_info_folders()
         top_bar = videre.Row(
             [
+                # Database info
                 videre.Text("Database:"),
                 videre.Text(context.name, strong=True),
                 videre.Text("|"),
                 self._info_folders,
-                *menus,
+                # Menus
+                *self._get_menus(),
                 videre.Container(weight=1),
-                pagination,
+                # Videos pagination
+                Pagination(
+                    context.view.nb_pages,
+                    context.view.page_number,
+                    on_change=self._change_page,
+                ),
             ],
             space=10,
             vertical_alignment=videre.Alignment.CENTER,
         )
+
+        center_border_color = videre.Colors.lightgray
         center_bar = videre.Container(
-            videre.Row([left_view, right_view], space=5),
+            videre.Row(
+                [
+                    # Filters
+                    videre.Container(
+                        self._render_filters(),
+                        weight=1,
+                        border=videre.Border(right=(1, center_border_color)),
+                    ),
+                    # Videos
+                    videre.ScrollView(
+                        videre.Column(
+                            [
+                                VideoView(video, i)
+                                for i, video in enumerate(context.view.result)
+                            ]
+                        ),
+                        wrap_horizontal=True,
+                        weight=4,
+                    ),
+                ],
+                space=5,
+            ),
             weight=1,
             border=videre.Border.all(1, center_border_color),
         )
+
         bottom_bar = videre.Row(
             [
                 self.status_bar,
@@ -122,6 +136,7 @@ class VideosPage(videre.Column, metaclass=OvldMC):
             ]
         )
 
+        self._update_info_folders()
         return [top_bar, center_bar, bottom_bar]
 
     def _render_filters(self) -> Widget:
