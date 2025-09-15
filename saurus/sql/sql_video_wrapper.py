@@ -1,7 +1,6 @@
 from typing import Iterable
 
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.classes import StringedTuple
 from pysaurus.core.datestring import Date
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_pattern import MoveType, VideoPattern
@@ -252,18 +251,6 @@ class SQLVideoWrapper(VideoPattern):
         return self.filename.file_title
 
     @property
-    def day(self):
-        return self.date.day
-
-    @property
-    def year(self):
-        return self.date.year
-
-    @property
-    def disk(self):
-        return self.filename.get_drive_name() or self.driver_id
-
-    @property
     def frame_rate(self):
         return self.frame_rate_num / self.frame_rate_den
 
@@ -272,24 +259,8 @@ class SQLVideoWrapper(VideoPattern):
         return self.meta_title or self.filename.file_title
 
     @property
-    def title_numeric(self):
-        return self.meta_title_numeric if self.meta_title else self.file_title_numeric
-
-    @property
     def filename_numeric(self):
         return self.filename.standard_path
-
-    @property
-    def meta_title_numeric(self):
-        return self.meta_title
-
-    @property
-    def size_length(self):
-        return StringedTuple((self.size, self.length))
-
-    @property
-    def filename_length(self):
-        return len(self.filename)
 
     @property
     def move_id(self):

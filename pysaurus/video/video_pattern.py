@@ -3,9 +3,11 @@ from abc import ABC, abstractmethod
 from typing import TypedDict
 
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.classes import StringedTuple
 from pysaurus.core.datestring import Date
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
+from pysaurus.core.semantic_text import SemanticText
 from pysaurus.properties.properties import PropUnitType
 
 
@@ -206,6 +208,11 @@ class VideoPattern(ABC):
         raise NotImplementedError()
 
     @property
+    @abstractmethod
+    def move_id(self):
+        raise NotImplementedError()
+
+    @property
     def thumbnail_base64(self):
         # Return thumbnail as HTML, base64 encoded image data
         data: bytes = self.thumbnail
@@ -279,6 +286,42 @@ class VideoPattern(ABC):
             if self.similarity_id is None
             else ("none" if self.similarity_id < 0 else str(self.similarity_id))
         )
+
+    @property
+    def meta_title_numeric(self) -> SemanticText:
+        return SemanticText(self.meta_title)
+
+    @property
+    def file_title_numeric(self) -> SemanticText:
+        return SemanticText(self.file_title)
+
+    @property
+    def title_numeric(self) -> SemanticText:
+        return self.meta_title_numeric if self.meta_title else self.file_title_numeric
+
+    @property
+    def filename_numeric(self) -> SemanticText:
+        return SemanticText(self.filename.standard_path)
+
+    @property
+    def year(self) -> int:
+        return self.date.year
+
+    @property
+    def day(self) -> int:
+        return self.date.day
+
+    @property
+    def disk(self):
+        return self.filename.get_drive_name() or self.driver_id
+
+    @property
+    def filename_length(self) -> int:
+        return len(self.filename)
+
+    @property
+    def size_length(self) -> StringedTuple:
+        return StringedTuple((self.size, self.length))
 
     def json(self, with_moves=False) -> dict:
         filename = self.filename

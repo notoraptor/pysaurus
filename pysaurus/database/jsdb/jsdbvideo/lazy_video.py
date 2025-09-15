@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import Any
 
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.classes import StringedTuple, StringPrinter, Text
+from pysaurus.core.classes import StringPrinter, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.constants import UNDEFINED
 from pysaurus.core.datestring import Date
@@ -189,8 +189,6 @@ class LazyVideo(WithSchema, VideoPattern):
     file_title = property(lambda self: Text(self.filename.file_title))
     file_title_numeric = property(lambda self: SemanticText(self.filename.file_title))
     size = property(lambda self: FileSize(self.file_size))
-    day = property(lambda self: self.date.day)
-    year = property(lambda self: self.date.year)
     # runtime attributes
     disk = property(
         lambda self: self.filename.get_drive_name() or self.runtime.driver_id
@@ -233,8 +231,6 @@ class LazyVideo(WithSchema, VideoPattern):
     thumbnail_base64 = property(
         lambda self: self.database.jsondb_get_thumbnail_base64(self.filename)
     )
-    size_length = property(lambda self: StringedTuple((self.size, self.length)))
-    filename_length = property(lambda self: len(self.filename))
 
     @property
     def thumbnail(self) -> bytes:
