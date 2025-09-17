@@ -33,7 +33,7 @@ from typing import Callable, Iterable
 
 
 @dataclass(slots=True, frozen=True)
-class SQLiteFunction:
+class SkulliteFunction:
     function: Callable
     name: str
     nb_args: int
@@ -56,7 +56,7 @@ class DbID(int):
         return True
 
 
-class SaurusSQLiteDatabase:
+class Skullite:
     __slots__ = ("debug", "db_path", "functions")
 
     def __init__(
@@ -65,7 +65,7 @@ class SaurusSQLiteDatabase:
         *,
         script_path: str | None = None,
         script: str | None = None,
-        functions: Iterable[SQLiteFunction] = (),
+        functions: Iterable[SkulliteFunction] = (),
     ):
         """
         Open (or create) and populate tables (if necessary)
@@ -85,7 +85,7 @@ class SaurusSQLiteDatabase:
                 connection.script(script)
 
     def connect(self):
-        return _SaurusSQLiteConnection(
+        return _SkulliteConnection(
             self.db_path, debug=self.debug, functions=self.functions
         )
 
@@ -145,11 +145,11 @@ class SaurusSQLiteDatabase:
             return connection.count_from_values(table, column, **values)
 
 
-class _SaurusSQLiteConnection:
+class _SkulliteConnection:
     __slots__ = ("connection", "cursor", "debug")
 
     def __init__(
-        self, db_path: str, *, debug=False, functions: tuple[SQLiteFunction, ...] = ()
+        self, db_path: str, *, debug=False, functions: tuple[SkulliteFunction, ...] = ()
     ):
         """
         Open (or create) and populate tables (if necessary)

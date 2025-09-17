@@ -1,9 +1,9 @@
 import os
 
-from saurus.sql.saurus_sqlite_database import SaurusSQLiteDatabase
+from saurus.sql.skullite import Skullite
 
 
-class ThumbnailDatabase(SaurusSQLiteDatabase):
+class ThumbnailDatabase(Skullite):
     __slots__ = ()
     DATABASE_SCRIPT_FILE = os.path.join(os.path.dirname(__file__), "thumbnail_db.sql")
 

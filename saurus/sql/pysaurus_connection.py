@@ -3,10 +3,10 @@ import os
 from typing import Iterable
 
 from saurus.sql import sql_functions
-from saurus.sql.saurus_sqlite_database import SQLiteFunction, SaurusSQLiteDatabase
+from saurus.sql.skullite import Skullite, SkulliteFunction
 
 
-class PysaurusConnection(SaurusSQLiteDatabase):
+class PysaurusConnection(Skullite):
     __slots__ = ()
 
     def __init__(self, db_path: str):
@@ -17,13 +17,13 @@ class PysaurusConnection(SaurusSQLiteDatabase):
         )
         self.register_pysaurus_functions()
 
-    def register_pysaurus_functions(self) -> Iterable[SQLiteFunction]:
+    def register_pysaurus_functions(self) -> Iterable[SkulliteFunction]:
         for name, function in inspect.getmembers(
             sql_functions,
             lambda value: callable(value) and value.__name__.startswith("pysaurus_"),
         ):
             signature = inspect.signature(function)
             narg = len(signature.parameters)
-            yield SQLiteFunction(
+            yield SkulliteFunction(
                 name=name, function=function, nb_args=narg, deterministic=True
             )
