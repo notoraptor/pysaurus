@@ -1,6 +1,6 @@
 import os
 
-from saurus.sql.skullite import Skullite
+from skullite import Skullite
 
 
 class ThumbnailDatabase(Skullite):

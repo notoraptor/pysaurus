@@ -1,9 +1,9 @@
 import inspect
 import os
+from skullite import Skullite, SkulliteFunction
 from typing import Iterable
 
 from saurus.sql import sql_functions
-from saurus.sql.skullite import Skullite, SkulliteFunction
 
 
 class PysaurusConnection(Skullite):

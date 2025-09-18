@@ -25,6 +25,7 @@ dependencies = [
     "videre",
     "filelock>=3.19.1",
     "matplotlib>=3.10.6",
+    "skullite",
 ]
 
 [dependency-groups]
@@ -35,6 +36,7 @@ dev = [
 
 [tool.uv.sources]
 videre = { path = "../videre", editable = true }
+skullite = { path = "../skullite", editable = true }
 
 [build-system]
 requires = ["hatchling"]
