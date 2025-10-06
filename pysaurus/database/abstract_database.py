@@ -1,10 +1,10 @@
+from collections import Counter
+
 import logging
 import tempfile
-from abc import ABC, abstractmethod
-from collections import Counter
-from typing import Any, Collection, Container, Iterable, Sequence
-
 import ujson as json
+from abc import ABC, abstractmethod
+from typing import Any, Collection, Container, Iterable, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
@@ -419,7 +419,6 @@ class AbstractDatabase(ABC):
                 self.video_entry_del(from_id)
 
     def set_similarities(self, similarities: dict[int, int | None]):
-        print(repr(similarities))
         self.videos_set_field("similarity_id", similarities)
         self._notify_fields_modified(["similarity_id"])
 
