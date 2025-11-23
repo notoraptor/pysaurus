@@ -1,9 +1,8 @@
 from typing import Any, Callable
 
-import videre
 from ovld import OvldMC
-from videre.widgets.widget import Widget
 
+import videre
 from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.constants import VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE
 from pysaurus.core.informer import Information
@@ -15,6 +14,7 @@ from pysaurus.interface.using_videre.videre_notifications import (
     RequestedDatabaseUpdate,
     RequestedHomePage,
 )
+from videre.widgets.widget import Widget
 
 
 class App(metaclass=OvldMC):
@@ -38,7 +38,7 @@ class App(metaclass=OvldMC):
         self.window.add_notification_callback(self.on_notification)
         if callback:
             self.window.add_notification_callback(callback)
-        # Set new page to display
+        # Set the new page to display
         self.container.control = widget
 
     def on_notification(self, notification: Notification):

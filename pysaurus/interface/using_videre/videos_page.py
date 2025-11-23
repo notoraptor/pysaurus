@@ -1,9 +1,8 @@
-import videre
 from ovld import OvldMC
-from videre.core.pygame_utils import Surface
-from videre.widgets.widget import Widget
 
+import videre
 from pysaurus.core import notifications
+from pysaurus.core.classes import Selector
 from pysaurus.core.profiling import Profiler
 from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.interface.using_videre.common import (
@@ -22,26 +21,40 @@ from pysaurus.interface.using_videre.videos_page_dialogs import (
 from pysaurus.interface.using_videre.videre_notifications import (
     RequestedDatabaseUpdate,
     RequestedHomePage,
+    VideoSelected,
 )
 from pysaurus.video.database_context import DatabaseContext
+from videre.core.pygame_utils import Surface
+from videre.widgets.widget import Widget
 
 
 class VideosPage(videre.Column, metaclass=OvldMC):
     __wprops__ = {}
-    __slots__ = ("context", "status_bar", "_info_folders")
+    __slots__ = ("context", "status_bar", "_info_folders", "_info_selector")
 
     def __init__(self, context: DatabaseContext):
         self.context = context
         self.status_bar = videre.Text("Ready.")
         self._info_folders = videre.Text()
+        self._info_selector = videre.Text("")
         super().__init__(self._build(), space=5)
 
     def _update_info_folders(self):
         self._info_folders.text = f"{len(self.context.folders)} folder(s)"
 
+    def _update_info_selector(self):
+        total = self.context.view.view_count
+        selector = self.context.view.selector
+        if selector is None:
+            message = "No video selected"
+        else:
+            message = f"{selector.size_from(total)} / {total} video(s) selected"
+        self._info_selector.text = message
+
     def _build(self) -> list[Widget]:
         context = self.context
         view = context.view
+        selector = view.selector
 
         top_bar = videre.Row(
             [
@@ -78,7 +91,12 @@ class VideosPage(videre.Column, metaclass=OvldMC):
                     videre.ScrollView(
                         videre.Column(
                             [
-                                VideoView(video, i)
+                                VideoView(
+                                    video,
+                                    i,
+                                    selected=selector is not None
+                                    and selector.contains(video.video_id),
+                                )
                                 for i, video in enumerate(context.view.result)
                             ]
                         ),
@@ -110,6 +128,7 @@ class VideosPage(videre.Column, metaclass=OvldMC):
     def _render_filters(self) -> Widget:
         color_none = videre.Colors.gray
         view = self.context.view
+        self._update_info_selector()
         return videre.Column(
             [
                 videre.Text("FILTER", strong=True, italic=False, underline=True),
@@ -139,11 +158,12 @@ class VideosPage(videre.Column, metaclass=OvldMC):
                     for field, reverse in view.get_video_sorting()
                 ],
                 videre.Text("Selection", strong=True),
+                self._info_selector,
             ],
             horizontal_alignment=videre.Alignment.CENTER,
         )
 
-    def _get_menus(self):
+    def _get_menus(self) -> list[videre.ContextButton]:
         menus = [
             videre.ContextButton(
                 "Database ...",
@@ -183,7 +203,7 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         menus.extend(
             [
                 videre.ContextButton(
-                    "Proerties ...",
+                    "Prpoerties ...",
                     actions=[
                         ("Manage properties", self._action_manage_properties),
                         (
@@ -218,9 +238,11 @@ class VideosPage(videre.Column, metaclass=OvldMC):
         self._reload(page_number)
 
     def _reload(self, page_number: int = 0):
+        selector = self.context.view.selector
         context = get_backend(self).get_python_backend(
             self.context.view.page_size, page_number, None
         )
+        context.view.selector = selector
         self.context = context
         self.controls = self._build()
 
@@ -230,7 +252,23 @@ class VideosPage(videre.Column, metaclass=OvldMC):
     def on_notification(self, notification: notifications.Message):
         self.status_bar.text = notification.message
 
-    def _can_open_random_video(self):
+    def on_notification(self, notification: VideoSelected):
+        view = self.context.view
+        selector = self.context.view.selector
+        if selector:
+            if notification.selected:
+                selector.include(notification.video_id)
+            elif selector.contains(notification.video_id):
+                selector.exclude(notification.video_id)
+        elif notification.selected:
+            selector = Selector(False, {notification.video_id})
+        if selector and not selector.size_from(view.view_count):
+            selector = None
+        self.context.view.selector = selector
+        print("selector:", selector)
+        self._update_info_selector()
+
+    def _can_open_random_video(self) -> bool:
         # If any source contains "not_found", we may have videos not found,
         # so we won't try to open random video.
         for source in self.context.view.sources:

@@ -1,15 +1,16 @@
 from typing import Callable
 
 import pyperclip
-import videre
-from videre.widgets.widget import Widget
 
+import videre
 from pysaurus.core import notifications
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC
 from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.interface.using_videre.common import Uniconst
+from pysaurus.interface.using_videre.videre_notifications import VideoSelected
 from pysaurus.video.video_pattern import VideoPattern
+from videre.widgets.widget import Widget
 
 LIGHT_GREY = videre.parse_color((240, 240, 240))
 
@@ -46,9 +47,9 @@ class VideoView(videre.Container):
     )
     __BACKGROUND_EVEN__ = videre.parse_color((240, 240, 240))
 
-    def __init__(self, video: VideoPattern, index: int):
+    def __init__(self, video: VideoPattern, index: int, selected: bool = False):
         self._video = video
-        checkbox = videre.Checkbox()
+        checkbox = videre.Checkbox(checked=selected, on_change=self._on_select_video)
         properties = video.properties
         self._menu = videre.ContextButton(
             Uniconst.SETTINGS, actions=self._get_menu_actions(video), square=True
@@ -284,3 +285,7 @@ class VideoView(videre.Container):
                 f"New similarity ({video.similarity}) for: {video.filename}"
             )
         )
+
+    def _on_select_video(self, checkbox: videre.Checkbox):
+        print(self._video.video_id, checkbox.checked)
+        self.get_window().notify(VideoSelected(self._video.video_id, checkbox.checked))
