@@ -1,6 +1,6 @@
 from pysaurus.core.functions import get_percent
 from wip.adnoide.adnoide import Life
-from wip.adnoide.birth import ControlledNursery, FreeNursery
+from wip.adnoide.birth import ControlledNursery
 from wip.adnoide.dna_errors import DNAError, ProteinArgsError, ProteinError
 from wip.adnoide.mutation import Individual, Mutagenesis
 from wip.adnoide.selection import NaturalSelection, Survival
@@ -37,7 +37,7 @@ def main():
     print("[seed]", life.seed)
 
     mutagenesis = Mutagenesis(life)
-    free_nursery = FreeNursery(mutagenesis, population_size)
+    # free_nursery = FreeNursery(mutagenesis, population_size)
     controlled_nursery = ControlledNursery.priority(
         mutagenesis, population_size, selection_size
     )

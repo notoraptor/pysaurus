@@ -1,10 +1,11 @@
 import inspect
-import math
 import operator
 import random
-import sys
 from abc import ABC, abstractmethod
 from typing import Any, Self, Sequence
+
+import math
+import sys
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import boolean_and, boolean_or, if_else, map_attribute
