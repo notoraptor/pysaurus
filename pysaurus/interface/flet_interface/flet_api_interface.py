@@ -1,4 +1,4 @@
-from typing import *
+from typing import Collection, Iterable, Sequence
 
 from pysaurus.interface.api.gui_api import GuiAPI
 

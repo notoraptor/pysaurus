@@ -1,3 +1,4 @@
+# ruff: noqa: F811
 from typing import Any, Callable
 
 from ovld import OvldMC

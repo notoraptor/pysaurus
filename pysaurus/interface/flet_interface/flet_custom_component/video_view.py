@@ -71,8 +71,6 @@ class VideoView(ft.Container):
         extension = video.extension.upper()
         frame_rate = round(video.frame_rate)
         meta_title = None if video.title == video.file_title else video.title
-        already_opened = video.date < video.date_entry_opened
-        common_fields = common_fields or {}
         unique_move = (
             video.moves[0] if grouped_by_moves and len(video.moves) == 1 else None
         )

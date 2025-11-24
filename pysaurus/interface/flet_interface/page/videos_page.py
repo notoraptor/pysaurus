@@ -530,8 +530,6 @@ class VideosPage(ft.Container):
                 self.selection_filter,
             ]
         )
-        classifier_view = None
-        group_view = None
         self.videos_view = [
             VideoView(
                 v,

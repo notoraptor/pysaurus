@@ -1,8 +1,8 @@
-import math
 from typing import Any
 
-from annoy import AnnoyIndex
+import math
 from PIL import ImageFilter
+from annoy import AnnoyIndex
 
 from pysaurus.core.informer import Information
 from pysaurus.core.notifications import Message
@@ -24,6 +24,7 @@ class ApproximateComparatorAnnoy:
         weight_length = self.WEIGHT_LENGTH
         self.notifier = Information.notifier()
         blur = ImageFilter.BoxBlur(1)
+        del blur
         vector_size = 3 * self.DIM * self.DIM + weight_length
         vectors = []
         indices_to_compare = []

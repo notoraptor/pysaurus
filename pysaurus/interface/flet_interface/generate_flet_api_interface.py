@@ -60,6 +60,8 @@ def write_method(name: str, signature: inspect.Signature, printer: StringPrinter
             param_kwargs = param
         elif param.name not in ("self", "cls"):
             params.append(param)
+    del param_args
+    del param_kwargs
     param_string = ""
     if params:
         param_string = ", " + ", ".join(str(param) for param in params)
