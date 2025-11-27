@@ -1,0 +1,309 @@
+{
+  "videos": [
+    {
+      "r": 1536000,
+      "a": "pcm_s16be",
+      "A": "PCM signed 16-bit big-endian",
+      "l": [
+        "eng"
+      ],
+      "D": 8,
+      "C": 2,
+      "c": "QuickTime / MOV",
+      "b": "dxva2",
+      "d": 217050000,
+      "t": 1000000,
+      "e": [],
+      "s": 219561953,
+      "f": "H:\\donnees\\livres\\autres livres\\Megan Lisa Jones - Captive (BitTorrent Edition)\\Introduction to Captive by Megan Lisa Jones - BitTorrent Edition.mov",
+      "y": 100,
+      "x": 2997,
+      "h": 486,
+      "n": "",
+      "p": {
+        "série": [
+          "(autres)"
+        ]
+      },
+      "R": {
+        "d": 0,
+        "f": false,
+        "m": 1302197450.0,
+        "s": 219561953
+      },
+      "u": 48000,
+      "S": null,
+      "L": [],
+      "i": "2b673ac773272ef4",
+      "U": false,
+      "v": "h264",
+      "V": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+      "j": 8642,
+      "w": 864,
+      "m": 1711139308.908188
+    },
+    {
+      "r": 0,
+      "a": "",
+      "A": "",
+      "l": [],
+      "D": 0,
+      "C": 2,
+      "c": "",
+      "b": "",
+      "d": 0.0,
+      "t": 1,
+      "e": [
+        "ERROR_FIND_VIDEO_STREAM"
+      ],
+      "s": 13286674,
+      "f": "H:\\donnees\\musique\\Musique-autres\\Antonin_Dvorak_-_symphony_no._9_in_e_minor__from_the_new_world___op._95_-_i._adagio_-_allegro_molto_2.ogg",
+      "y": 1,
+      "x": 0,
+      "h": 0,
+      "n": "",
+      "p": {},
+      "R": {
+        "d": 0,
+        "f": false,
+        "m": 1391819256.0,
+        "s": 13286674
+      },
+      "u": 0,
+      "S": null,
+      "L": [],
+      "i": "",
+      "U": true,
+      "v": "",
+      "V": "",
+      "j": 8643,
+      "w": 0,
+      "m": 1711139308.908188
+    },
+    {
+      "r": 0,
+      "a": "",
+      "A": "",
+      "l": [],
+      "D": 0,
+      "C": 2,
+      "c": "",
+      "b": "",
+      "d": 0.0,
+      "t": 1,
+      "e": [
+        "ERROR_FIND_VIDEO_STREAM"
+      ],
+      "s": 14538728,
+      "f": "H:\\donnees\\musique\\Musique-autres\\Antonin_Dvorak_-_symphony_no._9_in_e_minor__from_the_new_world___op._95_-_ii._largo.ogg",
+      "y": 1,
+      "x": 0,
+      "h": 0,
+      "n": "",
+      "p": {},
+      "R": {
+        "d": 0,
+        "f": false,
+        "m": 1391857134.0,
+        "s": 14538728
+      },
+      "u": 0,
+      "S": null,
+      "L": [],
+      "i": "",
+      "U": true,
+      "v": "",
+      "V": "",
+      "j": 8644,
+      "w": 0,
+      "m": 1711139308.908188
+    },
+    {
+      "r": 112000,
+      "a": "mp2",
+      "A": "MP2 (MPEG audio layer 2)",
+      "l": [],
+      "D": 8,
+      "C": 2,
+      "c": "MPEG-PS (MPEG-2 Program Stream)",
+      "b": "",
+      "d": 307120000,
+      "t": 1000000,
+      "e": [],
+      "s": 47187972,
+      "f": "H:\\donnees\\musique\\Musique-autres\\Génériques Series Tv,Dessins Animés,Films,Emissions Tv,Pub\\-- Dessins Animés --\\X-OR-(TRANSMUTATION).MPG",
+      "y": 1,
+      "x": 25,
+      "h": 288,
+      "n": "",
+      "p": {
+        "série": [
+          "(autres)"
+        ]
+      },
+      "R": {
+        "d": 0,
+        "f": false,
+        "m": 1308035204.0,
+        "s": 47187972
+      },
+      "u": 44100,
+      "S": null,
+      "L": [],
+      "i": "9f18321af5171afc",
+      "U": false,
+      "v": "mpeg1video",
+      "V": "MPEG-1 video",
+      "j": 8648,
+      "w": 352,
+      "m": 1711139308.908188
+    },
+    {
+      "d": 1721741000,
+      "t": 1000000,
+      "s": 457191978,
+      "w": 1422,
+      "h": 800,
+      "x": 30000,
+      "y": 1001,
+      "D": 8,
+      "f": "H:\\donnees\\torrents\\[DATS-Wild Bunch] Digimon Tamers 2021 (from DigiFes 2021) [1080p][8AC9A8FB].mkv",
+      "c": "Matroska / WebM",
+      "v": "h264",
+      "V": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+      "B": 32,
+      "C": 2,
+      "u": 48000,
+      "r": 0,
+      "a": "aac",
+      "A": "AAC (Advanced Audio Coding)",
+      "b": "dxva2",
+      "l": [],
+      "L": [],
+      "p": {
+        "animé": [
+          "digimon"
+        ],
+        "série": [
+          "(autres)"
+        ],
+        "japanimation?": [
+          "0"
+        ]
+      },
+      "S": 1855,
+      "m": 1752185455.08678,
+      "j": 0,
+      "i": "c496b2c9fd3cda4f",
+      "e": [],
+      "o": 1628465858.0,
+      "R": {
+        "s": 457191978,
+        "m": 1628465858.0,
+        "d": 1558350510,
+        "f": true
+      }
+    },
+    {
+      "d": 1721741000,
+      "t": 1000000,
+      "s": 457191978,
+      "w": 1422,
+      "h": 800,
+      "x": 30000,
+      "y": 1001,
+      "D": 8,
+      "f": "H:\\donnees\\old_location\\Digimon Tamers 2021.mkv",
+      "c": "Matroska / WebM",
+      "v": "h264",
+      "V": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+      "B": 32,
+      "C": 2,
+      "u": 48000,
+      "r": 0,
+      "a": "aac",
+      "A": "AAC (Advanced Audio Coding)",
+      "b": "dxva2",
+      "l": [],
+      "L": [],
+      "p": {
+        "animé": [
+          "digimon"
+        ],
+        "série": [
+          "(autres)"
+        ],
+        "japanimation?": [
+          "0"
+        ]
+      },
+      "S": 1855,
+      "m": 1752185455.08678,
+      "j": 9999,
+      "i": "c496b2c9fd3cda4f",
+      "e": [],
+      "o": 1628465858.0,
+      "R": {
+        "s": 457191978,
+        "m": 1628465858.0,
+        "d": 1558350510,
+        "f": false
+      }
+    }
+  ],
+  "prop_types": [
+    {
+      "n": "série",
+      "d": "",
+      "m": false
+    },
+    {
+      "n": "animé",
+      "d": "",
+      "m": false
+    },
+    {
+      "n": "real end",
+      "d": "",
+      "m": false
+    },
+    {
+      "n": "saison",
+      "d": [
+        "(1) hiver",
+        "(2) printemps",
+        "(3) été",
+        "(4) automne"
+      ],
+      "m": false
+    },
+    {
+      "n": "année",
+      "d": 0,
+      "m": false
+    },
+    {
+      "n": "information",
+      "d": "",
+      "m": true
+    },
+    {
+      "n": "nom alternatif",
+      "d": "",
+      "m": true
+    },
+    {
+      "n": "qualité",
+      "d": "",
+      "m": false
+    },
+    {
+      "n": "japanimation?",
+      "d": [
+        "1",
+        "0"
+      ],
+      "m": false
+    }
+  ]
+}
