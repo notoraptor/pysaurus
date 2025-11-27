@@ -55,8 +55,14 @@ class Application:
     )
     app_name = "Pysaurus"
 
-    def __init__(self, notifier=DEFAULT_NOTIFIER):
-        self.home_dir = AbsolutePath(str(Path.home()))
+    def __init__(
+        self, notifier=DEFAULT_NOTIFIER, home_dir: str | AbsolutePath | None = None
+    ):
+        if home_dir is not None:
+            home_dir = AbsolutePath.ensure(home_dir)
+        else:
+            home_dir = AbsolutePath(str(Path.home()))
+        self.home_dir = home_dir
         self.app_dir = (self.home_dir / f".{self.app_name}").mkdir()
         self.dbs_dir = (self.app_dir / "databases").mkdir()
         self.lang_dir = (self.app_dir / "languages").mkdir()
