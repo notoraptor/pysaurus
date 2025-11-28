@@ -4,7 +4,14 @@ import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.newsql.newsql_database import NewSqlDatabase
-from tests.utils import TEST_DB_FOLDER, TEST_HOME_DIR, get_new_sql_database, get_old_app
+from saurus.sql.pysaurus_collection import PysaurusCollection
+from tests.utils import (
+    TEST_DB_FOLDER,
+    TEST_HOME_DIR,
+    get_new_sql_database,
+    get_old_app,
+    get_saurus_sql_database,
+)
 
 
 @pytest.fixture
@@ -20,6 +27,11 @@ def fake_old_database(fake_old_app) -> AbstractDatabase:
 @pytest.fixture
 def fake_new_database() -> NewSqlDatabase:
     return get_new_sql_database()
+
+
+@pytest.fixture
+def fake_saurus_database() -> PysaurusCollection:
+    return get_saurus_sql_database()
 
 
 # =============================================================================

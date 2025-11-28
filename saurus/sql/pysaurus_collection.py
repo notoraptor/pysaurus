@@ -76,20 +76,21 @@ class PysaurusCollection(AbstractDatabase):
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
         output = {}
-        for row in self.db.query(
-            "SELECT pv.video_id, pv.property_value "
-            "FROM video_property_value AS pv "
-            "JOIN property AS p "
-            "ON pv.property_id = p.property_id "
-            "WHERE p.name = ?"
-            + (
-                f" AND pv.video_id IN ({','.join(['?'] * len(indices))})"
-                if indices
-                else ""
-            ),
-            [name] + indices,
-        ):
-            output.setdefault(row[0], []).append(pt.from_string(row[1]))
+        with self.db:
+            for row in self.db.query(
+                "SELECT pv.video_id, pv.property_value "
+                "FROM video_property_value AS pv "
+                "JOIN property AS p "
+                "ON pv.property_id = p.property_id "
+                "WHERE p.name = ?"
+                + (
+                    f" AND pv.video_id IN ({','.join(['?'] * len(indices))})"
+                    if indices
+                    else ""
+                ),
+                [name] + list(indices),
+            ):
+                output.setdefault(row[0], []).append(pt.from_string(row[1]))
         return output
 
     def videos_tag_set(
@@ -162,7 +163,7 @@ class PysaurusCollection(AbstractDatabase):
             )
         elif unique_prop_indices:
             self.db.modify(
-                f"DELETE FROM video_property_value HWERE video_id = ? "
+                f"DELETE FROM video_property_value WHERE video_id = ? "
                 f"AND property_id IN ({','.join(['?'] * len(unique_prop_indices))})",
                 [video_id] + unique_prop_indices,
             )

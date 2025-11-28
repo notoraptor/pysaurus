@@ -36,10 +36,10 @@ class F:
     video_codec_description = 26
     video_id = 27
     width = 28
+    watched = 29
     # Special fields, not from "video" table
-    thumbnail = 29
-    with_thumbnails = 30
-    watched = 31
+    thumbnail = 30
+    with_thumbnails = 31
 
 
 def get_video_table_fields() -> Iterable[str]:
@@ -285,7 +285,7 @@ class SQLVideoWrapper(VideoPattern):
 
     @properties.setter
     def properties(self, properties):
-        self._properties = property
+        self._properties = properties
 
     @moves.setter
     def moves(self, moves):

@@ -79,26 +79,24 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
         video_field_getter["discarded"] = get_discarded
         video_fields = get_all_fields()
 
-        videos = sorted(
-            Video(None, video_dict) for video_dict in json_dict.get("videos", ())
-        )
+        videos = [Video(None, video_dict) for video_dict in json_dict.get("videos", ())]
         video_lines = [
-            [video_field_getter[field](i, video, field) for field in video_fields]
-            for i, video in enumerate(videos)
+            [video_field_getter[field](None, video, field) for field in video_fields]
+            for video in videos
         ]
         video_errors = [
-            (i, error)
-            for i, video in enumerate(videos)
+            (video.video_id, error)
+            for video in videos
             for error in sorted(video._get("errors"))
         ]
         video_audio_languages = [
-            (i, "a", lang_code, r)
-            for i, video in enumerate(videos)
+            (video.video_id, "a", lang_code, r)
+            for video in videos
             for r, lang_code in enumerate(video._get("audio_languages"))
         ]
         video_subtitle_languages = [
-            (i, "s", lang_code, r)
-            for i, video in enumerate(videos)
+            (video.video_id, "s", lang_code, r)
+            for video in videos
             for r, lang_code in enumerate(video._get("subtitle_languages"))
         ]
         prop_types = sorted(
@@ -121,16 +119,16 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
             for r, e in enumerate(pt.enumeration or [pt.default])
         ]
         video_property_values = [
-            (video_id, pt_name_to_pid[name], property_value)
-            for video_id, video in enumerate(videos)
+            (video.video_id, pt_name_to_pid[name], property_value)
+            for video in videos
             for name, values in sorted(
                 video._get("properties").items(), key=lambda c: c[0]
             )
             for property_value in format_prop_val(values, pt_name_to_type[name])
         ]
         video_texts = [
-            (video_id, *get_video_text_triple(video, string_props))
-            for video_id, video in enumerate(videos)
+            (video.video_id, *get_video_text_triple(video, string_props))
+            for video in videos
         ]
 
     # Save data into SQL table
@@ -194,9 +192,7 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
 
     # Move thumbnails into new SQL database
     with Profiler(f"[{db_name}] Move thumbnails", notifier):
-        video_filename_to_id = {
-            video.filename.path: i for i, video in enumerate(videos)
-        }
+        video_filename_to_id = {video.filename.path: video.video_id for video in videos}
         thumb_sql_path = ways.db_thumb_sql_path
         assert thumb_sql_path.isfile()
         thm = ThumbnailManager(ways.db_thumb_sql_path)
