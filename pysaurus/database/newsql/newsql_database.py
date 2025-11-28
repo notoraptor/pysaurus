@@ -600,13 +600,37 @@ class NewSqlDatabase(AbstractDatabase):
         return not folders_tree.in_folders(filename)
 
     def videos_get_terms(self) -> dict[int, list[str]]:
+        # Get string property type names for including property values in terms
+        string_prop_names = {
+            pt["name"] for pt in self.get_prop_types() if pt.get("type") == "str"
+        }
+
         result = {}
         for video in self._sql.get_all_videos():
             video_id = video["video_id"]
             data = video["data"]
             filename = video["filename"]
             meta_title = data.get("n") or data.get("meta_title", "")
-            terms = string_to_pieces(filename) + string_to_pieces(meta_title)
+
+            # Start with filename and meta_title
+            term_sources = [filename, meta_title]
+
+            # Add string property values (same as lazy_video.terms())
+            props = data.get("p") or data.get("properties", {})
+            for prop_name in string_prop_names:
+                if prop_name in props:
+                    values = props[prop_name]
+                    if isinstance(values, list):
+                        term_sources.extend(str(v) for v in values)
+                    else:
+                        term_sources.append(str(values))
+
+            all_str = " ".join(term_sources)
+            t_all_str = string_to_pieces(all_str)
+            t_all_str_low = string_to_pieces(all_str.lower())
+            terms = (
+                t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
+            )
             result[video_id] = terms
         return result
 
@@ -824,8 +848,16 @@ class NewSqlDatabase(AbstractDatabase):
     def videos_tag_set(
         self, name: str, updates: dict[int, Collection[PropUnitType]], merge=False
     ):
+        if not updates:
+            return
+
+        # Batch fetch all videos at once
+        all_videos = {v["video_id"]: v for v in self._sql.get_all_videos()}
+
+        # Collect all updates
+        batch_updates = []  # [(video_id, data, filename), ...]
         for video_id, values in updates.items():
-            video = self._sql.get_video_by_id(video_id)
+            video = all_videos.get(video_id)
             if not video:
                 continue
 
@@ -840,8 +872,14 @@ class NewSqlDatabase(AbstractDatabase):
                 props[name] = sorted(values)
 
             data["p"] = props
-            self._sql.update_video(video_id, data)
-            self._update_video_index(video_id, video["filename"], data)
+            batch_updates.append((video_id, data, video["filename"]))
+
+        # Batch update all videos
+        self._sql.update_videos_batch(batch_updates)
+
+        # Batch update indexes
+        for video_id, data, filename in batch_updates:
+            self._update_video_index(video_id, filename, data)
 
         self.save()
 
@@ -872,10 +910,6 @@ class NewSqlDatabase(AbstractDatabase):
                 return definition[0]
             return definition
         return None
-
-    def jsondb_register_modified(self, video):
-        """Compatibility method - no-op for SQL (auto-saved)."""
-        pass
 
     def jsondb_get_thumbnail_base64(self, filename: AbsolutePath) -> str:
         return self.get_thumbnail_base64(filename)

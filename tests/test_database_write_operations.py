@@ -31,7 +31,7 @@ class TestPropertyTypeOperations:
 
     def test_prop_type_add_string(self, mem_old_database, mem_new_database):
         """Both should support adding a string property type."""
-        prop_name = "category"
+        prop_name = "test_tags"
 
         # Add property type (prop_type must be string name, not the type itself)
         mem_old_database.prop_type_add(prop_name, "str", "", True)
@@ -136,8 +136,8 @@ class TestVideoPropertyOperations:
 
     @pytest.fixture
     def databases_with_category(self, mem_old_database, mem_new_database):
-        """Setup databases with a 'category' property."""
-        prop_name = "category"
+        """Setup databases with a 'test_category' property."""
+        prop_name = "test_category"
         mem_old_database.prop_type_add(prop_name, "str", "", True)
         mem_new_database.prop_type_add(prop_name, "str", "", True)
         return mem_old_database, mem_new_database, prop_name
@@ -558,13 +558,13 @@ class TestSetSimilarities:
 
 class TestCategoryPropertyFullWorkflow:
     """
-    Full workflow test: create a 'category' property and populate it
+    Full workflow test: create a property and populate it
     based on video folder structure.
     """
 
     def test_populate_category_from_folders(self, mem_old_database, mem_new_database):
-        """Populate category property based on folder structure."""
-        prop_name = "category"
+        """Populate test_folder_category property based on folder structure."""
+        prop_name = "test_folder_category"
 
         # Create property
         mem_old_database.prop_type_add(prop_name, "str", "", True)

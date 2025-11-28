@@ -262,6 +262,27 @@ class SqlDatabase:
             (new_filename, json_data, video_id),
         )
 
+    def update_videos_batch(self, updates: list[tuple[int, dict, str]]):
+        """
+        Batch update multiple videos in a single transaction.
+
+        Args:
+            updates: List of (video_id, data_dict, filename) tuples
+        """
+        if not updates:
+            return
+
+        self.begin()
+        try:
+            params = [
+                (json.dumps(data), video_id) for video_id, data, filename in updates
+            ]
+            self.executemany("UPDATE videos SET data = ? WHERE video_id = ?", params)
+            self.commit()
+        except Exception:
+            self.rollback()
+            raise
+
     def delete_video(self, video_id: int):
         self.execute("DELETE FROM videos WHERE video_id = ?", (video_id,))
 
