@@ -39,6 +39,7 @@ class F:
     # Special fields, not from "video" table
     thumbnail = 29
     with_thumbnails = 30
+    watched = 31
 
 
 def get_video_table_fields() -> Iterable[str]:
@@ -227,6 +228,10 @@ class SQLVideoWrapper(VideoPattern):
     @property
     def similarity_id(self):
         return self.data[F.similarity_id]
+
+    @property
+    def watched(self) -> bool:
+        return self.data[F.watched]
 
     # derived
 

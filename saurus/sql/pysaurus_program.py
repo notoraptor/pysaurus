@@ -22,7 +22,7 @@ class PysaurusProgram:
 
     def __init__(self, home_dir=None):
         home_dir = home_dir or str(Path.home())
-        self.home_dir = AbsolutePath(home_dir)
+        self.home_dir = AbsolutePath.ensure(home_dir)
         self.app_dir = (self.home_dir / f".{self.app_name}").mkdir()
         self.dbs_dir = (self.app_dir / "databases").mkdir()
         self.databases: dict[AbsolutePath, PysaurusCollection | None] = {}
