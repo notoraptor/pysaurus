@@ -4,9 +4,7 @@ from pysaurus.application.application import Application
 from pysaurus.database.newsql.newsql_database import NewSqlDatabase
 
 TEST_HOME_DIR = os.path.join(os.path.dirname(__file__), "home_dir_test")
-TEST_DB_FOLDER = os.path.join(
-    TEST_HOME_DIR, ".Pysaurus", "databases", "test_database"
-)
+TEST_DB_FOLDER = os.path.join(TEST_HOME_DIR, ".Pysaurus", "databases", "test_database")
 
 
 def get_old_app() -> Application:

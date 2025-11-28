@@ -23,13 +23,50 @@ SCHEMA_VERSION = 1
 class SqlDatabase:
     """Low-level SQL database operations."""
 
-    def __init__(self, db_path: Path | str):
-        self.db_path = Path(db_path)
-        self._conn: sqlite3.Connection | None = None
+    def __init__(
+        self,
+        db_path: Path | str | None = None,
+        connection: sqlite3.Connection | None = None,
+    ):
+        """
+        Initialize SqlDatabase.
+
+        Args:
+            db_path: Path to the SQLite database file. Can be None if connection is provided.
+            connection: Optional existing connection (e.g., for in-memory databases).
+        """
+        self.db_path = Path(db_path) if db_path else None
+        self._conn: sqlite3.Connection | None = connection
+        if connection is not None:
+            connection.row_factory = sqlite3.Row
+
+    @classmethod
+    def from_memory_copy(cls, source_db_path: Path | str) -> "SqlDatabase":
+        """
+        Create an in-memory copy of an existing database.
+
+        This is useful for tests where you want to modify the database
+        without affecting the original file.
+        """
+        source_db_path = Path(source_db_path)
+        # Create in-memory connection
+        mem_conn = sqlite3.connect(":memory:", isolation_level=None)
+        mem_conn.row_factory = sqlite3.Row
+
+        # Copy source database to memory
+        with sqlite3.connect(source_db_path) as source_conn:
+            source_conn.backup(mem_conn)
+
+        # Enable foreign keys (WAL mode not needed for in-memory)
+        mem_conn.execute("PRAGMA foreign_keys = ON")
+
+        return cls(db_path=None, connection=mem_conn)
 
     @property
     def conn(self) -> sqlite3.Connection:
         if self._conn is None:
+            if self.db_path is None:
+                raise ValueError("No database path or connection provided")
             self._conn = sqlite3.connect(self.db_path, isolation_level=None)
             self._conn.row_factory = sqlite3.Row
             # Enable foreign keys and WAL mode for better performance

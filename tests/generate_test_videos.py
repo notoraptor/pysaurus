@@ -199,7 +199,6 @@ def generate_test_dataset(
     print()
 
     generated_videos = []  # Track generated videos for duplicates/similar
-    similar_seeds = []  # Track seeds used for similar video groups
     current_similar_seed = None
     similar_group = []
     videos_in_current_similar_group = 0
@@ -372,8 +371,8 @@ def main():
 
     args = parser.parse_args()
 
-    print(f"Test Video Generator (PyAV)")
-    print(f"=" * 60)
+    print("Test Video Generator (PyAV)")
+    print("=" * 60)
     print(f"Output directory: {args.output}")
     print(f"Video count: {args.count}")
     print(f"Random seed: {args.seed}")
@@ -384,8 +383,8 @@ def main():
     )
 
     print()
-    print(f"=" * 60)
-    print(f"Generation complete!")
+    print("=" * 60)
+    print("Generation complete!")
     print(f"  Total: {stats['success']} ({stats['failed']} failed)")
     print(f"    - Unique: {stats['unique']}")
     print(f"    - Similar: {stats['similar']} ({len(stats['similar_groups'])} groups)")
@@ -400,24 +399,24 @@ def main():
     print(f"  Elapsed: {stats['elapsed_seconds']:.1f}s")
     print(f"  Rate: {stats['videos_per_second']:.1f} videos/s")
     print()
-    print(f"By resolution:")
+    print("By resolution:")
     for res, cnt in sorted(stats["by_resolution"].items()):
         print(f"  {res}: {cnt}")
     print()
-    print(f"By category:")
+    print("By category:")
     for cat, cnt in sorted(stats["by_category"].items()):
         print(f"  {cat}: {cnt}")
 
     # Show some examples of similar/identical
     if stats["identical_pairs"]:
         print()
-        print(f"Identical pairs (first 3):")
+        print("Identical pairs (first 3):")
         for orig, copy in stats["identical_pairs"][:3]:
             print(f"  {Path(orig).name} -> {Path(copy).name}")
 
     if stats["similar_groups"]:
         print()
-        print(f"Similar groups (first 3):")
+        print("Similar groups (first 3):")
         for group in stats["similar_groups"][:3]:
             names = [Path(p).name for p in group]
             print(f"  {names}")

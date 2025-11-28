@@ -13,6 +13,7 @@ from pysaurus.core.classes import Text
 from pysaurus.core.datestring import Date
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_utils import DatabaseLoaded
@@ -78,7 +79,11 @@ class SqlVideo(VideoPattern):
 
     @property
     def similarity_id(self) -> int | None:
-        return self._data.get("S") or self._data.get("similarity_id")
+        # Use explicit None check because 0 is a valid value
+        val = self._data.get("S")
+        if val is not None:
+            return val
+        return self._data.get("similarity_id")
 
     @property
     def watched(self) -> bool:
@@ -350,6 +355,55 @@ class NewSqlDatabase(AbstractDatabase):
         # Notify loaded
         self.notifier.notify(DatabaseLoaded(self))
 
+    @classmethod
+    def from_memory_copy(
+        cls, db_folder: PathType, notifier=DEFAULT_NOTIFIER
+    ) -> "NewSqlDatabase":
+        """
+        Create an in-memory copy of an existing NewSqlDatabase.
+
+        The SQLite database is loaded entirely into memory using sqlite3.backup().
+        This is much faster for tests than copying files to a temp directory.
+        All modifications are done in memory and don't affect the original file.
+        """
+        from pysaurus.database.jsdb.db_video_attribute import PotentialMoveAttribute
+        from pysaurus.database.jsdb.jsdb_video_provider import JsonDatabaseVideoProvider
+
+        db_folder = AbsolutePath.ensure(db_folder).assert_dir()
+        sql_path = db_folder / "newsql.db"
+
+        if not sql_path.exists():
+            raise FileNotFoundError(f"SQL database not found: {sql_path}")
+
+        # Create instance without calling __init__
+        instance = object.__new__(cls)
+
+        # Initialize SqlDatabase from memory copy
+        instance._sql = SqlDatabase.from_memory_copy(sql_path.path)
+
+        # Load folders
+        instance._folders = set(
+            AbsolutePath.ensure(f) for f in instance._sql.get_folders()
+        )
+
+        # Cache prop_types
+        instance._prop_types_cache = None
+
+        # Load date
+        instance._date = Date(instance._sql.get_config("date") or 0)
+
+        # Initialize moves_attribute
+        instance.moves_attribute = PotentialMoveAttribute(instance)
+
+        # Initialize parent with provider
+        provider = JsonDatabaseVideoProvider(instance)
+        AbstractDatabase.__init__(instance, db_folder, provider, notifier)
+
+        # Notify loaded
+        instance.notifier.notify(DatabaseLoaded(instance))
+
+        return instance
+
     def __close__(self):
         super().__close__()
         self._sql.close()
@@ -542,10 +596,8 @@ class NewSqlDatabase(AbstractDatabase):
 
     def _is_discarded(self, filename: AbsolutePath) -> bool:
         """Check if filename is outside monitored folders."""
-        for folder in self._folders:
-            if filename.in_directory(folder):
-                return False
-        return True
+        folders_tree = PathTree(self._folders)
+        return not folders_tree.in_folders(filename)
 
     def videos_get_terms(self) -> dict[int, list[str]]:
         result = {}
