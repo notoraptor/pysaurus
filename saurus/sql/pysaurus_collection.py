@@ -303,18 +303,9 @@ class PysaurusCollection(AbstractDatabase):
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-        count_only: bool = False,
-        exists_only: bool = False,
-        ids_only: bool = False,
     ) -> list[VideoPattern] | int | bool | list[int]:
         return video_mega_search(
-            self.db,
-            include=include,
-            with_moves=with_moves,
-            where=where,
-            count_only=count_only,
-            exists_only=exists_only,
-            ids_only=ids_only,
+            self.db, include=include, with_moves=with_moves, where=where
         )
 
     def count_videos(self, *flags, **forced_flags) -> int:
@@ -322,11 +313,11 @@ class PysaurusCollection(AbstractDatabase):
         forced_flags.update({flag: True for flag in flags})
         if forced_flags:
             forced_flags.setdefault("discarded", False)
-        return self.get_videos(where=forced_flags, count_only=True)
+        return video_mega_search(self.db, where=forced_flags, count_only=True)
 
     def has_video(self, **fields) -> bool:
         """Optimized existence check using SQL LIMIT 1."""
-        return self.get_videos(where=fields, exists_only=True)
+        return video_mega_search(self.db, where=fields, exists_only=True)
 
     def _get_video_terms(self, video_id: int) -> list[str]:
         # **NB**: Keep this method for reference.

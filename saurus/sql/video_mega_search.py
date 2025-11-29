@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Iterable, Sequence
+from typing import Iterable, Literal, Sequence, overload
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import Selector
@@ -70,12 +70,68 @@ def _needs_thumbnail_join(include: Sequence[str] | None, where: dict | None) -> 
     return False
 
 
+@overload
 def video_mega_search(
     db: PysaurusConnection,
     *,
-    include: Sequence[str] = None,
+    include: Sequence[str] | None = None,
     with_moves: bool = False,
-    where: dict = None,
+    where: dict | None = None,
+    # Optimization flags
+    count_only: Literal[False] = False,
+    exists_only: Literal[True],
+    ids_only: Literal[False] = False,
+) -> bool: ...
+
+
+@overload
+def video_mega_search(
+    db: PysaurusConnection,
+    *,
+    include: Sequence[str] | None = None,
+    with_moves: bool = False,
+    where: dict | None = None,
+    # Optimization flags
+    count_only: Literal[True],
+    exists_only: Literal[False] = False,
+    ids_only: Literal[False] = False,
+) -> int: ...
+
+
+@overload
+def video_mega_search(
+    db: PysaurusConnection,
+    *,
+    include: Sequence[str] | None = None,
+    with_moves: bool = False,
+    where: dict | None = None,
+    # Optimization flags
+    count_only: Literal[False] = False,
+    exists_only: Literal[False] = False,
+    ids_only: Literal[True],
+) -> list[int]: ...
+
+
+@overload
+def video_mega_search(
+    db: PysaurusConnection,
+    *,
+    include: Sequence[str] | None = None,
+    with_moves: bool = False,
+    where: dict | None = None,
+    # Optimization flags
+    count_only: Literal[False] = False,
+    exists_only: Literal[False] = False,
+    ids_only: Literal[False] = False,
+) -> list[VideoPattern]: ...
+
+
+def video_mega_search(
+    db: PysaurusConnection,
+    *,
+    include: Sequence[str] | None = None,
+    with_moves: bool = False,
+    where: dict | None = None,
     # Optimization flags
     count_only: bool = False,
     exists_only: bool = False,
@@ -202,7 +258,7 @@ def _get_videos(
     query: str,
     parameters: Sequence,
     *,
-    include: Sequence[str] = None,
+    include: Sequence[str] | None = None,
     with_moves: bool = False,
 ) -> list[VideoPattern]:
     videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
@@ -583,7 +639,7 @@ def _compute_results_and_stats(
     db: PysaurusConnection,
     context: VideoSearchContext,
     query_maker: QueryMaker,
-    include: Sequence[str] = None,
+    include: Sequence[str] | None = None,
 ):
     query_maker_count = query_maker.copy()
     query_maker_select = query_maker.copy()
