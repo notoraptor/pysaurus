@@ -31,8 +31,8 @@ class FeatureAPI:
             "PYTHON_DEFAULT_SOURCES": PYTHON_DEFAULT_SOURCES,
             "PYTHON_APP_NAME": self.application.app_name,
             "PYTHON_FEATURE_COMPARISON": True,
-            "PYTHON_LANG": language_to_dict(self.application.lang),
-            "PYTHON_LANGUAGE": self.application.lang.__language__,
+            "PYTHON_LANG": "english",
+            "PYTHON_LANGUAGE": "english",
         }
         # We must return value for proxy ending with "!"
         self._proxies: dict[str, str | ProxyFeature] = {

@@ -75,11 +75,21 @@ class Application:
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
             if entry.is_dir() and not entry.name.startswith("."):
                 self.databases[AbsolutePath(entry.path)] = None
+
+        # Load config file.
+        if self.config_path.exists():
+            assert self.config_path.isfile()
+            self.config = Config(parse_json(self.config_path))
+        say.set_language(self.config.language)
+        say.set_folder((self.app_dir / "lang").mkdir())
+
+    def _handle_languages(self):
         # Load language names.
         for entry in FileSystem.scandir(self.lang_dir.path):  # type: os.DirEntry
             path = AbsolutePath(entry.path)
             if path.isfile() and path.extension == "txt":
                 self.languages[path] = None
+
         # Load default languages names.
         for entry in FileSystem.scandir(
             os.path.join(package_dir(), "application", "language", "default")
@@ -99,10 +109,7 @@ class Application:
                     path.copy_file_to(user_path)
                     self.languages[user_path] = None
                     logger.info(f"Installed embedded language {path.title}")
-        # Load config file.
-        if self.config_path.exists():
-            assert self.config_path.isfile()
-            self.config = Config(parse_json(self.config_path))
+
         # Load language.
         lang_path = self.lang_dir / f"{self.config.language}.txt"
         if lang_path not in self.languages:
@@ -112,8 +119,6 @@ class Application:
             else:
                 raise exceptions.MissingLanguageFile(self.config.language)
         self.languages[lang_path] = self._load_lang(lang_path)
-        say.set_language(self.config.language)
-        say.set_folder((self.app_dir / "lang").mkdir())
 
     def _load_lang(self, lang_path: AbsolutePath):
         lang = Language(dff_load(lang_path), self.config.language)

@@ -295,7 +295,9 @@ class TestVideoMegaGroupEdgeCases:
         provider = saurus_database.provider
 
         # Group by category (property) with LENGTH sorting (without singletons to get groups)
-        provider.set_groups("category", is_property=True, allow_singletons=False, sorting="length")
+        provider.set_groups(
+            "category", is_property=True, allow_singletons=False, sorting="length"
+        )
         group_def = provider.get_group_def()
 
         # Should have groups sorted by length of category value
@@ -332,11 +334,21 @@ class TestVideoMegaGroupEdgeCases:
         provider = saurus_database.provider
 
         # Group by category with classifier
-        provider.set_groups("category", is_property=True, allow_singletons=True, sorting="count", reverse=True)
+        provider.set_groups(
+            "category",
+            is_property=True,
+            allow_singletons=True,
+            sorting="count",
+            reverse=True,
+        )
 
         # Find two non-NULL categories to use as classifier
         group_def = provider.get_group_def()
-        categories = [g["value"] for g in group_def["groups"] if g["value"] is not None and g["count"] > 0]
+        categories = [
+            g["value"]
+            for g in group_def["groups"]
+            if g["value"] is not None and g["count"] > 0
+        ]
 
         if len(categories) >= 2:
             # Set classifier with first category
