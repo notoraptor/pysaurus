@@ -1,0 +1,25 @@
+group_def:
+  allow_singletons: false
+  field: length
+  group_id: 0
+  groups:
+  - count: 3
+    value: 5.886667
+  - count: 3
+    value: 6.0
+  - count: 2
+    value: 6.74
+  - count: 3
+    value: 7.166667
+  - count: 2
+    value: 10.005
+  - count: 2
+    value: 12.0
+  - count: 3
+    value: 12.04
+  - count: 2
+    value: 20.0
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 3

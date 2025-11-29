@@ -1,0 +1,43 @@
+group_def:
+  allow_singletons: false
+  field: date_entry_opened
+  group_id: 0
+  groups:
+  - count: 2
+    value: 1695768586.0
+  - count: 2
+    value: 1695768588.0
+  - count: 2
+    value: 1695768592.0
+  - count: 2
+    value: 1695768754.0
+  - count: 2
+    value: 1695770370.0
+  - count: 2
+    value: 1695770402.0
+  - count: 2
+    value: 1695770416.0
+  - count: 2
+    value: 1695770424.0
+  - count: 2
+    value: 1695770462.0
+  - count: 2
+    value: 1695770492.0
+  - count: 3
+    value: 1695770500.0
+  - count: 3
+    value: 1695770516.0
+  - count: 2
+    value: 1695770532.0
+  - count: 2
+    value: 1695770540.0
+  - count: 2
+    value: 1695770562.0
+  - count: 2
+    value: 1695770572.0
+  - count: 4
+    value: 1695770586.0
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 2

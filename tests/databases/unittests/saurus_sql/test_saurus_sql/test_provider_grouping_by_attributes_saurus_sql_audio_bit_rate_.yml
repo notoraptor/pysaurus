@@ -1,0 +1,39 @@
+group_def:
+  allow_singletons: true
+  field: audio_bit_rate
+  group_id: 0
+  groups:
+  - count: 61
+    value: 0
+  - count: 1
+    value: 58815
+  - count: 1
+    value: 62687
+  - count: 1
+    value: 103303
+  - count: 1
+    value: 111999
+  - count: 1
+    value: 117600
+  - count: 1
+    value: 118010
+  - count: 8
+    value: 125375
+  - count: 1
+    value: 125623
+  - count: 1
+    value: 127877
+  - count: 1
+    value: 127891
+  - count: 9
+    value: 128000
+  - count: 1
+    value: 128065
+  - count: 1
+    value: 128349
+  - count: 1
+    value: 137010
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 61

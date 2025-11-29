@@ -1,0 +1,11 @@
+group_def:
+  allow_singletons: false
+  field: move_id
+  group_id: 0
+  groups:
+  - count: 90
+    value: null
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 90

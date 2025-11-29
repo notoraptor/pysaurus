@@ -1,18 +1,20 @@
 # ruff: noqa: F811
-from ovld import OvldMC
-
 import videre
+from ovld import OvldMC
+from videre.core.pygame_utils import Surface
+from videre.widgets.widget import Widget
+
 from pysaurus.core import notifications
 from pysaurus.core.classes import Selector
 from pysaurus.core.profiling import Profiler
-from pysaurus.interface.using_videre.backend import get_backend
-from pysaurus.interface.using_videre.common import (
+from pysaurus.interface.common.common import (
     FIELD_MAP,
     SEARCH_COND_TITLE,
     Uniconst,
     pretty_grouping,
     pretty_quote,
 )
+from pysaurus.interface.using_videre.backend import get_backend
 from pysaurus.interface.using_videre.pagination import Pagination
 from pysaurus.interface.using_videre.video_view import VideoView
 from pysaurus.interface.using_videre.videos_page_dialogs import (
@@ -25,8 +27,6 @@ from pysaurus.interface.using_videre.videre_notifications import (
     VideoSelected,
 )
 from pysaurus.video.database_context import DatabaseContext
-from videre.core.pygame_utils import Surface
-from videre.widgets.widget import Widget
 
 
 class VideosPage(videre.Column, metaclass=OvldMC):

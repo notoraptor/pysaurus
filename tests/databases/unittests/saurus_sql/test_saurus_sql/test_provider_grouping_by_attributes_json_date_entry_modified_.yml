@@ -1,0 +1,47 @@
+group_def:
+  allow_singletons: false
+  field: date_entry_modified
+  group_id: 0
+  groups:
+  - count: 3
+    value: '2023-12-16 12:46:12'
+  - count: 6
+    value: '2023-12-16 12:46:12'
+  - count: 6
+    value: '2023-12-16 12:46:12'
+  - count: 2
+    value: '2023-12-16 12:46:12'
+  - count: 5
+    value: '2023-12-16 12:46:12'
+  - count: 5
+    value: '2023-12-16 12:46:12'
+  - count: 4
+    value: '2023-12-16 12:46:12'
+  - count: 2
+    value: '2023-12-16 12:46:12'
+  - count: 4
+    value: '2023-12-16 12:46:12'
+  - count: 4
+    value: '2023-12-16 12:46:12'
+  - count: 5
+    value: '2023-12-16 12:46:12'
+  - count: 6
+    value: '2023-12-16 12:46:12'
+  - count: 6
+    value: '2023-12-16 12:46:12'
+  - count: 2
+    value: '2023-12-16 12:46:12'
+  - count: 5
+    value: '2023-12-16 12:46:12'
+  - count: 5
+    value: '2023-12-16 12:46:12'
+  - count: 4
+    value: '2023-12-16 12:46:12'
+  - count: 5
+    value: '2023-12-16 12:46:12'
+  - count: 3
+    value: '2023-12-16 12:46:12'
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 3

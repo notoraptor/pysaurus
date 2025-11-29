@@ -1,0 +1,11 @@
+group_def:
+  allow_singletons: true
+  field: day
+  group_id: 0
+  groups:
+  - count: 90
+    value: '2023-09-26'
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 90

@@ -1,0 +1,47 @@
+group_def:
+  allow_singletons: false
+  field: date_entry_modified
+  group_id: 0
+  groups:
+  - count: 3
+    value: 1702748772.011606
+  - count: 6
+    value: 1702748772.012605
+  - count: 6
+    value: 1702748772.013601
+  - count: 2
+    value: 1702748772.014627
+  - count: 5
+    value: 1702748772.015159
+  - count: 5
+    value: 1702748772.016305
+  - count: 4
+    value: 1702748772.017304
+  - count: 2
+    value: 1702748772.018302
+  - count: 4
+    value: 1702748772.019271
+  - count: 4
+    value: 1702748772.020298
+  - count: 5
+    value: 1702748772.021267
+  - count: 6
+    value: 1702748772.022264
+  - count: 6
+    value: 1702748772.023262
+  - count: 2
+    value: 1702748772.024286
+  - count: 5
+    value: 1702748772.025356
+  - count: 5
+    value: 1702748772.026392
+  - count: 4
+    value: 1702748772.027389
+  - count: 5
+    value: 1702748772.028386
+  - count: 3
+    value: 1702748772.029385
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 3

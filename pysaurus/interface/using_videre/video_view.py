@@ -1,16 +1,16 @@
 from typing import Callable
 
 import pyperclip
-
 import videre
+from videre.widgets.widget import Widget
+
 from pysaurus.core import notifications
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC
+from pysaurus.interface.common.common import Uniconst
 from pysaurus.interface.using_videre.backend import get_backend
-from pysaurus.interface.using_videre.common import Uniconst
 from pysaurus.interface.using_videre.videre_notifications import VideoSelected
 from pysaurus.video.video_pattern import VideoPattern
-from videre.widgets.widget import Widget
 
 LIGHT_GREY = videre.parse_color((240, 240, 240))
 

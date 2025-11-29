@@ -1,0 +1,25 @@
+group_def:
+  allow_singletons: false
+  field: length
+  group_id: 0
+  groups:
+  - count: 3
+    value: 05s 886667µs
+  - count: 3
+    value: 06s
+  - count: 2
+    value: 06s 740000µs
+  - count: 3
+    value: 07s 166667µs
+  - count: 2
+    value: 10s 005000µs
+  - count: 2
+    value: 12s
+  - count: 3
+    value: 12s 040000µs
+  - count: 2
+    value: 20s
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 3

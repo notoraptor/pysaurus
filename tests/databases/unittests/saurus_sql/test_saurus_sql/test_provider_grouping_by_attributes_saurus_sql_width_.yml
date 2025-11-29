@@ -1,0 +1,21 @@
+group_def:
+  allow_singletons: true
+  field: width
+  group_id: 0
+  groups:
+  - count: 7
+    value: 360
+  - count: 1
+    value: 426
+  - count: 11
+    value: 480
+  - count: 1
+    value: 540
+  - count: 1
+    value: 636
+  - count: 69
+    value: 640
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 7

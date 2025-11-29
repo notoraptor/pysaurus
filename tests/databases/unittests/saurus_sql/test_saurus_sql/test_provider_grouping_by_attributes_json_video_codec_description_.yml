@@ -1,0 +1,11 @@
+group_def:
+  allow_singletons: true
+  field: video_codec_description
+  group_id: 0
+  groups:
+  - count: 90
+    value: H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 90

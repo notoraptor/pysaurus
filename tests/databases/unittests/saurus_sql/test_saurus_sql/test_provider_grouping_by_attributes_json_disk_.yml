@@ -1,0 +1,11 @@
+group_def:
+  allow_singletons: true
+  field: disk
+  group_id: 0
+  groups:
+  - count: 90
+    value: C:\
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 90

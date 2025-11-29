@@ -1,0 +1,43 @@
+group_def:
+  allow_singletons: false
+  field: date_entry_opened
+  group_id: 0
+  groups:
+  - count: 2
+    value: '2023-09-26 18:49:46'
+  - count: 2
+    value: '2023-09-26 18:49:48'
+  - count: 2
+    value: '2023-09-26 18:49:52'
+  - count: 2
+    value: '2023-09-26 18:52:34'
+  - count: 2
+    value: '2023-09-26 19:19:30'
+  - count: 2
+    value: '2023-09-26 19:20:02'
+  - count: 2
+    value: '2023-09-26 19:20:16'
+  - count: 2
+    value: '2023-09-26 19:20:24'
+  - count: 2
+    value: '2023-09-26 19:21:02'
+  - count: 2
+    value: '2023-09-26 19:21:32'
+  - count: 3
+    value: '2023-09-26 19:21:40'
+  - count: 3
+    value: '2023-09-26 19:21:56'
+  - count: 2
+    value: '2023-09-26 19:22:12'
+  - count: 2
+    value: '2023-09-26 19:22:20'
+  - count: 2
+    value: '2023-09-26 19:22:42'
+  - count: 2
+    value: '2023-09-26 19:22:52'
+  - count: 4
+    value: '2023-09-26 19:23:06'
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 2

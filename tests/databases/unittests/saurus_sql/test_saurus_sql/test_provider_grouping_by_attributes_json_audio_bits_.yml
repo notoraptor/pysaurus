@@ -1,0 +1,13 @@
+group_def:
+  allow_singletons: true
+  field: audio_bits
+  group_id: 0
+  groups:
+  - count: 61
+    value: 0
+  - count: 29
+    value: 32
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 61

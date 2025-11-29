@@ -5,9 +5,12 @@ These tests verify that AbstractVideoProvider methods work correctly
 on both JSON and Saurus SQL database implementations.
 """
 
+import pprint
+
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
+from pysaurus.interface.common.common import FIELD_MAP
 
 
 @pytest.fixture(params=["json", "saurus_sql"])
@@ -124,6 +127,22 @@ class TestDatabaseProvider:
         provider.set_groups("audio_bit_rate", True, sorting="count", reverse=True)
         provider.set_group(0)
         assert len(provider.get_view_indices()) == 0
+
+    @pytest.mark.parametrize("attribute", [field.name for field in FIELD_MAP.allowed])
+    def test_provider_grouping_by_attributes(
+        self, provider, attribute, data_regression
+    ):
+        field = FIELD_MAP.fields[attribute]
+        provider.set_groups(attribute, allow_singletons=not field.is_only_many())
+        nb_videos_first_group = len(provider.get_view_indices())
+        group_def = provider.get_group_def()
+        results = {
+            "nb_videos_first_group": nb_videos_first_group,
+            "group_def": group_def,
+        }
+        pprint.pprint(results)
+        # data_regression.check(results, basename=f"provider_grouping_by_{attribute}")
+        data_regression.check(results)
 
     def test_provider_grouping_by_property(self, provider):
         expected_without_singletons = [

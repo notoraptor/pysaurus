@@ -1,0 +1,9 @@
+group_def:
+  allow_singletons: false
+  field: bit_rate
+  group_id: -1
+  groups: []
+  is_property: false
+  reverse: false
+  sorting: field
+nb_videos_first_group: 0
