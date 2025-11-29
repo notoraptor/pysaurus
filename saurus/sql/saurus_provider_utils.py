@@ -34,8 +34,16 @@ def search_to_sql(search: SearchDef) -> tuple[str, list[str]]:
             piece = f'"{piece}"'
         terms.append(piece)
     if search.cond == "exact":
-        query = "SELECT video_id FROM video_text WHERE video_text MATCH ?"
-        where = [" + ".join(terms)]
+        # FTS5 + operator matches adjacent tokens, but doesn't distinguish
+        # between "then natural" and "then.natural" (both tokenize the same).
+        # Use additional LIKE filter to ensure exact phrase match.
+        # Use original search text (not tokenized) for LIKE comparison.
+        exact_phrase = search.text.lower()
+        query = (
+            "SELECT video_id FROM video_text WHERE video_text MATCH ? "
+            "AND LOWER(filename || ' ' || meta_title || ' ' || COALESCE(properties, '')) LIKE ?"
+        )
+        where = [" + ".join(terms), f"%{exact_phrase}%"]
     else:
         terms = [f"{piece}*" for piece in terms]
         if search.cond == "and":

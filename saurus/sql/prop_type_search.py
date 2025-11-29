@@ -26,15 +26,14 @@ def prop_type_search(
     ret = []
     for row in db.query_all(clause, where_clause.get_parameters()):
         tp = PROP_UNIT_CONVERTER[row["type"]]
-        with db:
-            enumeration = [
-                tp(res["enum_value"])
-                for res in db.query(
-                    "SELECT enum_value FROM property_enumeration "
-                    "WHERE property_id = ? ORDER BY rank ASC",
-                    [row["property_id"]],
-                )
-            ]
+        enumeration = [
+            tp(res["enum_value"])
+            for res in db.query_all(
+                "SELECT enum_value FROM property_enumeration "
+                "WHERE property_id = ? ORDER BY rank ASC",
+                [row["property_id"]],
+            )
+        ]
         if (
             with_enum is None
             or (len(enumeration) > 1 and set(enumeration) == set(with_enum))

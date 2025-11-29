@@ -15,6 +15,7 @@ class PysaurusConnection(Skullite):
             db_path,
             script_path=os.path.join(os.path.dirname(__file__), "database.sql"),
             functions=self.register_pysaurus_functions(),
+            persistent=True,
         )
 
     @classmethod

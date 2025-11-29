@@ -26,7 +26,48 @@ from saurus.sql.sql_video_wrapper import (
     SQLVideoWrapper,
     VIDEO_TABLE_FIELD_NAMES,
 )
-from saurus.sql.video_parser import VideoFieldQueryParser
+from saurus.sql.video_parser import FieldQuery, VideoFieldQueryParser
+
+# Fields that require joining video_thumbnail table
+_THUMBNAIL_FIELDS = frozenset({"thumbnail", "with_thumbnails"})
+
+
+def _build_where_clause(
+    where: dict | None,
+) -> tuple[SQLWhereBuilder, FieldQuery | None]:
+    """Build WHERE clause from dict, returning builder and video_id query if present."""
+    where_builder = SQLWhereBuilder()
+    selection_builder = SQLWhereBuilder(use_or=True)
+    vid_query = None
+    parser = VideoFieldQueryParser()
+    seen = set()
+    for key, value in (where or {}).items():
+        parsed = parser.parse(key, value)
+        assert parsed.field not in seen
+        seen.add(parsed.field)
+        if parsed.field in ("video_id", "filename"):
+            builder = selection_builder
+            if parsed.field == "video_id":
+                vid_query = parsed
+        else:
+            builder = where_builder
+        builder.append_field_query(parsed)
+    if selection_builder:
+        where_builder.append_query_builder(selection_builder)
+    return where_builder, vid_query
+
+
+def _needs_thumbnail_join(include: Sequence[str] | None, where: dict | None) -> bool:
+    """Check if we need to JOIN video_thumbnail table."""
+    if include is None:
+        return True
+    if set(include) & _THUMBNAIL_FIELDS:
+        return True
+    # Check if where clause references thumbnail fields
+    if where:
+        if "with_thumbnails" in where or "without_thumbnails" in where:
+            return True
+    return False
 
 
 def video_mega_search(
@@ -35,38 +76,99 @@ def video_mega_search(
     include: Sequence[str] = None,
     with_moves: bool = False,
     where: dict = None,
-) -> list[VideoPattern]:
-    with db:
-        where_builder = SQLWhereBuilder()
-        selection_builder = SQLWhereBuilder(use_or=True)
-        vid_query = None
-        parser = VideoFieldQueryParser()
-        seen = set()
-        for key, value in (where or {}).items():
-            parsed = parser.parse(key, value)
-            assert parsed.field not in seen
-            seen.add(parsed.field)
-            if parsed.field in ("video_id", "filename"):
-                builder = selection_builder
-                if parsed.field == "video_id":
-                    vid_query = parsed
-            else:
-                builder = where_builder
-            builder.append_field_query(parsed)
-        if selection_builder:
-            where_builder.append_query_builder(selection_builder)
+    # Optimization flags
+    count_only: bool = False,
+    exists_only: bool = False,
+    ids_only: bool = False,
+) -> list[VideoPattern] | int | bool | list[int]:
+    """
+    Search for videos with various optimization modes.
 
+    Args:
+        db: Database connection
+        include: Fields to include in results. None means all fields.
+        with_moves: Whether to include move information
+        where: Filter conditions
+        count_only: If True, return only the count (int)
+        exists_only: If True, return whether any match exists (bool)
+        ids_only: If True, return only video IDs (list[int])
+
+    Returns:
+        Depending on flags:
+        - exists_only=True: bool
+        - count_only=True: int
+        - ids_only=True: list[int]
+        - Otherwise: list[VideoPattern]
+    """
+    where_builder, vid_query = _build_where_clause(where)
+    where_clause = where_builder.get_where_clause()
+    params = where_builder.get_parameters()
+
+    # Check if we need thumbnail join for the where clause
+    needs_thumbnail_for_where = _needs_thumbnail_join(None, where)
+
+    # Fast path: exists_only - just check if any row matches
+    if exists_only:
+        if needs_thumbnail_for_where:
+            query = f"""
+            SELECT 1 FROM video AS v
+            LEFT JOIN video_thumbnail AS t ON v.video_id = t.video_id
+            {where_clause} LIMIT 1
+            """
+        else:
+            query = f"SELECT 1 FROM video AS v {where_clause} LIMIT 1"
+        result = db.query_one(query, params)
+        return result is not None
+
+    # Fast path: count_only - just count matching rows
+    if count_only:
+        if needs_thumbnail_for_where:
+            query = f"""
+            SELECT COUNT(v.video_id) FROM video AS v
+            LEFT JOIN video_thumbnail AS t ON v.video_id = t.video_id
+            {where_clause}
+            """
+        else:
+            query = f"SELECT COUNT(v.video_id) FROM video AS v {where_clause}"
+        result = db.query_one(query, params)
+        return result[0] if result else 0
+
+    # Fast path: ids_only - return just video IDs
+    if ids_only:
         query_with = ""
         query_with_join = ""
-        query_with_order = ""
+        query_order = ""
         if vid_query and len(vid_query.values) > 1:
             query_with = (
                 f"WITH vid_order(video_id, rank) AS "
                 f"(VALUES {','.join(f'({v},{r})' for r, v in enumerate(vid_query.values))})"
             )
             query_with_join = "LEFT JOIN vid_order AS vo ON v.video_id = vo.video_id"
-            query_with_order = "ORDER BY vo.rank"
+            query_order = "ORDER BY vo.rank"
+        query = f"""
+        {query_with}
+        SELECT v.video_id FROM video AS v
+        {query_with_join}
+        {where_clause}
+        {query_order}
+        """
+        return [row[0] for row in db.query(query, params)]
 
+    # Standard path: full video search
+    needs_thumbnail = _needs_thumbnail_join(include, where)
+
+    query_with = ""
+    query_with_join = ""
+    query_with_order = ""
+    if vid_query and len(vid_query.values) > 1:
+        query_with = (
+            f"WITH vid_order(video_id, rank) AS "
+            f"(VALUES {','.join(f'({v},{r})' for r, v in enumerate(vid_query.values))})"
+        )
+        query_with_join = "LEFT JOIN vid_order AS vo ON v.video_id = vo.video_id"
+        query_with_order = "ORDER BY vo.rank"
+
+    if needs_thumbnail:
         query = f"""
         {query_with}
         SELECT
@@ -76,16 +178,23 @@ def video_mega_search(
         FROM video AS v LEFT JOIN video_thumbnail AS t
         ON v.video_id = t.video_id
         {query_with_join}
-        {where_builder.get_where_clause()}
+        {where_clause}
         {query_with_order}
         """
-        return _get_videos(
-            db,
-            query,
-            where_builder.get_parameters(),
-            include=include,
-            with_moves=with_moves,
-        )
+    else:
+        query = f"""
+        {query_with}
+        SELECT
+            {FORMATTED_VIDEO_TABLE_FIELDS},
+            NULL AS thumbnail,
+            0 AS with_thumbnails
+        FROM video AS v
+        {query_with_join}
+        {where_clause}
+        {query_with_order}
+        """
+
+    return _get_videos(db, query, params, include=include, with_moves=with_moves)
 
 
 def _get_videos(
@@ -97,9 +206,28 @@ def _get_videos(
     with_moves: bool = False,
 ) -> list[VideoPattern]:
     videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
-    # print(query)
-    # print(parameters)
-    # print(len(videos))
+
+    # Early return if no videos or minimal include (no extra data needed)
+    if not videos:
+        return videos
+
+    include_set = set(include) if include is not None else None
+
+    # Determine what extra data we need to fetch
+    with_errors = include_set is None or "errors" in include_set
+    with_audio_languages = include_set is None or "audio_languages" in include_set
+    with_subtitle_languages = include_set is None or "subtitle_languages" in include_set
+    with_properties = include_set is None or "properties" in include_set
+
+    # Fast path: if we only need basic video fields, skip all extra queries
+    if not (
+        with_errors
+        or with_audio_languages
+        or with_subtitle_languages
+        or with_properties
+        or with_moves
+    ):
+        return videos
 
     video_indices = [video.data["video_id"] for video in videos]
     placeholders = ", ".join(["?"] * len(video_indices))
@@ -108,10 +236,7 @@ def _get_videos(
     languages = {"a": defaultdict(list), "s": defaultdict(list)}
     properties = defaultdict(dict)
     json_properties = {}
-    with_errors = include is None or "errors" in include
-    with_audio_languages = include is None or "audio_languages" in include
-    with_subtitle_languages = include is None or "subtitle_languages" in include
-    with_properties = include is None or "properties" in include
+
     if with_errors:
         for row in db.query(
             f"SELECT video_id, error FROM video_error "
@@ -216,243 +341,242 @@ def video_mega_group(
     include: Sequence[str] = None,
     with_moves=False,
 ) -> VideoSearchContext:
-    with sql_db:
-        output_groups = LookupArray[GroupCount](GroupCount, (), GroupCount.keyof)
-        output = VideoSearchContext(
-            sources=sources,
-            grouping=grouping,
-            classifier=classifier,
-            group_id=group,
-            search=search,
-            sorting=sorting,
-            selector=selector,
-            page_size=page_size,
-            page_number=page_number,
-            with_moves=with_moves,
-            result_groups=output_groups,
+    output_groups = LookupArray[GroupCount](GroupCount, (), GroupCount.keyof)
+    output = VideoSearchContext(
+        sources=sources,
+        grouping=grouping,
+        classifier=classifier,
+        group_id=group,
+        search=search,
+        sorting=sorting,
+        selector=selector,
+        page_size=page_size,
+        page_number=page_number,
+        with_moves=with_moves,
+        result_groups=output_groups,
+    )
+
+    query_maker = QueryMaker("video", "v")
+    field_video_id = query_maker.get_main_table().get_alias_field("video_id")
+    query_maker.add_field(field_video_id)
+    video_thumbnail_table = TableDef("video_thumbnail", "vt")
+    query_maker.add_left_join(video_thumbnail_table, "video_id")
+
+    if search and search.cond == "id":
+        query_maker.where.append_field(field_video_id, int(search.text))
+        _compute_results_and_stats(sql_db, output, query_maker, include=include)
+        return output
+
+    field_factory = SqlFieldFactory(sql_db)
+    parser = ProviderVideoParser()
+    source_query_builder = SQLWhereBuilder.combine(
+        [
+            SQLWhereBuilder.build(parser.parse(flag, True) for flag in source)
+            for source in sources
+        ],
+        use_or=True,
+    )
+    source_query = source_query_builder.get_clause()
+    source_params = source_query_builder.get_parameters()
+
+    where_group_query = None
+    where_group_params = None
+    if grouping:
+        without_singletons = ""
+        if not grouping.allow_singletons:
+            without_singletons = "HAVING size > 1"
+        order_direction = "DESC" if grouping.reverse else "ASC"
+        if grouping.is_property:
+            if grouping.sorting == grouping.FIELD:
+                order_field = f"value {order_direction}"
+            elif grouping.sorting == grouping.LENGTH:
+                # Secondary sort by value for deterministic ordering
+                order_field = (
+                    f"LENGTH(value || '') {order_direction}, value {order_direction}"
+                )
+            else:
+                assert grouping.sorting == grouping.COUNT
+                # Secondary sort by value for deterministic ordering when counts are equal
+                # Both sorts use same direction to match JSON behavior
+                order_field = f"size {order_direction}, value {order_direction}"
+
+            if classifier:
+                placeholders = ["?"] * len(classifier)
+                query = f"""
+                SELECT v.video_id
+                FROM video AS v
+                JOIN video_property_value AS vv
+                ON v.video_id = vv.video_id
+                JOIN property AS p
+                ON vv.property_id = p.property_id
+                LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
+                WHERE
+                v.discarded = 0 AND {source_query} AND p.name = ?
+                AND vv.property_value IN ({",".join(placeholders)})
+                GROUP BY vv.video_id
+                HAVING COUNT(vv.property_value) = ?
+                """
+                params = (
+                    source_params + [grouping.field] + classifier + [len(classifier)]
+                )
+                nb_classified_videos = len(sql_db.query_all(query, params))
+                super_query = f"""
+                SELECT xv.property_value AS value, COUNT(x.video_id) AS size
+                FROM
+                (SELECT v.video_id AS video_id
+                FROM video AS v
+                JOIN video_property_value AS vv
+                ON v.video_id = vv.video_id
+                JOIN property AS p
+                ON vv.property_id = p.property_id
+                LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
+                WHERE
+                v.discarded = 0 AND {source_query} AND p.name = ?
+                AND vv.property_value IN ({",".join(placeholders)})
+                GROUP BY vv.video_id
+                HAVING COUNT(vv.property_value) = ?)
+                AS x
+                JOIN video_property_value AS xv ON x.video_id = xv.video_id
+                JOIN property AS xp ON xv.property_id = xp.property_id
+                WHERE xp.name = ? AND value NOT IN ({",".join(placeholders)})
+                GROUP BY value {without_singletons}
+                ORDER BY {order_field}
+                """
+                super_params = params + [grouping.field] + classifier
+                grouping_rows = [(None, nb_classified_videos)] + sql_db.query_all(
+                    super_query, super_params
+                )
+            else:
+                super_query = f"""
+                SELECT
+                IIF(x.have_property = 0, NULL, xv.property_value) AS value,
+                COUNT(DISTINCT x.video_id) AS size
+                FROM
+                (SELECT
+                v.video_id AS video_id,
+                SUM(IIF(p.name = ?, 1, 0)) AS have_property
+                FROM video AS v
+                LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
+                LEFT JOIN property AS p ON pv.property_id = p.property_id
+                LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
+                WHERE v.discarded = 0 AND {source_query}
+                GROUP BY v.video_id)
+                AS x
+                LEFT JOIN video_property_value AS xv ON x.video_id = xv.video_id
+                LEFT JOIN property AS xp ON xv.property_id = xp.property_id
+                WHERE
+                (x.have_property > 0 AND xp.name = ?) OR (x.have_property = 0)
+                GROUP BY value {without_singletons}
+                ORDER BY {order_field}
+                """
+                super_params = [grouping.field] + source_params + [grouping.field]
+                grouping_rows = sql_db.query(super_query, super_params)
+        else:
+            field = field_factory.get_field(grouping.field)
+            if grouping.sorting == grouping.FIELD:
+                order_field = field_factory.get_sorting(
+                    grouping.field, grouping.reverse
+                )
+            elif grouping.sorting == grouping.LENGTH:
+                order_field = (
+                    field_factory.get_length(grouping.field) + " " + order_direction
+                )
+            else:
+                assert grouping.sorting == grouping.COUNT
+                order_field = f"COUNT(v.video_id) {order_direction}"
+
+            where_similarity_id = ""
+            if grouping.field == "similarity_id":
+                where_similarity_id = (
+                    " AND v.similarity_id IS NOT NULL AND v.similarity_id != -1"
+                )
+            grouping_rows = sql_db.query(
+                f"SELECT {field}, COUNT(v.video_id) AS size "
+                f"FROM video AS v "
+                f"LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id "
+                f"WHERE v.discarded = 0 AND {source_query} {where_similarity_id} "
+                f"GROUP BY {field} {without_singletons} "
+                f"ORDER BY {order_field}",
+                source_params,
+            )
+
+        output_groups.clear()
+        output_groups.extend(
+            GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows
         )
 
-        query_maker = QueryMaker("video", "v")
-        field_video_id = query_maker.get_main_table().get_alias_field("video_id")
-        query_maker.add_field(field_video_id)
-        video_thumbnail_table = TableDef("video_thumbnail", "vt")
-        query_maker.add_left_join(video_thumbnail_table, "video_id")
+        output.group_id = min(max(0, output.group_id), len(output_groups) - 1)
 
-        if search and search.cond == "id":
-            query_maker.where.append_field(field_video_id, int(search.text))
+        if not output_groups:
+            # Make sure to find nothing
+            query_maker.where.append_query("0")
             _compute_results_and_stats(sql_db, output, query_maker, include=include)
             return output
 
-        field_factory = SqlFieldFactory(sql_db)
-        parser = ProviderVideoParser()
-        source_query_builder = SQLWhereBuilder.combine(
-            [
-                SQLWhereBuilder.build(parser.parse(flag, True) for flag in source)
-                for source in sources
-            ],
-            use_or=True,
-        )
-        source_query = source_query_builder.get_clause()
-        source_params = source_query_builder.get_parameters()
-
-        where_group_query = None
-        where_group_params = None
-        if grouping:
-            without_singletons = ""
-            if not grouping.allow_singletons:
-                without_singletons = "HAVING size > 1"
-            order_direction = "DESC" if grouping.reverse else "ASC"
-            if grouping.is_property:
-                if grouping.sorting == grouping.FIELD:
-                    order_field = "value"
-                elif grouping.sorting == grouping.LENGTH:
-                    order_field = "LENGTH(value || '')"
-                else:
-                    assert grouping.sorting == grouping.COUNT
-                    order_field = "size"
-
-                if classifier:
-                    placeholders = ["?"] * len(classifier)
-                    query = f"""
-                    SELECT v.video_id
-                    FROM video AS v
-                    JOIN video_property_value AS vv
-                    ON v.video_id = vv.video_id
-                    JOIN property AS p
-                    ON vv.property_id = p.property_id
-                    LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
-                    WHERE
-                    v.discarded = 0 AND {source_query} AND p.name = ?
-                    AND vv.property_value IN ({",".join(placeholders)})
-                    GROUP BY vv.video_id
-                    HAVING COUNT(vv.property_value) = ?
-                    """
-                    params = (
-                        source_params
-                        + [grouping.field]
-                        + classifier
-                        + [len(classifier)]
-                    )
-                    nb_classified_videos = len(sql_db.query_all(query, params))
-                    super_query = f"""
-                    SELECT xv.property_value AS value, COUNT(x.video_id) AS size
-                    FROM
-                    (SELECT v.video_id AS video_id
-                    FROM video AS v
-                    JOIN video_property_value AS vv
-                    ON v.video_id = vv.video_id
-                    JOIN property AS p
-                    ON vv.property_id = p.property_id
-                    LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
-                    WHERE
-                    v.discarded = 0 AND {source_query} AND p.name = ?
-                    AND vv.property_value IN ({",".join(placeholders)})
-                    GROUP BY vv.video_id
-                    HAVING COUNT(vv.property_value) = ?)
-                    AS x
-                    JOIN video_property_value AS xv ON x.video_id = xv.video_id
-                    JOIN property AS xp ON xv.property_id = xp.property_id
-                    WHERE xp.name = ? AND value NOT IN ({",".join(placeholders)})
-                    GROUP BY value {without_singletons}
-                    ORDER BY {order_field} {order_direction}
-                    """
-                    super_params = params + [grouping.field] + classifier
-                    grouping_rows = [(None, nb_classified_videos)] + sql_db.query_all(
-                        super_query, super_params
-                    )
-                else:
-                    super_query = f"""
-                    SELECT
-                    IIF(x.have_property = 0, NULL, xv.property_value) AS value,
-                    COUNT(DISTINCT x.video_id) AS size
-                    FROM
-                    (SELECT
-                    v.video_id AS video_id,
-                    SUM(IIF(p.name = ?, 1, 0)) AS have_property
-                    FROM video AS v
-                    LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
-                    LEFT JOIN property AS p ON pv.property_id = p.property_id
-                    LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
-                    WHERE v.discarded = 0 AND {source_query}
-                    GROUP BY v.video_id)
-                    AS x
-                    LEFT JOIN video_property_value AS xv ON x.video_id = xv.video_id
-                    LEFT JOIN property AS xp ON xv.property_id = xp.property_id
-                    WHERE
-                    (x.have_property > 0 AND xp.name = ?) OR (x.have_property = 0)
-                    GROUP BY value {without_singletons}
-                    ORDER BY {order_field} {order_direction}
-                    """
-                    super_params = [grouping.field] + source_params + [grouping.field]
-                    grouping_rows = sql_db.query(super_query, super_params)
+        group = output_groups[output.group_id]
+        if grouping.is_property:
+            (field_value,) = group.value
+            if classifier:
+                expected = list(classifier)
+                if field_value is not None:
+                    expected.append(field_value)
+                placeholders = ["?"] * len(expected)
+                query = f"""
+                SELECT v.video_id
+                FROM video_property_value AS v
+                JOIN property AS p
+                ON v.property_id = p.property_id
+                WHERE
+                p.name = ?
+                AND v.property_value IN ({",".join(placeholders)})
+                GROUP BY v.video_id
+                HAVING COUNT(v.property_value) = ?
+                """
+                params = [grouping.field] + expected + [len(expected)]
+            elif field_value is None:
+                query = """
+                SELECT
+                v.video_id AS video_id
+                FROM video AS v
+                LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
+                LEFT JOIN property AS p ON pv.property_id = p.property_id
+                GROUP BY v.video_id HAVING SUM(IIF(p.name = ?, 1, 0)) = 0
+                """
+                params = [grouping.field]
             else:
-                field = field_factory.get_field(grouping.field)
-                if grouping.sorting == grouping.FIELD:
-                    order_field = field_factory.get_sorting(
-                        grouping.field, grouping.reverse
-                    )
-                elif grouping.sorting == grouping.LENGTH:
-                    order_field = (
-                        field_factory.get_length(grouping.field) + " " + order_direction
-                    )
-                else:
-                    assert grouping.sorting == grouping.COUNT
-                    order_field = f"COUNT(v.video_id) {order_direction}"
-
-                where_similarity_id = ""
-                if grouping.field == "similarity_id":
-                    where_similarity_id = (
-                        " AND v.similarity_id IS NOT NULL AND v.similarity_id != -1"
-                    )
-                grouping_rows = sql_db.query(
-                    f"SELECT {field}, COUNT(v.video_id) AS size "
-                    f"FROM video AS v "
-                    f"LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id "
-                    f"WHERE v.discarded = 0 AND {source_query} {where_similarity_id} "
-                    f"GROUP BY {field} {without_singletons} "
-                    f"ORDER BY {order_field}",
-                    source_params,
-                )
-
-            output_groups.clear()
-            output_groups.extend(
-                GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows
+                query = """
+                SELECT v.video_id FROM video_property_value AS v
+                JOIN property AS p ON v.property_id = p.property_id
+                WHERE p.name = ? AND v.property_value = ?
+                """
+                params = [grouping.field, field_value]
+            where_group_query = f"v.video_id IN ({query})"
+            where_group_params = params
+        else:
+            where_group_query, where_group_params = convert_dict_to_sql(
+                field_factory.get_conditions(grouping.field, group.value)
             )
 
-            output.group_id = min(max(0, output.group_id), len(output_groups) - 1)
+    where_builder = query_maker.where
+    where_builder.append_query("v.discarded = 0")
+    where_builder.append_query(source_query, *source_params)
 
-            if not output_groups:
-                # Make sure to find nothing
-                query_maker.where.append_query("0")
-                _compute_results_and_stats(sql_db, output, query_maker, include=include)
-                return output
+    if where_group_query:
+        where_builder.append_query(where_group_query, *where_group_params)
 
-            group = output_groups[output.group_id]
-            if grouping.is_property:
-                (field_value,) = group.value
-                if classifier:
-                    expected = list(classifier)
-                    if field_value is not None:
-                        expected.append(field_value)
-                    placeholders = ["?"] * len(expected)
-                    query = f"""
-                    SELECT v.video_id
-                    FROM video_property_value AS v
-                    JOIN property AS p
-                    ON v.property_id = p.property_id
-                    WHERE
-                    p.name = ?
-                    AND v.property_value IN ({",".join(placeholders)})
-                    GROUP BY v.video_id
-                    HAVING COUNT(v.property_value) = ?
-                    """
-                    params = [grouping.field] + expected + [len(expected)]
-                elif field_value is None:
-                    query = """
-                    SELECT
-                    v.video_id AS video_id
-                    FROM video AS v
-                    LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
-                    LEFT JOIN property AS p ON pv.property_id = p.property_id
-                    GROUP BY v.video_id HAVING SUM(IIF(p.name = ?, 1, 0)) = 0
-                    """
-                    params = [grouping.field]
-                else:
-                    query = """
-                    SELECT v.video_id FROM video_property_value AS v
-                    JOIN property AS p ON v.property_id = p.property_id
-                    WHERE p.name = ? AND v.property_value = ?
-                    """
-                    params = [grouping.field, field_value]
-                where_group_query = f"v.video_id IN ({query})"
-                where_group_params = params
-            else:
-                where_group_query, where_group_params = convert_dict_to_sql(
-                    field_factory.get_conditions(grouping.field, group.value)
-                )
+    if search:
+        where_search, params_search = search_to_sql(search)
+        where_builder.append_query(f"v.video_id IN ({where_search})", *params_search)
 
-        where_builder = query_maker.where
-        where_builder.append_query("v.discarded = 0")
-        where_builder.append_query(source_query, *source_params)
+    sql_sorting = [
+        field_factory.get_sorting(field, reverse)
+        for field, reverse in VideoSorting(sorting)
+    ]
 
-        if where_group_query:
-            where_builder.append_query(where_group_query, *where_group_params)
-
-        if search:
-            where_search, params_search = search_to_sql(search)
-            where_builder.append_query(
-                f"v.video_id IN ({where_search})", *params_search
-            )
-
-        sql_sorting = [
-            field_factory.get_sorting(field, reverse)
-            for field, reverse in VideoSorting(sorting)
-        ]
-
-        for sorting in sql_sorting:
-            query_maker.order_by_complex(sorting)
-        _compute_results_and_stats(sql_db, output, query_maker, include=include)
-        return output
+    for sorting in sql_sorting:
+        query_maker.order_by_complex(sorting)
+    _compute_results_and_stats(sql_db, output, query_maker, include=include)
+    return output
 
 
 def _compute_results_and_stats(

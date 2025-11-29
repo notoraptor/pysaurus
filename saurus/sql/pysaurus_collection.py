@@ -76,21 +76,20 @@ class PysaurusCollection(AbstractDatabase):
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
         output = {}
-        with self.db:
-            for row in self.db.query(
-                "SELECT pv.video_id, pv.property_value "
-                "FROM video_property_value AS pv "
-                "JOIN property AS p "
-                "ON pv.property_id = p.property_id "
-                "WHERE p.name = ?"
-                + (
-                    f" AND pv.video_id IN ({','.join(['?'] * len(indices))})"
-                    if indices
-                    else ""
-                ),
-                [name] + list(indices),
-            ):
-                output.setdefault(row[0], []).append(pt.from_string(row[1]))
+        for row in self.db.query(
+            "SELECT pv.video_id, pv.property_value "
+            "FROM video_property_value AS pv "
+            "JOIN property AS p "
+            "ON pv.property_id = p.property_id "
+            "WHERE p.name = ?"
+            + (
+                f" AND pv.video_id IN ({','.join(['?'] * len(indices))})"
+                if indices
+                else ""
+            ),
+            [name] + list(indices),
+        ):
+            output.setdefault(row[0], []).append(pt.from_string(row[1]))
         return output
 
     def videos_tag_set(
@@ -104,6 +103,8 @@ class PysaurusCollection(AbstractDatabase):
             updates[video_id] = pt.instantiate(updates[video_id])
 
         property_id = pt.property_id
+
+        # 1. DELETE old values (if not merging or property is not multiple)
         if not merge or not pt.multiple:
             self.db.modify(
                 f"DELETE FROM video_property_value "
@@ -111,6 +112,8 @@ class PysaurusCollection(AbstractDatabase):
                 f"AND video_id IN ({placeholders_string})",
                 [property_id] + video_indices,
             )
+
+        # 2. INSERT new values
         self.db.modify_many(
             "INSERT OR IGNORE INTO video_property_value "
             "(video_id, property_id, property_value) VALUES (?, ?, ?)",
@@ -120,6 +123,8 @@ class PysaurusCollection(AbstractDatabase):
                 for value in values
             ),
         )
+
+        # 3. Update FTS5 table if property is string type
         if pt.type is str:
             new_texts = self.db.query_all(
                 f"SELECT v.video_id, v.filename, v.meta_title, t.property_text "
@@ -298,12 +303,30 @@ class PysaurusCollection(AbstractDatabase):
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> list[VideoPattern]:
-        # where = where or {}
-        # where["discarded"] = where.get("discarded", False)
+        count_only: bool = False,
+        exists_only: bool = False,
+        ids_only: bool = False,
+    ) -> list[VideoPattern] | int | bool | list[int]:
         return video_mega_search(
-            self.db, include=include, with_moves=with_moves, where=where
+            self.db,
+            include=include,
+            with_moves=with_moves,
+            where=where,
+            count_only=count_only,
+            exists_only=exists_only,
+            ids_only=ids_only,
         )
+
+    def count_videos(self, *flags, **forced_flags) -> int:
+        """Optimized count using SQL COUNT instead of fetching all videos."""
+        forced_flags.update({flag: True for flag in flags})
+        if forced_flags:
+            forced_flags.setdefault("discarded", False)
+        return self.get_videos(where=forced_flags, count_only=True)
+
+    def has_video(self, **fields) -> bool:
+        """Optimized existence check using SQL LIMIT 1."""
+        return self.get_videos(where=fields, exists_only=True)
 
     def _get_video_terms(self, video_id: int) -> list[str]:
         # **NB**: Keep this method for reference.
@@ -327,9 +350,9 @@ class PysaurusCollection(AbstractDatabase):
 
     def videos_get_terms(self) -> dict[int, list[str]]:
         output = {}
-        for row in self.db.query(
+        for row in self.db.query_all(
             """
-                SELECT v.video_id, 
+                SELECT v.video_id,
                 v.filename || ' ' || v.meta_title || ' ' || COALESCE(pv.property_text, '')
                 FROM video AS v
                 LEFT JOIN video_property_text AS pv ON v.video_id = pv.video_id

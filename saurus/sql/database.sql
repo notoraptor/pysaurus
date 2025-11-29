@@ -155,3 +155,40 @@ CREATE TRIGGER IF NOT EXISTS on_video_delete DELETE ON video
 BEGIN
     DELETE FROM video_text WHERE video_id = OLD.video_id;
 END;
+
+----------------------------------------------------------------------------------------
+-- Indexes for video table.
+-- Columns used for filtering (WHERE clauses).
+----------------------------------------------------------------------------------------
+
+CREATE INDEX IF NOT EXISTS idx_video_discarded ON video(discarded);
+CREATE INDEX IF NOT EXISTS idx_video_unreadable ON video(unreadable);
+CREATE INDEX IF NOT EXISTS idx_video_is_file ON video(is_file);
+CREATE INDEX IF NOT EXISTS idx_video_similarity_id ON video(similarity_id);
+
+----------------------------------------------------------------------------------------
+-- Indexes for sorting and grouping.
+-- Columns frequently used in ORDER BY and GROUP BY clauses.
+----------------------------------------------------------------------------------------
+
+CREATE INDEX IF NOT EXISTS idx_video_mtime ON video(mtime);
+CREATE INDEX IF NOT EXISTS idx_video_file_size ON video(file_size);
+CREATE INDEX IF NOT EXISTS idx_video_date_entry_modified ON video(date_entry_modified);
+CREATE INDEX IF NOT EXISTS idx_video_date_entry_opened ON video(date_entry_opened);
+CREATE INDEX IF NOT EXISTS idx_video_duration ON video(duration);
+CREATE INDEX IF NOT EXISTS idx_video_height ON video(height);
+CREATE INDEX IF NOT EXISTS idx_video_width ON video(width);
+CREATE INDEX IF NOT EXISTS idx_video_audio_bit_rate ON video(audio_bit_rate);
+CREATE INDEX IF NOT EXISTS idx_video_sample_rate ON video(sample_rate);
+CREATE INDEX IF NOT EXISTS idx_video_audio_codec ON video(audio_codec);
+CREATE INDEX IF NOT EXISTS idx_video_video_codec ON video(video_codec);
+CREATE INDEX IF NOT EXISTS idx_video_container_format ON video(container_format);
+
+----------------------------------------------------------------------------------------
+-- Indexes for video_property_value table.
+-- Used heavily for property lookups and grouping.
+----------------------------------------------------------------------------------------
+
+CREATE INDEX IF NOT EXISTS idx_vpv_video_id ON video_property_value(video_id);
+CREATE INDEX IF NOT EXISTS idx_vpv_property_id ON video_property_value(property_id);
+CREATE INDEX IF NOT EXISTS idx_vpv_property_value ON video_property_value(property_id, property_value);

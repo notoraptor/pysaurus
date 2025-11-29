@@ -77,10 +77,11 @@ class VideoFieldQueryParser:
         return self._video_query("is_file", int(not value))
 
     def with_thumbnails(self, value) -> FieldQuery:
-        return self._thumb_query("with_thumbnails", int(value))
+        # Use computed expression that works with or without alias
+        return FieldQuery("IIF(LENGTH(t.thumbnail), 1, 0)", [int(value)])
 
     def without_thumbnails(self, value) -> FieldQuery:
-        return self._thumb_query("with_thumbnails", int(not value))
+        return FieldQuery("IIF(LENGTH(t.thumbnail), 1, 0)", [int(not value)])
 
     def driver_id(self, value) -> FieldQuery:
         return self._video_query("driver_id", str(value))

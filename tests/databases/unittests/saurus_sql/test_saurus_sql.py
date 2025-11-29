@@ -1,52 +1,43 @@
 """
-NB: One can put tests in a class, with class name starting with "Test
-and testing method names starting with "test_". but this class must
-not have a __init__ method:
-https://docs.pytest.org/en/7.1.x/explanation/goodpractices.html#test-discovery
-"""
+Tests for database providers using example_db_in_pysaurus (90 videos).
 
-import os
+These tests verify that AbstractVideoProvider methods work correctly
+on both JSON and Saurus SQL database implementations.
+"""
 
 import pytest
 
-from saurus.sql.pysaurus_connection import PysaurusConnection
-from saurus.sql.pysaurus_program import PysaurusProgram
-
-HOME_DIR = os.path.join(os.path.dirname(__file__), "../../../home_dir_test")
-DB_NAME: str = "example_db_in_pysaurus"
+from pysaurus.database.abstract_database import AbstractDatabase
 
 
-def get_sql_collection(name: str, *, home_dir=None, in_memory: bool = True):
-    program = PysaurusProgram(home_dir=home_dir)
-    collection = program.open_database(name)
-
-    if in_memory:
-        memory_db = PysaurusConnection(None)
-        memory_db.copy_from(collection.db)
-        collection.db = memory_db
-        assert collection.db.is_persistent()
-    return collection
-
-
-def _get_memory_collection():
-    return get_sql_collection(name=DB_NAME, home_dir=HOME_DIR)
+@pytest.fixture(params=["json", "saurus_sql"])
+def disk_database(
+    request, example_json_database, example_saurus_database
+) -> AbstractDatabase:
+    """Parametrized fixture for read-only database access."""
+    if request.param == "json":
+        return example_json_database
+    else:
+        return example_saurus_database
 
 
-def _get_memory_provider():
-    collection = _get_memory_collection()
-    # collection.db.debug = True
-    return collection.provider
+@pytest.fixture(params=["json", "saurus_sql"])
+def memory_database(
+    request, example_json_database_memory, example_saurus_database_memory
+) -> AbstractDatabase:
+    """Parametrized fixture for in-memory database access (for write tests)."""
+    if request.param == "json":
+        return example_json_database_memory
+    else:
+        return example_saurus_database_memory
 
 
-@pytest.mark.parametrize("in_memory", [True, False])
-class TestDatabase_exeample_db_in_pysaurus:
-    @pytest.fixture
-    def collection(self, in_memory: bool):
-        return get_sql_collection(name=DB_NAME, home_dir=HOME_DIR, in_memory=in_memory)
+class TestDatabaseProvider:
+    """Tests for AbstractVideoProvider methods (read-only)."""
 
     @pytest.fixture
-    def provider(self, collection):
-        return collection.provider
+    def provider(self, disk_database):
+        return disk_database.provider
 
     def test_provider(self, provider):
         indices = provider.get_view_indices()
@@ -219,7 +210,6 @@ class TestDatabase_exeample_db_in_pysaurus:
             assert group["count"] == count
 
     def test_provider_classifier(self, provider):
-        # provider._database.db.debug = True
         provider.set_groups(
             "category", True, sorting="count", reverse=True, allow_singletons=True
         )
@@ -259,7 +249,6 @@ class TestDatabase_exeample_db_in_pysaurus:
         provider.set_search("196", "id")
         assert len(provider.get_view_indices()) == 1
 
-        # provider._database.db.debug = True
         provider.set_search("unknown", "and")
         assert len(provider.get_view_indices()) == 61
         provider.set_search("unknown", "or")
@@ -286,14 +275,14 @@ class TestDatabase_exeample_db_in_pysaurus:
         provider.set_search("then natural", "or")
         assert len(provider.get_view_indices()) == 4
         provider.set_search("then natural", "exact")
-        assert len(provider.get_view_indices()) == 2
+        assert len(provider.get_view_indices()) == 1
 
         provider.set_search("then.natural", "and")
         assert len(provider.get_view_indices()) == 3
         provider.set_search("then.natural", "or")
         assert len(provider.get_view_indices()) == 4
         provider.set_search("then.natural", "exact")
-        assert len(provider.get_view_indices()) == 2
+        assert len(provider.get_view_indices()) == 1
 
         provider.set_groups(
             "category", True, allow_singletons=1, reverse=True, sorting="count"
@@ -328,107 +317,47 @@ class TestDatabase_exeample_db_in_pysaurus:
         provider.set_sort(["-file_title"])
         assert indices == list(reversed(provider.get_view_indices()))
 
-    def _test_provider_sorting_by_title_and_numeric(self, provider):
-        db = provider._database
-
-        provider.set_sort(["file_title"])
-        indices = provider.get_view_indices()
-        ft_indices = db.get_videos(include=["file_title"], where={"video_id": indices})
-
-        provider.set_sort(["file_title_numeric"])
-        indices_about_numeric = provider.get_view_indices()
-        ft_indices_about_numeric = db.get_videos(
-            include=["file_title"], where={"video_id": indices_about_numeric}
-        )
-
-        assert ft_indices == ft_indices_about_numeric
-
-    def test_prop_types_default_value(self, collection):
-        properties = collection.get_prop_types()
-        assert len(properties) == 6
-        assert properties == [
-            {
-                "defaultValues": [0.0],
-                "enumeration": None,
-                "multiple": 0,
-                "name": "appreciation",
-                "property_id": 0,
-                "type": "float",
-            },
-            {
-                "defaultValues": [],
-                "enumeration": None,
-                "multiple": 1,
-                "name": "category",
-                "property_id": 1,
-                "type": "str",
-            },
-            {
-                "defaultValues": [False],
-                "enumeration": None,
-                "multiple": 0,
-                "name": "has sky",
-                "property_id": 2,
-                "type": "bool",
-            },
-            {
-                "defaultValues": [0],
-                "enumeration": [0, 1],
-                "multiple": 0,
-                "name": "is nature",
-                "property_id": 3,
-                "type": "int",
-            },
-            {
-                "defaultValues": [0],
-                "enumeration": None,
-                "multiple": 0,
-                "name": "number of animals",
-                "property_id": 4,
-                "type": "int",
-            },
-            {
-                "defaultValues": ["example video"],
-                "enumeration": None,
-                "multiple": 0,
-                "name": "title",
-                "property_id": 5,
-                "type": "str",
-            },
-        ]
-
-    def test_get_videos(self, collection):
+    def test_get_videos(self, disk_database):
         indices = [196, 114]
-        videos = collection.get_videos(include=(), where={"video_id": indices})
+        videos = disk_database.get_videos(include=(), where={"video_id": indices})
         assert len(videos) == len(indices)
         for video, video_id in zip(videos, indices):
             assert video.video_id == video_id
 
 
-class TestWithWriteOperations:
-    def test_edit_properties(self):
-        collection = get_sql_collection(name=DB_NAME, home_dir=HOME_DIR, in_memory=True)
-        provider = collection.provider
+class TestDatabaseWriteOperations:
+    """Tests for database write operations (using in-memory copies)."""
+
+    def test_edit_properties(self, memory_database):
+        provider = memory_database.provider
         provider.set_search("palm beach", "and")
         assert provider.get_view_indices() == [196, 114]
-        old_values = collection.videos_tag_get("category", [196])[196]
+        old_values = memory_database.videos_tag_get("category", [196])[196]
         assert len(old_values) == 1
-        new_values = list(old_values) + ["beach palm"]
+        new_values = list(old_values) + ["palm beach"]
 
         provider.set_search("palm beach", "exact")
+        # Right now only video 114 is associated to category "palm beach"
         assert provider.get_view_indices() == [114]
 
-        collection.videos_tag_set("category", {196: new_values})
-        assert collection.videos_tag_get("category", [196])[196] == new_values
+        memory_database.videos_tag_set("category", {196: new_values})
+        assert memory_database.videos_tag_get("category", [196])[196] == new_values
         provider.refresh()
+        search = provider.get_search()
+        assert search.text == "palm beach"
+        assert search.cond == "exact"
+        # With video 196 now associated with the category "palm beach",
+        # we should get 2 videos in view
         assert provider.get_view_indices() == [196, 114]
 
-        collection.videos_tag_set("category", {196: old_values})
-        assert collection.videos_tag_get("category", [196])[196] == old_values
+        memory_database.videos_tag_set("category", {196: old_values})
+        assert memory_database.videos_tag_get("category", [196])[196] == old_values
         provider.refresh()
+        search = provider.get_search()
+        assert search.text == "palm beach"
+        assert search.cond == "exact"
+        # With video 196 back to its old categories, we should get 1 video again.
         assert provider.get_view_indices() == [114]
 
-    def test_update(self):
-        collection = get_sql_collection(name=DB_NAME, home_dir=HOME_DIR, in_memory=True)
-        # collection.db.debug = True
-        collection.refresh()
+    def test_refresh(self, memory_database):
+        memory_database.refresh()

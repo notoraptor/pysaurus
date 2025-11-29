@@ -280,9 +280,10 @@ class LazyVideo(WithSchema, VideoPattern):
             text in self.filename.path.lower()
             or text in self.meta_title.value.lower()
             or any(
-                text in [v.lower() for v in val]
+                text in v.lower()
                 for name, val in self._get("properties").items()
                 if self.database.get_prop_types(name=name, with_type=str)
+                for v in val
             )
         )
 

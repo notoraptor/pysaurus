@@ -265,15 +265,12 @@ class LayerClassifier(_AbstractLayerGrouping):
             self.output = data
         else:
             path = self.params["path"]
+            # Check if all path values exist - if any is missing, result is empty
+            if not all(data.contains_key(value) for value in path):
+                self.output = GroupArray(data.field, data.is_property, [])
+                return
             videos = set.intersection(
-                *(
-                    [
-                        set(data.lookup(value).videos)
-                        for value in path
-                        if data.contains_key(value)
-                    ]
-                    or [set()]
-                )
+                *(set(data.lookup(value).videos) for value in path)
             )
             assert videos, path
             self.output = self._classify_videos(videos, data.field, path)
@@ -287,7 +284,7 @@ class LayerClassifier(_AbstractLayerGrouping):
                 classes.setdefault(value, []).append(video)
         assert None not in classes, classes.keys()
         for value in path:
-            classes.pop(value)
+            classes.pop(value, None)
         return GroupArray(
             prop_name,
             True,
@@ -544,14 +541,19 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
 
     def _get_classifier_stats(self):
         layer: LayerClassifier = self.layers[LayerClassifier]
-        if layer.output.field and layer.output.is_property:
-            converter = functions.identity
-        else:
-            converter = str
         return [
-            {"value": converter(g.field_value), "count": len(g.videos)}
+            {"value": self._get_printable_value(g.field_value), "count": len(g.videos)}
             for g in layer.output
         ]
+
+    @staticmethod
+    def _get_printable_value(value):
+        """Return value as-is for primitives, convert to string otherwise."""
+        return (
+            value
+            if value is None or isinstance(value, (str, bool, int, float))
+            else str(value)
+        )
 
     def get_classifier_stats(self) -> list[FieldStat]:
         layer: LayerClassifier = self.layers[LayerClassifier]
