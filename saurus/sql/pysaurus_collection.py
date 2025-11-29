@@ -548,7 +548,7 @@ class PysaurusCollection(AbstractDatabase):
     SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
     FROM video
     WHERE unreadable = 0 AND discarded = 0
-    GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
+    GROUP BY file_size, duration, duration_time_base_not_null
     HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
                     """
         ):

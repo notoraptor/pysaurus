@@ -336,12 +336,32 @@ class TestDatabaseProvider:
         provider.set_sort(["-file_title"])
         assert indices == list(reversed(provider.get_view_indices()))
 
-    def test_get_videos(self, disk_database):
+    def test_get_videos(self, disk_database, data_regression):
         indices = [196, 114]
-        videos = disk_database.get_videos(include=(), where={"video_id": indices})
+        videos = disk_database.get_videos(
+            include=None, where={"video_id": indices}, with_moves=True
+        )
         assert len(videos) == len(indices)
         for video, video_id in zip(videos, indices):
             assert video.video_id == video_id
+        data_regression.check([_to_dict(video) for video in videos])
+
+
+def _to_dict(v):
+    d = {}
+    for name in sorted(dir(v)):
+        if (
+            name[0] != "_"
+            and name not in ["runtime"]
+            and isinstance(getattr(type(v), name), property)
+        ):
+            value = getattr(v, name)
+            d[name] = (
+                value
+                if isinstance(value, (str, bool, int, float, list, set, dict))
+                else str(value)
+            )
+    return d
 
 
 class TestDatabaseWriteOperations:

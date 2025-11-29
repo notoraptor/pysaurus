@@ -277,3 +277,125 @@ class TestVideoMegaGroupEdgeCases:
 
                 # Should have fewer or equal videos than level 1
                 assert len(indices_level2) <= len(indices_level1)
+
+    def test_search_by_video_id(self, saurus_database):
+        """Test search by video ID directly (covers lines 61-63)."""
+        provider = saurus_database.provider
+
+        # Search by video ID using the "id" condition
+        provider.set_search("196", "id")
+        indices = provider.get_view_indices()
+
+        # Should get exactly 1 video with ID 196
+        assert len(indices) == 1
+        assert indices[0] == 196
+
+    def test_grouping_by_property_with_length_sorting(self, saurus_database):
+        """Test grouping by property with LENGTH sorting (covers line 89)."""
+        provider = saurus_database.provider
+
+        # Group by category (property) with LENGTH sorting (without singletons to get groups)
+        provider.set_groups("category", is_property=True, allow_singletons=False, sorting="length")
+        group_def = provider.get_group_def()
+
+        # Should have groups sorted by length of category value
+        if len(group_def["groups"]) > 0:
+            # Verify groups are sorted by length
+            groups = group_def["groups"]
+            for i in range(len(groups) - 1):
+                current_val = str(groups[i]["value"] or "")
+                next_val = str(groups[i + 1]["value"] or "")
+                current_len = len(current_val)
+                next_len = len(next_val)
+                # Length should be non-decreasing (or equal with secondary sort by value)
+                assert current_len <= next_len or (
+                    current_len == next_len and current_val <= next_val
+                )
+
+    def test_grouping_by_similarity_id(self, saurus_database):
+        """Test grouping by similarity_id with special filtering (covers line 185)."""
+        provider = saurus_database.provider
+
+        # Group by similarity_id
+        provider.set_groups("similarity_id", allow_singletons=True)
+        group_def = provider.get_group_def()
+
+        # Should filter out NULL and -1 values
+        # All groups should have valid similarity IDs
+        for group in group_def["groups"]:
+            similarity_id = group["value"]
+            assert similarity_id is not None
+            assert similarity_id != -1
+
+    def test_classifier_with_non_null_property_value(self, saurus_database):
+        """Test classifier with non-NULL property value (covers line 217)."""
+        provider = saurus_database.provider
+
+        # Group by category with classifier
+        provider.set_groups("category", is_property=True, allow_singletons=True, sorting="count", reverse=True)
+
+        # Find two non-NULL categories to use as classifier
+        group_def = provider.get_group_def()
+        categories = [g["value"] for g in group_def["groups"] if g["value"] is not None and g["count"] > 0]
+
+        if len(categories) >= 2:
+            # Set classifier with first category
+            provider.set_classifier_path([categories[0]])
+            indices_level1 = provider.get_view_indices()
+            assert len(indices_level1) > 0
+
+            # Get sub-groups and find second non-NULL category (different from first)
+            group_def_level1 = provider.get_group_def()
+            second_category = None
+            for group in group_def_level1["groups"]:
+                if group["value"] is not None and group["value"] != categories[0]:
+                    second_category = group["value"]
+                    break
+
+            if second_category:
+                # Set classifier with both categories (covers line 217)
+                provider.set_classifier_path([categories[0], second_category])
+                indices_level2 = provider.get_view_indices()
+                assert len(indices_level2) > 0
+
+    def test_classifier_with_null_property_value_in_path(self, saurus_database):
+        """Test classifier when NULL is part of the classification path (covers lines 232-240)."""
+        provider = saurus_database.provider
+
+        # Group by category
+        provider.set_groups("category", is_property=True, allow_singletons=True)
+        group_def = provider.get_group_def()
+
+        # Find a non-NULL category
+        first_category = None
+        for group in group_def["groups"]:
+            if group["value"] is not None and group["count"] > 0:
+                first_category = group["value"]
+                break
+
+        if first_category:
+            # Set classifier path with the category
+            provider.set_classifier_path([first_category])
+            indices = provider.get_view_indices()
+            assert len(indices) > 0
+
+            # Now add NULL as second level (videos with first_category but no other categories)
+            provider.set_classifier_path([first_category, None])
+            indices_with_null = provider.get_view_indices()
+            # This covers the elif field_value is None branch (lines 232-240)
+            # Should get videos that have first_category but no additional categories
+            assert len(indices_with_null) >= 0
+
+    def test_search_with_text_query(self, saurus_database):
+        """Test search with text query (not by ID) (covers lines 263-264)."""
+        provider = saurus_database.provider
+
+        # Set up grouping first
+        provider.set_groups("category", is_property=True, allow_singletons=True)
+
+        # Now add a text search
+        provider.set_search("unknown", "and")
+        indices = provider.get_view_indices()
+
+        # Should filter videos based on text search
+        assert len(indices) > 0

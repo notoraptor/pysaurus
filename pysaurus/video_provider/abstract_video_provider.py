@@ -173,8 +173,11 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         video_indices = []
         for path in self.get_sources():
             where = {flag: True for flag in path}
+            if "not_found" in where or "unreadable" in where:
+                continue
             where["found"] = True
-            where["already_opened"] = False
+            where["readable"] = True
+            where["watched"] = False
             video_indices.extend(
                 video.video_id
                 for video in self._database.get_videos(

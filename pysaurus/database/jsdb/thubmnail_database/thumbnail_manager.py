@@ -48,8 +48,10 @@ class ThumbnailManager:
         )
 
     def has(self, filename: AbsolutePath) -> bool:
-        return self.thumb_db.count(
-            "video_to_thumbnail", "filename", "filename = ?", [filename.path]
+        return bool(
+            self.thumb_db.count(
+                "video_to_thumbnail", "filename", "filename = ?", [filename.path]
+            )
         )
 
     def filter(self, filenames: Iterable[str]) -> set[str]:

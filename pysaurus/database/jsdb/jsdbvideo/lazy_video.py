@@ -84,7 +84,7 @@ class LazyVideo(WithSchema, VideoPattern):
         return video
 
     file_size = property(lambda self: self._get("file_size"))
-    errors = property(lambda self: set(self._get("errors")))
+    errors = property(lambda self: sorted(set(self._get("errors"))))
 
     @property
     def video_id(self):
@@ -117,10 +117,6 @@ class LazyVideo(WithSchema, VideoPattern):
         if self._get("date_entry_opened") is None:
             self._set("date_entry_opened", self.runtime.mtime)
         return Date(self._get("date_entry_opened"))
-
-    @property
-    def already_opened(self) -> bool:
-        return self.date != self.date_entry_opened
 
     @date_entry_opened.setter
     def date_entry_opened(self, data):
@@ -227,7 +223,6 @@ class LazyVideo(WithSchema, VideoPattern):
     )
     filename_numeric = property(lambda self: SemanticText(self.filename.standard_path))
     meta_title_numeric = property(lambda self: SemanticText(self.meta_title.value))
-    raw_seconds = property(lambda self: self.duration / self.duration_time_base)
     thumbnail_base64 = property(
         lambda self: self.database.jsondb_get_thumbnail_base64(self.filename)
     )
@@ -235,21 +230,6 @@ class LazyVideo(WithSchema, VideoPattern):
     @property
     def thumbnail(self) -> bytes:
         return self.database.jsondb_get_thumbnail_blob(self.filename)
-
-    @property
-    def expected_raw_size(self):
-        return FileSize(
-            (
-                self.frame_rate
-                * self.width
-                * self.height
-                * 3
-                * (self.bit_depth or 8)
-                / 8
-                + self.sample_rate * (self.audio_bits or 32) / 8
-            )
-            * self.raw_seconds
-        )
 
     @property
     def move_id(self):

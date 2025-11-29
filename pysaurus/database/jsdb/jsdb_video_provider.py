@@ -113,10 +113,7 @@ class LayerSource(Layer):
                     video_id
                     for video_id in source
                     if self.input.has_video(
-                        video_id=video_id,
-                        found=True,
-                        readable=True,
-                        already_opened=False,
+                        video_id=video_id, found=True, readable=True, watched=False
                     )
                 )
         self.output = video_indices

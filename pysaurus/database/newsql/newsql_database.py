@@ -99,10 +99,6 @@ class SqlVideo(VideoPattern):
         val = self._data.get("o") or self._data.get("date_entry_opened", 0)
         return Date(val)
 
-    @property
-    def already_opened(self) -> bool:
-        return self.date_entry_opened.time > 0
-
     # Runtime info properties
     @property
     def _runtime(self) -> dict:

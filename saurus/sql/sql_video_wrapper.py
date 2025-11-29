@@ -100,8 +100,8 @@ class SQLVideoWrapper(VideoPattern):
         return self.data[F.file_size]
 
     @property
-    def unreadable(self):
-        return self.data[F.unreadable]
+    def unreadable(self) -> bool:
+        return bool(self.data[F.unreadable])
 
     @property
     def audio_bit_rate(self):
@@ -136,8 +136,13 @@ class SQLVideoWrapper(VideoPattern):
         return self.data[F.device_name]
 
     @property
-    def duration(self):
-        return abs(self.data[F.duration])
+    def duration(self) -> int | float:
+        value: float = abs(self.data[F.duration])
+        return (
+            value
+            if isinstance(value, int)
+            else (int(value) if value.is_integer() else value)
+        )
 
     @property
     def duration_time_base(self):
@@ -208,12 +213,8 @@ class SQLVideoWrapper(VideoPattern):
         return self.data[F.driver_id]
 
     @property
-    def is_file(self):
-        return self.data[F.is_file]
-
-    @property
-    def discarded(self):
-        return self.data[F.discarded]
+    def discarded(self) -> bool:
+        return bool(self.data[F.discarded])
 
     @property
     def date_entry_modified(self) -> Date:
@@ -231,17 +232,17 @@ class SQLVideoWrapper(VideoPattern):
 
     @property
     def watched(self) -> bool:
-        return self.data[F.watched]
+        return bool(self.data[F.watched])
 
     # derived
 
     @property
-    def found(self):
-        return self.data[F.is_file]
+    def found(self) -> bool:
+        return bool(self.data[F.is_file])
 
     @property
-    def with_thumbnails(self):
-        return self.data[F.with_thumbnails]
+    def with_thumbnails(self) -> bool:
+        return bool(self.data[F.with_thumbnails])
 
     @property
     def extension(self):
