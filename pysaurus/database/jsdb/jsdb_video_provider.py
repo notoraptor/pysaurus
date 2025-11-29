@@ -11,6 +11,7 @@ from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.core.profiling import Profiler
+from pysaurus.database.database_operations import DatabaseOperations
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
@@ -90,6 +91,7 @@ class LayerSource(Layer):
         return {"sources": [["readable"]]}
 
     def run(self):
+        ops = DatabaseOperations(self.input)
         video_indices: set[int] = set()
         video_indices_found: list[int] = []
         videos_not_yet_opened: list[int] = []
@@ -105,14 +107,12 @@ class LayerSource(Layer):
                 video_indices_found.extend(
                     video_id
                     for video_id in source
-                    if self.input.has_video(
-                        video_id=video_id, found=True, readable=True
-                    )
+                    if ops.has_video(video_id=video_id, found=True, readable=True)
                 )
                 videos_not_yet_opened.extend(
                     video_id
                     for video_id in source
-                    if self.input.has_video(
+                    if ops.has_video(
                         video_id=video_id, found=True, readable=True, watched=False
                     )
                 )
@@ -169,7 +169,7 @@ class _AbstractLayerGrouping(Layer):
         values = results[video_id]
         assert isinstance(values, list)
         if not values and self.database.get_prop_types(name=name, multiple=False):
-            values = [self.database.default_prop_unit(name)]
+            values = [self.database.jsondb_default_prop_unit(name)]
         return values
 
     def delete(self, video_id: int):

@@ -143,7 +143,7 @@ class Application:
         else:
             self.databases[path].reopen()
         if update:
-            self.databases[path].refresh()
+            self.databases[path].algos.refresh()
         return self.databases[path]
 
     @Profiler.profile_method()

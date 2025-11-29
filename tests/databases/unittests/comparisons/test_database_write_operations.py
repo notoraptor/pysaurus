@@ -14,6 +14,8 @@ Tests cover:
 
 import pytest
 
+from pysaurus.database.abstract_database import AbstractDatabase
+
 
 def get_category_from_filename(filename: str) -> str:
     """Extract category from video filename path (parent folder name)."""
@@ -198,8 +200,12 @@ class TestVideoPropertyOperations:
         new_db.videos_tag_set(prop_name, {video_id: ["value1"]})
 
         # Merge with new value
-        old_db.videos_tag_set(prop_name, {video_id: ["value2"]}, merge=True)
-        new_db.videos_tag_set(prop_name, {video_id: ["value2"]}, merge=True)
+        old_db.videos_tag_set(
+            prop_name, {video_id: ["value2"]}, action=AbstractDatabase.action.ADD
+        )
+        new_db.videos_tag_set(
+            prop_name, {video_id: ["value2"]}, action=AbstractDatabase.action.ADD
+        )
 
         # Should have both values
         old_tags = old_db.videos_tag_get(prop_name, indices=[video_id])
@@ -313,11 +319,8 @@ class TestPropertyValueOperations:
         old_db, new_db, prop_name, video_ids = databases_with_tags
 
         # Delete "test_tag" from all videos
-        old_modified = old_db.delete_property_values(prop_name, ["test_tag"])
-        new_modified = new_db.delete_property_values(prop_name, ["test_tag"])
-
-        # Same videos modified
-        assert sorted(old_modified) == sorted(new_modified)
+        old_db.algos.delete_property_values(prop_name, ["test_tag"])
+        new_db.algos.delete_property_values(prop_name, ["test_tag"])
 
         # Verify "test_tag" is gone
         for vid in video_ids[:5]:
@@ -331,10 +334,10 @@ class TestPropertyValueOperations:
         old_db, new_db, prop_name, video_ids = databases_with_tags
 
         # Replace "test_tag" with "replaced_tag"
-        old_result = old_db.replace_property_values(
+        old_result = old_db.algos.replace_property_values(
             prop_name, ["test_tag"], "replaced_tag"
         )
-        new_result = new_db.replace_property_values(
+        new_result = new_db.algos.replace_property_values(
             prop_name, ["test_tag"], "replaced_tag"
         )
 
@@ -353,8 +356,8 @@ class TestPropertyValueOperations:
         """Both should count property values the same way."""
         old_db, new_db, prop_name, video_ids = databases_with_tags
 
-        old_count = old_db.count_property_for_videos(video_ids, prop_name)
-        new_count = new_db.count_property_for_videos(video_ids, prop_name)
+        old_count = old_db.ops.count_property_for_videos(video_ids, prop_name)
+        new_count = new_db.ops.count_property_for_videos(video_ids, prop_name)
 
         # Should have same counts
         assert old_count == new_count
@@ -368,13 +371,13 @@ class TestPropertyValueOperations:
 
         subset = video_ids[:10]
 
-        old_db.update_property_for_videos(
+        old_db.ops.update_property_for_videos(
             subset,
             prop_name,
             values_to_add=["new_value"],
             values_to_remove=["test_tag"],
         )
-        new_db.update_property_for_videos(
+        new_db.ops.update_property_for_videos(
             subset,
             prop_name,
             values_to_add=["new_value"],
@@ -400,10 +403,10 @@ class TestValidation:
         mem_old_database.prop_type_add(prop_name, "str", "", True)
         mem_new_database.prop_type_add(prop_name, "str", "", True)
 
-        old_result = mem_old_database.validate_prop_values(
+        old_result = mem_old_database.ops.validate_prop_values(
             prop_name, ["value1", "value2"]
         )
-        new_result = mem_new_database.validate_prop_values(
+        new_result = mem_new_database.ops.validate_prop_values(
             prop_name, ["value1", "value2"]
         )
 
@@ -415,8 +418,8 @@ class TestValidation:
         mem_old_database.prop_type_add(prop_name, "int", 0, False)
         mem_new_database.prop_type_add(prop_name, "int", 0, False)
 
-        old_result = mem_old_database.validate_prop_values(prop_name, [42])
-        new_result = mem_new_database.validate_prop_values(prop_name, [42])
+        old_result = mem_old_database.ops.validate_prop_values(prop_name, [42])
+        new_result = mem_new_database.ops.validate_prop_values(prop_name, [42])
 
         assert old_result == new_result == [42]
 
@@ -427,8 +430,8 @@ class TestValidation:
         mem_old_database.prop_type_add(prop_name, "str", enum_values, False)
         mem_new_database.prop_type_add(prop_name, "str", enum_values, False)
 
-        old_result = mem_old_database.validate_prop_values(prop_name, ["a"])
-        new_result = mem_new_database.validate_prop_values(prop_name, ["a"])
+        old_result = mem_old_database.ops.validate_prop_values(prop_name, ["a"])
+        new_result = mem_new_database.ops.validate_prop_values(prop_name, ["a"])
 
         assert old_result == new_result == ["a"]
 
@@ -447,8 +450,8 @@ class TestSetPropertyForVideos:
 
         updates = {vid: ["custom_value"] for vid in video_ids}
 
-        mem_old_database.set_property_for_videos(prop_name, updates)
-        mem_new_database.set_property_for_videos(prop_name, updates)
+        mem_old_database.ops.set_property_for_videos(prop_name, updates)
+        mem_new_database.ops.set_property_for_videos(prop_name, updates)
 
         # Verify
         old_tags = mem_old_database.videos_tag_get(prop_name, indices=video_ids)
@@ -466,14 +469,14 @@ class TestSetPropertyForVideos:
         video_id = mem_old_database.get_videos(include=["video_id"])[0].video_id
 
         # Set initial
-        mem_old_database.set_property_for_videos(prop_name, {video_id: ["a"]})
-        mem_new_database.set_property_for_videos(prop_name, {video_id: ["a"]})
+        mem_old_database.ops.set_property_for_videos(prop_name, {video_id: ["a"]})
+        mem_new_database.ops.set_property_for_videos(prop_name, {video_id: ["a"]})
 
         # Merge
-        mem_old_database.set_property_for_videos(
+        mem_old_database.ops.set_property_for_videos(
             prop_name, {video_id: ["b"]}, merge=True
         )
-        mem_new_database.set_property_for_videos(
+        mem_new_database.ops.set_property_for_videos(
             prop_name, {video_id: ["b"]}, merge=True
         )
 
@@ -490,8 +493,8 @@ class TestMarkAsWatched:
         """Both should mark video as watched."""
         video_id = mem_old_database.get_videos(include=["video_id"])[0].video_id
 
-        mem_old_database.mark_as_watched(video_id)
-        mem_new_database.mark_as_watched(video_id)
+        mem_old_database.ops.mark_as_watched(video_id)
+        mem_new_database.ops.mark_as_watched(video_id)
 
         old_v = mem_old_database.get_videos(where={"video_id": video_id})[0]
         new_v = mem_new_database.get_videos(where={"video_id": video_id})[0]
@@ -509,14 +512,14 @@ class TestMarkAsWatched:
         initial_watched = old_v.watched
 
         # Toggle
-        old_result = mem_old_database.mark_as_read(video_id)
-        new_result = mem_new_database.mark_as_read(video_id)
+        old_result = mem_old_database.ops.mark_as_read(video_id)
+        new_result = mem_new_database.ops.mark_as_read(video_id)
 
         assert old_result == new_result == (not initial_watched)
 
         # Toggle back
-        old_result2 = mem_old_database.mark_as_read(video_id)
-        new_result2 = mem_new_database.mark_as_read(video_id)
+        old_result2 = mem_old_database.ops.mark_as_read(video_id)
+        new_result2 = mem_new_database.ops.mark_as_read(video_id)
 
         assert old_result2 == new_result2 == initial_watched
 
@@ -532,8 +535,8 @@ class TestSetSimilarities:
         # Set similarities (all to same group)
         similarities = {vid: 100 for vid in video_ids}
 
-        mem_old_database.set_similarities(similarities)
-        mem_new_database.set_similarities(similarities)
+        mem_old_database.ops.set_similarities(similarities)
+        mem_new_database.ops.set_similarities(similarities)
 
         # Verify
         for vid in video_ids:
@@ -547,8 +550,8 @@ class TestSetSimilarities:
         video_ids = [v.video_id for v in videos]
         sim_ids = [1, 2, 3]
 
-        mem_old_database.set_similarities_from_list(video_ids, sim_ids)
-        mem_new_database.set_similarities_from_list(video_ids, sim_ids)
+        mem_old_database.ops.set_similarities_from_list(video_ids, sim_ids)
+        mem_new_database.ops.set_similarities_from_list(video_ids, sim_ids)
 
         for vid, expected_sim in zip(video_ids, sim_ids):
             old_v = mem_old_database.get_videos(where={"video_id": vid})[0]
@@ -593,8 +596,12 @@ class TestCategoryPropertyFullWorkflow:
 
         # Verify same counts
         sample_ids = list(old_updates.keys())[:100]
-        old_count = mem_old_database.count_property_for_videos(sample_ids, prop_name)
-        new_count = mem_new_database.count_property_for_videos(sample_ids, prop_name)
+        old_count = mem_old_database.ops.count_property_for_videos(
+            sample_ids, prop_name
+        )
+        new_count = mem_new_database.ops.count_property_for_videos(
+            sample_ids, prop_name
+        )
 
         assert old_count == new_count
 

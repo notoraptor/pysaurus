@@ -127,8 +127,8 @@ def main():
             "count_videos()",
             json_db,
             sql_db,
-            lambda db: db.count_videos(),
-            lambda db: db.count_videos(),
+            lambda db: db.ops.count_videos(),
+            lambda db: db.ops.count_videos(),
         )
     )
 

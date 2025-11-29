@@ -8,7 +8,7 @@ from pysaurus.core.datestring import Date
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
-from pysaurus.database.abstract_database import AbstractDatabase
+from pysaurus.database.abstract_database import AbstractDatabase, Change
 from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
@@ -19,7 +19,6 @@ from saurus.sql.prop_type_search import prop_type_search
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
 from saurus.sql.sql_useful_constants import WRITABLE_FIELDS
-from saurus.sql.sql_video_wrapper import SQLVideoWrapper
 from saurus.sql.video_mega_search import video_mega_search
 
 logger = logging.getLogger(__name__)
@@ -93,50 +92,111 @@ class PysaurusCollection(AbstractDatabase):
         return output
 
     def videos_tag_set(
-        self, name: str, updates: dict[int, Collection[PropUnitType]], merge=False
+        self,
+        name: str,
+        updates: dict[int | None, Collection[PropUnitType]],
+        action: Change = Change.REPLACE,
     ):
+        if not updates:
+            return
+
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
         video_indices = list(updates.keys())
-        placeholders_string = ",".join(["?"] * len(video_indices))
+        if len(video_indices) == 1 and video_indices[0] is None:
+            placeholders_string = None
+        else:
+            assert all(isinstance(video_id, int) for video_id in video_indices)
+            placeholders_string = ",".join(["?"] * len(video_indices))
         for video_id in video_indices:
             updates[video_id] = pt.instantiate(updates[video_id])
 
         property_id = pt.property_id
 
-        # 1. DELETE old values (if not merging or property is not multiple)
-        if not merge or not pt.multiple:
-            self.db.modify(
-                f"DELETE FROM video_property_value "
-                f"WHERE property_id = ? "
-                f"AND video_id IN ({placeholders_string})",
-                [property_id] + video_indices,
-            )
-
-        # 2. INSERT new values
-        self.db.modify_many(
-            "INSERT OR IGNORE INTO video_property_value "
-            "(video_id, property_id, property_value) VALUES (?, ?, ?)",
-            (
-                (video_id, property_id, value)
-                for video_id, values in updates.items()
-                for value in values
-            ),
-        )
+        if placeholders_string is None:
+            values = updates[None]
+            # Update all video
+            if action == Change.REMOVE:
+                self.db.modify_many(
+                    "DELETE FROM video_property_value "
+                    "WHERE property_id = ? "
+                    "AND property_value = ?",
+                    [(property_id, value) for value in values],
+                )
+            else:
+                all_video_indices = [
+                    row["video_id"]
+                    for row in self.db.query_all("SELECT video_id FROM video")
+                ]
+                if action == Change.REPLACE:
+                    self.db.modify(
+                        "DELETE FROM video_property_value WHERE property_id = ?",
+                        [property_id],
+                    )
+                self.db.modify_many(
+                    "INSERT OR IGNORE INTO video_property_value "
+                    "(video_id, property_id, property_value) VALUES (?, ?, ?)",
+                    (
+                        (video_id, property_id, value)
+                        for video_id in all_video_indices
+                        for value in values
+                    ),
+                )
+        else:
+            # Update only video indices present in `updates`
+            if action == Change.REMOVE:
+                self.db.modify_many(
+                    "DELETE FROM video_property_value "
+                    "WHERE video_id = ? "
+                    "AND property_id = ? "
+                    "AND property_value = ? ",
+                    [
+                        (video_id, property_id, value)
+                        for video_id, values in updates.items()
+                        for value in values
+                    ],
+                )
+            else:
+                if action == Change.REPLACE:
+                    self.db.modify(
+                        f"DELETE FROM video_property_value "
+                        f"WHERE property_id = ? "
+                        f"AND video_id IN ({placeholders_string})",
+                        [property_id] + video_indices,
+                    )
+                self.db.modify_many(
+                    "INSERT OR IGNORE INTO video_property_value "
+                    "(video_id, property_id, property_value) VALUES (?, ?, ?)",
+                    (
+                        (video_id, property_id, value)
+                        for video_id, values in updates.items()
+                        for value in values
+                    ),
+                )
 
         # 3. Update FTS5 table if property is string type
         if pt.type is str:
-            new_texts = self.db.query_all(
-                f"SELECT v.video_id, v.filename, v.meta_title, t.property_text "
-                f"FROM video AS v JOIN video_property_text AS t "
-                f"ON v.video_id = t.video_id "
-                f"WHERE v.video_id IN ({placeholders_string})",
-                video_indices,
-            )
-            self.db.modify(
-                f"DELETE FROM video_text WHERE video_id IN ({placeholders_string})",
-                video_indices,
-            )
+            if placeholders_string is None:
+                # Update for all videos
+                new_texts = self.db.query_all(
+                    "SELECT v.video_id, v.filename, v.meta_title, t.property_text "
+                    "FROM video AS v JOIN video_property_text AS t "
+                    "ON v.video_id = t.video_id"
+                )
+                self.db.modify("DELETE FROM video_text")
+            else:
+                # Update only for videos in `updates`
+                new_texts = self.db.query_all(
+                    f"SELECT v.video_id, v.filename, v.meta_title, t.property_text "
+                    f"FROM video AS v JOIN video_property_text AS t "
+                    f"ON v.video_id = t.video_id "
+                    f"WHERE v.video_id IN ({placeholders_string})",
+                    video_indices,
+                )
+                self.db.modify(
+                    f"DELETE FROM video_text WHERE video_id IN ({placeholders_string})",
+                    video_indices,
+                )
             self.db.modify_many(
                 "INSERT INTO video_text "
                 "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
@@ -295,49 +355,24 @@ class PysaurusCollection(AbstractDatabase):
                 [int(bool(multiple)), name],
             )
 
-    x = SQLVideoWrapper
-
     def get_videos(
         self,
         *,
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> list[VideoPattern] | int | bool | list[int]:
+        # Optimization flags
+        count_only: bool = False,
+        exists_only: bool = False,
+    ) -> list[VideoPattern] | int | bool:
         return video_mega_search(
-            self.db, include=include, with_moves=with_moves, where=where
+            self.db,
+            include=include,
+            with_moves=with_moves,
+            where=where,
+            count_only=count_only,
+            exists_only=exists_only,
         )
-
-    def count_videos(self, *flags, **forced_flags) -> int:
-        """Optimized count using SQL COUNT instead of fetching all videos."""
-        forced_flags.update({flag: True for flag in flags})
-        if forced_flags:
-            forced_flags.setdefault("discarded", False)
-        return video_mega_search(self.db, where=forced_flags, count_only=True)
-
-    def has_video(self, **fields) -> bool:
-        """Optimized existence check using SQL LIMIT 1."""
-        return video_mega_search(self.db, where=fields, exists_only=True)
-
-    def _get_video_terms(self, video_id: int) -> list[str]:
-        # **NB**: Keep this method for reference.
-        video = self.db.query_one(
-            "SELECT filename, meta_title FROM video WHERE video_id = ?", [video_id]
-        )
-        prop_vals = [
-            row[0]
-            for row in self.db.query(
-                "SELECT v.property_value FROM video_property_value AS v "
-                "JOIN property AS p ON v.property_id = p.property_id "
-                "WHERE v.video_id = ? AND p.type = ?",
-                [video_id, "str"],
-            )
-        ]
-        term_sources = [video[0], video[1]] + prop_vals
-        all_str = " ".join(term_sources)
-        t_all_str = string_to_pieces(all_str)
-        t_all_str_low = string_to_pieces(all_str.lower())
-        return t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
 
     def videos_get_terms(self) -> dict[int, list[str]]:
         output = {}
@@ -592,25 +627,3 @@ class PysaurusCollection(AbstractDatabase):
                 for filename, thumb_path in filename_to_thumb_name.items()
             ),
         )
-
-    def delete_property_values(self, name: str, values: list) -> list[int]:
-        if not values:
-            return []
-        (prop_desc,) = self.get_prop_types(name=name)
-        modified = [
-            row["video_id"]
-            for row in self.db.query(
-                f"SELECT video_id FROM video_property_value "
-                f"WHERE property_id = ? "
-                f"AND property_value IN ({','.join(['?'] * len(values))})",
-                [prop_desc["property_id"]] + values,
-            )
-        ]
-        self.db.modify(
-            f"DELETE FROM video_property_value "
-            f"WHERE property_id = ? "
-            f"AND property_value IN ({','.join(['?'] * len(values))})",
-            [prop_desc["property_id"]] + values,
-        )
-        self._notify_fields_modified([name], is_property=True)
-        return modified

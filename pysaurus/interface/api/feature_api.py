@@ -8,9 +8,13 @@ from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
 from pysaurus.core.file_utils import create_xspf_playlist
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
+from pysaurus.database.database_algorithms import DatabaseAlgorithms as Algo
+from pysaurus.database.database_operations import DatabaseOperations as Ops
 from pysaurus.interface.api.api_utils.proxy_feature import (
+    FromAlgo,
     FromApp,
     FromDb,
+    FromOps,
     FromView,
     ProxyFeature,
 )
@@ -37,38 +41,38 @@ class FeatureAPI:
         # We must return value for proxy ending with "!"
         self._proxies: dict[str, str | ProxyFeature] = {
             "apply_on_view": FromView(self, View.apply_on_view, True),
-            "apply_on_prop_value": FromDb(self, Db.apply_on_prop_value),
+            "apply_on_prop_value": FromOps(self, Ops.apply_on_prop_value),
             "classifier_back": FromView(self, View.classifier_back),
             "classifier_focus_prop_val": FromView(self, View.classifier_focus_prop_val),
             "classifier_reverse": FromView(self, View.classifier_reverse, True),
             "classifier_select_group": FromView(self, View.classifier_select_group),
-            "confirm_unique_moves": FromDb(self, Db.confirm_unique_moves, True),
+            "confirm_unique_moves": FromAlgo(self, Algo.confirm_unique_moves, True),
             "convert_prop_multiplicity": FromDb(self, Db.prop_type_set_multiple),
             "create_prop_type": FromDb(self, Db.prop_type_add),
-            "delete_property_values": FromDb(self, Db.delete_property_values),
-            "delete_video": FromDb(self, Db.delete_video),
+            "delete_property_values": FromAlgo(self, Algo.delete_property_values),
+            "delete_video": FromOps(self, Ops.delete_video),
             "delete_video_entry": FromDb(self, Db.video_entry_del),
             "describe_prop_types": FromDb(self, Db.get_prop_types, True),
-            "replace_property_values": FromDb(self, Db.replace_property_values),
-            "fill_property_with_terms": FromDb(self, Db.fill_property_with_terms),
+            "replace_property_values": FromAlgo(self, Algo.replace_property_values),
+            "fill_property_with_terms": FromAlgo(self, Algo.fill_property_with_terms),
             "get_database_names": FromApp(self, Application.get_database_names, True),
             "get_language_names": FromApp(self, Application.get_language_names, True),
-            "move_property_values": FromDb(self, Db.move_property_values),
+            "move_property_values": FromAlgo(self, Algo.move_property_values),
             "open_random_video": FromView(self, View.choose_random_video, True),
-            "open_video": FromDb(self, Db.open_video),
-            "mark_as_read": FromDb(self, Db.mark_as_read, True),
+            "open_video": FromOps(self, Ops.open_video),
+            "mark_as_read": FromOps(self, Ops.mark_as_read, True),
             "remove_prop_type": FromDb(self, Db.prop_type_del),
             "rename_database": FromDb(self, Db.rename),
             "rename_prop_type": FromDb(self, Db.prop_type_set_name),
-            "rename_video": FromDb(self, Db.change_video_file_title),
+            "rename_video": FromOps(self, Ops.change_video_file_title),
             "set_group": FromView(self, View.set_group),
             "set_groups": FromView(self, View.set_groups),
             "set_search": FromView(self, View.set_search),
-            "set_similarities": FromDb(self, Db.set_similarities_from_list),
+            "set_similarities": FromOps(self, Ops.set_similarities_from_list),
             "set_sorting": FromView(self, View.set_sort),
             "set_sources": FromView(self, View.set_sources),
-            "set_video_folders": FromDb(self, Db.set_folders),
-            "set_video_moved": FromDb(self, Db.move_video_entry),
+            "set_video_folders": FromOps(self, Ops.set_folders),
+            "set_video_moved": FromOps(self, Ops.move_video_entry),
             "set_video_properties": FromDb(self, Db.video_entry_set_tags),
         }
 
@@ -129,18 +133,19 @@ class FeatureAPI:
         from_property = self.database.provider.get_grouping().field
         self.database.provider.set_classifier_path([])
         self.database.provider.set_group(0)
-        self.database.move_property_values(
-            path, from_property, to_property, concatenate=True
-        )
+        alg = Algo(self.database)
+        alg.move_property_values(path, from_property, to_property, concatenate=True)
 
     def playlist(self) -> str:
         db = self.database
         pv = db.provider
+        ops = Ops(db)
         return str(
             create_xspf_playlist(
-                map(db.get_video_filename, pv.get_view_indices())
+                map(ops.get_video_filename, pv.get_view_indices())
             ).open()
         )
 
     def open_containing_folder(self, video_id: int) -> str:
-        return str(self.database.get_video_filename(video_id).locate_file())
+        ops = Ops(self.database)
+        return str(ops.get_video_filename(video_id).locate_file())

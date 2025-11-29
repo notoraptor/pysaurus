@@ -189,14 +189,17 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         return video_indices[random.randrange(len(video_indices))]
 
     def choose_random_video(self, open_video=True) -> str:
+        from pysaurus.database.database_operations import DatabaseOperations
+
+        ops = DatabaseOperations(self._database)
         video_id = self.get_random_found_video_id()
         self.reset_parameters(
             self.LAYER_GROUPING, self.LAYER_CLASSIFIER, self.LAYER_GROUP
         )
         self.set_search(str(video_id), "id")
         if open_video:
-            self._database.open_video(video_id)
-        return self._database.get_video_filename(video_id).path
+            ops.open_video(video_id)
+        return ops.get_video_filename(video_id).path
 
     def classifier_select_group(self, group_id: int) -> None:
         path = self.get_classifier_path()
@@ -234,9 +237,12 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         return path
 
     def apply_on_view(self, selector, db_fn_name, *db_fn_args) -> Optional:
+        from pysaurus.database.database_operations import DatabaseOperations
+
+        ops = DatabaseOperations(self._database)
         callable_methods = {
-            "count_property_values": self._database.count_property_for_videos,
-            "edit_property_for_videos": self._database.update_property_for_videos,
+            "count_property_values": ops.count_property_for_videos,
+            "edit_property_for_videos": ops.update_property_for_videos,
         }
         return callable_methods[db_fn_name](
             functions.apply_selector_to_data(selector, self.get_view_indices()),

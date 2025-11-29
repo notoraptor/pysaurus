@@ -38,25 +38,25 @@ class TestVideoMegaSearchOptimizations:
     def test_count_videos_basic(self, disk_database):
         """Test count_videos method."""
         # Count all found videos
-        count = disk_database.count_videos("found")
+        count = disk_database.ops.count_videos("found")
         assert count == 90
 
         # Count unreadable videos
-        count_unreadable = disk_database.count_videos("unreadable")
+        count_unreadable = disk_database.ops.count_videos("unreadable")
         assert count_unreadable == 3
 
         # Count not_found videos
-        count_not_found = disk_database.count_videos("not_found")
+        count_not_found = disk_database.ops.count_videos("not_found")
         assert count_not_found == 3
 
     def test_has_video_method(self, disk_database):
         """Test has_video method (exists check)."""
         # Check if a specific video exists by video_id
-        exists = disk_database.has_video(video_id=196)
+        exists = disk_database.ops.has_video(video_id=196)
         assert exists is True
 
         # Check if a video with impossible ID exists
-        exists_impossible = disk_database.has_video(video_id=999999)
+        exists_impossible = disk_database.ops.has_video(video_id=999999)
         assert exists_impossible is False
 
     def test_get_videos_by_ids(self, disk_database):

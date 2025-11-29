@@ -10,7 +10,7 @@ from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.abstract_database import AbstractDatabase
+from pysaurus.database.abstract_database import AbstractDatabase, Change
 from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.jsdb.db_video_attribute import PotentialMoveAttribute
 from pysaurus.database.jsdb.jsdb_prop_type import PropType
@@ -81,14 +81,10 @@ class JsonDatabase(AbstractDatabase):
                     )
                 )
         # Initialize
-        self.__jsondb_load(folders)
-
-    def rename(self, new_name: str) -> None:
-        super().rename(new_name)
-        self._thumb_mgr = ThumbnailManager(self.ways.db_thumb_sql_path)
+        self._jsondb_load(folders)
 
     @Profiler.profile_method()
-    def __jsondb_load(self, folders: Iterable[PathType] | None = None):
+    def _jsondb_load(self, folders: Iterable[PathType] | None = None):
         to_save = False
 
         with Profiler("loading JSON file", self.notifier):
@@ -172,11 +168,6 @@ class JsonDatabase(AbstractDatabase):
             logger.debug(f"Generating {len(without_identifiers)} new video indices.")
         return len(without_identifiers)
 
-    def jsondb_register_modified(self, video: Video):
-        if video in self._removed:
-            self._removed.remove(video)
-        self._modified.add(video)
-
     def _jsondb_register_removed(self, video: Video):
         if video in self._modified:
             self._modified.remove(video)
@@ -202,14 +193,6 @@ class JsonDatabase(AbstractDatabase):
         self._removed.clear()
         self._modified.clear()
 
-    def jsondb_get_thumbnail_base64(self, filename: AbsolutePath) -> str:
-        data = self._thumb_mgr.get_base64(filename)
-        # return ("data:image/jpeg;base64," + data.decode()) if data else None
-        return data.decode() if data else None
-
-    def jsondb_has_thumbnail(self, filename: AbsolutePath) -> bool:
-        return self._thumb_mgr.has(filename)
-
     def _jsondb_get_cached_videos(self, *flags, **forced_flags) -> list[Video]:
         if flags or forced_flags:
             self._jsondb_flush_changes()
@@ -221,6 +204,105 @@ class JsonDatabase(AbstractDatabase):
             ]
         else:
             return list(self._videos.values())
+
+    def _jsondb_get_videos_from_identifiers(self, where: dict):
+        q_video_id = where.pop("video_id", [])
+        q_filename = where.pop("filename", [])
+
+        if isinstance(q_video_id, int):
+            q_video_id = [q_video_id]
+        if isinstance(q_filename, AbsolutePath):
+            q_filename = [q_filename]
+
+        nb_expected = len(q_video_id) + len(q_filename)
+        found = [
+            self._id_to_video[video_id]
+            for video_id in q_video_id
+            if video_id in self._id_to_video
+        ] + [
+            self._videos[filename]
+            for filename in q_filename
+            if filename in self._videos
+        ]
+        return found, nb_expected
+
+    def _jsondb_get_all_video_indices(self) -> Iterable[int]:
+        return (item.video_id for item in self.get_videos(include=["video_id"]))
+
+    def _jsondb_notify_filename_modified(self, new_video: Video, old_video: Video):
+        self._notify_fields_modified(
+            (
+                "title",
+                "title_numeric",
+                "file_title",
+                "file_title_numeric",
+                "filename_numeric",
+                "disk",
+                "filename",
+            )
+        )
+        # JSON database: register replaced
+        self._jsondb_register_removed(old_video)
+        self.jsondb_register_modified(new_video)
+
+    def _jsondb_update_prop_values(
+        self,
+        video_id: int,
+        name: str,
+        values: Collection,
+        *,
+        action: Change = Change.REPLACE,
+    ) -> bool:
+        pt = self._prop_types[name]
+        video = self._id_to_video[video_id]
+
+        if pt.multiple:
+            if action == Change.ADD:
+                new_values = video.get_property(name) + list(values)
+            elif action == Change.REMOVE:
+                new_values = [
+                    val for val in video.get_property(name) if val not in values
+                ]
+            else:
+                assert action == Change.REPLACE
+                new_values = values
+        else:
+            assert len(values) <= 1
+            if action == Change.ADD:
+                # For unique properties, interpreted as REPLACE
+                action = Change.REPLACE
+            if action == Change.REPLACE:
+                new_values = values
+            else:
+                assert action == Change.REMOVE
+                new_values = [
+                    val for val in video.get_property(name) if val not in values
+                ]
+
+        if new_values:
+            if pt.multiple:
+                modified = video.set_property(name, pt.validate(new_values))
+            else:
+                # Should have 1 value
+                # Force error if more than 1 value
+                (new_value,) = new_values
+                modified = video.set_property(name, pt.validate(new_value))
+        else:
+            modified = bool(video.remove_property(name))
+        return modified
+
+    def jsondb_register_modified(self, video: Video):
+        if video in self._removed:
+            self._removed.remove(video)
+        self._modified.add(video)
+
+    def jsondb_get_thumbnail_base64(self, filename: AbsolutePath) -> str:
+        data = self._thumb_mgr.get_base64(filename)
+        # return ("data:image/jpeg;base64," + data.decode()) if data else None
+        return data.decode() if data else None
+
+    def jsondb_has_thumbnail(self, filename: AbsolutePath) -> bool:
+        return self._thumb_mgr.has(filename)
 
     def jsondb_prop_val_is_default(self, name: str, value: list) -> bool:
         pt = self._prop_types[name]
@@ -273,26 +355,13 @@ class JsonDatabase(AbstractDatabase):
             key=lambda video_id: self._id_to_video[video_id].to_comparable(sorting),
         )
 
-    def _jsondb_get_videos_from_identifiers(self, where: dict):
-        q_video_id = where.pop("video_id", [])
-        q_filename = where.pop("filename", [])
+    def jsondb_default_prop_unit(self, name):
+        (pt,) = self.get_prop_types(name=name)
+        return None if pt["multiple"] else pt["defaultValues"][0]
 
-        if isinstance(q_video_id, int):
-            q_video_id = [q_video_id]
-        if isinstance(q_filename, AbsolutePath):
-            q_filename = [q_filename]
-
-        nb_expected = len(q_video_id) + len(q_filename)
-        found = [
-            self._id_to_video[video_id]
-            for video_id in q_video_id
-            if video_id in self._id_to_video
-        ] + [
-            self._videos[filename]
-            for filename in q_filename
-            if filename in self._videos
-        ]
-        return found, nb_expected
+    def rename(self, new_name: str) -> None:
+        super().rename(new_name)
+        self._thumb_mgr = ThumbnailManager(self.ways.db_thumb_sql_path)
 
     @Profiler.profile_method()
     def _save(self):
@@ -386,49 +455,16 @@ class JsonDatabase(AbstractDatabase):
             prop_type.multiple = multiple
             self.save()
 
-    def update_prop_values(
-        self, video_id: int, name: str, values: Collection, *, merge=False
-    ) -> bool:
-        pt = self._prop_types[name]
-        video = self._id_to_video[video_id]
-        modified = False
-        if values:
-            if pt.multiple:
-                if not merge:  # replace
-                    modified = video.set_property(name, pt.validate(values))
-                else:  # merge
-                    new_values = pt.validate(video.get_property(name) + list(values))
-                    modified = video.set_property(name, new_values)
-            else:  # merge == replace
-                (value,) = values
-                modified = video.set_property(name, pt.validate(value))
-        elif not merge:  # replace with empty -> remove
-            modified = video.remove_property(name)
-        return modified
-
-    def _notify_filename_modified(self, new_video: Video, old_video: Video):
-        self._notify_fields_modified(
-            (
-                "title",
-                "title_numeric",
-                "file_title",
-                "file_title_numeric",
-                "filename_numeric",
-                "disk",
-                "filename",
-            )
-        )
-        # JSON database: register replaced
-        self._jsondb_register_removed(old_video)
-        self.jsondb_register_modified(new_video)
-
     def get_videos(
         self,
         *,
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> list[VideoPattern]:
+        # Optimization flags
+        count_only: bool = False,
+        exists_only: bool = False,
+    ) -> list[VideoPattern] | int | bool:
         where = where or {}
         # where["discarded"] = where.get("discarded", False)
         q_flags = {key: value for key, value in where.items() if key in VIDEO_FLAGS}
@@ -458,12 +494,17 @@ class JsonDatabase(AbstractDatabase):
                 if all(getattr(video, key) == value for key, value in q_other.items())
             )
 
-        return list(videos)
+        ret = list(videos)
+        if count_only:
+            return len(ret)
+        elif exists_only:
+            return bool(ret)
+        return ret
 
     def videos_get_terms(self) -> dict[int, list[str]]:
         return {
             video_id: self._id_to_video[video_id].terms()
-            for video_id in self._get_all_video_indices()
+            for video_id in self._jsondb_get_all_video_indices()
         }
 
     def videos_set_field(self, field: str, changes: dict[int, Any]):
@@ -529,7 +570,7 @@ class JsonDatabase(AbstractDatabase):
         self._id_to_video[video_id] = new_video
         self._thumb_mgr.rename(video.filename, new_video.filename)
 
-        self._notify_filename_modified(new_video, video)
+        self._jsondb_notify_filename_modified(new_video, video)
 
         return video.filename
 
@@ -554,17 +595,26 @@ class JsonDatabase(AbstractDatabase):
     ) -> dict[int, list[PropUnitType]]:
         return {
             video_id: self._id_to_video[video_id].get_property(name)
-            for video_id in (indices or self._get_all_video_indices())
+            for video_id in (indices or self._jsondb_get_all_video_indices())
         }
 
-    def _get_all_video_indices(self) -> Iterable[int]:
-        return (item.video_id for item in self.get_videos(include=["video_id"]))
-
     def videos_tag_set(
-        self, name: str, updates: dict[int, Collection[PropUnitType]], merge=False
+        self,
+        name: str,
+        updates: dict[int | None, Collection[PropUnitType]],
+        action: Change = Change.REPLACE,
     ):
+        if not updates:
+            return
+        if len(updates) == 1 and None in updates:
+            values = updates[None]
+            updates = {
+                video_id: values for video_id in self._jsondb_get_all_video_indices()
+            }
+        else:
+            assert all(isinstance(video_id, int) for video_id in updates.keys())
         for video_id, prop_values in updates.items():
-            self.update_prop_values(video_id, name, prop_values, merge=merge)
+            self._jsondb_update_prop_values(video_id, name, prop_values, action=action)
 
     def video_entry_set_tags(
         self, video_id: int, properties: dict, merge=False
@@ -572,12 +622,11 @@ class JsonDatabase(AbstractDatabase):
         modified = [
             name
             for name, values in properties.items()
-            if self.update_prop_values(
-                video_id, name, make_collection(values), merge=merge
+            if self._jsondb_update_prop_values(
+                video_id,
+                name,
+                make_collection(values),
+                action=(Change.ADD if merge else Change.REPLACE),
             )
         ]
         self._notify_fields_modified(modified, is_property=True)
-
-    def default_prop_unit(self, name):
-        (pt,) = self.get_prop_types(name=name)
-        return None if pt["multiple"] else pt["defaultValues"][0]

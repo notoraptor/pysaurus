@@ -15,7 +15,7 @@ from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.abstract_database import AbstractDatabase
+from pysaurus.database.abstract_database import AbstractDatabase, Change
 from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.newsql.sql_database import SqlDatabase
 from pysaurus.properties.properties import PropRawType, PropUnitType
@@ -539,7 +539,10 @@ class NewSqlDatabase(AbstractDatabase):
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> list[VideoPattern]:
+        # Optimization flags
+        count_only: bool = False,
+        exists_only: bool = False,
+    ) -> list[VideoPattern] | int | bool:
         where = dict(where) if where else {}
 
         # Handle video_id filter
@@ -579,6 +582,10 @@ class NewSqlDatabase(AbstractDatabase):
         for key, value in where.items():
             results = [v for v in results if self._video_matches_filter(v, key, value)]
 
+        if count_only:
+            return len(results)
+        elif exists_only:
+            return bool(results)
         return results
 
     def _video_matches_filter(self, video: SqlVideo, key: str, value: Any) -> bool:
@@ -842,13 +849,21 @@ class NewSqlDatabase(AbstractDatabase):
         self.save()
 
     def videos_tag_set(
-        self, name: str, updates: dict[int, Collection[PropUnitType]], merge=False
+        self,
+        name: str,
+        updates: dict[int | None, Collection[PropUnitType]],
+        action: Change = Change.REPLACE,
     ):
-        if not updates:
-            return
-
         # Batch fetch all videos at once
         all_videos = {v["video_id"]: v for v in self._sql.get_all_videos()}
+
+        if not updates:
+            return
+        if len(updates) == 1 and None in updates:
+            values = updates[None]
+            updates = {video_id: values for video_id in all_videos.keys()}
+        else:
+            assert all(isinstance(video_id, int) for video_id in updates.keys())
 
         # Collect all updates
         batch_updates = []  # [(video_id, data, filename), ...]
@@ -860,12 +875,18 @@ class NewSqlDatabase(AbstractDatabase):
             data = video["data"]
             props = data.get("p") or data.get("properties", {})
 
-            if merge:
-                existing = set(props.get(name, []))
-                existing.update(values)
-                props[name] = sorted(existing)
+            existing = set(props.get(name, []))
+            if action == Change.REPLACE:
+                new_values = set(values)
+            elif action == Change.ADD:
+                new_values = existing | set(values)
             else:
-                props[name] = sorted(values)
+                assert action == Change.REMOVE
+                new_values = existing - set(values)
+            if new_values:
+                props[name] = sorted(new_values)
+            else:
+                props.pop(name, None)
 
             data["p"] = props
             batch_updates.append((video_id, data, video["filename"]))
@@ -897,7 +918,7 @@ class NewSqlDatabase(AbstractDatabase):
             return base64.b64encode(blob).decode("ascii")
         return ""
 
-    def default_prop_unit(self, name: str):
+    def jsondb_default_prop_unit(self, name: str):
         """Return default value for a property."""
         pt = self._sql.get_prop_type(name)
         if pt:

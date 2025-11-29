@@ -20,15 +20,18 @@ class DatabaseLoaded(Notification):
 
     def __init__(self, database):
         super().__init__()
-        self.entries = database.count_videos()
-        self.discarded = database.count_videos("discarded")
-        self.unreadable_not_found = database.count_videos("unreadable", "not_found")
-        self.unreadable_found = database.count_videos("unreadable", "found")
-        self.readable_not_found = database.count_videos("readable", "not_found")
-        self.readable_found_without_thumbnails = database.count_videos(
+        from pysaurus.database.database_operations import DatabaseOperations
+
+        ops = DatabaseOperations(database)
+        self.entries = ops.count_videos()
+        self.discarded = ops.count_videos("discarded")
+        self.unreadable_not_found = ops.count_videos("unreadable", "not_found")
+        self.unreadable_found = ops.count_videos("unreadable", "found")
+        self.readable_not_found = ops.count_videos("readable", "not_found")
+        self.readable_found_without_thumbnails = ops.count_videos(
             "readable", "found", "without_thumbnails"
         )
-        self.valid = database.count_videos("readable", "found", "with_thumbnails")
+        self.valid = ops.count_videos("readable", "found", "with_thumbnails")
 
     def __str__(self):
         name = camel_case_to_snake_case(type(self).__name__).replace("_", " ")

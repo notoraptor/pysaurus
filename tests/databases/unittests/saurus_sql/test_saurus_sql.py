@@ -399,4 +399,4 @@ class TestDatabaseWriteOperations:
         assert provider.get_view_indices() == [114]
 
     def test_refresh(self, memory_database):
-        memory_database.refresh()
+        memory_database.algos.refresh()

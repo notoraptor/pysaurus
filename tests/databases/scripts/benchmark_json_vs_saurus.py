@@ -113,8 +113,8 @@ def run_read_benchmarks(json_db, saurus_db, all_video_ids, sample_100, sample_10
             "count_videos()",
             json_db,
             saurus_db,
-            lambda db: db.count_videos(),
-            lambda db: db.count_videos(),
+            lambda db: db.ops.count_videos(),
+            lambda db: db.ops.count_videos(),
         )
     )
 

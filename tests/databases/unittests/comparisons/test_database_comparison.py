@@ -213,19 +213,19 @@ class TestDatabaseComparison:
 
     def test_count_videos_total(self, fake_old_database, test_database):
         """Both should return the same total count."""
-        assert fake_old_database.count_videos() == test_database.count_videos()
+        assert fake_old_database.ops.count_videos() == test_database.ops.count_videos()
 
     def test_count_videos_readable(self, fake_old_database, test_database):
         """Both should return the same readable count."""
-        assert fake_old_database.count_videos("readable") == test_database.count_videos(
+        assert fake_old_database.ops.count_videos(
             "readable"
-        )
+        ) == test_database.ops.count_videos("readable")
 
     def test_count_videos_with_thumbnails(self, fake_old_database, test_database):
         """Both should return the same count with thumbnails."""
-        assert fake_old_database.count_videos(
+        assert fake_old_database.ops.count_videos(
             "with_thumbnails"
-        ) == test_database.count_videos("with_thumbnails")
+        ) == test_database.ops.count_videos("with_thumbnails")
 
     # =========================================================================
     # has_video
@@ -237,15 +237,15 @@ class TestDatabaseComparison:
         sample_ids = [v.video_id for v in old_videos[:10]]
 
         for video_id in sample_ids:
-            assert fake_old_database.has_video(
+            assert fake_old_database.ops.has_video(
                 video_id=video_id
-            ) == test_database.has_video(video_id=video_id)
+            ) == test_database.ops.has_video(video_id=video_id)
 
         # Test non-existent ID
         max_id = max(v.video_id for v in old_videos) if old_videos else 0
-        assert fake_old_database.has_video(
+        assert fake_old_database.ops.has_video(
             video_id=max_id + 9999
-        ) == test_database.has_video(video_id=max_id + 9999)
+        ) == test_database.ops.has_video(video_id=max_id + 9999)
 
     def test_has_video_by_filename(self, fake_old_database, test_database):
         """Both should agree on video existence by filename."""
@@ -253,9 +253,9 @@ class TestDatabaseComparison:
         sample_filenames = [v.filename for v in old_videos[:10]]
 
         for filename in sample_filenames:
-            assert fake_old_database.has_video(
+            assert fake_old_database.ops.has_video(
                 filename=filename
-            ) == test_database.has_video(filename=filename)
+            ) == test_database.ops.has_video(filename=filename)
 
     # =========================================================================
     # get_video_filename
@@ -267,8 +267,8 @@ class TestDatabaseComparison:
         sample_ids = [v.video_id for v in old_videos[:10]]
 
         for video_id in sample_ids:
-            old_filename = fake_old_database.get_video_filename(video_id)
-            new_filename = test_database.get_video_filename(video_id)
+            old_filename = fake_old_database.ops.get_video_filename(video_id)
+            new_filename = test_database.ops.get_video_filename(video_id)
             assert str(old_filename) == str(new_filename)
 
     # =========================================================================
@@ -383,8 +383,8 @@ class TestDatabaseComparison:
 
     def test_get_unique_moves(self, fake_old_database, test_database):
         """Both should return the same unique moves."""
-        old_unique = fake_old_database.get_unique_moves()
-        new_unique = test_database.get_unique_moves()
+        old_unique = fake_old_database.algos.get_unique_moves()
+        new_unique = test_database.algos.get_unique_moves()
 
         assert sorted(old_unique) == sorted(new_unique)
 
