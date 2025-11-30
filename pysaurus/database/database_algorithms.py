@@ -88,7 +88,7 @@ class DatabaseAlgorithms:
                     elif task.need_info:
                         if result.info:
                             # info -> new
-                            new.append(info)
+                            new.append(result.info)
                         else:
                             # unreadable + error_info -> new
                             new.append(result.get_unreadable())

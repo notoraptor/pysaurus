@@ -1,8 +1,7 @@
 import logging
 import sys
 import traceback
-from dataclasses import dataclass
-from dataclasses import field as dataclass_field
+from dataclasses import dataclass, field as dataclass_field
 
 import av
 from PIL import Image
@@ -70,6 +69,7 @@ class PythonVideoRaptor:
     def capture(cls, task: VideoTask) -> VideoTaskResult:
         filename = task.filename
         ret = VideoTaskResult(task=task)
+        container = None
         try:
             container = open_video(filename.path)
         except Exception as exc:
@@ -89,7 +89,9 @@ class PythonVideoRaptor:
                     traceback.print_tb(exc.__traceback__)
                     print(f"{type(exc).__name__}:", exc, file=sys.stderr)
                     ret.error_thumbnail = cls._exc_to_err(exc, ERROR_SAVE_THUMBNAIL)
-            container.close()
+        finally:
+            if container:
+                container.close()
         return ret
 
     @classmethod
