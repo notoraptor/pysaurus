@@ -77,7 +77,7 @@ class GuiAPI(FeatureAPI):
         url = f"http://{hostname}:{port}/video/{video_id}"
         logger.debug(f"Running {VLC_PATH} {url}")
         self._run_thread(subprocess.run, [VLC_PATH, url])
-        self.database.mark_as_watched(video_id)
+        self.database.ops.mark_as_watched(video_id)
         return url
 
     def cancel_copy(self) -> None:
@@ -167,7 +167,7 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def update_database(self) -> None:
-        self.database.refresh()
+        self.database.algos.refresh()
 
     @process()
     def find_similar_videos(self) -> None:
@@ -183,7 +183,7 @@ class GuiAPI(FeatureAPI):
     @process(finish=False)
     def move_video_file(self, video_id: int, directory: str) -> None:
         try:
-            filename: AbsolutePath = self.database.get_video_filename(video_id)
+            filename: AbsolutePath = self.database.ops.get_video_filename(video_id)
             directory = AbsolutePath.ensure(directory).assert_dir()
             if not PathTree(self.database.get_folders()).in_folders(directory):
                 raise exceptions.ForbiddenVideoFolder(
