@@ -534,7 +534,7 @@ class JsonDatabase(AbstractDatabase):
                     **entry.to_formatted_dict(), database=self
                 )
                 # Get previous properties, if available
-                if self.has_video(filename=file_path, readable=True):
+                if self.ops.has_video(filename=file_path, readable=True):
                     old_video = self._videos[file_path]
                     video_state.properties = old_video.properties
                     video_state.similarity_id = old_video.similarity_id

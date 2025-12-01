@@ -64,6 +64,6 @@ class ServerLauncher:
         video_id = int(video_id)
         logger.info(f"Required video ID {video_id}")
         database = self.db_getter()
-        filename = database.get_video_filename(video_id)
+        filename = database.ops.get_video_filename(video_id)
         logger.info(f"Found video: {filename}")
         return send_file(filename.path)

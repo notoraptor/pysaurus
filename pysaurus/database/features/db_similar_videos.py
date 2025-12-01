@@ -66,7 +66,7 @@ class DbSimilarVideos:
     @classmethod
     @Profiler.profile()
     def find_similar_videos(cls, db: AbstractDatabase) -> None:
-        miniatures: list[Miniature] = db.ensure_miniatures()
+        miniatures: list[Miniature] = db.algos.ensure_miniatures()
         video_indices = [m.video_id for m in miniatures]
         previous_sim = [
             row.similarity_id
@@ -80,7 +80,7 @@ class DbSimilarVideos:
                 cls._find_similar_videos(db, miniatures)
             except Exception:
                 # Restore previous similarities.
-                db.set_similarities(
+                db.ops.set_similarities(
                     {
                         video_id: prev_sim_id
                         for video_id, prev_sim_id in zip(video_indices, previous_sim)
@@ -115,10 +115,10 @@ class DbSimilarVideos:
         similarities = [group for group in graph.pop_groups() if len(group) > 1]
 
         video_indices = [m.video_id for m in miniatures]
-        db.set_similarities({video_id: -1 for video_id in video_indices})
+        db.ops.set_similarities({video_id: -1 for video_id in video_indices})
 
         similarities.sort(key=imp.to_sortable_group)
-        db.set_similarities(
+        db.ops.set_similarities(
             {
                 imp.video_id(filename): similarity_id
                 for similarity_id, group in enumerate(similarities)
