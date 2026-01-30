@@ -73,6 +73,7 @@ class FeatureAPI:
             "set_sources": FromView(self, View.set_sources),
             "set_video_folders": FromOps(self, Ops.set_folders),
             "set_video_moved": FromOps(self, Ops.move_video_entry),
+            "confirm_move": FromOps(self, Ops.move_video_entry),
             "set_video_properties": FromDb(self, Db.video_entry_set_tags),
         }
 
