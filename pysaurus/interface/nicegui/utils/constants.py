@@ -48,10 +48,7 @@ GROUPABLE_FIELDS = [
 ]
 
 # Sortable fields
-SORTABLE_FIELDS = [
-    (name, title)
-    for name, title, perm, is_string in FIELD_DEFINITIONS
-]
+SORTABLE_FIELDS = [(name, title) for name, title, perm, is_string in FIELD_DEFINITIONS]
 
 
 # Source tree structure for filtering videos

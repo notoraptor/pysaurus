@@ -5,7 +5,6 @@ Uses nicegui.testing.User fixture for fast, headless UI testing.
 Tests the actual Pysaurus pages defined in main.py.
 """
 
-import pytest
 from nicegui.testing import User
 
 
@@ -17,7 +16,9 @@ from nicegui.testing import User
 class TestDatabasesPage:
     """Test the databases page (index page)."""
 
-    async def test_databases_page_renders(self, user: User, mock_api_bridge, reset_app_state):
+    async def test_databases_page_renders(
+        self, user: User, mock_api_bridge, reset_app_state
+    ):
         """Test that databases page renders with expected content."""
         await user.open("/")
 

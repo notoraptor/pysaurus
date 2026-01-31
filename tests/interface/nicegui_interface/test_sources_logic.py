@@ -4,7 +4,6 @@ Tests for the sources selection logic.
 Tests the helper functions used by the sources dialog.
 """
 
-import pytest
 
 # Import the functions we're testing
 from pysaurus.interface.nicegui.utils.constants import SOURCE_TREE
@@ -194,8 +193,7 @@ class TestRemovePaths:
     def test_remove_multiple_paths(self):
         """Remove multiple paths."""
         result = _remove_paths(
-            ["readable", "readable-found", "unreadable"],
-            ["readable", "readable-found"],
+            ["readable", "readable-found", "unreadable"], ["readable", "readable-found"]
         )
         assert result == ["unreadable"]
 

@@ -6,7 +6,10 @@ from typing import Any, Callable
 
 from nicegui import ui
 
-from pysaurus.interface.nicegui.utils.formatters import format_duration, format_resolution
+from pysaurus.interface.nicegui.utils.formatters import (
+    format_duration,
+    format_resolution,
+)
 
 
 # Type alias for context menu actions (list of tuples: label, callback)
@@ -41,7 +44,9 @@ def video_card(
     watched = video.get("watched", False)
 
     # Card styling based on state
-    card_classes = "cursor-pointer transition-all duration-200 hover:shadow-lg overflow-hidden"
+    card_classes = (
+        "cursor-pointer transition-all duration-200 hover:shadow-lg overflow-hidden"
+    )
     if selected:
         card_classes += " ring-2 ring-primary"
     if not found:

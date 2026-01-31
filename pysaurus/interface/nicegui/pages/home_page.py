@@ -103,7 +103,9 @@ def home_page():
         ui.label("Loading Database").classes("text-2xl font-bold text-center")
 
         if app_state.database_name:
-            ui.label(app_state.database_name).classes("text-xl text-gray-500 text-center")
+            ui.label(app_state.database_name).classes(
+                "text-xl text-gray-500 text-center"
+            )
 
         # Progress section
         progress_card = ui.card().classes("w-full")

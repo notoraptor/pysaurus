@@ -16,7 +16,9 @@ def databases_page():
     """Render the databases page."""
     with ui.column().classes("w-full max-w-4xl mx-auto p-4 gap-4"):
         ui.label("Pysaurus").classes("text-4xl font-bold text-center mb-4")
-        ui.label("Video Collection Manager").classes("text-xl text-gray-500 text-center mb-8")
+        ui.label("Video Collection Manager").classes(
+            "text-xl text-gray-500 text-center mb-8"
+        )
 
         # Two-column layout
         with ui.row().classes("w-full gap-8"):
@@ -56,7 +58,9 @@ def _render_existing_databases():
 
 def _render_database_item(db_name: str, refresh_callback):
     """Render a single database item."""
-    with ui.row().classes("w-full items-center justify-between p-2 hover:bg-gray-100 rounded"):
+    with ui.row().classes(
+        "w-full items-center justify-between p-2 hover:bg-gray-100 rounded"
+    ):
         # Database name
         ui.label(db_name).classes("flex-1 font-medium")
 
@@ -77,13 +81,17 @@ def _render_database_item(db_name: str, refresh_callback):
             # Rename
             ui.button(
                 icon="edit",
-                on_click=lambda name=db_name: _rename_database_dialog(name, refresh_callback),
+                on_click=lambda name=db_name: _rename_database_dialog(
+                    name, refresh_callback
+                ),
             ).props("flat dense round").tooltip("Rename")
 
             # Delete
             ui.button(
                 icon="delete",
-                on_click=lambda name=db_name: _delete_database_dialog(name, refresh_callback),
+                on_click=lambda name=db_name: _delete_database_dialog(
+                    name, refresh_callback
+                ),
             ).props("flat dense round color=negative").tooltip("Delete")
 
 
@@ -196,8 +204,7 @@ def _render_create_database():
                     with ui.row().classes("w-full items-center gap-2"):
                         ui.label(folder).classes("flex-1 text-sm truncate")
                         ui.button(
-                            icon="close",
-                            on_click=lambda idx=i: _remove_folder(idx),
+                            icon="close", on_click=lambda idx=i: _remove_folder(idx)
                         ).props("flat dense round size=sm")
             else:
                 ui.label("No folders added").classes("text-gray-500 italic text-sm")
@@ -214,7 +221,9 @@ def _render_create_database():
 
     refresh_folders()
 
-    ui.button("Add folder", icon="folder", on_click=_add_folder).props("flat").classes("mt-2")
+    ui.button("Add folder", icon="folder", on_click=_add_folder).props("flat").classes(
+        "mt-2"
+    )
 
     # Create button
     def _create_database():
@@ -236,7 +245,6 @@ def _render_create_database():
         else:
             ui.navigate.to("/home")
 
-    ui.button("Create Database", on_click=_create_database).props("color=primary").classes(
-        "w-full mt-4"
-    )
-
+    ui.button("Create Database", on_click=_create_database).props(
+        "color=primary"
+    ).classes("w-full mt-4")

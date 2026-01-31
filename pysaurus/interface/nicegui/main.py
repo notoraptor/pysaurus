@@ -16,8 +16,7 @@ from pysaurus.interface.nicegui.state import Page, app_state
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -31,15 +30,15 @@ def create_header():
         # Navigation buttons (only show when database is open)
         if app_state.database_name:
             with ui.row():
-                ui.button(
-                    "Videos", on_click=lambda: ui.navigate.to("/videos")
-                ).props("flat color=white")
+                ui.button("Videos", on_click=lambda: ui.navigate.to("/videos")).props(
+                    "flat color=white"
+                )
                 ui.button(
                     "Properties", on_click=lambda: ui.navigate.to("/properties")
                 ).props("flat color=white")
-                ui.button(
-                    "Databases", on_click=lambda: ui.navigate.to("/")
-                ).props("flat color=white")
+                ui.button("Databases", on_click=lambda: ui.navigate.to("/")).props(
+                    "flat color=white"
+                )
 
             ui.space()
             ui.label(f"DB: {app_state.database_name}").classes("text-sm")

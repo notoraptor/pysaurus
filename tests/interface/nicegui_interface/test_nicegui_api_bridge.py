@@ -7,7 +7,6 @@ Uses mock_database for fast in-memory testing.
 
 import pytest
 
-from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.interface.nicegui.api_bridge import APIBridge, NiceGuiAPI
 
 

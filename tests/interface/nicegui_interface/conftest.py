@@ -5,7 +5,6 @@ Activates the nicegui.testing plugin for User/Screen fixtures.
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
 
 # Activate nicegui testing plugin
 pytest_plugins = ["nicegui.testing.plugin"]
@@ -32,6 +31,7 @@ class MockAPIBridge:
     @property
     def api(self):
         """Return a mock API object."""
+
         class MockAPI:
             def __init__(self, db, app):
                 self.database = db
@@ -43,17 +43,16 @@ class MockAPIBridge:
         return ["test_database", "another_database"]
 
     def get_constants(self):
-        return {
-            "PYTHON_APP_NAME": "Pysaurus",
-            "PYTHON_DEFAULT_SOURCES": [],
-        }
+        return {"PYTHON_APP_NAME": "Pysaurus", "PYTHON_DEFAULT_SOURCES": []}
 
     def describe_prop_types(self):
         return self._database.get_prop_types() if self._database else []
 
     def backend(self, page_size, page_number, selector=None):
         if self._database:
-            ctx = self._database.provider.get_current_state(page_size, page_number, selector)
+            ctx = self._database.provider.get_current_state(
+                page_size, page_number, selector
+            )
             from pysaurus.video.database_context import DatabaseContext
 
             db_ctx = DatabaseContext(
@@ -63,7 +62,13 @@ class MockAPIBridge:
                 view=ctx,
             )
             return db_ctx.json()
-        return {"videos": [], "pageSize": page_size, "pageNumber": page_number, "nbPages": 0, "nbVideos": 0}
+        return {
+            "videos": [],
+            "pageSize": page_size,
+            "pageNumber": page_number,
+            "nbPages": 0,
+            "nbVideos": 0,
+        }
 
     def set_search(self, text, cond="and"):
         if self._database:
@@ -75,9 +80,18 @@ class MockAPIBridge:
             self._database.provider.set_sources(paths)
         return {"error": False}
 
-    def set_groups(self, field, is_property=False, sorting="field", reverse=False, allow_singletons=True):
+    def set_groups(
+        self,
+        field,
+        is_property=False,
+        sorting="field",
+        reverse=False,
+        allow_singletons=True,
+    ):
         if self._database:
-            self._database.provider.set_groups(field, is_property, sorting, reverse, allow_singletons)
+            self._database.provider.set_groups(
+                field, is_property, sorting, reverse, allow_singletons
+            )
         return {"error": False}
 
     def set_sorting(self, sorting):
@@ -91,7 +105,10 @@ class MockAPIBridge:
                 self._database.prop_type_add(name, prop_type, definition, multiple)
                 return {"error": False}
             except Exception as e:
-                return {"error": True, "data": {"name": type(e).__name__, "message": str(e)}}
+                return {
+                    "error": True,
+                    "data": {"name": type(e).__name__, "message": str(e)},
+                }
         return {"error": True, "data": {"message": "No database"}}
 
     def remove_prop_type(self, name):
@@ -100,7 +117,10 @@ class MockAPIBridge:
                 self._database.prop_type_del(name)
                 return {"error": False}
             except Exception as e:
-                return {"error": True, "data": {"name": type(e).__name__, "message": str(e)}}
+                return {
+                    "error": True,
+                    "data": {"name": type(e).__name__, "message": str(e)},
+                }
         return {"error": True, "data": {"message": "No database"}}
 
     def rename_prop_type(self, old_name, new_name):
@@ -109,7 +129,10 @@ class MockAPIBridge:
                 self._database.prop_type_set_name(old_name, new_name)
                 return {"error": False}
             except Exception as e:
-                return {"error": True, "data": {"name": type(e).__name__, "message": str(e)}}
+                return {
+                    "error": True,
+                    "data": {"name": type(e).__name__, "message": str(e)},
+                }
         return {"error": True, "data": {"message": "No database"}}
 
     def convert_prop_multiplicity(self, name, multiple):
@@ -118,7 +141,10 @@ class MockAPIBridge:
                 self._database.prop_type_set_multiple(name, multiple)
                 return {"error": False}
             except Exception as e:
-                return {"error": True, "data": {"name": type(e).__name__, "message": str(e)}}
+                return {
+                    "error": True,
+                    "data": {"name": type(e).__name__, "message": str(e)},
+                }
         return {"error": True, "data": {"message": "No database"}}
 
     def open_database(self, name, update=True):
@@ -180,7 +206,7 @@ def mock_api_bridge(mock_database, monkeypatch):
 @pytest.fixture
 def reset_app_state(monkeypatch):
     """Reset app_state to initial values before each test."""
-    from pysaurus.interface.nicegui.state import AppState, Page
+    from pysaurus.interface.nicegui.state import AppState
 
     fresh_state = AppState()
 

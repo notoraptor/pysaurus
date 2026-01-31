@@ -317,7 +317,10 @@ class TestVideosPageState:
 
     def test_initial_state(self):
         """Test VideosPageState initial values."""
-        from pysaurus.interface.nicegui.pages.videos_page import VideosPageState, ViewMode
+        from pysaurus.interface.nicegui.pages.videos_page import (
+            VideosPageState,
+            ViewMode,
+        )
 
         state = VideosPageState()
 
@@ -333,7 +336,10 @@ class TestVideosPageState:
 
     def test_toggle_view_mode(self):
         """Test toggle_view_mode switches between grid and list."""
-        from pysaurus.interface.nicegui.pages.videos_page import VideosPageState, ViewMode
+        from pysaurus.interface.nicegui.pages.videos_page import (
+            VideosPageState,
+            ViewMode,
+        )
 
         state = VideosPageState()
 
@@ -547,16 +553,20 @@ class TestProgressTracker:
         tracker = ProgressTracker()
 
         # First add job
-        tracker.handle_notification({
-            "name": "JobToDo",
-            "notification": {"name": "scan", "title": "Scanning", "total": 100},
-        })
+        tracker.handle_notification(
+            {
+                "name": "JobToDo",
+                "notification": {"name": "scan", "title": "Scanning", "total": 100},
+            }
+        )
 
         # Then progress
-        tracker.handle_notification({
-            "name": "JobStep",
-            "notification": {"name": "scan", "channel": "ch1", "step": 30},
-        })
+        tracker.handle_notification(
+            {
+                "name": "JobStep",
+                "notification": {"name": "scan", "channel": "ch1", "step": 30},
+            }
+        )
 
         assert tracker.jobs["scan"]["current"] == 30
 
@@ -567,16 +577,20 @@ class TestProgressTracker:
         tracker = ProgressTracker()
 
         # Add job
-        tracker.handle_notification({
-            "name": "JobToDo",
-            "notification": {"name": "scan", "title": "Scanning", "total": 100},
-        })
+        tracker.handle_notification(
+            {
+                "name": "JobToDo",
+                "notification": {"name": "scan", "title": "Scanning", "total": 100},
+            }
+        )
 
         # Complete it
-        tracker.handle_notification({
-            "name": "JobStep",
-            "notification": {"name": "scan", "channel": "ch1", "step": 100},
-        })
+        tracker.handle_notification(
+            {
+                "name": "JobStep",
+                "notification": {"name": "scan", "channel": "ch1", "step": 100},
+            }
+        )
 
         assert "scan" not in tracker.jobs
 
@@ -642,20 +656,26 @@ class TestProgressTracker:
         tracker = ProgressTracker()
 
         # Add job
-        tracker.handle_notification({
-            "name": "JobToDo",
-            "notification": {"name": "scan", "title": "Scanning", "total": 100},
-        })
+        tracker.handle_notification(
+            {
+                "name": "JobToDo",
+                "notification": {"name": "scan", "title": "Scanning", "total": 100},
+            }
+        )
 
         # Progress on multiple channels
-        tracker.handle_notification({
-            "name": "JobStep",
-            "notification": {"name": "scan", "channel": "ch1", "step": 30},
-        })
-        tracker.handle_notification({
-            "name": "JobStep",
-            "notification": {"name": "scan", "channel": "ch2", "step": 20},
-        })
+        tracker.handle_notification(
+            {
+                "name": "JobStep",
+                "notification": {"name": "scan", "channel": "ch1", "step": 30},
+            }
+        )
+        tracker.handle_notification(
+            {
+                "name": "JobStep",
+                "notification": {"name": "scan", "channel": "ch2", "step": 20},
+            }
+        )
 
         assert tracker.jobs["scan"]["current"] == 50  # 30 + 20
 

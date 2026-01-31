@@ -9,7 +9,6 @@ from nicegui import ui
 
 from pysaurus.interface.nicegui.api_bridge import api_bridge
 from pysaurus.interface.nicegui.components.video_card import video_card
-from pysaurus.interface.nicegui.state import app_state
 from pysaurus.interface.nicegui.utils.constants import GROUPABLE_FIELDS, SOURCE_TREE
 
 logger = logging.getLogger(__name__)
@@ -78,7 +77,9 @@ class VideosPageState:
             self.search_def = data.get("searchDef")
             self.sorting = data.get("sorting") or []
 
-            logger.debug(f"Loaded {len(self.videos)} videos (page {self.page_number + 1}/{self.nb_pages})")
+            logger.debug(
+                f"Loaded {len(self.videos)} videos (page {self.page_number + 1}/{self.nb_pages})"
+            )
 
         except Exception as e:
             logger.exception("Error loading videos")
@@ -158,8 +159,7 @@ def _render_toolbar():
         # View mode toggle
         is_grid = _page_state.view_mode == ViewMode.GRID
         ui.button(
-            icon="grid_view" if is_grid else "view_list",
-            on_click=_on_toggle_view_mode,
+            icon="grid_view" if is_grid else "view_list", on_click=_on_toggle_view_mode
         ).props("flat").tooltip(
             "Switch to list view" if is_grid else "Switch to grid view"
         )
@@ -211,9 +211,13 @@ def _render_sources_section():
     # Check if sources are active
     has_sources = bool(_page_state.sources)
 
-    with ui.expansion("Sources", icon="filter_alt", value=has_sources).classes("w-full"):
+    with ui.expansion("Sources", icon="filter_alt", value=has_sources).classes(
+        "w-full"
+    ):
         if has_sources:
-            ui.label(f"{len(_page_state.sources)} filter(s) active").classes("text-sm text-primary mb-2")
+            ui.label(f"{len(_page_state.sources)} filter(s) active").classes(
+                "text-sm text-primary mb-2"
+            )
 
             # Show each selected source path
             with ui.column().classes("gap-1 mb-2"):
@@ -225,15 +229,21 @@ def _render_sources_section():
                         ui.label(display).classes("text-xs")
 
             with ui.row().classes("gap-2"):
-                ui.button("Edit", on_click=_show_sources_dialog, icon="edit").props("flat dense")
-                ui.button("Clear", on_click=_on_clear_sources, icon="clear").props("flat dense")
+                ui.button("Edit", on_click=_show_sources_dialog, icon="edit").props(
+                    "flat dense"
+                )
+                ui.button("Clear", on_click=_on_clear_sources, icon="clear").props(
+                    "flat dense"
+                )
         else:
             ui.label("Filter by video status").classes("text-sm text-gray-500 mb-2")
-            ui.label("(readable, found, thumbnails...)").classes("text-xs text-gray-400 mb-2")
+            ui.label("(readable, found, thumbnails...)").classes(
+                "text-xs text-gray-400 mb-2"
+            )
 
-            ui.button("Select sources...", on_click=_show_sources_dialog, icon="filter_alt").props(
-                "flat dense"
-            ).classes("w-full")
+            ui.button(
+                "Select sources...", on_click=_show_sources_dialog, icon="filter_alt"
+            ).props("flat dense").classes("w-full")
 
 
 def _render_grouping_section():
@@ -241,7 +251,9 @@ def _render_grouping_section():
     group_def = _page_state.group_def
     is_grouped = group_def and group_def.get("field")
 
-    with ui.expansion("Grouping", icon="workspaces", value=is_grouped).classes("w-full"):
+    with ui.expansion("Grouping", icon="workspaces", value=is_grouped).classes(
+        "w-full"
+    ):
         if is_grouped:
             # Show current grouping info
             field = group_def.get("field", "")
@@ -250,7 +262,9 @@ def _render_grouping_section():
 
             with ui.column().classes("w-full gap-1"):
                 ui.label(f"Grouped by: {field}").classes("text-sm font-medium")
-                ui.label(f"{'Property' if is_property else 'Attribute'}").classes("text-xs text-gray-500")
+                ui.label(f"{'Property' if is_property else 'Attribute'}").classes(
+                    "text-xs text-gray-500"
+                )
 
                 if groups:
                     ui.label(f"{len(groups)} groups").classes("text-sm text-primary")
@@ -262,13 +276,17 @@ def _render_grouping_section():
                             ui.label(" > ".join(_page_state.classifier_path)).classes(
                                 "text-xs text-primary truncate"
                             )
-                        ui.button("Back", on_click=_on_classifier_back, icon="arrow_back").props(
-                            "flat dense"
-                        )
+                        ui.button(
+                            "Back", on_click=_on_classifier_back, icon="arrow_back"
+                        ).props("flat dense")
 
                 with ui.row().classes("w-full gap-1 mt-2"):
-                    ui.button("Clear", on_click=_on_clear_grouping, icon="clear").props("flat dense")
-                    ui.button("Edit", on_click=_show_grouping_dialog, icon="edit").props("flat dense")
+                    ui.button("Clear", on_click=_on_clear_grouping, icon="clear").props(
+                        "flat dense"
+                    )
+                    ui.button(
+                        "Edit", on_click=_show_grouping_dialog, icon="edit"
+                    ).props("flat dense")
 
                 # Show groups list
                 if groups:
@@ -276,9 +294,9 @@ def _render_grouping_section():
                     _render_groups_list(groups)
         else:
             ui.label("Group videos by field").classes("text-sm text-gray-500 mb-2")
-            ui.button("Set grouping...", on_click=_show_grouping_dialog, icon="workspaces").props(
-                "flat dense"
-            ).classes("w-full")
+            ui.button(
+                "Set grouping...", on_click=_show_grouping_dialog, icon="workspaces"
+            ).props("flat dense").classes("w-full")
 
 
 def _render_groups_list(groups: list[dict]):
@@ -294,7 +312,9 @@ def _render_groups_list(groups: list[dict]):
             if len(display_value) > 20:
                 display_value = display_value[:17] + "..."
 
-            with ui.row().classes("w-full items-center hover:bg-gray-100 rounded p-1 cursor-pointer"):
+            with ui.row().classes(
+                "w-full items-center hover:bg-gray-100 rounded p-1 cursor-pointer"
+            ):
                 ui.label(display_value).classes("flex-1 text-sm truncate")
                 ui.label(f"({count})").classes("text-xs text-gray-500")
 
@@ -304,7 +324,9 @@ def _render_groups_list(groups: list[dict]):
                 )
 
         if len(groups) > 20:
-            ui.label(f"... and {len(groups) - 20} more").classes("text-xs text-gray-500 italic")
+            ui.label(f"... and {len(groups) - 20} more").classes(
+                "text-xs text-gray-500 italic"
+            )
 
 
 def _render_search_section():
@@ -326,8 +348,12 @@ def _render_search_section():
         search_input.on("keydown.enter", lambda: _on_search(search_input.value))
 
         with ui.row().classes("w-full gap-1 mt-1"):
-            ui.button("AND", on_click=lambda: _on_search(search_input.value, "and")).props("flat dense")
-            ui.button("OR", on_click=lambda: _on_search(search_input.value, "or")).props("flat dense")
+            ui.button(
+                "AND", on_click=lambda: _on_search(search_input.value, "and")
+            ).props("flat dense")
+            ui.button(
+                "OR", on_click=lambda: _on_search(search_input.value, "or")
+            ).props("flat dense")
             ui.button("Clear", on_click=_on_clear_search).props("flat dense")
 
 
@@ -344,7 +370,9 @@ def _render_sorting_section():
             arrow = "↓" if is_desc else "↑"
             ui.label(f"{arrow} {field_name}").classes("text-sm")
 
-        ui.button("Clear sorting", on_click=_on_clear_sorting, icon="clear").props("flat dense")
+        ui.button("Clear sorting", on_click=_on_clear_sorting, icon="clear").props(
+            "flat dense"
+        )
     else:
         ui.label("No custom sorting").classes("text-sm text-gray-500")
 
@@ -365,7 +393,9 @@ def _render_stats_bar():
         ui.space()
 
         # View mode indicator
-        mode_label = "Grid view" if _page_state.view_mode == ViewMode.GRID else "List view"
+        mode_label = (
+            "Grid view" if _page_state.view_mode == ViewMode.GRID else "List view"
+        )
         ui.label(mode_label).classes("text-primary font-medium")
 
 
@@ -415,7 +445,6 @@ def _render_video_grid():
 
 def _render_video_list():
     """Render the video list."""
-    from pysaurus.interface.nicegui.utils.formatters import format_duration, format_resolution
 
     # Context menu actions
     menu_actions = [
@@ -443,7 +472,11 @@ def _render_video_list():
 
 def _render_video_list_item(video: dict[str, Any], menu_actions: list):
     """Render a single video in list mode with all info."""
-    from pysaurus.interface.nicegui.utils.formatters import format_duration, format_resolution, format_file_size
+    from pysaurus.interface.nicegui.utils.formatters import (
+        format_duration,
+        format_resolution,
+        format_file_size,
+    )
 
     video_id = video.get("video_id", 0)
     title = video.get("title", "Untitled")
@@ -485,11 +518,15 @@ def _render_video_list_item(video: dict[str, Any], menu_actions: list):
 
         with ui.row().classes("w-full gap-4 items-start"):
             # Thumbnail (small)
-            with ui.element("div").classes("w-32 h-20 flex-shrink-0 bg-gray-200 rounded overflow-hidden"):
+            with ui.element("div").classes(
+                "w-32 h-20 flex-shrink-0 bg-gray-200 rounded overflow-hidden"
+            ):
                 if thumbnail:
                     ui.image(thumbnail).classes("w-full h-full object-cover")
                 else:
-                    with ui.element("div").classes("w-full h-full flex items-center justify-center"):
+                    with ui.element("div").classes(
+                        "w-full h-full flex items-center justify-center"
+                    ):
                         ui.icon("movie", size="lg").classes("text-gray-400")
 
             # Main info
@@ -498,11 +535,17 @@ def _render_video_list_item(video: dict[str, Any], menu_actions: list):
                 with ui.row().classes("items-center gap-2"):
                     ui.label(title).classes("font-medium text-lg truncate")
                     if watched:
-                        ui.icon("visibility", size="xs").classes("text-green-500").tooltip("Watched")
+                        ui.icon("visibility", size="xs").classes(
+                            "text-green-500"
+                        ).tooltip("Watched")
                     if not found:
-                        ui.icon("error", size="xs").classes("text-red-500").tooltip("Not found")
+                        ui.icon("error", size="xs").classes("text-red-500").tooltip(
+                            "Not found"
+                        )
                     if not readable:
-                        ui.icon("warning", size="xs").classes("text-orange-500").tooltip("Unreadable")
+                        ui.icon("warning", size="xs").classes(
+                            "text-orange-500"
+                        ).tooltip("Unreadable")
 
                 # File info row
                 with ui.row().classes("text-sm text-gray-600 gap-4 flex-wrap"):
@@ -534,11 +577,15 @@ def _render_video_list_item(video: dict[str, Any], menu_actions: list):
                         with ui.row().classes("text-xs gap-1"):
                             ui.label(f"{prop_name}:").classes("text-gray-500")
                             if isinstance(prop_value, list):
-                                ui.label(", ".join(str(v) for v in prop_value[:3])).classes("truncate")
+                                ui.label(
+                                    ", ".join(str(v) for v in prop_value[:3])
+                                ).classes("truncate")
                             else:
                                 ui.label(str(prop_value)).classes("truncate")
                     if len(properties) > 5:
-                        ui.label(f"... +{len(properties) - 5} more").classes("text-xs text-gray-400 italic")
+                        ui.label(f"... +{len(properties) - 5} more").classes(
+                            "text-xs text-gray-400 italic"
+                        )
 
 
 def _render_pagination():
@@ -548,12 +595,9 @@ def _render_pagination():
 
     with ui.row().classes("w-full justify-center items-center gap-2 mt-4"):
         # First page
-        ui.button(
-            icon="first_page",
-            on_click=lambda: _go_to_page(0),
-        ).props("flat dense").bind_enabled_from(
-            _page_state, "page_number", backward=lambda p: p > 0
-        )
+        ui.button(icon="first_page", on_click=lambda: _go_to_page(0)).props(
+            "flat dense"
+        ).bind_enabled_from(_page_state, "page_number", backward=lambda p: p > 0)
 
         # Previous page
         ui.button(
@@ -576,8 +620,7 @@ def _render_pagination():
 
         # Last page
         ui.button(
-            icon="last_page",
-            on_click=lambda: _go_to_page(_page_state.nb_pages - 1),
+            icon="last_page", on_click=lambda: _go_to_page(_page_state.nb_pages - 1)
         ).props("flat dense").bind_enabled_from(
             _page_state, "page_number", backward=lambda p: p < _page_state.nb_pages - 1
         )
@@ -663,7 +706,11 @@ def _on_video_double_click(video_id: int):
 
 def _show_video_info_dialog(video_id: int):
     """Show a dialog with all video information."""
-    from pysaurus.interface.nicegui.utils.formatters import format_duration, format_resolution, format_file_size
+    from pysaurus.interface.nicegui.utils.formatters import (
+        format_duration,
+        format_resolution,
+        format_file_size,
+    )
 
     # Find video in current list
     video = next((v for v in _page_state.videos if v.get("video_id") == video_id), None)
@@ -696,7 +743,10 @@ def _show_video_info_dialog(video_id: int):
     date = video.get("date", "")
     day = video.get("day", "")
 
-    with ui.dialog() as dialog, ui.card().classes("min-w-[600px] max-w-[900px] max-h-[90vh] overflow-y-auto"):
+    with (
+        ui.dialog() as dialog,
+        ui.card().classes("min-w-[600px] max-w-[900px] max-h-[90vh] overflow-y-auto"),
+    ):
         # Header with title and close button
         with ui.row().classes("w-full items-center mb-4"):
             ui.label(title).classes("text-xl font-bold flex-1 truncate")
@@ -706,11 +756,15 @@ def _show_video_info_dialog(video_id: int):
             # Left column: thumbnail and actions
             with ui.column().classes("w-64 flex-shrink-0"):
                 # Thumbnail
-                with ui.element("div").classes("w-full aspect-video bg-gray-200 rounded overflow-hidden mb-4"):
+                with ui.element("div").classes(
+                    "w-full aspect-video bg-gray-200 rounded overflow-hidden mb-4"
+                ):
                     if thumbnail:
                         ui.image(thumbnail).classes("w-full h-full object-cover")
                     else:
-                        with ui.element("div").classes("w-full h-full flex items-center justify-center"):
+                        with ui.element("div").classes(
+                            "w-full h-full flex items-center justify-center"
+                        ):
                             ui.icon("movie", size="xl").classes("text-gray-400")
 
                 # Status badges
@@ -726,18 +780,40 @@ def _show_video_info_dialog(video_id: int):
 
                 # Action buttons
                 with ui.column().classes("w-full gap-2"):
-                    ui.button("Open Video", on_click=lambda: [dialog.close(), _on_open_video(video_id)], icon="play_arrow").props("color=primary").classes("w-full")
-                    ui.button("Open in VLC", on_click=lambda: [dialog.close(), _on_open_in_vlc(video_id)], icon="smart_display").classes("w-full")
-                    ui.button("Open Folder", on_click=lambda: _on_open_folder(video_id), icon="folder_open").props("flat").classes("w-full")
-                    ui.button("Toggle Watched", on_click=lambda: [_on_mark_watched(video_id), dialog.close()], icon="visibility").props("flat").classes("w-full")
-                    ui.button("Copy Path", on_click=lambda: _on_copy_path(video_id), icon="content_copy").props("flat").classes("w-full")
+                    ui.button(
+                        "Open Video",
+                        on_click=lambda: [dialog.close(), _on_open_video(video_id)],
+                        icon="play_arrow",
+                    ).props("color=primary").classes("w-full")
+                    ui.button(
+                        "Open in VLC",
+                        on_click=lambda: [dialog.close(), _on_open_in_vlc(video_id)],
+                        icon="smart_display",
+                    ).classes("w-full")
+                    ui.button(
+                        "Open Folder",
+                        on_click=lambda: _on_open_folder(video_id),
+                        icon="folder_open",
+                    ).props("flat").classes("w-full")
+                    ui.button(
+                        "Toggle Watched",
+                        on_click=lambda: [_on_mark_watched(video_id), dialog.close()],
+                        icon="visibility",
+                    ).props("flat").classes("w-full")
+                    ui.button(
+                        "Copy Path",
+                        on_click=lambda: _on_copy_path(video_id),
+                        icon="content_copy",
+                    ).props("flat").classes("w-full")
 
             # Right column: details
             with ui.column().classes("flex-1 gap-4"):
                 # File info section
                 with ui.card().classes("w-full").props("flat bordered"):
                     ui.label("File Information").classes("font-bold mb-2")
-                    with ui.element("div").classes("grid grid-cols-2 gap-x-4 gap-y-1 text-sm"):
+                    with ui.element("div").classes(
+                        "grid grid-cols-2 gap-x-4 gap-y-1 text-sm"
+                    ):
                         ui.label("File name:").classes("text-gray-500")
                         ui.label(file_title or title)
 
@@ -757,7 +833,9 @@ def _show_video_info_dialog(video_id: int):
                 # Video info section
                 with ui.card().classes("w-full").props("flat bordered"):
                     ui.label("Video").classes("font-bold mb-2")
-                    with ui.element("div").classes("grid grid-cols-2 gap-x-4 gap-y-1 text-sm"):
+                    with ui.element("div").classes(
+                        "grid grid-cols-2 gap-x-4 gap-y-1 text-sm"
+                    ):
                         ui.label("Duration:").classes("text-gray-500")
                         ui.label(format_duration(length))
 
@@ -771,7 +849,10 @@ def _show_video_info_dialog(video_id: int):
                         ui.label(str(bit_rate) if bit_rate else "-")
 
                         ui.label("Codec:").classes("text-gray-500")
-                        ui.label(f"{video_codec}" + (f" ({video_codec_desc})" if video_codec_desc else ""))
+                        ui.label(
+                            f"{video_codec}"
+                            + (f" ({video_codec_desc})" if video_codec_desc else "")
+                        )
 
                         ui.label("Container:").classes("text-gray-500")
                         ui.label(container_format or "-")
@@ -779,9 +860,16 @@ def _show_video_info_dialog(video_id: int):
                 # Audio info section
                 with ui.card().classes("w-full").props("flat bordered"):
                     ui.label("Audio").classes("font-bold mb-2")
-                    with ui.element("div").classes("grid grid-cols-2 gap-x-4 gap-y-1 text-sm"):
+                    with ui.element("div").classes(
+                        "grid grid-cols-2 gap-x-4 gap-y-1 text-sm"
+                    ):
                         ui.label("Codec:").classes("text-gray-500")
-                        ui.label(f"{audio_codec}" + (f" ({audio_codec_desc})" if audio_codec_desc else "") if audio_codec else "-")
+                        ui.label(
+                            f"{audio_codec}"
+                            + (f" ({audio_codec_desc})" if audio_codec_desc else "")
+                            if audio_codec
+                            else "-"
+                        )
 
                         ui.label("Bit rate:").classes("text-gray-500")
                         ui.label(str(audio_bit_rate) if audio_bit_rate else "-")
@@ -793,7 +881,9 @@ def _show_video_info_dialog(video_id: int):
                 if properties:
                     with ui.card().classes("w-full").props("flat bordered"):
                         ui.label("Properties").classes("font-bold mb-2")
-                        with ui.element("div").classes("grid grid-cols-2 gap-x-4 gap-y-1 text-sm"):
+                        with ui.element("div").classes(
+                            "grid grid-cols-2 gap-x-4 gap-y-1 text-sm"
+                        ):
                             for prop_name, prop_value in properties.items():
                                 ui.label(f"{prop_name}:").classes("text-gray-500")
                                 if isinstance(prop_value, list):
@@ -835,10 +925,7 @@ def _on_mark_watched(video_id: int):
 def _on_rename(video_id: int):
     """Show rename dialog."""
     # Find video
-    video = next(
-        (v for v in _page_state.videos if v["video_id"] == video_id),
-        None,
-    )
+    video = next((v for v in _page_state.videos if v["video_id"] == video_id), None)
     if not video:
         return
 
@@ -879,8 +966,7 @@ def _on_delete_entry(video_id: int):
         with ui.row().classes("w-full justify-end gap-2 mt-4"):
             ui.button("Cancel", on_click=dialog.close).props("flat")
             ui.button(
-                "Delete",
-                on_click=lambda: _do_delete_entry(dialog, video_id),
+                "Delete", on_click=lambda: _do_delete_entry(dialog, video_id)
             ).props("color=negative")
 
     dialog.open()
@@ -908,8 +994,7 @@ def _on_delete_file(video_id: int):
         with ui.row().classes("w-full justify-end gap-2 mt-4"):
             ui.button("Cancel", on_click=dialog.close).props("flat")
             ui.button(
-                "Delete permanently",
-                on_click=lambda: _do_delete_file(dialog, video_id),
+                "Delete permanently", on_click=lambda: _do_delete_file(dialog, video_id)
             ).props("color=negative")
 
     dialog.open()
@@ -928,10 +1013,7 @@ def _do_delete_file(dialog, video_id: int):
 
 def _on_copy_path(video_id: int):
     """Copy video path to clipboard."""
-    video = next(
-        (v for v in _page_state.videos if v["video_id"] == video_id),
-        None,
-    )
+    video = next((v for v in _page_state.videos if v["video_id"] == video_id), None)
     if video:
         path = video.get("filename", "")
         api_bridge.clipboard(path)
@@ -998,9 +1080,9 @@ def _show_sources_dialog():
     with ui.dialog() as dialog, ui.card().classes("min-w-[500px] max-h-[80vh]"):
         ui.label("Select Video Sources").classes("text-xl font-bold mb-4")
 
-        ui.label("Filter videos by their status (readable, found, thumbnails).").classes(
-            "text-sm text-gray-600 mb-4"
-        )
+        ui.label(
+            "Filter videos by their status (readable, found, thumbnails)."
+        ).classes("text-sm text-gray-600 mb-4")
 
         # Tree container (refreshable)
         tree_container = ui.column().classes("w-full")
@@ -1030,7 +1112,9 @@ def _show_sources_dialog():
                             # Format path nicely: "readable-found-with_thumbnails" -> "readable > found > with_thumbnails"
                             display = path.replace("-", " > ").replace("_", " ")
                             with ui.row().classes("items-center gap-2"):
-                                ui.icon("check_circle", size="xs").classes("text-primary")
+                                ui.icon("check_circle", size="xs").classes(
+                                    "text-primary"
+                                )
                                 ui.label(display).classes("text-sm")
                 else:
                     ui.label("None selected (will show all readable videos)").classes(
@@ -1045,8 +1129,7 @@ def _show_sources_dialog():
         with ui.row().classes("w-full justify-end gap-2 mt-4 pt-4 border-t"):
             ui.button("Cancel", on_click=dialog.close).props("flat")
             ui.button(
-                "Apply",
-                on_click=lambda: _apply_sources(dialog, state["paths"]),
+                "Apply", on_click=lambda: _apply_sources(dialog, state["paths"])
             ).props("color=primary")
 
     dialog.open()
@@ -1078,23 +1161,33 @@ def _render_source_tree(tree: dict, prefix: str, state: dict, refresh_callback):
                                     if e.value == "select":
                                         # Remove all child paths and add this path
                                         paths_to_remove = _collect_all_paths(st, en)
-                                        state["paths"] = _remove_paths(state["paths"], paths_to_remove)
-                                        state["paths"] = _add_paths(state["paths"], [en])
+                                        state["paths"] = _remove_paths(
+                                            state["paths"], paths_to_remove
+                                        )
+                                        state["paths"] = _add_paths(
+                                            state["paths"], [en]
+                                        )
                                     else:  # develop
                                         # Just remove this path (allow children to be selected)
-                                        state["paths"] = _remove_paths(state["paths"], [en])
+                                        state["paths"] = _remove_paths(
+                                            state["paths"], [en]
+                                        )
                                     refresh_callback()
 
                                 radio_select.on("update:model-value", on_radio_change)
 
                         # Show children only if "develop" is selected (not this branch)
                         if not is_selected:
-                            _render_source_tree(subtree, entry_name, state, refresh_callback)
+                            _render_source_tree(
+                                subtree, entry_name, state, refresh_callback
+                            )
 
                 else:
                     # Leaf node - use checkbox
                     with ui.row().classes("items-center gap-2"):
-                        cb = ui.checkbox(display_name, value=is_selected).classes("font-medium")
+                        cb = ui.checkbox(display_name, value=is_selected).classes(
+                            "font-medium"
+                        )
 
                         def on_checkbox_change(e, en=entry_name):
                             if e.value:
@@ -1150,23 +1243,33 @@ def _show_grouping_dialog():
                 if is_property.value:
                     # Property fields
                     if _page_state.prop_types:
-                        options = {pt["name"]: pt["name"] for pt in _page_state.prop_types}
-                        current = group_def.get("field", _page_state.prop_types[0]["name"]) if group_def.get("is_property") else _page_state.prop_types[0]["name"]
+                        options = {
+                            pt["name"]: pt["name"] for pt in _page_state.prop_types
+                        }
+                        current = (
+                            group_def.get("field", _page_state.prop_types[0]["name"])
+                            if group_def.get("is_property")
+                            else _page_state.prop_types[0]["name"]
+                        )
                     else:
                         options = {}
                         current = None
-                        ui.label("No properties defined").classes("text-gray-500 italic")
+                        ui.label("No properties defined").classes(
+                            "text-gray-500 italic"
+                        )
                 else:
                     # Attribute fields
                     options = {name: title for name, title, _ in GROUPABLE_FIELDS}
-                    current = group_def.get("field", GROUPABLE_FIELDS[0][0]) if not group_def.get("is_property") else GROUPABLE_FIELDS[0][0]
+                    current = (
+                        group_def.get("field", GROUPABLE_FIELDS[0][0])
+                        if not group_def.get("is_property")
+                        else GROUPABLE_FIELDS[0][0]
+                    )
 
                 if options:
-                    return ui.select(
-                        options,
-                        value=current,
-                        label="Field",
-                    ).classes("w-full")
+                    return ui.select(options, value=current, label="Field").classes(
+                        "w-full"
+                    )
             return None
 
         field_select = update_field_options()
@@ -1205,13 +1308,22 @@ def _show_grouping_dialog():
     dialog.open()
 
 
-def _apply_grouping(dialog, field: str | None, is_property: bool, sorting: str, reverse: bool, allow_singletons: bool):
+def _apply_grouping(
+    dialog,
+    field: str | None,
+    is_property: bool,
+    sorting: str,
+    reverse: bool,
+    allow_singletons: bool,
+):
     """Apply the grouping configuration."""
     if not field:
         ui.notify("Please select a field", type="warning")
         return
 
-    result = api_bridge.set_groups(field, is_property, sorting, reverse, allow_singletons)
+    result = api_bridge.set_groups(
+        field, is_property, sorting, reverse, allow_singletons
+    )
     if result.get("error"):
         ui.notify(f"Error: {result['data']['message']}", type="negative")
     else:
@@ -1282,13 +1394,17 @@ def _show_sorting_dialog():
                             # Direction toggle
                             ui.button(
                                 icon="arrow_downward" if is_desc else "arrow_upward",
-                                on_click=lambda idx=i: _toggle_sort_direction(sorting_list, idx, refresh_sort_list),
+                                on_click=lambda idx=i: _toggle_sort_direction(
+                                    sorting_list, idx, refresh_sort_list
+                                ),
                             ).props("flat dense round")
 
                             # Remove
                             ui.button(
                                 icon="close",
-                                on_click=lambda idx=i: _remove_sort_field(sorting_list, idx, refresh_sort_list),
+                                on_click=lambda idx=i: _remove_sort_field(
+                                    sorting_list, idx, refresh_sort_list
+                                ),
                             ).props("flat dense round color=negative")
                 else:
                     ui.label("No sorting configured").classes("text-gray-500 italic")
@@ -1305,20 +1421,23 @@ def _show_sorting_dialog():
         with ui.row().classes("w-full gap-2"):
             ui.button(
                 "Add ascending",
-                on_click=lambda: _add_sort_field(sorting_list, new_field_select.value, False, refresh_sort_list),
+                on_click=lambda: _add_sort_field(
+                    sorting_list, new_field_select.value, False, refresh_sort_list
+                ),
                 icon="arrow_upward",
             ).props("flat dense")
             ui.button(
                 "Add descending",
-                on_click=lambda: _add_sort_field(sorting_list, new_field_select.value, True, refresh_sort_list),
+                on_click=lambda: _add_sort_field(
+                    sorting_list, new_field_select.value, True, refresh_sort_list
+                ),
                 icon="arrow_downward",
             ).props("flat dense")
 
         with ui.row().classes("w-full justify-end gap-2 mt-4"):
             ui.button("Cancel", on_click=dialog.close).props("flat")
             ui.button(
-                "Apply",
-                on_click=lambda: _apply_sorting(dialog, sorting_list),
+                "Apply", on_click=lambda: _apply_sorting(dialog, sorting_list)
             ).props("color=primary")
 
     dialog.open()
@@ -1340,7 +1459,9 @@ def _remove_sort_field(sorting_list: list[str], index: int, refresh_callback):
     refresh_callback()
 
 
-def _add_sort_field(sorting_list: list[str], field: str | None, descending: bool, refresh_callback):
+def _add_sort_field(
+    sorting_list: list[str], field: str | None, descending: bool, refresh_callback
+):
     """Add a new sort field."""
     if not field:
         ui.notify("Please select a field", type="warning")

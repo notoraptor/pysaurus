@@ -248,8 +248,7 @@ class MockProvider:
         total_count = len(videos)
         total_size = sum(v.get("file_size", 0) for v in videos)
         total_duration = sum(
-            v.get("duration", 0) / (v.get("duration_time_base", 1) or 1)
-            for v in videos
+            v.get("duration", 0) / (v.get("duration_time_base", 1) or 1) for v in videos
         )
 
         # Pagination
@@ -360,9 +359,7 @@ class MockProvider:
             return random.choice(videos)["video_id"]
         return 0
 
-    def apply_on_view(
-        self, selector: dict, fn_name: str, *fn_args
-    ) -> dict[str, Any]:
+    def apply_on_view(self, selector: dict, fn_name: str, *fn_args) -> dict[str, Any]:
         """Apply a function on selected videos."""
         # Mock implementation - just return success
         return {"applied": True, "fn_name": fn_name}
@@ -511,9 +508,7 @@ class MockDatabase:
         return self._prop_types
 
     def get_videos(
-        self,
-        include: list[str] | None = None,
-        where: dict | None = None,
+        self, include: list[str] | None = None, where: dict | None = None
     ) -> list[MockVideoPattern]:
         """Get videos with optional filtering."""
         videos = self._videos
@@ -549,11 +544,7 @@ class MockDatabase:
         self._name = new_name
 
     def prop_type_add(
-        self,
-        name: str,
-        prop_type: str,
-        definition: Any = None,
-        multiple: bool = False,
+        self, name: str, prop_type: str, definition: Any = None, multiple: bool = False
     ) -> None:
         """Add a new property type."""
         # Check if already exists

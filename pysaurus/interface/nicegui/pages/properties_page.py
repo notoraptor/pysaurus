@@ -20,12 +20,7 @@ PROP_TYPES = [
     ("str", "Text"),
 ]
 
-DEFAULT_VALUES = {
-    "bool": False,
-    "int": 0,
-    "float": 0.0,
-    "str": "",
-}
+DEFAULT_VALUES = {"bool": False, "int": 0, "float": 0.0, "str": ""}
 
 
 class PropertiesPageState:
@@ -73,10 +68,12 @@ def properties_page():
     with ui.column().classes("w-full h-full p-4"):
         # Header with back button
         with ui.row().classes("w-full items-center mb-4"):
-            ui.button(icon="arrow_back", on_click=lambda: ui.navigate.to("/videos")).props(
-                "flat"
+            ui.button(
+                icon="arrow_back", on_click=lambda: ui.navigate.to("/videos")
+            ).props("flat")
+            ui.label("Properties Management").classes(
+                "text-2xl font-bold flex-1 text-center"
             )
-            ui.label("Properties Management").classes("text-2xl font-bold flex-1 text-center")
 
         ui.separator()
 
@@ -129,8 +126,12 @@ def _render_property_row(prop_def: dict[str, Any], refresh_callback):
 
     # Extract type info from definition
     prop_type = definition.get("type", "str") if isinstance(definition, dict) else "str"
-    enumeration = definition.get("enumeration") if isinstance(definition, dict) else None
-    default_values = definition.get("defaultValues", []) if isinstance(definition, dict) else []
+    enumeration = (
+        definition.get("enumeration") if isinstance(definition, dict) else None
+    )
+    default_values = (
+        definition.get("defaultValues", []) if isinstance(definition, dict) else []
+    )
 
     with ui.row().classes("w-full p-2 border-b items-center hover:bg-gray-50"):
         # Name
@@ -168,12 +169,16 @@ def _render_property_row(prop_def: dict[str, Any], refresh_callback):
             if multiple:
                 ui.button(
                     icon="looks_one",
-                    on_click=lambda n=name: _convert_to_unique_dialog(n, refresh_callback),
+                    on_click=lambda n=name: _convert_to_unique_dialog(
+                        n, refresh_callback
+                    ),
                 ).props("flat dense round").tooltip("Convert to unique")
             else:
                 ui.button(
                     icon="format_list_numbered",
-                    on_click=lambda n=name: _convert_to_multiple_dialog(n, refresh_callback),
+                    on_click=lambda n=name: _convert_to_multiple_dialog(
+                        n, refresh_callback
+                    ),
                 ).props("flat dense round").tooltip("Convert to multiple")
 
             # Delete
@@ -192,13 +197,13 @@ def _render_create_form():
 
     # Type select
     type_select = ui.select(
-        {t[0]: t[1] for t in PROP_TYPES},
-        value=_page_state.prop_type,
-        label="Type",
+        {t[0]: t[1] for t in PROP_TYPES}, value=_page_state.prop_type, label="Type"
     ).classes("w-full")
 
     # Multiple checkbox
-    multiple_checkbox = ui.checkbox("Accept multiple values", value=_page_state.multiple)
+    multiple_checkbox = ui.checkbox(
+        "Accept multiple values", value=_page_state.multiple
+    )
 
     # Enumeration checkbox
     enum_checkbox = ui.checkbox("Is enumeration", value=_page_state.is_enumeration)
@@ -212,10 +217,12 @@ def _render_create_form():
         with default_container:
             if enum_checkbox.value:
                 # Enumeration mode - allow adding multiple values
-                ui.label("Enumeration values (comma-separated):").classes("text-sm text-gray-600")
-                enum_input = ui.input(
-                    placeholder="value1, value2, value3...",
-                ).classes("w-full")
+                ui.label("Enumeration values (comma-separated):").classes(
+                    "text-sm text-gray-600"
+                )
+                enum_input = ui.input(placeholder="value1, value2, value3...").classes(
+                    "w-full"
+                )
                 ui.label("First value is the default").classes("text-xs text-gray-500")
                 return enum_input
             elif not multiple_checkbox.value:
@@ -230,7 +237,9 @@ def _render_create_form():
                 elif prop_type == "int":
                     return ui.number("Default value", value=0).classes("w-full")
                 elif prop_type == "float":
-                    return ui.number("Default value", value=0.0, step=0.1).classes("w-full")
+                    return ui.number("Default value", value=0.0, step=0.1).classes(
+                        "w-full"
+                    )
                 else:  # str
                     return ui.input("Default value").classes("w-full")
             return None
@@ -253,9 +262,12 @@ def _render_create_form():
 
     # Buttons
     with ui.row().classes("w-full justify-end gap-2"):
-        ui.button("Reset", on_click=lambda: _reset_form(
-            name_input, type_select, multiple_checkbox, enum_checkbox
-        )).props("flat")
+        ui.button(
+            "Reset",
+            on_click=lambda: _reset_form(
+                name_input, type_select, multiple_checkbox, enum_checkbox
+            ),
+        ).props("flat")
 
         ui.button(
             "Create",
@@ -277,7 +289,9 @@ def _reset_form(name_input, type_select, multiple_checkbox, enum_checkbox):
     enum_checkbox.value = False
 
 
-def _create_property(name: str, prop_type: str, multiple: bool, is_enum: bool, default_input):
+def _create_property(
+    name: str, prop_type: str, multiple: bool, is_enum: bool, default_input
+):
     """Create a new property."""
     if not name or not name.strip():
         ui.notify("Please enter a property name", type="warning")
@@ -289,11 +303,17 @@ def _create_property(name: str, prop_type: str, multiple: bool, is_enum: bool, d
     try:
         if is_enum:
             # Parse enumeration values
-            if default_input and hasattr(default_input, "value") and default_input.value:
+            if (
+                default_input
+                and hasattr(default_input, "value")
+                and default_input.value
+            ):
                 values_str = default_input.value
                 values = [v.strip() for v in values_str.split(",") if v.strip()]
                 if not values:
-                    ui.notify("Please enter at least one enumeration value", type="warning")
+                    ui.notify(
+                        "Please enter at least one enumeration value", type="warning"
+                    )
                     return
                 # Convert to proper type
                 if prop_type == "int":
@@ -324,7 +344,9 @@ def _create_property(name: str, prop_type: str, multiple: bool, is_enum: bool, d
             # Multiple without enumeration - no default
             definition = None
 
-        logger.info(f"Creating property: {name}, type={prop_type}, definition={definition}, multiple={multiple}")
+        logger.info(
+            f"Creating property: {name}, type={prop_type}, definition={definition}, multiple={multiple}"
+        )
 
         result = api_bridge.create_prop_type(name, prop_type, definition, multiple)
         if result.get("error"):
@@ -345,13 +367,17 @@ def _rename_property_dialog(name: str, refresh_callback):
     """Show dialog to rename a property."""
     with ui.dialog() as dialog, ui.card():
         ui.label(f"Rename '{name}'").classes("text-lg font-bold")
-        new_name_input = ui.input("New name", value=name).classes("w-full min-w-[300px]")
+        new_name_input = ui.input("New name", value=name).classes(
+            "w-full min-w-[300px]"
+        )
 
         with ui.row().classes("w-full justify-end gap-2 mt-4"):
             ui.button("Cancel", on_click=dialog.close).props("flat")
             ui.button(
                 "Rename",
-                on_click=lambda: _do_rename_property(name, new_name_input.value, dialog, refresh_callback),
+                on_click=lambda: _do_rename_property(
+                    name, new_name_input.value, dialog, refresh_callback
+                ),
             ).props("color=primary")
 
     dialog.open()
@@ -377,7 +403,9 @@ def _delete_property_dialog(name: str, refresh_callback):
     """Show confirmation dialog to delete a property."""
     with ui.dialog() as dialog, ui.card():
         ui.label(f"Delete '{name}'?").classes("text-lg font-bold")
-        ui.label("This will remove the property from all videos.").classes("text-red-500")
+        ui.label("This will remove the property from all videos.").classes(
+            "text-red-500"
+        )
 
         with ui.row().classes("w-full justify-end gap-2 mt-4"):
             ui.button("Cancel", on_click=dialog.close).props("flat")
@@ -413,7 +441,9 @@ def _convert_to_unique_dialog(name: str, refresh_callback):
             ui.button("Cancel", on_click=dialog.close).props("flat")
             ui.button(
                 "Convert",
-                on_click=lambda: _do_convert_multiplicity(name, False, dialog, refresh_callback),
+                on_click=lambda: _do_convert_multiplicity(
+                    name, False, dialog, refresh_callback
+                ),
             ).props("color=primary")
 
     dialog.open()
@@ -429,7 +459,9 @@ def _convert_to_multiple_dialog(name: str, refresh_callback):
             ui.button("Cancel", on_click=dialog.close).props("flat")
             ui.button(
                 "Convert",
-                on_click=lambda: _do_convert_multiplicity(name, True, dialog, refresh_callback),
+                on_click=lambda: _do_convert_multiplicity(
+                    name, True, dialog, refresh_callback
+                ),
             ).props("color=primary")
 
     dialog.open()

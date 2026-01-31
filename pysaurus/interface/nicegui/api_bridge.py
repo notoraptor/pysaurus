@@ -52,6 +52,7 @@ class NiceGuiAPI(GuiAPI):
 
 def _wrap_error(func):
     """Decorator to wrap exceptions into error dict."""
+
     def wrapper(*args, **kwargs):
         try:
             result = func(*args, **kwargs)
@@ -62,6 +63,7 @@ def _wrap_error(func):
                 "error": True,
                 "data": {"name": type(exc).__name__, "message": str(exc)},
             }
+
     return wrapper
 
 
@@ -151,11 +153,7 @@ class APIBridge:
 
     @_wrap_error
     def create_prop_type(
-        self,
-        name: str,
-        prop_type: str,
-        definition: Any = None,
-        multiple: bool = False,
+        self, name: str, prop_type: str, definition: Any = None, multiple: bool = False
     ):
         """Create a new property type."""
         return self.api.database.prop_type_add(name, prop_type, definition, multiple)
@@ -298,11 +296,13 @@ class APIBridge:
     def select_directory(self) -> str | None:
         """Open directory selection dialog."""
         import filedial
+
         return filedial.select_directory()
 
     def select_file(self) -> str | None:
         """Open file selection dialog."""
         import filedial
+
         return filedial.select_file_to_open()
 
     @_wrap_error
