@@ -7,6 +7,7 @@ from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.newsql.newsql_database import NewSqlDatabase
 from saurus.sql.pysaurus_collection import PysaurusCollection
 from saurus.sql.pysaurus_connection import PysaurusConnection
+from tests.mocks.mock_database import MockDatabase
 from tests.utils import (
     TEST_DB_FOLDER,
     TEST_HOME_DIR,
@@ -138,3 +139,28 @@ def example_saurus_database_memory() -> PysaurusCollection:
     memory_db.copy_from(collection.db)
     collection.db = memory_db
     return collection
+
+
+# =============================================================================
+# Mock database fixtures (fast, pure in-memory)
+# =============================================================================
+
+
+@pytest.fixture
+def mock_database() -> MockDatabase:
+    """
+    Fast in-memory mock database for testing.
+
+    Loads test data from JSON, all operations happen in memory.
+    Much faster than real database fixtures - no disk I/O.
+    Use this for unit tests that don't need real database implementation.
+    """
+    return MockDatabase.create_fresh()
+
+
+@pytest.fixture
+def mock_database_readonly() -> MockDatabase:
+    """
+    Read-only mock database (same as mock_database but semantically for read tests).
+    """
+    return MockDatabase.create_fresh()
