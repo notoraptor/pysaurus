@@ -87,6 +87,8 @@ class MainWindow(QMainWindow):
 
         view_menu.addAction("&Videos", self.show_videos_page)
         view_menu.addAction("&Properties", self.show_properties_page)
+        view_menu.addSeparator()
+        view_menu.addAction("&Generate Playlist (Ctrl+L)", self.videos_page._on_playlist)
 
         # Help menu
         help_menu = QMenu("&Help", self)
@@ -104,6 +106,7 @@ class MainWindow(QMainWindow):
         self.videos_page.update_database_requested.connect(self._on_update_database)
         self.videos_page.find_similar_requested.connect(self._on_find_similar)
         self.videos_page.move_video_requested.connect(self._on_move_video)
+        self.videos_page.status_message_requested.connect(self._on_status_message)
 
         # Context signals
         self.ctx.notification_received.connect(self._on_notification)
@@ -161,6 +164,10 @@ class MainWindow(QMainWindow):
     def _on_notification(self, notification):
         """Handle generic notifications."""
         self.status_bar.showMessage(str(notification), 3000)
+
+    def _on_status_message(self, message: str, timeout: int):
+        """Handle status message requests from pages."""
+        self.status_bar.showMessage(message, timeout)
 
     # =========================================================================
     # Process page management

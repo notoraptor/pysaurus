@@ -55,6 +55,7 @@ class VideosPage(QWidget):
     update_database_requested = Signal()
     find_similar_requested = Signal()
     move_video_requested = Signal(int, str)  # video_id, directory
+    status_message_requested = Signal(str, int)  # message, timeout
 
     VIEW_GRID = 0
     VIEW_LIST = 1
@@ -162,6 +163,10 @@ class VideosPage(QWidget):
         shortcut_delete = QShortcut(QKeySequence(Qt.Key.Key_Delete), self)
         shortcut_delete.activated.connect(self._delete_selected)
 
+        # Ctrl+L - Play list
+        shortcut_playlist = QShortcut(QKeySequence("Ctrl+L"), self)
+        shortcut_playlist.activated.connect(self._on_playlist)
+
         # Home/End - First/Last page
         shortcut_home = QShortcut(QKeySequence(Qt.Key.Key_Home), self)
         shortcut_home.activated.connect(self._go_first)
@@ -242,6 +247,25 @@ class VideosPage(QWidget):
                 self._clear_selection()
                 self.refresh()
 
+    def _on_playlist(self):
+        """Generate and open a playlist of the current view."""
+        if not self.ctx.database:
+            return
+
+        try:
+            # Call the playlist method from the API
+            filename = self.ctx.api.playlist()
+            
+            # Emit signal for status message
+            self.status_message_requested.emit(f"Playlist opened: {filename}", 5000)
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Error Creating Playlist",
+                f"Failed to create playlist: {str(e)}",
+            )
+
     def _create_toolbar(self) -> QToolBar:
         """Create the toolbar."""
         toolbar = QToolBar()
@@ -275,6 +299,12 @@ class VideosPage(QWidget):
         self.btn_random.setToolTip("Open a random video (Ctrl+O)")
         self.btn_random.clicked.connect(self._on_random_video)
         toolbar.addWidget(self.btn_random)
+
+        # Playlist button
+        self.btn_playlist = QPushButton("Playlist")
+        self.btn_playlist.setToolTip("Generate playlist (Ctrl+L)")
+        self.btn_playlist.clicked.connect(self._on_playlist)
+        toolbar.addWidget(self.btn_playlist)
         toolbar.addSeparator()
 
         # Refresh view button

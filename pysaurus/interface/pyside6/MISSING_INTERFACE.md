@@ -50,13 +50,13 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 | Ctrl+Shift+G | Reset grouping | Non |
 | Ctrl+Shift+F | Reset search | Non |
 | Ctrl+P | Manage properties | Non |
-| Ctrl+L | Play list | Non |
+| Ctrl+L | Play list | Oui |
 
 ---
 
 ## 6. Fonctionnalités de playlist
 
-- [ ] **Générer et ouvrir une playlist** des vidéos filtrées
+- [x] **Générer et ouvrir une playlist** des vidéos filtrées
 
 ---
 
@@ -107,8 +107,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 1. Copier dans le presse-papiers (file path, title, ID)
 2. Renommer vidéo
 3. Renommer/éditer dossiers de la base de données
-4. Playlist generation
-5. Classifier path navigation
+4. Classifier path navigation
 
 ### Moyenne priorité
 
