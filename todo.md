@@ -4,6 +4,10 @@ Video file manager written in Python (WIP).
 ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > "<output-file>.json"
 ```
 
+
+TODO:
+- Recherche conditionnelle; exemple: "bit rate > value"
+
 # Abandoned:
 
 - Using SQL instead of JSON could it make code faster and easier to maintain ?

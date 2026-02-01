@@ -39,7 +39,7 @@ class MoveValuesDialog(QDialog):
         self._target_props = [
             pt
             for pt in prop_types
-            if pt.get("type") is str and pt["name"] != source_prop["name"]
+            if pt.get("type") == "str" and pt["name"] != source_prop["name"]
         ]
 
         self.setWindowTitle(f"Move Values from {source_prop['name']}")

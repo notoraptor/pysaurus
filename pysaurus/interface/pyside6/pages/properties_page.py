@@ -12,8 +12,10 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLineEdit,
+    QMenu,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -48,8 +50,13 @@ class PropertiesPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
 
-        # Header with back button
-        header_layout = QHBoxLayout()
+        # Header with back button (compact)
+        header_widget = QWidget()
+        header_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        header_layout = QHBoxLayout(header_widget)
+        header_layout.setContentsMargins(0, 0, 0, 5)
 
         self.btn_back = QPushButton("< Back to Videos")
         self.btn_back.clicked.connect(self._on_back)
@@ -63,7 +70,7 @@ class PropertiesPage(QWidget):
 
         header_layout.addStretch()
 
-        layout.addLayout(header_layout)
+        layout.addWidget(header_widget)
 
         # Main content with splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -107,6 +114,10 @@ class PropertiesPage(QWidget):
         self.props_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.props_table.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.ResizeMode.Stretch
+        )
+        # Let Actions column resize to its content
+        self.props_table.horizontalHeader().setSectionResizeMode(
+            5, QHeaderView.ResizeMode.ResizeToContents
         )
         self.props_table.setAlternatingRowColors(True)
         layout.addWidget(self.props_table)
@@ -297,48 +308,44 @@ class PropertiesPage(QWidget):
         name = prop_type.get("name", "")
         ptype = prop_type.get("type", "str")  # String like "str", "int", etc.
         multiple = prop_type.get("multiple", False)
+        is_string = ptype == "str"
 
-        # Values button (only for string properties)
-        if ptype == "str":
-            btn_values = QPushButton("Values")
-            btn_values.setFixedWidth(60)
-            btn_values.setToolTip("Manage property values")
-            btn_values.clicked.connect(lambda _, n=name: self._on_manage_values(n))
-            layout.addWidget(btn_values)
+        # Create dropdown button with menu
+        btn_actions = QPushButton("Actions")
 
-        # Rename button
-        btn_rename = QPushButton("Rename")
-        btn_rename.setFixedWidth(60)
-        btn_rename.clicked.connect(lambda _, n=name: self._on_rename(n))
-        layout.addWidget(btn_rename)
+        menu = QMenu(btn_actions)
 
-        # Convert button (only for string properties)
-        if ptype is str:
-            convert_text = "Single" if multiple else "Multi"
-            btn_convert = QPushButton(convert_text)
-            btn_convert.setFixedWidth(50)
-            btn_convert.setToolTip(
-                "Convert to single value" if multiple else "Convert to multiple values"
-            )
-            btn_convert.clicked.connect(
+        # Values action (only for string properties)
+        if is_string:
+            action_values = menu.addAction("Manage Values...")
+            action_values.triggered.connect(lambda _, n=name: self._on_manage_values(n))
+
+        # Rename action (always)
+        action_rename = menu.addAction("Rename...")
+        action_rename.triggered.connect(lambda _, n=name: self._on_rename(n))
+
+        # Convert action (only for string properties)
+        if is_string:
+            convert_text = "Convert to Single Value" if multiple else "Convert to Multiple Values"
+            action_convert = menu.addAction(convert_text)
+            action_convert.triggered.connect(
                 lambda _, n=name, m=multiple: self._on_convert(n, m)
             )
-            layout.addWidget(btn_convert)
 
-        # Move values button (only for string-multiple)
-        if ptype is str and multiple:
-            btn_move = QPushButton("Move")
-            btn_move.setFixedWidth(50)
-            btn_move.setToolTip("Move values to another property")
-            btn_move.clicked.connect(lambda _, n=name: self._on_move_values(n))
-            layout.addWidget(btn_move)
+        # Move values action (only for string-multiple)
+        if is_string and multiple:
+            action_move = menu.addAction("Move Values...")
+            action_move.triggered.connect(lambda _, n=name: self._on_move_values(n))
 
-        # Delete button
-        btn_delete = QPushButton("Del")
-        btn_delete.setFixedWidth(40)
-        btn_delete.setStyleSheet("color: #c00;")
-        btn_delete.clicked.connect(lambda _, n=name: self._on_delete(n))
-        layout.addWidget(btn_delete)
+        # Separator before delete
+        menu.addSeparator()
+
+        # Delete action (always)
+        action_delete = menu.addAction("Delete")
+        action_delete.triggered.connect(lambda _, n=name: self._on_delete(n))
+
+        btn_actions.setMenu(menu)
+        layout.addWidget(btn_actions)
 
         return widget
 

@@ -161,11 +161,12 @@ class AbstractNotifier(ABC):
         self, identifier, total: int, kind="item(s)", expectation=None, title=None
     ):
         """Job start"""
+        if not total:
+            return
         name = _get_job_name(identifier)
         job_title = _compute_job_title(title, name, expectation, total, kind)
         self.notify(JobToDo(name, total, job_title))
-        if total:
-            self.notify(JobStep(name, None, 0, total, title=job_title))
+        self.notify(JobStep(name, None, 0, total, title=job_title))
 
     def progress(self, identifier, step: int, size=1, channel=None, title=None):
         """Job progress"""

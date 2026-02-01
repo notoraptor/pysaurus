@@ -317,6 +317,17 @@ class DatabasesPage(QWidget):
             QMessageBox.warning(self, "Error", "Please add at least one source.")
             return
 
+        # Confirmation dialog
+        reply = QMessageBox.question(
+            self,
+            "Create Database",
+            f"Create database '{name}' with {len(sources)} source(s)?\n\n"
+            "This will scan all sources for video files.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
         # Emit signal and let main window handle the navigation
         self.database_creating.emit(name, sources, True)
 

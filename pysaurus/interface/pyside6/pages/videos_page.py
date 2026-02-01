@@ -23,8 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from pysaurus.video_provider.field_stat import FieldStat
-
+from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.interface.pyside6.app_context import AppContext
 from pysaurus.interface.pyside6.dialogs import (
     GroupingDialog,
@@ -37,6 +36,7 @@ from pysaurus.interface.pyside6.widgets.video_card import VideoCard
 from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
+from pysaurus.video_provider.field_stat import FieldStat
 
 
 class VideosPage(QWidget):
@@ -49,8 +49,10 @@ class VideosPage(QWidget):
     - Pagination at bottom
     """
 
-    # Signal emitted when a long operation is requested
-    long_operation_requested = Signal()
+    # Signals for long operations that require a ProcessPage
+    update_database_requested = Signal()
+    find_similar_requested = Signal()
+    move_video_requested = Signal(int, str)  # video_id, directory
 
     VIEW_GRID = 0
     VIEW_LIST = 1
@@ -240,12 +242,42 @@ class VideosPage(QWidget):
         """Create the toolbar."""
         toolbar = QToolBar()
 
-        # Refresh button
-        self.btn_refresh = QPushButton("Refresh")
+        # Back to databases button (first, on the left)
+        self.btn_back = QPushButton("<< Databases")
+        self.btn_back.setToolTip("Back to database selection")
+        self.btn_back.setStyleSheet(
+            "QPushButton { color: #505050; font-weight: bold; }"
+        )
+        self.btn_back.clicked.connect(self._on_back_to_databases)
+        toolbar.addWidget(self.btn_back)
+        toolbar.addSeparator()
+
+        # Update database button
+        self.btn_update_db = QPushButton("Update Database")
+        self.btn_update_db.setToolTip("Rescan folders and update database")
+        self.btn_update_db.clicked.connect(self._on_update_database)
+        toolbar.addWidget(self.btn_update_db)
+        toolbar.addSeparator()
+
+        # Find similar button
+        self.btn_similar = QPushButton("Find Similar")
+        self.btn_similar.setToolTip("Find visually similar videos")
+        self.btn_similar.clicked.connect(self._on_find_similar)
+        toolbar.addWidget(self.btn_similar)
+        toolbar.addSeparator()
+
+        # Random video button
+        self.btn_random = QPushButton("Random")
+        self.btn_random.setToolTip("Open a random video (Ctrl+O)")
+        self.btn_random.clicked.connect(self._on_random_video)
+        toolbar.addWidget(self.btn_random)
+        toolbar.addSeparator()
+
+        # Refresh view button
+        self.btn_refresh = QPushButton("Refresh View")
         self.btn_refresh.setToolTip("Refresh video list (Ctrl+R)")
         self.btn_refresh.clicked.connect(self.refresh)
         toolbar.addWidget(self.btn_refresh)
-
         toolbar.addSeparator()
 
         # View toggle
@@ -255,21 +287,6 @@ class VideosPage(QWidget):
         self.view_combo.setCurrentIndex(self._current_view)
         self.view_combo.currentIndexChanged.connect(self._on_view_changed)
         toolbar.addWidget(self.view_combo)
-
-        toolbar.addSeparator()
-
-        # Random video button
-        self.btn_random = QPushButton("Random")
-        self.btn_random.setToolTip("Open a random video (Ctrl+O)")
-        self.btn_random.clicked.connect(self._on_random_video)
-        toolbar.addWidget(self.btn_random)
-
-        # Find similar button
-        self.btn_similar = QPushButton("Find Similar")
-        self.btn_similar.setToolTip("Find visually similar videos")
-        self.btn_similar.clicked.connect(self._on_find_similar)
-        toolbar.addWidget(self.btn_similar)
-
         toolbar.addSeparator()
 
         # Page size
@@ -279,7 +296,6 @@ class VideosPage(QWidget):
         self.page_size_combo.setCurrentText("20")
         self.page_size_combo.currentTextChanged.connect(self._on_page_size_changed)
         toolbar.addWidget(self.page_size_combo)
-
         toolbar.addSeparator()
 
         # Selection indicator and batch actions
@@ -334,6 +350,10 @@ class VideosPage(QWidget):
             }
             QPushButton#clearBtn:hover {
                 background-color: #dd4444;
+            }
+            QPushButton#clearBtn:disabled {
+                background-color: #cccccc;
+                color: #888888;
             }
         """)
         layout = QVBoxLayout(sidebar)
@@ -494,11 +514,6 @@ class VideosPage(QWidget):
         layout.addWidget(sorting_section)
 
         layout.addStretch()
-
-        # Back to databases button
-        self.btn_databases = QPushButton("Back to Databases")
-        self.btn_databases.clicked.connect(self._on_back_to_databases)
-        layout.addWidget(self.btn_databases)
 
         # Apply reduced font size to all buttons in sidebar
         for btn in sidebar.findChildren(QPushButton):
@@ -722,6 +737,7 @@ class VideosPage(QWidget):
                 self._current_group_index = 0
         else:
             self.grouping_info.setText("No grouping")
+            self.btn_grouping_clear.setEnabled(False)
             self.group_bar.setVisible(False)
             self._group_stats = []
             self._current_group_index = -1
@@ -785,6 +801,10 @@ class VideosPage(QWidget):
 
     def _update_sources_display(self, sources: list[list[str]] | None):
         """Update the sources info label."""
+        # Enable/disable clear button based on whether sources differ from default
+        is_default = sources is None or sources == PYTHON_DEFAULT_SOURCES
+        self.btn_sources_clear.setEnabled(not is_default)
+
         if not sources:
             self.sources_info.setText("All sources")
             return
@@ -811,6 +831,10 @@ class VideosPage(QWidget):
     def _update_sorting_display(self, sorting: list[str] | None):
         """Update the sorting info label."""
         from pysaurus.interface.common.common import FIELD_MAP, Uniconst
+
+        # Enable/disable clear button based on whether sorting differs from default
+        is_default = sorting is None or list(sorting) == VIDEO_DEFAULT_SORTING
+        self.btn_sorting_clear.setEnabled(not is_default)
 
         if not sorting:
             self.sorting_info.setText("Default")
@@ -843,6 +867,7 @@ class VideosPage(QWidget):
         """Update the search mode indicator."""
         if not search or not search.text:
             self.search_mode_label.setText("")
+            self.btn_search_clear.setEnabled(False)
             return
 
         # Map condition to user-friendly label
@@ -859,11 +884,14 @@ class VideosPage(QWidget):
         if self.search_input.text() != search.text:
             self.search_input.setText(search.text)
 
+        self.btn_search_clear.setEnabled(True)
+
     def _update_grouping_display(self, context: VideoSearchContext):
         """Update the grouping info label with detailed information."""
         grouping = context.grouping
         if not grouping or not grouping.field:
             self.grouping_info.setText("No grouping")
+            self.btn_grouping_clear.setEnabled(False)
             return
 
         # Build info lines
@@ -891,6 +919,7 @@ class VideosPage(QWidget):
             lines.append("(no singletons)")
 
         self.grouping_info.setText("\n".join(lines))
+        self.btn_grouping_clear.setEnabled(True)
 
     def _display_videos(self, videos: list[VideoPattern]):
         """Display the videos in the content area."""
@@ -1031,7 +1060,7 @@ class VideosPage(QWidget):
     def _toggle_watched(self, video_id: int):
         """Toggle the watched status of a video."""
         if self.ctx.ops:
-            self.ctx.ops.toggle_watched(video_id)
+            self.ctx.ops.mark_as_read(video_id)
             self.refresh()
 
     def _move_video(self, video_id: int):
@@ -1065,9 +1094,8 @@ class VideosPage(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            # Show home page and start the move operation
-            self.long_operation_requested.emit()
-            self.ctx.move_video_file(video_id, directory)
+            # Emit signal - MainWindow will handle showing process page and running operation
+            self.move_video_requested.emit(video_id, directory)
 
     def _show_properties(self, video_id: int):
         """Show properties dialog for a video."""
@@ -1282,12 +1310,29 @@ class VideosPage(QWidget):
                 self.page_number = 0
                 self.refresh()
 
+    def _on_update_database(self):
+        """Update/rescan the database."""
+        reply = QMessageBox.question(
+            self,
+            "Update Database",
+            "Rescan folders and update the database?\n\n"
+            "This may take a while depending on the number of videos.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.update_database_requested.emit()
+
     def _on_find_similar(self):
         """Find similar videos."""
-        # Emit signal to show home page
-        self.long_operation_requested.emit()
-        # Start the similarity search
-        self.ctx.find_similar_videos()
+        reply = QMessageBox.question(
+            self,
+            "Find Similar Videos",
+            "Search for visually similar videos?\n\n"
+            "This may take a while depending on the number of videos.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.find_similar_requested.emit()
 
     def _on_back_to_databases(self):
         """Navigate back to databases page."""

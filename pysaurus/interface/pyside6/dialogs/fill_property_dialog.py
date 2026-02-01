@@ -29,7 +29,7 @@ class FillPropertyDialog(QDialog):
 
         # Filter to only string-multiple properties
         self._eligible_props = [
-            pt for pt in prop_types if pt.get("type") is str and pt.get("multiple")
+            pt for pt in prop_types if pt.get("type") == "str" and pt.get("multiple")
         ]
 
         self.setWindowTitle("Fill Property with Terms")

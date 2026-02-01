@@ -4,15 +4,18 @@ Main window for PySide6 interface.
 Central window with QStackedWidget for page navigation.
 """
 
+from typing import Callable
+
 from PySide6.QtWidgets import QMainWindow, QStackedWidget, QStatusBar, QMenuBar, QMenu
 
+from pysaurus.core.notifications import End
 from pysaurus.interface.pyside6.app_context import AppContext
 from pysaurus.interface.pyside6.pages import (
     DatabasesPage,
-    HomePage,
     PropertiesPage,
     VideosPage,
 )
+from pysaurus.interface.pyside6.pages.process_page import ProcessPage
 
 
 class MainWindow(QMainWindow):
@@ -25,15 +28,15 @@ class MainWindow(QMainWindow):
     - Status bar
     """
 
-    # Page indices
+    # Page indices (process page is dynamically added/removed)
     PAGE_DATABASES = 0
-    PAGE_HOME = 1
-    PAGE_VIDEOS = 2
-    PAGE_PROPERTIES = 3
+    PAGE_VIDEOS = 1
+    PAGE_PROPERTIES = 2
 
     def __init__(self):
         super().__init__()
         self.ctx = AppContext()
+        self._process_page: ProcessPage | None = None
         self._setup_ui()
         self._setup_menu()
         self._connect_signals()
@@ -49,15 +52,13 @@ class MainWindow(QMainWindow):
 
         # Create pages
         self.databases_page = DatabasesPage(self.ctx, self)
-        self.home_page = HomePage(self.ctx, self)
         self.videos_page = VideosPage(self.ctx, self)
         self.properties_page = PropertiesPage(self.ctx, self)
 
         # Add pages to stack
         self.stack.addWidget(self.databases_page)  # Index 0
-        self.stack.addWidget(self.home_page)  # Index 1
-        self.stack.addWidget(self.videos_page)  # Index 2
-        self.stack.addWidget(self.properties_page)  # Index 3
+        self.stack.addWidget(self.videos_page)  # Index 1
+        self.stack.addWidget(self.properties_page)  # Index 2
 
         # Status bar
         self.status_bar = QStatusBar()
@@ -99,45 +100,116 @@ class MainWindow(QMainWindow):
         self.databases_page.database_opening.connect(self._on_database_opening)
         self.databases_page.database_creating.connect(self._on_database_creating)
 
-        # Home page signals
-        self.home_page.continue_requested.connect(self._on_continue_to_videos)
-
         # Videos page signals
-        self.videos_page.long_operation_requested.connect(self._on_long_operation)
+        self.videos_page.update_database_requested.connect(self._on_update_database)
+        self.videos_page.find_similar_requested.connect(self._on_find_similar)
+        self.videos_page.move_video_requested.connect(self._on_move_video)
 
         # Context signals
-        self.ctx.database_ready.connect(self._on_database_ready)
         self.ctx.notification_received.connect(self._on_notification)
 
     def _on_database_opening(self, name: str, update: bool):
         """Handle database opening request."""
-        self.home_page.reset()
-        self.show_home_page()
-        self.ctx.open_database(name, update)
+        self._run_process(
+            title="Opening Database",
+            operation=lambda: self.ctx.open_database(name, update),
+            on_end=self._on_database_operation_end,
+        )
 
     def _on_database_creating(self, name: str, folders: list, update: bool):
         """Handle database creation request."""
-        self.home_page.reset()
-        self.show_home_page()
-        self.ctx.create_database(name, folders, update)
+        self._run_process(
+            title="Creating Database",
+            operation=lambda: self.ctx.create_database(name, folders, update),
+            on_end=self._on_database_operation_end,
+        )
 
-    def _on_database_ready(self):
-        """Handle database ready notification."""
-        # Don't navigate automatically - let user click Continue
-        self.status_bar.showMessage(f"Database loaded: {self.ctx.database.get_name()}")
-
-    def _on_continue_to_videos(self):
-        """Handle continue button from home page."""
+    def _on_database_operation_end(self, end_notification: End):
+        """Handle database operation completion."""
+        self._cleanup_process_page()
         self.show_videos_page()
 
-    def _on_long_operation(self):
-        """Handle request to show home page for long operation."""
-        self.home_page.reset()
-        self.show_home_page()
+    def _on_update_database(self):
+        """Handle update database request."""
+        self._run_process(
+            title="Updating Database",
+            operation=lambda: self.ctx.update_database(),
+            on_end=self._on_videos_operation_end,
+        )
+
+    def _on_find_similar(self):
+        """Handle find similar videos request."""
+        self._run_process(
+            title="Finding Similar Videos",
+            operation=lambda: self.ctx.find_similar_videos(),
+            on_end=self._on_videos_operation_end,
+        )
+
+    def _on_move_video(self, video_id: int, directory: str):
+        """Handle move video request."""
+        self._run_process(
+            title="Moving Video",
+            operation=lambda: self.ctx.move_video_file(video_id, directory),
+            on_end=self._on_videos_operation_end,
+        )
+
+    def _on_videos_operation_end(self, end_notification: End):
+        """Handle videos page operation completion."""
+        self._cleanup_process_page()
+        self.show_videos_page()
 
     def _on_notification(self, notification):
         """Handle generic notifications."""
         self.status_bar.showMessage(str(notification), 3000)
+
+    # =========================================================================
+    # Process page management
+    # =========================================================================
+
+    def _run_process(
+        self,
+        title: str,
+        operation: Callable[[], None],
+        on_end: Callable[[End], None],
+    ):
+        """
+        Run an operation with a dedicated ProcessPage.
+
+        Creates a new ProcessPage with its own NotificationCollector,
+        displays it, and runs the operation.
+
+        Args:
+            title: Title to display on the process page
+            operation: Function to call to start the operation
+            on_end: Callback when operation ends (receives End notification)
+        """
+        # Clean up any existing process page
+        self._cleanup_process_page()
+
+        # Create new process page
+        self._process_page = ProcessPage(title, callback=on_end)
+
+        # Add to stack and display
+        self.stack.addWidget(self._process_page)
+        self.stack.setCurrentWidget(self._process_page)
+        self.setWindowTitle(f"Pysaurus - {title}")
+
+        # Route notifications to the process page
+        self.ctx.set_notification_handler(self._process_page)
+
+        # Start the operation
+        operation()
+
+    def _cleanup_process_page(self):
+        """Remove and clean up the current process page."""
+        # Clear notification handler
+        self.ctx.clear_notification_handler()
+
+        # Remove process page from stack
+        if self._process_page is not None:
+            self.stack.removeWidget(self._process_page)
+            self._process_page.deleteLater()
+            self._process_page = None
 
     def _show_about(self):
         """Show about dialog."""
@@ -158,11 +230,6 @@ class MainWindow(QMainWindow):
         """Navigate to databases page."""
         self.stack.setCurrentIndex(self.PAGE_DATABASES)
         self.setWindowTitle("Pysaurus - Databases")
-
-    def show_home_page(self):
-        """Navigate to home page (loading progress)."""
-        self.stack.setCurrentIndex(self.PAGE_HOME)
-        self.setWindowTitle("Pysaurus - Loading...")
 
     def show_videos_page(self):
         """Navigate to videos page."""

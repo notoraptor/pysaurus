@@ -49,6 +49,10 @@ class AppContext(QObject):
         super().__init__()
         self.api = PySide6API()
 
+        # Current notification handler (e.g., ProcessPage)
+        # When set, notifications are routed to this handler instead of signals
+        self._notification_handler = None
+
         # Connect internal signal with QueuedConnection for thread safety
         self._notification_from_thread.connect(
             self._process_notification, Qt.ConnectionType.QueuedConnection
@@ -56,6 +60,22 @@ class AppContext(QObject):
 
         # Set callback to emit the internal signal from background thread
         self.api.set_notification_callback(self._on_notification_from_thread)
+
+    def set_notification_handler(self, handler):
+        """
+        Set the current notification handler.
+
+        When set, notifications are routed to handler.on_notification()
+        instead of emitting individual signals.
+
+        Args:
+            handler: Object with on_notification(notification) method, or None
+        """
+        self._notification_handler = handler
+
+    def clear_notification_handler(self):
+        """Clear the current notification handler."""
+        self._notification_handler = None
 
     def _on_notification_from_thread(self, notification: Notification):
         """
@@ -68,8 +88,17 @@ class AppContext(QObject):
     def _process_notification(self, notification: Notification):
         """
         Process notification in the main thread.
-        Emits public signals for UI components.
+
+        If a notification handler is set, routes to it.
+        Otherwise, emits public signals for UI components.
         """
+        # Route to handler if set
+        if self._notification_handler is not None:
+            self._notification_handler.on_notification(notification)
+            # Also emit generic signal for status bar, etc.
+            self.notification_received.emit(notification)
+            return
+
         # Generic signal for all notifications
         self.notification_received.emit(notification)
 
