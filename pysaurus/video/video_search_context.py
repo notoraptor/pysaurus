@@ -37,13 +37,15 @@ class VideoSearchContext:
     result_groups: Any = None
     classifier_stats: list[FieldStat] = field(default_factory=list)
     common_fields: dict[str, bool] = field(default_factory=dict)
+    file_title_diffs: dict[int, list[tuple[int, int]]] = field(default_factory=dict)
     source_count: int = 0
 
     def __post_init__(self):
-        if self.result and self.grouping.field == "similarity_id":
+        if self.result and self.grouping and self.grouping.field == "similarity_id":
             self.common_fields = VideoFeatures.get_common_fields(
                 self.result, fields=COMMON_FIELDS
             )
+            self.file_title_diffs = VideoFeatures.get_file_title_diffs(self.result)
 
     def grouped_by_moves(self) -> bool:
         return self.grouping.field == "move_id"
