@@ -36,9 +36,9 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ## 4. Opérations sur les propriétés
 
-- [ ] **Convertir valeurs en minuscules/majuscules** (pour propriétés string)
-- [ ] **Compter les valeurs de propriété** (count_property_values)
-- [ ] **Remplacer valeurs de propriété** (replace_property_values)
+- [x] **Convertir valeurs en minuscules/majuscules** (pour propriétés string)
+- [x] **Compter les valeurs de propriété** (affiché dans PropertyValuesDialog)
+- [x] **Remplacer valeurs de propriété** (via rename dans PropertyValuesDialog)
 
 ---
 
@@ -113,7 +113,6 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 6. Dismiss/Reset similarity
 7. Confirmer déplacements (move_id grouping)
-8. Convertir valeurs en min/majuscules
 9. Sélection avancée (tout sélectionner dans la vue)
 10. Raccourcis clavier reset (Ctrl+Shift+...)
 
@@ -122,3 +121,10 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 11. Go to page dialog
 12. Options menu (confirmation dialogs)
 13. Historique des vidéos
+
+### Fonctionnalités déjà implémentées ✅
+
+- [x] Playlist generation (Ctrl+L)
+- [x] Convertir valeurs en minuscules/majuscules (PropertyValuesDialog)
+- [x] Compter les valeurs de propriété (affiché dans PropertyValuesDialog)
+- [x] Remplacer valeurs de propriété (via rename dans PropertyValuesDialog)
