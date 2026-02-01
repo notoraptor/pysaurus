@@ -52,6 +52,7 @@ class FeatureAPI:
             "delete_property_values": FromAlgo(self, Algo.delete_property_values),
             "delete_video": FromOps(self, Ops.delete_video),
             "delete_video_entry": FromDb(self, Db.video_entry_del),
+            "trash_video": FromOps(self, Ops.trash_video),
             "describe_prop_types": FromDb(self, Db.get_prop_types, True),
             "replace_property_values": FromAlgo(self, Algo.replace_property_values),
             "fill_property_with_terms": FromAlgo(self, Algo.fill_property_with_terms),

@@ -84,6 +84,15 @@ class DatabaseOperations:
         self.db.video_entry_del(video_id)
         return video_filename
 
+    def trash_video(self, video_id: int) -> AbsolutePath:
+        """Move video file to system trash and delete database entry."""
+        from send2trash import send2trash
+
+        video_filename = self.get_video_filename(video_id)
+        send2trash(str(video_filename))
+        self.db.video_entry_del(video_id)
+        return video_filename
+
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         """Change video file title."""
         from pysaurus.application import exceptions
