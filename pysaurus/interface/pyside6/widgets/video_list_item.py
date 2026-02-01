@@ -85,12 +85,20 @@ class VideoListItem(QFrame):
 
     # Highlight color for differing fields (works on white and yellow backgrounds)
     DIFF_HIGHLIGHT = "#ffcccc"  # Light pink/salmon
+    CHAR_DIFF_HIGHLIGHT = "#ff9999"  # Slightly darker pink for character-level diffs
 
-    def __init__(self, video: VideoPattern, diff_fields: set[str] | None = None, parent=None):
+    def __init__(
+        self,
+        video: VideoPattern,
+        diff_fields: set[str] | None = None,
+        file_title_diffs: list[tuple[int, int]] | None = None,
+        parent=None,
+    ):
         super().__init__(parent)
         self.video = video
         self._selected = False
         self._diff_fields = diff_fields or set()
+        self._file_title_diffs = file_title_diffs  # Character ranges that differ
 
         # Calculate scaled sizes
         self._thumb_width = _get_scaled_size(self.BASE_THUMB_WIDTH)
@@ -124,9 +132,21 @@ class VideoListItem(QFrame):
         details_layout.setContentsMargins(0, 0, 0, 0)
 
         # Row 1: Title
+        # Note: title = meta_title or file_title, so when meta_title is empty,
+        # title == file_title. In that case, apply character-level diffs to title.
         title_str = str(self.video.title)
-        title_display = _add_break_opportunities(self._escape_html(title_str))
-        title_html = self._highlight_if_diff("title", f"<b>{title_display}</b>")
+        file_title = str(self.video.file_title)
+        title_is_file_title = title_str == file_title
+
+        # Apply character-level diff highlights if title is actually file_title
+        if title_is_file_title and self._file_title_diffs:
+            # _apply_char_diff_highlights now handles break opportunities internally
+            title_display = self._apply_char_diff_highlights(title_str)
+            title_html = f"<b>{title_display}</b>"
+        else:
+            title_display = _add_break_opportunities(self._escape_html(title_str))
+            title_html = self._highlight_if_diff("title", f"<b>{title_display}</b>")
+
         self.title_label = WrappingLabel(title_html)
         self.title_label.setToolTip(title_str)
         self.title_label.setTextFormat(Qt.TextFormat.RichText)
@@ -134,11 +154,15 @@ class VideoListItem(QFrame):
         details_layout.addWidget(self.title_label)
 
         # Row 2: Filename (if different from title)
-        file_title = (
-            str(self.video.file_title) if hasattr(self.video, "file_title") else ""
-        )
-        if file_title and file_title != title_str:
-            file_title_display = _add_break_opportunities(self._escape_html(file_title))
+        if file_title and not title_is_file_title:
+            # Apply character-level diff highlights (handles escaping + break opportunities)
+            if self._file_title_diffs:
+                # _apply_char_diff_highlights now handles break opportunities internally
+                file_title_display = self._apply_char_diff_highlights(file_title)
+            else:
+                file_title_display = _add_break_opportunities(
+                    self._escape_html(file_title)
+                )
             file_title_label = WrappingLabel(f"<i>{file_title_display}</i>")
             file_title_label.setStyleSheet("color: #666666;")
             file_title_label.setTextFormat(Qt.TextFormat.RichText)
@@ -376,6 +400,45 @@ class VideoListItem(QFrame):
         if field in self._diff_fields:
             return f'<span style="background-color: {self.DIFF_HIGHLIGHT}; padding: 1px 3px;">{html}</span>'
         return html
+
+    def _apply_char_diff_highlights(self, text: str) -> str:
+        """Apply character-level diff highlights to text.
+
+        Takes diff ranges (start, end) and wraps those character ranges in
+        highlight spans. The text should be the ORIGINAL (non-escaped) text,
+        as the diff ranges are computed on the original string.
+
+        Each segment is escaped and has break opportunities added individually,
+        BEFORE wrapping in HTML spans (to avoid breaking CSS properties).
+        """
+        if not self._file_title_diffs:
+            return _add_break_opportunities(self._escape_html(text))
+
+        # Sort ranges by start position (in case they're not sorted)
+        ranges = sorted(self._file_title_diffs)
+
+        # Build result by interleaving normal and highlighted text
+        result = []
+        pos = 0
+
+        for start, end in ranges:
+            # Add normal text before this diff range (escaped + break opportunities)
+            if start > pos:
+                segment = _add_break_opportunities(self._escape_html(text[pos:start]))
+                result.append(segment)
+            # Add highlighted diff range (escaped + break opportunities, then wrapped)
+            diff_text = _add_break_opportunities(self._escape_html(text[start:end]))
+            result.append(
+                f'<span style="background-color: {self.CHAR_DIFF_HIGHLIGHT}; '
+                f'font-weight: bold;">{diff_text}</span>'
+            )
+            pos = end
+
+        # Add remaining text after last diff range (escaped + break opportunities)
+        if pos < len(text):
+            result.append(_add_break_opportunities(self._escape_html(text[pos:])))
+
+        return "".join(result)
 
     def _apply_style(self):
         """Apply the item style (light theme)."""

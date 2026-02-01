@@ -72,6 +72,7 @@ class VideosPage(QWidget):
         self._selected_video_ids: set[int] = set()  # For multiple selection
         self._last_clicked_index: int = -1  # For Shift+Click range selection
         self._diff_fields: set[str] = set()  # Fields that differ in similarity group
+        self._file_title_diffs: dict[int, list[tuple[int, int]]] = {}  # Character diffs
         self._setup_ui()
         self._setup_shortcuts()
 
@@ -742,8 +743,11 @@ class VideosPage(QWidget):
                 field for field, is_common in context.common_fields.items()
                 if not is_common
             }
+            # Extract file title character-level diffs
+            self._file_title_diffs = context.file_title_diffs or {}
         else:
             self._diff_fields = set()
+            self._file_title_diffs = {}
             self.grouping_info.setText("No grouping")
             self.btn_grouping_clear.setEnabled(False)
             self.group_bar.setVisible(False)
@@ -963,7 +967,11 @@ class VideosPage(QWidget):
 
         # Add video list items (insert before the stretch at the end)
         for i, video in enumerate(videos):
-            item = VideoListItem(video, diff_fields=diff_fields)
+            # Get file title diff ranges for this video (if any)
+            title_diffs = self._file_title_diffs.get(video.video_id)
+            item = VideoListItem(
+                video, diff_fields=diff_fields, file_title_diffs=title_diffs
+            )
             item.clicked.connect(self._on_video_clicked)
             item.double_clicked.connect(self._on_video_double_clicked)
             item.context_menu_requested.connect(self._on_video_context_menu)
