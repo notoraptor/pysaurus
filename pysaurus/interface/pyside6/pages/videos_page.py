@@ -5,10 +5,12 @@ Videos page for browsing and managing videos.
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QFileDialog,
     QFrame,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMenu,
@@ -1052,9 +1054,32 @@ class VideosPage(QWidget):
         menu.addAction("Open in VLC", lambda: self._open_in_vlc(video_id))
         menu.addAction("Open Folder", lambda: self._open_folder(video_id))
         menu.addSeparator()
+
+        # Copy submenu
+        copy_menu = menu.addMenu("Copy")
+        copy_menu.addAction("Copy Title", lambda: self._copy_title(video_id))
+        copy_menu.addAction("Copy File Title", lambda: self._copy_file_title(video_id))
+        copy_menu.addAction("Copy File Path", lambda: self._copy_file_path(video_id))
+        copy_menu.addAction("Copy Video ID", lambda: self._copy_video_id(video_id))
+
+        menu.addSeparator()
+        menu.addAction("Rename...", lambda: self._rename_video(video_id))
         menu.addAction("Toggle Watched", lambda: self._toggle_watched(video_id))
         menu.addAction("Move to...", lambda: self._move_video(video_id))
         menu.addSeparator()
+
+        # Similarity actions (only show when video has similarity)
+        video = self._get_video_by_id(video_id)
+        if video and video.similarity_id is not None:
+            if video.similarity_id >= 0:
+                menu.addAction(
+                    "Dismiss Similarity", lambda: self._dismiss_similarity(video_id)
+                )
+            menu.addAction(
+                "Reset Similarity", lambda: self._reset_similarity(video_id)
+            )
+            menu.addSeparator()
+
         menu.addAction("Properties...", lambda: self._show_properties(video_id))
         menu.addSeparator()
         menu.addAction("Delete from database", lambda: self._delete_video(video_id))
@@ -1077,6 +1102,96 @@ class VideosPage(QWidget):
         """Open the folder containing the video."""
         if self.ctx.api:
             self.ctx.api.open_containing_folder(video_id)
+
+    def _get_video_by_id(self, video_id: int):
+        """Get video object by ID from current page."""
+        for video in self._videos:
+            if video.video_id == video_id:
+                return video
+        return None
+
+    def _copy_to_clipboard(self, text: str):
+        """Copy text to system clipboard."""
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
+
+    def _copy_title(self, video_id: int):
+        """Copy video title to clipboard."""
+        video = self._get_video_by_id(video_id)
+        if video:
+            self._copy_to_clipboard(str(video.title))
+
+    def _copy_file_title(self, video_id: int):
+        """Copy video file title to clipboard."""
+        video = self._get_video_by_id(video_id)
+        if video:
+            self._copy_to_clipboard(str(video.file_title))
+
+    def _copy_file_path(self, video_id: int):
+        """Copy video file path to clipboard."""
+        video = self._get_video_by_id(video_id)
+        if video:
+            self._copy_to_clipboard(str(video.filename))
+
+    def _copy_video_id(self, video_id: int):
+        """Copy video ID to clipboard."""
+        self._copy_to_clipboard(str(video_id))
+
+    def _rename_video(self, video_id: int):
+        """Rename video (change file title)."""
+        video = self._get_video_by_id(video_id)
+        if not video or not self.ctx.ops:
+            return
+
+        current_title = str(video.file_title)
+        new_title, ok = QInputDialog.getText(
+            self,
+            "Rename Video",
+            "New file title:",
+            QLineEdit.EchoMode.Normal,
+            current_title,
+        )
+
+        if ok and new_title and new_title != current_title:
+            try:
+                self.ctx.ops.change_video_file_title(video_id, new_title)
+                self.refresh()
+            except Exception as e:
+                QMessageBox.warning(self, "Rename Failed", str(e))
+
+    def _dismiss_similarity(self, video_id: int):
+        """Dismiss similarity for a video (mark as no match)."""
+        if not self.ctx.ops:
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Dismiss Similarity",
+            "Mark this video as having no similar matches?\n\n"
+            "The video will be excluded from future similarity searches.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.ctx.ops.set_similarities_from_list([video_id], [-1])
+            self.refresh()
+
+    def _reset_similarity(self, video_id: int):
+        """Reset similarity for a video (mark as not compared)."""
+        if not self.ctx.ops:
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Reset Similarity",
+            "Reset similarity status for this video?\n\n"
+            "The video will be re-evaluated in the next similarity search.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.ctx.ops.set_similarities_from_list([video_id], [None])
+            self.refresh()
 
     def _toggle_watched(self, video_id: int):
         """Toggle the watched status of a video."""
