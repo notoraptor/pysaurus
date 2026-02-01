@@ -71,6 +71,7 @@ class VideosPage(QWidget):
         self._current_view = self.VIEW_LIST
         self._selected_video_ids: set[int] = set()  # For multiple selection
         self._last_clicked_index: int = -1  # For Shift+Click range selection
+        self._diff_fields: set[str] = set()  # Fields that differ in similarity group
         self._setup_ui()
         self._setup_shortcuts()
 
@@ -735,7 +736,14 @@ class VideosPage(QWidget):
                 # Re-fetch videos with the selected group
                 context = self.ctx.get_videos(self.page_size, self.page_number)
                 self._current_group_index = 0
+
+            # Extract differing fields from common_fields (for similarity groups)
+            self._diff_fields = {
+                field for field, is_common in context.common_fields.items()
+                if not is_common
+            }
         else:
+            self._diff_fields = set()
             self.grouping_info.setText("No grouping")
             self.btn_grouping_clear.setEnabled(False)
             self.group_bar.setVisible(False)
@@ -950,9 +958,12 @@ class VideosPage(QWidget):
         # Clear existing list items
         self._clear_list_items()
 
+        # Use diff_fields from context.common_fields (computed for similarity groups)
+        diff_fields = self._diff_fields if self._diff_fields else None
+
         # Add video list items (insert before the stretch at the end)
         for i, video in enumerate(videos):
-            item = VideoListItem(video)
+            item = VideoListItem(video, diff_fields=diff_fields)
             item.clicked.connect(self._on_video_clicked)
             item.double_clicked.connect(self._on_video_double_clicked)
             item.context_menu_requested.connect(self._on_video_context_menu)

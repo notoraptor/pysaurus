@@ -83,10 +83,14 @@ class VideoListItem(QFrame):
     BASE_THUMB_WIDTH = 180
     BASE_THUMB_HEIGHT = 100
 
-    def __init__(self, video: VideoPattern, parent=None):
+    # Highlight color for differing fields (works on white and yellow backgrounds)
+    DIFF_HIGHLIGHT = "#ffcccc"  # Light pink/salmon
+
+    def __init__(self, video: VideoPattern, diff_fields: set[str] | None = None, parent=None):
         super().__init__(parent)
         self.video = video
         self._selected = False
+        self._diff_fields = diff_fields or set()
 
         # Calculate scaled sizes
         self._thumb_width = _get_scaled_size(self.BASE_THUMB_WIDTH)
@@ -122,7 +126,8 @@ class VideoListItem(QFrame):
         # Row 1: Title
         title_str = str(self.video.title)
         title_display = _add_break_opportunities(self._escape_html(title_str))
-        self.title_label = WrappingLabel(f"<b>{title_display}</b>")
+        title_html = self._highlight_if_diff("title", f"<b>{title_display}</b>")
+        self.title_label = WrappingLabel(title_html)
         self.title_label.setToolTip(title_str)
         self.title_label.setTextFormat(Qt.TextFormat.RichText)
         self.title_label.setStyleSheet("color: #000000;")
@@ -168,13 +173,18 @@ class VideoListItem(QFrame):
 
         # Badge style: white text on dark background (using &nbsp; for padding since Qt ignores CSS padding)
         badge = "background-color: #333; color: white; font-weight: bold;"
+        ext_html = self._highlight_if_diff("extension", f'<span style="{badge}">&nbsp;&nbsp;{ext}&nbsp;&nbsp;</span>')
+        size_html = self._highlight_if_diff("size", f"<b>{size}</b>")
+        container_html = self._highlight_if_diff("container_format", container)
+        video_codec_html = self._highlight_if_diff("video_codec", f'<span style="color: #666;">{video_codec}</span>')
+        audio_codec_html = self._highlight_if_diff("audio_codec", f'<span style="color: #666;">{audio_codec}</span>')
+        bit_rate_html = self._highlight_if_diff("bit_rate", f"<b><i>{bit_rate}/s</i></b>")
         format_line = (
-            f'<span style="{badge}">&nbsp;&nbsp;{ext}&nbsp;&nbsp;</span> '
-            f"<b>{size}</b> / {container} "
-            f'(<span style="color: #666;">{video_codec}</span>, '
-            f'<span style="color: #666;">{audio_codec}</span>) '
+            f'{ext_html} '
+            f"{size_html} / {container_html} "
+            f'({video_codec_html}, {audio_codec_html}) '
             f'<span style="{badge}">&nbsp;Bit rate&nbsp;</span> '
-            f"<b><i>{bit_rate}/s</i></b>"
+            f"{bit_rate_html}"
         )
         format_label = WrappingLabel(format_line)
         format_label.setTextFormat(Qt.TextFormat.RichText)
@@ -194,12 +204,22 @@ class VideoListItem(QFrame):
             round(self.video.audio_bit_rate / 1000) if self.video.audio_bit_rate else 0
         )
 
+        duration_html = self._highlight_if_diff("length", f'<b style="color: #0066cc;">{duration}</b>')
+        width_html = self._highlight_if_diff("width", f'<b style="color: #006600;">{width}</b>')
+        height_html = self._highlight_if_diff("height", f'<b style="color: #006600;">{height}</b>')
+        frame_rate_html = self._highlight_if_diff("frame_rate", f"{frame_rate} fps")
+        bit_depth_html = self._highlight_if_diff("bit_depth", f"{bit_depth} bits")
+        sample_rate_html = self._highlight_if_diff("sample_rate", f"{sample_rate} Hz")
+        audio_bits_html = self._highlight_if_diff("audio_bits", f"{audio_bits} bits")
+        channels_html = self._highlight_if_diff("channels", f"{channels} ch")
+        audio_bit_rate_html = self._highlight_if_diff("audio_bit_rate", f"{audio_bit_rate_kbps} Kb/s")
+
         video_line = (
-            f'<b style="color: #0066cc;">{duration}</b> | '
-            f'<b style="color: #006600;">{width}</b> x <b style="color: #006600;">{height}</b> '
-            f'@ <span style="color: #666;">{frame_rate} fps, {bit_depth} bits</span> | '
-            f'<span style="color: #666;">{sample_rate} Hz x {audio_bits} bits '
-            f"({channels} ch), {audio_bit_rate_kbps} Kb/s</span>"
+            f'{duration_html} | '
+            f'{width_html} x {height_html} '
+            f'@ <span style="color: #666;">{frame_rate_html}, {bit_depth_html}</span> | '
+            f'<span style="color: #666;">{sample_rate_html} x {audio_bits_html} '
+            f"({channels_html}), {audio_bit_rate_html}</span>"
         )
         video_label = WrappingLabel(video_line)
         video_label.setTextFormat(Qt.TextFormat.RichText)
@@ -219,17 +239,20 @@ class VideoListItem(QFrame):
             else ""
         )
 
-        date_line = f'<code style="color: #996600;">{date}</code>'
+        date_html = self._highlight_if_diff("date", f'<code style="color: #996600;">{date}</code>')
+        date_line = date_html
         if date_entry_modified:
-            date_line += (
-                f' | <i style="color: #888;">(entry)</i> '
+            date_mod_html = self._highlight_if_diff(
+                "date_entry_modified",
                 f'<code style="color: #996600;">{date_entry_modified}</code>'
             )
+            date_line += f' | <i style="color: #888;">(entry)</i> {date_mod_html}'
         if date_entry_opened:
-            date_line += (
-                f' | <i style="color: #888;">(opened)</i> '
+            date_opened_html = self._highlight_if_diff(
+                "date_entry_opened",
                 f'<code style="color: #996600;">{date_entry_opened}</code>'
             )
+            date_line += f' | <i style="color: #888;">(opened)</i> {date_opened_html}'
 
         date_label = WrappingLabel(date_line)
         date_label.setTextFormat(Qt.TextFormat.RichText)
@@ -249,9 +272,11 @@ class VideoListItem(QFrame):
             else '<span style="color: #aaa;">(none)</span>'
         )
 
+        audio_langs_html = self._highlight_if_diff("audio_languages", audio_str)
+        subtitle_langs_html = self._highlight_if_diff("subtitle_languages", subtitle_str)
         lang_line = (
-            f'<b style="color: #333;">Audio:</b> {audio_str} | '
-            f'<b style="color: #333;">Subtitles:</b> {subtitle_str}'
+            f'<b style="color: #333;">Audio:</b> {audio_langs_html} | '
+            f'<b style="color: #333;">Subtitles:</b> {subtitle_langs_html}'
         )
         lang_label = WrappingLabel(lang_line)
         lang_label.setTextFormat(Qt.TextFormat.RichText)
@@ -345,6 +370,12 @@ class VideoListItem(QFrame):
             .replace(">", "&gt;")
             .replace('"', "&quot;")
         )
+
+    def _highlight_if_diff(self, field: str, html: str) -> str:
+        """Wrap HTML with highlight style if field differs from other videos in group."""
+        if field in self._diff_fields:
+            return f'<span style="background-color: {self.DIFF_HIGHLIGHT}; padding: 1px 3px;">{html}</span>'
+        return html
 
     def _apply_style(self):
         """Apply the item style (light theme)."""
