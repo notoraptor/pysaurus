@@ -3,6 +3,7 @@ Home page showing loading progress.
 """
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QPalette, QColor
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -49,6 +50,29 @@ class JobProgressWidget(QFrame):
         self.progress_bar.setRange(0, self.total)
         self.progress_bar.setValue(0)
         self.progress_bar.setMinimumWidth(200)
+        self.progress_bar.setFixedHeight(20)
+        # Style the progress bar
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                background-color: #f0f0f0;
+            }
+            QProgressBar::chunk {
+                background-color: #0078d4;
+                border-radius: 2px;
+            }
+        """)
+        # Style text with palette and font
+        palette = self.progress_bar.palette()
+        palette.setColor(QPalette.ColorRole.Text, QColor("white"))
+        palette.setColor(QPalette.ColorRole.HighlightedText, QColor("white"))
+        self.progress_bar.setPalette(palette)
+        font = self.progress_bar.font()
+        font.setBold(True)
+        font.setPointSize(font.pointSize() - 1)
+        self.progress_bar.setFont(font)
+        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.progress_bar)
 
         # Percentage label
@@ -122,7 +146,28 @@ class HomePage(QWidget):
         # Global progress bar (indeterminate)
         self.global_progress = QProgressBar()
         self.global_progress.setRange(0, 0)  # Indeterminate
-        self.global_progress.setMinimumHeight(20)
+        self.global_progress.setFixedHeight(20)
+        self.global_progress.setStyleSheet("""
+            QProgressBar {
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                background-color: #f0f0f0;
+            }
+            QProgressBar::chunk {
+                background-color: #0078d4;
+                border-radius: 2px;
+            }
+        """)
+        # Style text with palette and font
+        palette = self.global_progress.palette()
+        palette.setColor(QPalette.ColorRole.Text, QColor("white"))
+        palette.setColor(QPalette.ColorRole.HighlightedText, QColor("white"))
+        self.global_progress.setPalette(palette)
+        font = self.global_progress.font()
+        font.setBold(True)
+        font.setPointSize(font.pointSize() - 1)
+        self.global_progress.setFont(font)
+        self.global_progress.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.global_progress)
 
         # Jobs container (scroll area for multiple progress bars)
