@@ -1039,6 +1039,8 @@ class VideosPage(QWidget):
         menu.addAction("Properties...", lambda: self._show_properties(video_id))
         menu.addSeparator()
         menu.addAction("Delete from database", lambda: self._delete_video(video_id))
+        menu.addAction("Move to Trash", lambda: self._trash_video(video_id))
+        menu.addAction("Delete permanently", lambda: self._delete_video_file(video_id))
 
         menu.exec(pos)
 
@@ -1135,6 +1137,64 @@ class VideosPage(QWidget):
             if self.ctx.database:
                 self.ctx.database.video_entry_del(video_id)
                 self.refresh()
+
+    def _trash_video(self, video_id: int):
+        """Move a video file to system trash (with confirmation)."""
+        if not self.ctx.ops:
+            return
+
+        videos = self.ctx.database.get_videos(where={"video_id": video_id})
+        if not videos:
+            return
+        video = videos[0]
+
+        reply = QMessageBox.question(
+            self,
+            "Move to Trash",
+            f"Move '{video.title}' to the system trash?\n\n"
+            "(The file can be restored from the trash if needed)",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                self.ctx.ops.trash_video(video_id)
+                self.refresh()
+                QMessageBox.information(
+                    self, "Success", f"'{video.title}' moved to trash."
+                )
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Failed to move to trash: {e}")
+
+    def _delete_video_file(self, video_id: int):
+        """Permanently delete a video file (with confirmation)."""
+        if not self.ctx.ops:
+            return
+
+        videos = self.ctx.database.get_videos(where={"video_id": video_id})
+        if not videos:
+            return
+        video = videos[0]
+
+        reply = QMessageBox.warning(
+            self,
+            "Delete Permanently",
+            f"PERMANENTLY delete '{video.title}'?\n\n"
+            "⚠️ This action cannot be undone!\n"
+            "The file will be deleted from disk.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                self.ctx.ops.delete_video(video_id)
+                self.refresh()
+                QMessageBox.information(
+                    self, "Success", f"'{video.title}' permanently deleted."
+                )
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Failed to delete: {e}")
 
     def _on_batch_edit(self):
         """Open batch edit dialog for selected videos."""
