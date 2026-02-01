@@ -202,6 +202,10 @@ class VideosPage(QWidget):
 
     def _open_selected(self):
         """Open the selected video(s)."""
+        # Don't open video if focus is on search input (let Enter trigger search instead)
+        if self.search_input.hasFocus():
+            self._on_search()
+            return
         if self._selected_video_id and self.ctx.ops:
             self.ctx.ops.open_video(self._selected_video_id)
         elif self._selected_video_ids and self.ctx.ops:
@@ -508,8 +512,8 @@ class VideosPage(QWidget):
         """Create the main content area for videos."""
         content = QWidget()
         layout = QVBoxLayout(content)
-        layout.setContentsMargins(3, 3, 3, 3)
-        layout.setSpacing(3)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
         # Group navigation bar (hidden by default)
         self.group_bar = self._create_group_bar()
@@ -522,19 +526,23 @@ class VideosPage(QWidget):
 
         # Grid view (index 0)
         self.scroll_area = QScrollArea()
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
         self.video_container = QWidget()
         self.video_flow = FlowLayout(
-            self.video_container, margin=5, h_spacing=10, v_spacing=10
+            self.video_container, h_spacing=10, v_spacing=10
         )
+        # No top margin to align with sidebar top
+        self.video_flow.setContentsMargins(3, 0, 3, 3)
         self.scroll_area.setWidget(self.video_container)
         self.view_stack.addWidget(self.scroll_area)
 
         # List view (index 1) - simple QWidget with layout inside scroll area
         self.list_scroll_area = QScrollArea()
+        self.list_scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self.list_scroll_area.setWidgetResizable(True)
         self.list_scroll_area.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
@@ -542,7 +550,8 @@ class VideosPage(QWidget):
         self.list_container = QWidget()
         self.list_layout = QVBoxLayout(self.list_container)
         self.list_layout.setSpacing(5)
-        self.list_layout.setContentsMargins(5, 5, 5, 5)
+        # No top margin to align with sidebar top
+        self.list_layout.setContentsMargins(3, 0, 3, 3)
         self.list_layout.addStretch()  # Push items to top, absorb extra space
         self.list_scroll_area.setWidget(self.list_container)
 
