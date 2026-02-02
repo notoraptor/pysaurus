@@ -14,7 +14,10 @@ from PySide6.QtWidgets import (
     QLabel,
     QSizePolicy,
     QVBoxLayout,
+    QWidget,
 )
+
+from pysaurus.interface.pyside6.widgets.flow_layout import FlowLayout
 
 from pysaurus.video.video_pattern import VideoPattern
 
@@ -80,6 +83,7 @@ class VideoListItem(QFrame):
     double_clicked = Signal(int)  # video_id
     context_menu_requested = Signal(int, object)  # video_id, QPoint
     selection_changed = Signal(int, bool)  # video_id, selected
+    property_value_clicked = Signal(str, object)  # prop_name, value
 
     # Base sizes (designed for 9pt font, will be scaled)
     BASE_THUMB_WIDTH = 180
@@ -378,25 +382,53 @@ class VideoListItem(QFrame):
             errors_label.setTextFormat(Qt.TextFormat.RichText)
             details_layout.addWidget(errors_label)
 
-        # Row 10: Custom properties (compact, only non-empty)
+        # Row 10: Custom properties (compact, only non-empty) - clickable values
         properties = getattr(self.video, "properties", None) or {}
-        prop_parts = []
+        has_properties = False
         for prop_name, prop_values in properties.items():
             # Filter out None and empty values
             values = [v for v in prop_values if v is not None]
             if values:
-                values_str = ", ".join(str(v) for v in values)
-                prop_parts.append(
-                    f'<b style="color: #666;">{self._escape_html(prop_name)}:</b> '
-                    f'<span style="color: #333;">{self._escape_html(values_str)}</span>'
-                )
-        if prop_parts:
-            props_label = WrappingLabel(" | ".join(prop_parts))
-            props_label.setTextFormat(Qt.TextFormat.RichText)
-            props_label.setStyleSheet(
-                "background-color: #f5f5f5; padding: 2px; border-radius: 2px;"
+                has_properties = True
+                break
+
+        if has_properties:
+            # Use FlowLayout for wrapping
+            props_widget = QWidget()
+            props_layout = FlowLayout(props_widget, margin=4, h_spacing=4, v_spacing=2)
+
+            for prop_name, prop_values in properties.items():
+                values = [v for v in prop_values if v is not None]
+                if not values:
+                    continue
+
+                # Property name label
+                name_label = QLabel(f"<b>{self._escape_html(prop_name)}:</b>")
+                name_label.setTextFormat(Qt.TextFormat.RichText)
+                name_label.setStyleSheet("color: #666;")
+                props_layout.addWidget(name_label)
+
+                # Clickable value labels
+                for value in values:
+                    value_label = QLabel(str(value))
+                    value_label.setStyleSheet(
+                        "color: #1976d2; text-decoration: underline; "
+                        "background-color: #e3f2fd; padding: 1px 4px; "
+                        "border-radius: 3px;"
+                    )
+                    value_label.setCursor(Qt.CursorShape.PointingHandCursor)
+                    value_label.setToolTip(f"Filter by {prop_name} = {value}")
+                    # Capture prop_name and value for the lambda
+                    value_label.mousePressEvent = (
+                        lambda e, pn=prop_name, v=value: self._on_property_value_clicked(pn, v)
+                    )
+                    props_layout.addWidget(value_label)
+
+            # Style the container
+            props_widget.setStyleSheet(
+                "background-color: #f5f5f5; border-radius: 2px;"
             )
-            details_layout.addWidget(props_label)
+            details_layout.addWidget(props_widget)
 
         main_layout.addLayout(details_layout, 1)
 
@@ -543,6 +575,10 @@ class VideoListItem(QFrame):
     def _on_title_clicked(self, event):
         """Handle title label click - toggle checkbox."""
         self.checkbox.setChecked(not self.checkbox.isChecked())
+
+    def _on_property_value_clicked(self, prop_name: str, value):
+        """Handle property value click - emit signal to filter by this value."""
+        self.property_value_clicked.emit(prop_name, value)
 
     def mousePressEvent(self, event: QMouseEvent):
         """Handle mouse press."""

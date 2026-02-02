@@ -1228,6 +1228,7 @@ class VideosPage(QWidget):
             item.double_clicked.connect(self._on_video_double_clicked)
             item.context_menu_requested.connect(self._on_video_context_menu)
             item.selection_changed.connect(self._on_video_selection_changed)
+            item.property_value_clicked.connect(self._on_property_value_clicked)
 
             # Set selection state
             item.selected = self._selector.contains(video.video_id)
@@ -1277,6 +1278,12 @@ class VideosPage(QWidget):
 
         self._selected_video_id = video_id
         self._update_selection_display()
+
+    def _on_property_value_clicked(self, prop_name: str, value):
+        """Handle property value click - focus on this property value."""
+        self.ctx.classifier_focus_prop_val(prop_name, value)
+        self.page_number = 0
+        self.refresh()
 
     def _on_video_double_clicked(self, video_id: int):
         """Handle video card double-click (open video)."""

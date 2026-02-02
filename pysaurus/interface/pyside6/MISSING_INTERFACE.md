@@ -30,7 +30,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 - [x] **Affichage du chemin de classification** (classifier path) - section dans sidebar
 - [x] **Navigation dans le classifier** (unstack, reverse, concatenate) - boutons dans section
-- [ ] **Classifier focus prop val** (focus sur une valeur de propriété) - à implémenter via clic sur valeur
+- [x] **Classifier focus prop val** (focus sur une valeur de propriété) - clic sur valeur dans liste
 
 ---
 
@@ -105,7 +105,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ### Haute priorité (fonctionnalités importantes)
 
-(Classifier path navigation implémenté - reste focus prop val)
+(Toutes les fonctionnalités hautes priorités ont été implémentées)
 
 ### Moyenne priorité
 
