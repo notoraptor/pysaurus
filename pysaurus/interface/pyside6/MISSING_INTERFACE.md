@@ -89,14 +89,14 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 - [ ] **Historique des vidéos ouvertes**
 - [ ] **FormPaginationGoTo** - aller à une page spécifique
-- [ ] **DialogSearch** - recherche dans les groupes/pages
+- [x] ~~**DialogSearch**~~ - redondant : la barre de recherche PySide6 intègre 4 modes (AND, OR, Exact, ID)
 
 ---
 
 ## 11. Affichage vidéo
 
 - [ ] **Affichage des moves** (confirmations de déplacement potentielles)
-- [ ] **Bouton settings** (gear icon) sur chaque vidéo pour le menu contextuel rapide
+- [x] ~~**Bouton settings**~~ - redondant : le menu contextuel (clic droit) offre les mêmes 16 actions
 
 ---
 
@@ -104,27 +104,34 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ### Haute priorité (fonctionnalités importantes)
 
-1. Copier dans le presse-papiers (file path, title, ID)
-2. Renommer vidéo
-3. Renommer/éditer dossiers de la base de données
-4. Classifier path navigation
+1. Renommer/éditer dossiers de la base de données
+2. Fermer la base de données
+3. Classifier path navigation
 
 ### Moyenne priorité
 
-6. Dismiss/Reset similarity
-7. Confirmer déplacements (move_id grouping)
-9. Sélection avancée (tout sélectionner dans la vue)
-10. Raccourcis clavier reset (Ctrl+Shift+...)
+4. Confirmer déplacements (move_id grouping)
+5. Sélection avancée (tout sélectionner dans la vue)
+6. Raccourcis clavier reset (Ctrl+Shift+T/G/F, Ctrl+P)
+7. Confirmer tous les déplacements uniques
 
 ### Basse priorité
 
-11. Go to page dialog
-12. Options menu (confirmation dialogs)
-13. Historique des vidéos
+8. Go to page dialog (FormPaginationGoTo)
+9. Options menu (confirmation dialogs)
+10. Historique des vidéos ouvertes
 
-### Fonctionnalités déjà implémentées ✅
+---
 
-- [x] Playlist generation (Ctrl+L)
-- [x] Convertir valeurs en minuscules/majuscules (PropertyValuesDialog)
-- [x] Compter les valeurs de propriété (affiché dans PropertyValuesDialog)
-- [x] Remplacer valeurs de propriété (via rename dans PropertyValuesDialog)
+## Fonctionnalités déjà implémentées
+
+- [x] Copier dans le presse-papiers (meta title, file title, chemin, video ID)
+- [x] Renommer vidéo (changer le file title)
+- [x] Dismiss similarity (rejeter la similarité)
+- [x] Reset similarity (réinitialiser la similarité)
+- [x] Convertir valeurs en minuscules/majuscules
+- [x] Compter les valeurs de propriété
+- [x] Remplacer valeurs de propriété
+- [x] Générer et ouvrir une playlist (Ctrl+L)
+- [x] Recherche avec 4 modes (AND, OR, Exact, ID) dans la sidebar
+- [x] Menu contextuel complet (16 actions, équivalent au menu settings web)
