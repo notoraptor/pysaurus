@@ -12,7 +12,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
   - Copier le chemin du fichier
   - Copier le video ID
 - [x] **Renommer vidéo** (changer le file title)
-- [ ] **Confirmer déplacement** (quand groupé par move_id)
+- [x] **Confirmer déplacement** (menu contextuel quand groupé par move_id)
 - [x] **Dismiss similarity** (rejeter la similarité)
 - [x] **Reset similarity** (réinitialiser la similarité)
 
@@ -69,7 +69,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ## 8. Opérations de masse sur les groupes
 
-- [ ] **Confirmer tous les déplacements uniques** (confirm_unique_moves)
+- [x] **Confirmer tous les déplacements uniques** (bouton dans section Grouping quand groupé par move_id)
 - [ ] **Appliquer opération sur la vue** (apply_on_view)
 
 ---
@@ -95,7 +95,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ## 11. Affichage vidéo
 
-- [ ] **Affichage des moves** (confirmations de déplacement potentielles)
+- [x] **Affichage des moves** (sous-menu "Confirm move to" dans le menu contextuel)
 - [x] ~~**Bouton settings**~~ - redondant : le menu contextuel (clic droit) offre les mêmes 16 actions
 
 ---
@@ -108,9 +108,8 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ### Moyenne priorité
 
-4. Confirmer déplacements (move_id grouping)
-5. Sélection avancée (tout sélectionner dans la vue)
-6. Confirmer tous les déplacements uniques
+4. Sélection avancée (tout sélectionner dans la vue)
+5. Appliquer opération sur la vue (apply_on_view)
 
 ### Basse priorité
 
@@ -136,3 +135,5 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 - [x] Éditer les dossiers sources (menu Database)
 - [x] Fermer la base de données (menu Database)
 - [x] Raccourcis clavier reset (Ctrl+Shift+T/G/F) et Ctrl+P pour les propriétés
+- [x] Confirmer déplacement individuel (menu contextuel "Confirm move to")
+- [x] Confirmer tous les déplacements uniques (bouton quand groupé par move_id)

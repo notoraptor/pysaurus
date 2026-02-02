@@ -76,6 +76,7 @@ class VideosPage(QWidget):
         self._last_clicked_index: int = -1  # For Shift+Click range selection
         self._diff_fields: set[str] = set()  # Fields that differ in similarity group
         self._file_title_diffs: dict[int, list[tuple[int, int]]] = {}  # Character diffs
+        self._grouped_by_moves: bool = False  # True when grouped by move_id
         self._setup_ui()
         self._setup_shortcuts()
 
@@ -458,6 +459,20 @@ class VideosPage(QWidget):
         self.btn_grouping_clear.clicked.connect(self._clear_grouping)
         grouping_btn_layout.addWidget(self.btn_grouping_clear)
         grouping_layout.addLayout(grouping_btn_layout)
+
+        # Button for confirming all unique moves (only visible when grouped by move_id)
+        self.btn_confirm_unique_moves = QPushButton("Confirm all unique moves")
+        self.btn_confirm_unique_moves.setToolTip(
+            "Automatically confirm all moves with a single destination"
+        )
+        self.btn_confirm_unique_moves.setStyleSheet(
+            "QPushButton { background-color: #4CAF50; color: white; font-weight: bold; }"
+            "QPushButton:hover { background-color: #45a049; }"
+        )
+        self.btn_confirm_unique_moves.clicked.connect(self._on_confirm_unique_moves)
+        self.btn_confirm_unique_moves.setVisible(False)
+        grouping_layout.addWidget(self.btn_confirm_unique_moves)
+
         layout.addWidget(grouping_section)
 
         # Search section
@@ -788,6 +803,8 @@ class VideosPage(QWidget):
             self.group_bar.setVisible(False)
             self._group_stats = []
             self._current_group_index = -1
+            self._grouped_by_moves = False
+            self.btn_confirm_unique_moves.setVisible(False)
 
         # Display videos
         self._display_videos(context.result)
@@ -968,6 +985,10 @@ class VideosPage(QWidget):
         self.grouping_info.setText("\n".join(lines))
         self.btn_grouping_clear.setEnabled(True)
 
+        # Update grouped_by_moves flag and show/hide the confirm button
+        self._grouped_by_moves = grouping.field == "move_id"
+        self.btn_confirm_unique_moves.setVisible(self._grouped_by_moves)
+
     def _display_videos(self, videos: list[VideoPattern]):
         """Display the videos in the content area."""
         self._videos = videos
@@ -1111,6 +1132,18 @@ class VideosPage(QWidget):
             menu.addAction("Reset Similarity", lambda: self._reset_similarity(video_id))
             menu.addSeparator()
 
+        # Move confirmation actions (only when video has moves)
+        if video and video.moves:
+            move_menu = menu.addMenu("Confirm move to")
+            for move in video.moves:
+                dst_id = move["video_id"]
+                filename = move["filename"]
+                # Use a default argument to capture the current dst_id value
+                move_menu.addAction(
+                    filename, lambda did=dst_id: self._confirm_move(video_id, did)
+                )
+            menu.addSeparator()
+
         menu.addAction("Properties...", lambda: self._show_properties(video_id))
         menu.addSeparator()
         menu.addAction("Delete from database", lambda: self._delete_video(video_id))
@@ -1222,6 +1255,52 @@ class VideosPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.ctx.ops.set_similarities_from_list([video_id], [None])
+            self.refresh()
+
+    def _confirm_move(self, src_video_id: int, dst_video_id: int):
+        """Confirm a video move (transfer metadata from source to destination)."""
+        src_video = self._get_video_by_id(src_video_id)
+        if not src_video:
+            return
+
+        # Find destination filename from moves
+        dst_filename = None
+        for move in src_video.moves or []:
+            if move["video_id"] == dst_video_id:
+                dst_filename = move["filename"]
+                break
+
+        reply = QMessageBox.question(
+            self,
+            "Confirm Move",
+            f"Transfer metadata from missing video to:\n\n{dst_filename}\n\n"
+            "The missing video entry will be deleted.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.ctx.confirm_move(src_video_id, dst_video_id)
+            self.status_message_requested.emit("Video move confirmed", 3000)
+            self.refresh()
+
+    def _on_confirm_unique_moves(self):
+        """Confirm all unique video moves (videos with only one possible destination)."""
+        reply = QMessageBox.question(
+            self,
+            "Confirm All Unique Moves",
+            "This will automatically confirm all video moves that have only "
+            "one possible destination.\n\n"
+            "The metadata from missing videos will be transferred to the "
+            "found files, and the missing entries will be deleted.\n\n"
+            "Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            count = self.ctx.confirm_unique_moves()
+            self.status_message_requested.emit(f"Confirmed {count} video move(s)", 3000)
             self.refresh()
 
     def _toggle_watched(self, video_id: int):

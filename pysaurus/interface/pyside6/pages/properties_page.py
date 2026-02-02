@@ -364,36 +364,34 @@ class PropertiesPage(QWidget):
             QMessageBox.warning(self, "Error", "Please enter a property name.")
             return
 
-        type_name = self.type_combo.currentText()
-        type_map = {"bool": bool, "int": int, "float": float, "str": str}
-        prop_type = type_map[type_name]
+        prop_type = self.type_combo.currentText()  # "bool", "int", "float", "str"
 
         multiple = self.multiple_check.isChecked()
 
         # Parse default value
         default_text = self.default_input.text().strip()
         try:
-            if type_name == "bool":
+            if prop_type == "bool":
                 default = (
                     default_text.lower() in ("true", "1", "yes")
                     if default_text
                     else False
                 )
-            elif type_name == "int":
+            elif prop_type == "int":
                 default = int(default_text) if default_text else 0
-            elif type_name == "float":
+            elif prop_type == "float":
                 default = float(default_text) if default_text else 0.0
             else:
                 default = default_text
         except ValueError:
             QMessageBox.warning(
-                self, "Error", f"Invalid default value for type {type_name}."
+                self, "Error", f"Invalid default value for type {prop_type}."
             )
             return
 
         # Handle enumeration
         definition = default
-        if self.enum_check.isChecked() and type_name == "str":
+        if self.enum_check.isChecked() and prop_type == "str":
             enum_text = self.enum_input.text().strip()
             if enum_text:
                 enum_values = [v.strip() for v in enum_text.split(",") if v.strip()]

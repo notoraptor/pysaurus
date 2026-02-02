@@ -234,6 +234,17 @@ class AppContext(QObject):
         if self.ops:
             self.ops.set_folders(folders)
 
+    def confirm_move(self, src_video_id: int, dst_video_id: int) -> None:
+        """Confirm a video move (transfer metadata from src to dst, delete src)."""
+        if self.ops:
+            self.ops.move_video_entry(src_video_id, dst_video_id)
+
+    def confirm_unique_moves(self) -> int:
+        """Confirm all unique video moves (1-to-1 mappings). Returns count."""
+        if self.algos:
+            return self.algos.confirm_unique_moves()
+        return 0
+
     def close_app(self) -> None:
         """Close the application properly."""
         self.api.close_app()
