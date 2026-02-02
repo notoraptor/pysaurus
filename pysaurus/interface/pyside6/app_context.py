@@ -245,6 +245,47 @@ class AppContext(QObject):
             return self.algos.confirm_unique_moves()
         return 0
 
+    # =========================================================================
+    # Classifier operations
+    # =========================================================================
+
+    def classifier_select_group(self, group_id: int) -> None:
+        """Add a group value to the classifier path."""
+        if self.provider:
+            self.provider.classifier_select_group(group_id)
+
+    def classifier_back(self) -> None:
+        """Remove the last value from the classifier path."""
+        if self.provider:
+            self.provider.classifier_back()
+
+    def classifier_reverse(self) -> list:
+        """Reverse the classifier path order. Returns the new path."""
+        if self.provider:
+            return self.provider.classifier_reverse()
+        return []
+
+    def classifier_concatenate_path(self, to_property: str) -> None:
+        """
+        Concatenate the classifier path values into a string property.
+
+        Joins all path values with spaces and moves them to the target property.
+        Clears the classifier path after concatenation.
+        """
+        if self.provider and self.algos:
+            path = self.provider.get_classifier_path()
+            from_property = self.provider.get_grouping().field
+            self.provider.set_classifier_path([])
+            self.provider.set_group(0)
+            self.algos.move_property_values(
+                path, from_property, to_property, concatenate=True
+            )
+
+    def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
+        """Focus on a specific property value (resets classifier and jumps to value)."""
+        if self.provider:
+            self.provider.classifier_focus_prop_val(prop_name, field_value)
+
     def close_app(self) -> None:
         """Close the application properly."""
         self.api.close_app()

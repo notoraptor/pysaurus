@@ -28,9 +28,9 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ## 3. Gestion du Classifier (classification hiérarchique)
 
-- [ ] **Affichage du chemin de classification** (classifier path)
-- [ ] **Navigation dans le classifier** (unstack, reverse, concatenate)
-- [ ] **Classifier focus prop val** (focus sur une valeur de propriété)
+- [x] **Affichage du chemin de classification** (classifier path) - section dans sidebar
+- [x] **Navigation dans le classifier** (unstack, reverse, concatenate) - boutons dans section
+- [ ] **Classifier focus prop val** (focus sur une valeur de propriété) - à implémenter via clic sur valeur
 
 ---
 
@@ -105,7 +105,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ### Haute priorité (fonctionnalités importantes)
 
-1. Classifier path navigation
+(Classifier path navigation implémenté - reste focus prop val)
 
 ### Moyenne priorité
 
@@ -138,3 +138,5 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 - [x] Confirmer tous les déplacements uniques (bouton quand groupé par move_id)
 - [x] Go to page dialog (clic sur "Page X/Y" dans la barre de pagination)
 - [x] Menu Options avec sélection de taille de page et confirmation de suppression
+- [x] Classifier path navigation (affichage, unstack, reverse, concatenate)
+- [x] Bouton "+" pour ajouter un groupe au classifier (propriétés multiples)

@@ -80,6 +80,8 @@ class VideosPage(QWidget):
         self._grouped_by_moves: bool = False  # True when grouped by move_id
         self._total_pages: int = 1  # Total number of pages (for go to page dialog)
         self.confirm_not_found_deletion: bool = True  # Confirm before deleting "not found" entries
+        self._classifier_path: list[str] = []  # Current classifier path
+        self._is_classifying: bool = False  # True when classifier is active (multiple property)
         self._setup_ui()
         self._setup_shortcuts()
 
@@ -478,6 +480,44 @@ class VideosPage(QWidget):
 
         layout.addWidget(grouping_section)
 
+        # Classifier Path section (hidden by default, shown when path is active)
+        self.classifier_section, classifier_layout = self._create_filter_section(
+            color_light
+        )
+        classifier_label = QLabel("Classifier Path")
+        classifier_label.setStyleSheet("font-weight: bold; background: transparent;")
+        classifier_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        classifier_layout.addWidget(classifier_label)
+
+        # Path display area (vertical list of path values)
+        self.classifier_path_widget = QWidget()
+        self.classifier_path_widget.setStyleSheet("background: transparent;")
+        self.classifier_path_layout = QVBoxLayout(self.classifier_path_widget)
+        self.classifier_path_layout.setContentsMargins(0, 0, 0, 0)
+        self.classifier_path_layout.setSpacing(2)
+        classifier_layout.addWidget(self.classifier_path_widget)
+
+        # Classifier action buttons
+        classifier_btn_layout = QHBoxLayout()
+        classifier_btn_layout.setSpacing(2)
+
+        self.btn_classifier_reverse = QPushButton("Reverse")
+        self.btn_classifier_reverse.setToolTip("Reverse the order of path values")
+        self.btn_classifier_reverse.clicked.connect(self._on_classifier_reverse)
+        classifier_btn_layout.addWidget(self.btn_classifier_reverse)
+
+        self.btn_classifier_concat = QPushButton("Concat...")
+        self.btn_classifier_concat.setToolTip(
+            "Concatenate path values into a string property"
+        )
+        self.btn_classifier_concat.clicked.connect(self._on_classifier_concatenate)
+        classifier_btn_layout.addWidget(self.btn_classifier_concat)
+
+        classifier_layout.addLayout(classifier_btn_layout)
+
+        self.classifier_section.setVisible(False)
+        layout.addWidget(self.classifier_section)
+
         # Search section
         search_section, search_layout = self._create_filter_section(color_light)
         search_label = QLabel("Search")
@@ -692,6 +732,19 @@ class VideosPage(QWidget):
         self.group_count_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.group_count_label)
 
+        # Add to classifier button (only visible for multiple properties)
+        self.btn_add_to_classifier = QPushButton("+")
+        self.btn_add_to_classifier.setFixedWidth(30)
+        self.btn_add_to_classifier.setToolTip("Add current group to classifier path")
+        self.btn_add_to_classifier.setStyleSheet(
+            "QPushButton { background-color: #4CAF50; color: white; "
+            "font-weight: bold; font-size: 14px; }"
+            "QPushButton:hover { background-color: #45a049; }"
+        )
+        self.btn_add_to_classifier.clicked.connect(self._on_classifier_add_group)
+        self.btn_add_to_classifier.setVisible(False)
+        layout.addWidget(self.btn_add_to_classifier)
+
         return bar
 
     def _create_bottom_bar(self) -> QWidget:
@@ -806,6 +859,9 @@ class VideosPage(QWidget):
             }
             # Extract file title character-level diffs
             self._file_title_diffs = context.file_title_diffs or {}
+
+            # Update classifier path display
+            self._update_classifier_path(context)
         else:
             self._diff_fields = set()
             self._file_title_diffs = {}
@@ -816,6 +872,10 @@ class VideosPage(QWidget):
             self._current_group_index = -1
             self._grouped_by_moves = False
             self.btn_confirm_unique_moves.setVisible(False)
+            # Hide classifier when no grouping
+            self._classifier_path = []
+            self._is_classifying = False
+            self.classifier_section.setVisible(False)
 
         # Display videos
         self._display_videos(context.result)
@@ -873,6 +933,67 @@ class VideosPage(QWidget):
             self._current_group_index >= 0
             and self._current_group_index < total_groups - 1
         )
+
+    def _update_classifier_path(self, context: VideoSearchContext):
+        """Update the classifier path display."""
+        # Get classifier path from context
+        self._classifier_path = list(context.classifier) if context.classifier else []
+
+        # Check if grouping is on a multiple property (classifier is only for multiple props)
+        is_multiple_property = False
+        if context.grouping and context.grouping.is_property and self.ctx.database:
+            prop_types = self.ctx.database.get_prop_types(
+                name=context.grouping.field, multiple=True
+            )
+            is_multiple_property = len(prop_types) > 0
+
+        self._is_classifying = is_multiple_property
+
+        # Show/hide classifier section based on path and property type
+        has_path = len(self._classifier_path) > 0
+        self.classifier_section.setVisible(has_path)
+
+        # Show/hide the add-to-classifier button in group bar
+        self.btn_add_to_classifier.setVisible(is_multiple_property)
+
+        if not has_path:
+            return
+
+        # Clear existing path items
+        while self.classifier_path_layout.count() > 0:
+            item = self.classifier_path_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        # Add path items
+        for i, value in enumerate(self._classifier_path):
+            item_widget = QWidget()
+            item_widget.setStyleSheet("background: transparent;")
+            item_layout = QHBoxLayout(item_widget)
+            item_layout.setContentsMargins(2, 1, 2, 1)
+            item_layout.setSpacing(2)
+
+            # Value label
+            value_label = QLabel(str(value))
+            value_label.setStyleSheet(
+                "background: #e0e0e0; padding: 2px 4px; border-radius: 3px;"
+            )
+            item_layout.addWidget(value_label, 1)
+
+            # Unstack button (only on last item)
+            if i == len(self._classifier_path) - 1:
+                unstack_btn = QPushButton("✕")
+                unstack_btn.setFixedSize(20, 20)
+                unstack_btn.setToolTip("Remove from path (unstack)")
+                unstack_btn.setStyleSheet(
+                    "QPushButton { background-color: #cc3333; color: white; "
+                    "font-weight: bold; border-radius: 3px; }"
+                    "QPushButton:hover { background-color: #dd4444; }"
+                )
+                unstack_btn.clicked.connect(self._on_classifier_unstack)
+                item_layout.addWidget(unstack_btn)
+
+            self.classifier_path_layout.addWidget(item_widget)
 
     def _update_sources_display(self, sources: list[list[str]] | None):
         """Update the sources info label."""
@@ -1664,6 +1785,63 @@ class VideosPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             self.find_similar_requested.emit()
 
+    # =========================================================================
+    # Classifier operations
+    # =========================================================================
+
+    def _on_classifier_add_group(self):
+        """Add the current group to the classifier path."""
+        if self._current_group_index >= 0 and self.ctx.provider:
+            self.ctx.classifier_select_group(self._current_group_index)
+            self.page_number = 0
+            self.refresh()
+
+    def _on_classifier_unstack(self):
+        """Remove the last value from the classifier path."""
+        if self._classifier_path and self.ctx.provider:
+            self.ctx.classifier_back()
+            self.page_number = 0
+            self.refresh()
+
+    def _on_classifier_reverse(self):
+        """Reverse the classifier path order."""
+        if self._classifier_path and self.ctx.provider:
+            self.ctx.classifier_reverse()
+            self.refresh()
+
+    def _on_classifier_concatenate(self):
+        """Show dialog to concatenate path values into a string property."""
+        if not self._classifier_path or not self.ctx.database:
+            return
+
+        # Get string properties to concatenate into
+        prop_types = self.ctx.database.get_prop_types()
+        string_props = [p for p in prop_types if p["type"] == "str"]
+
+        if not string_props:
+            QMessageBox.information(
+                self,
+                "No Target Property",
+                "No single-value string properties available.\n\n"
+                "Create a string property first to concatenate the path into.",
+            )
+            return
+
+        # Show selection dialog
+        prop_names = [p["name"] for p in string_props]
+        name, ok = QInputDialog.getItem(
+            self,
+            "Concatenate Path",
+            "Select target property to concatenate path values into:",
+            prop_names,
+            0,
+            False,
+        )
+
+        if ok and name:
+            self.ctx.classifier_concatenate_path(name)
+            self.page_number = 0
+            self.refresh()
 
     def _go_prev_group(self):
         """Go to the previous group."""
