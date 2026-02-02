@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.interface.pyside6.app_context import AppContext
 from pysaurus.interface.pyside6.dialogs import (
+    GoToPageDialog,
     GroupingDialog,
     SortingDialog,
     SourcesDialog,
@@ -77,6 +78,8 @@ class VideosPage(QWidget):
         self._diff_fields: set[str] = set()  # Fields that differ in similarity group
         self._file_title_diffs: dict[int, list[tuple[int, int]]] = {}  # Character diffs
         self._grouped_by_moves: bool = False  # True when grouped by move_id
+        self._total_pages: int = 1  # Total number of pages (for go to page dialog)
+        self.confirm_not_found_deletion: bool = True  # Confirm before deleting "not found" entries
         self._setup_ui()
         self._setup_shortcuts()
 
@@ -715,10 +718,17 @@ class VideosPage(QWidget):
         self.btn_prev.clicked.connect(self._go_prev)
         layout.addWidget(self.btn_prev)
 
-        self.page_label = QLabel("Page 1/1")
-        self.page_label.setMinimumWidth(80)
-        self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.page_label)
+        # Page indicator button (clickable to go to a specific page)
+        self.page_button = QPushButton("Page 1/1")
+        self.page_button.setMinimumWidth(80)
+        self.page_button.setToolTip("Click to go to a specific page")
+        self.page_button.setFlat(True)
+        self.page_button.setStyleSheet(
+            "QPushButton { text-decoration: underline; color: #0078d4; }"
+            "QPushButton:hover { color: #005a9e; }"
+        )
+        self.page_button.clicked.connect(self._on_go_to_page)
+        layout.addWidget(self.page_button)
 
         self.btn_next = QPushButton(">")
         self.btn_next.setFixedSize(32, 24)
@@ -754,7 +764,8 @@ class VideosPage(QWidget):
 
         # Update pagination
         nb_pages = max(1, context.nb_pages)
-        self.page_label.setText(f"Page {self.page_number + 1}/{nb_pages}")
+        self._total_pages = nb_pages
+        self.page_button.setText(f"Page {self.page_number + 1}/{nb_pages}")
 
         # Update pagination button states
         self.btn_first.setEnabled(self.page_number > 0)
@@ -1364,15 +1375,30 @@ class VideosPage(QWidget):
         if not self.ctx.database:
             return
 
-        videos = self.ctx.database.get_videos(where={"video_id": video_id})
-        if not videos:
+        # Get video from current page (VideoPattern has found property)
+        video = self._get_video_by_id(video_id)
+        if not video:
+            # Fallback to database query
+            videos = self.ctx.database.get_videos(where={"video_id": video_id})
+            if not videos:
+                return
+            video_entry = videos[0]
+            video_title = video_entry.meta_title or video_entry.filename
+            is_not_found = not video_entry.is_file
+        else:
+            video_title = str(video.title)
+            is_not_found = video.not_found
+
+        # Skip confirmation for "not found" entries if option is disabled
+        if is_not_found and not self.confirm_not_found_deletion:
+            self.ctx.database.video_entry_del(video_id)
+            self.refresh()
             return
-        video = videos[0]
 
         reply = QMessageBox.question(
             self,
             "Delete Video",
-            f"Delete '{video.title}' from the database?\n\n"
+            f"Delete '{video_title}' from the database?\n\n"
             "(The file will NOT be deleted from disk)",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -1679,6 +1705,17 @@ class VideosPage(QWidget):
         if self.ctx.provider:
             self.ctx.provider.set_group(index)
             self.page_number = 0
+            self.refresh()
+
+    def _on_go_to_page(self):
+        """Show dialog to go to a specific page."""
+        page = GoToPageDialog.get_page_number(
+            current_page=self.page_number + 1,
+            total_pages=self._total_pages,
+            parent=self,
+        )
+        if page is not None and page != self.page_number:
+            self.page_number = page
             self.refresh()
 
     def _go_first(self):

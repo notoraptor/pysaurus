@@ -3,6 +3,7 @@
 from pysaurus.interface.pyside6.dialogs.batch_edit_dialog import BatchEditDialog
 from pysaurus.interface.pyside6.dialogs.edit_folders_dialog import EditFoldersDialog
 from pysaurus.interface.pyside6.dialogs.fill_property_dialog import FillPropertyDialog
+from pysaurus.interface.pyside6.dialogs.goto_page_dialog import GoToPageDialog
 from pysaurus.interface.pyside6.dialogs.grouping_dialog import GroupingDialog
 from pysaurus.interface.pyside6.dialogs.move_values_dialog import MoveValuesDialog
 from pysaurus.interface.pyside6.dialogs.property_values_dialog import (
@@ -19,6 +20,7 @@ __all__ = [
     "BatchEditDialog",
     "EditFoldersDialog",
     "FillPropertyDialog",
+    "GoToPageDialog",
     "GroupingDialog",
     "MoveValuesDialog",
     "PropertyValuesDialog",

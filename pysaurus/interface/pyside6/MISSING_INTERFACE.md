@@ -80,15 +80,16 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
   - Rename database
   - Edit folders
   - Close database
-- [ ] **Menu Options** :
+- [x] **Menu Options** :
+  - Sélection de la taille de page (10, 20, 50, 100)
   - Confirmation avant suppression des entrées non trouvées
 
 ---
 
 ## 10. Fonctionnalités spéciales manquantes
 
-- [ ] **Historique des vidéos ouvertes**
-- [ ] **FormPaginationGoTo** - aller à une page spécifique
+- [x] ~~**Historique des vidéos ouvertes**~~ - redondant : trier par "date_entry_opened DESC" affiche les dernières vidéos ouvertes
+- [x] **FormPaginationGoTo** - aller à une page spécifique (clic sur "Page X/Y")
 - [x] ~~**DialogSearch**~~ - redondant : la barre de recherche PySide6 intègre 4 modes (AND, OR, Exact, ID)
 
 ---
@@ -113,9 +114,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ### Basse priorité
 
-8. Go to page dialog (FormPaginationGoTo)
-9. Options menu (confirmation dialogs)
-10. Historique des vidéos ouvertes
+(Toutes les fonctionnalités basses priorités ont été implémentées)
 
 ---
 
@@ -137,3 +136,5 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 - [x] Raccourcis clavier reset (Ctrl+Shift+T/G/F) et Ctrl+P pour les propriétés
 - [x] Confirmer déplacement individuel (menu contextuel "Confirm move to")
 - [x] Confirmer tous les déplacements uniques (bouton quand groupé par move_id)
+- [x] Go to page dialog (clic sur "Page X/Y" dans la barre de pagination)
+- [x] Menu Options avec sélection de taille de page et confirmation de suppression

@@ -6,6 +6,7 @@ Central window with QStackedWidget for page navigation.
 
 from typing import Callable
 
+from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtWidgets import (
     QMainWindow,
     QMenu,
@@ -109,6 +110,41 @@ class MainWindow(QMainWindow):
         view_menu.addSeparator()
         view_menu.addAction(
             "&Generate Playlist (Ctrl+L)", self.videos_page._on_playlist
+        )
+
+        # Options menu
+        options_menu = QMenu("&Options", self)
+        menu_bar.addMenu(options_menu)
+
+        # Page size submenu
+        page_size_menu = options_menu.addMenu("&Page Size")
+        self._page_size_group = QActionGroup(self)
+        self._page_size_group.setExclusive(True)
+        self._page_size_actions = {}
+        for size in [10, 20, 50, 100]:
+            action = QAction(str(size), self)
+            action.setCheckable(True)
+            action.setData(size)
+            if size == 20:  # Default
+                action.setChecked(True)
+            self._page_size_group.addAction(action)
+            page_size_menu.addAction(action)
+            self._page_size_actions[size] = action
+        self._page_size_group.triggered.connect(self._on_page_size_action)
+
+        options_menu.addSeparator()
+
+        # Confirm deletion for entries not found
+        self._action_confirm_not_found = options_menu.addAction(
+            "Confirm &deletion for entries not found"
+        )
+        self._action_confirm_not_found.setCheckable(True)
+        self._action_confirm_not_found.setChecked(True)  # Default: confirm deletions
+        self._action_confirm_not_found.setToolTip(
+            "When checked, show confirmation dialog before deleting entries not found"
+        )
+        self._action_confirm_not_found.triggered.connect(
+            self._on_confirm_not_found_changed
         )
 
         # Help menu
@@ -372,6 +408,26 @@ class MainWindow(QMainWindow):
             self.properties_page.refresh()
         else:
             self.show_databases_page()
+
+    # =========================================================================
+    # Options menu actions
+    # =========================================================================
+
+    def _on_page_size_action(self, action: QAction):
+        """Handle page size selection from menu."""
+        size = action.data()
+        # Update the videos page combo box to match
+        self.videos_page.page_size_combo.setCurrentText(str(size))
+        # This will trigger the page size change through the combo box signal
+
+    def _on_confirm_not_found_changed(self, checked: bool):
+        """Handle confirm deletion setting change."""
+        # Store the setting in videos_page
+        self.videos_page.confirm_not_found_deletion = checked
+        self.status_bar.showMessage(
+            f"Confirm deletion for 'not found' entries: {'enabled' if checked else 'disabled'}",
+            3000,
+        )
 
     def closeEvent(self, event):
         """Handle window close event."""
