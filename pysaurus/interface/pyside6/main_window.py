@@ -6,10 +6,18 @@ Central window with QStackedWidget for page navigation.
 
 from typing import Callable
 
-from PySide6.QtWidgets import QMainWindow, QStackedWidget, QStatusBar, QMenuBar, QMenu
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QMenu,
+    QMenuBar,
+    QMessageBox,
+    QStackedWidget,
+    QStatusBar,
+)
 
 from pysaurus.core.notifications import End
 from pysaurus.interface.pyside6.app_context import AppContext
+from pysaurus.interface.pyside6.dialogs import EditFoldersDialog, RenameDialog
 from pysaurus.interface.pyside6.pages import DatabasesPage, PropertiesPage, VideosPage
 from pysaurus.interface.pyside6.pages.process_page import ProcessPage
 
@@ -77,6 +85,21 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction("&Quit", self.close)
 
+        # Database menu (only enabled when a database is open)
+        self.database_menu = QMenu("D&atabase", self)
+        menu_bar.addMenu(self.database_menu)
+
+        self._action_rename_db = self.database_menu.addAction(
+            "&Rename Database...", self._on_rename_database
+        )
+        self._action_edit_folders = self.database_menu.addAction(
+            "&Edit Folders...", self._on_edit_folders
+        )
+        self.database_menu.addSeparator()
+        self._action_close_db = self.database_menu.addAction(
+            "&Close Database", self._on_close_database
+        )
+
         # View menu
         view_menu = QMenu("&View", self)
         menu_bar.addMenu(view_menu)
@@ -93,6 +116,9 @@ class MainWindow(QMainWindow):
         menu_bar.addMenu(help_menu)
 
         help_menu.addAction("&About", self._show_about)
+
+        # Initial state: database menu disabled
+        self._update_database_menu_state()
 
     def _connect_signals(self):
         """Connect signals from pages and context."""
@@ -128,6 +154,7 @@ class MainWindow(QMainWindow):
     def _on_database_operation_end(self, end_notification: End):
         """Handle database operation completion."""
         self._cleanup_process_page()
+        self._update_database_menu_state()
         self.show_videos_page()
 
     def _on_update_database(self):
@@ -215,14 +242,107 @@ class MainWindow(QMainWindow):
 
     def _show_about(self):
         """Show about dialog."""
-        from PySide6.QtWidgets import QMessageBox
-
         QMessageBox.about(
             self,
             "About Pysaurus",
             "Pysaurus - Video Collection Manager\n\n"
             "A native Qt6 desktop interface for managing video collections.",
         )
+
+    def _update_database_menu_state(self):
+        """Enable/disable database menu based on whether a database is open."""
+        has_db = self.ctx.database is not None
+        self.database_menu.setEnabled(has_db)
+
+    # =========================================================================
+    # Database menu actions
+    # =========================================================================
+
+    def _on_rename_database(self):
+        """Handle rename database action."""
+        if not self.ctx.database:
+            return
+
+        current_name = self.ctx.database.get_name()
+        new_name = RenameDialog.get_name(
+            title=f"Rename Database: {current_name}",
+            current_name=current_name,
+            label="New database name:",
+            parent=self,
+        )
+
+        if new_name:
+            try:
+                self.ctx.rename_database(new_name)
+                self.setWindowTitle(f"Pysaurus - {new_name}")
+                self.status_bar.showMessage(
+                    f"Database renamed to '{new_name}'", 3000
+                )
+            except Exception as e:
+                QMessageBox.critical(
+                    self,
+                    "Rename Failed",
+                    f"Failed to rename database:\n{e}",
+                )
+
+    def _on_edit_folders(self):
+        """Handle edit folders action."""
+        if not self.ctx.database:
+            return
+
+        current_folders = self.ctx.get_database_folders()
+        db_name = self.ctx.database.get_name()
+
+        new_folders = EditFoldersDialog.edit_folders(
+            folders=current_folders,
+            database_name=db_name,
+            parent=self,
+        )
+
+        if new_folders is not None:
+            # Check if folders actually changed
+            if set(new_folders) != set(current_folders):
+                try:
+                    self.ctx.set_database_folders(new_folders)
+                    self.status_bar.showMessage("Folders updated", 3000)
+
+                    # Ask if user wants to update the database
+                    reply = QMessageBox.question(
+                        self,
+                        "Update Database",
+                        "Folders have been updated.\n\n"
+                        "Do you want to scan for new videos now?",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                        QMessageBox.StandardButton.Yes,
+                    )
+                    if reply == QMessageBox.StandardButton.Yes:
+                        self._on_update_database()
+                except Exception as e:
+                    QMessageBox.critical(
+                        self,
+                        "Update Failed",
+                        f"Failed to update folders:\n{e}",
+                    )
+
+    def _on_close_database(self):
+        """Handle close database action."""
+        if not self.ctx.database:
+            return
+
+        db_name = self.ctx.database.get_name()
+        reply = QMessageBox.question(
+            self,
+            "Close Database",
+            f"Close database '{db_name}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.ctx.close_database()
+            self._update_database_menu_state()
+            self.databases_page.refresh()
+            self.show_databases_page()
 
     # =========================================================================
     # Page navigation

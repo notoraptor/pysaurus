@@ -20,9 +20,9 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ## 2. Opérations sur la base de données
 
-- [ ] **Renommer la base de données**
-- [ ] **Éditer les dossiers sources** de la base de données
-- [ ] **Fermer la base de données** (retour à la page databases sans supprimer)
+- [x] **Renommer la base de données** (menu Database > Rename Database)
+- [x] **Éditer les dossiers sources** (menu Database > Edit Folders)
+- [x] **Fermer la base de données** (menu Database > Close Database)
 
 ---
 
@@ -76,7 +76,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ## 9. Menu/Actions manquants
 
-- [ ] **Menu Database** complet :
+- [x] **Menu Database** complet :
   - Rename database
   - Edit folders
   - Close database
@@ -104,9 +104,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ### Haute priorité (fonctionnalités importantes)
 
-1. Renommer/éditer dossiers de la base de données
-2. Fermer la base de données
-3. Classifier path navigation
+1. Classifier path navigation
 
 ### Moyenne priorité
 
@@ -135,3 +133,6 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 - [x] Générer et ouvrir une playlist (Ctrl+L)
 - [x] Recherche avec 4 modes (AND, OR, Exact, ID) dans la sidebar
 - [x] Menu contextuel complet (16 actions, équivalent au menu settings web)
+- [x] Renommer la base de données (menu Database)
+- [x] Éditer les dossiers sources (menu Database)
+- [x] Fermer la base de données (menu Database)

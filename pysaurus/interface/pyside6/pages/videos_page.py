@@ -268,16 +268,6 @@ class VideosPage(QWidget):
         """Create the toolbar."""
         toolbar = QToolBar()
 
-        # Back to databases button (first, on the left)
-        self.btn_back = QPushButton("<< Databases")
-        self.btn_back.setToolTip("Back to database selection")
-        self.btn_back.setStyleSheet(
-            "QPushButton { color: #505050; font-weight: bold; }"
-        )
-        self.btn_back.clicked.connect(self._on_back_to_databases)
-        toolbar.addWidget(self.btn_back)
-        toolbar.addSeparator()
-
         # Update database button
         self.btn_update_db = QPushButton("Update Database")
         self.btn_update_db.setToolTip("Rescan folders and update database")
@@ -1553,11 +1543,6 @@ class VideosPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             self.find_similar_requested.emit()
 
-    def _on_back_to_databases(self):
-        """Navigate back to databases page."""
-        main_window = self.window()
-        if hasattr(main_window, "show_databases_page"):
-            main_window.show_databases_page()
 
     def _go_prev_group(self):
         """Go to the previous group."""

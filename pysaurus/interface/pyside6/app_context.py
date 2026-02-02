@@ -209,6 +209,31 @@ class AppContext(QObject):
         """Delete the database."""
         self.api.delete_database()
 
+    def rename_database(self, new_name: str) -> None:
+        """Rename the database and update the application registry."""
+        if self.database:
+            # Get old path before renaming
+            old_path = self.database.ways.db_folder
+            # Perform the rename (this changes ways.db_folder)
+            self.database.rename(new_name)
+            # Get new path after renaming
+            new_path = self.database.ways.db_folder
+            # Update Application.databases dictionary
+            if old_path in self.application.databases:
+                del self.application.databases[old_path]
+                self.application.databases[new_path] = self.database
+
+    def get_database_folders(self) -> list[str]:
+        """Get the database source folders."""
+        if self.database:
+            return [str(f) for f in self.database.get_folders()]
+        return []
+
+    def set_database_folders(self, folders: list[str]) -> None:
+        """Set the database source folders."""
+        if self.ops:
+            self.ops.set_folders(folders)
+
     def close_app(self) -> None:
         """Close the application properly."""
         self.api.close_app()

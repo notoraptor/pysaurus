@@ -2,6 +2,8 @@
 Databases page for selecting and creating databases.
 """
 
+import os
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -16,8 +18,9 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QVBoxLayout,
     QWidget,
-)  # QListWidget still used for sources_list
+)
 
+from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 from pysaurus.interface.pyside6.app_context import AppContext
 
 
@@ -230,6 +233,10 @@ class DatabasesPage(QWidget):
 
         layout.addWidget(right_widget)
 
+    def refresh(self):
+        """Refresh the page (public interface)."""
+        self._refresh_database_list()
+
     def _refresh_database_list(self):
         """Refresh the list of databases."""
         # Clear existing widgets
@@ -274,22 +281,60 @@ class DatabasesPage(QWidget):
             self.ctx.application.delete_database_from_name(name)
             self._refresh_database_list()
 
+    def _normalize_path(self, path: str) -> str:
+        """Normalize a path to absolute with system separators."""
+        return os.path.normpath(os.path.abspath(path))
+
+    def _get_existing_paths(self) -> set[str]:
+        """Get set of normalized paths already in the sources list."""
+        paths = set()
+        for i in range(self.sources_list.count()):
+            text = self.sources_list.item(i).text()
+            # Remove emoji prefix
+            if text.startswith("📁 ") or text.startswith("📄 "):
+                paths.add(self._normalize_path(text[2:].strip()))
+            else:
+                paths.add(self._normalize_path(text))
+        return paths
+
     def _on_add_folder(self):
         """Add a folder to sources."""
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")
         if folder:
-            self.sources_list.addItem(f"📁 {folder}")
+            folder = self._normalize_path(folder)
+            if folder in self._get_existing_paths():
+                QMessageBox.information(
+                    self,
+                    "Already in List",
+                    f"This folder is already in the list:\n{folder}",
+                )
+            else:
+                self.sources_list.addItem(f"📁 {folder}")
 
     def _on_add_file(self):
         """Add files to sources."""
+        ext_filter = " ".join(f"*.{ext}" for ext in sorted(VIDEO_SUPPORTED_EXTENSIONS))
         files, _ = QFileDialog.getOpenFileNames(
             self,
             "Select Video Files",
             "",
-            "Video files (*.mp4 *.avi *.mkv *.mov *.wmv *.flv *.webm);;All files (*)",
+            f"Video files ({ext_filter});;All files (*)",
         )
+        existing = self._get_existing_paths()
+        added = 0
         for f in files:
-            self.sources_list.addItem(f"📄 {f}")
+            f = self._normalize_path(f)
+            if f not in existing:
+                self.sources_list.addItem(f"📄 {f}")
+                existing.add(f)
+                added += 1
+        if files and added < len(files):
+            skipped = len(files) - added
+            QMessageBox.information(
+                self,
+                "Some Files Already in List",
+                f"{skipped} file(s) were already in the list.",
+            )
 
     def _on_remove_source(self):
         """Remove selected source."""
