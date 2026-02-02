@@ -62,15 +62,15 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ## 7. Sélection avancée
 
-- [ ] **Sélectionner/désélectionner tous** dans la vue filtrée (pas juste la page courante)
-- [ ] **Afficher uniquement les sélectionnés** (toggle)
+- [x] **Sélectionner/désélectionner tous** dans la vue filtrée (bouton "Select All in View")
+- [x] **Afficher uniquement les sélectionnés** (bouton toggle "Show Selected")
 
 ---
 
 ## 8. Opérations de masse sur les groupes
 
 - [x] **Confirmer tous les déplacements uniques** (bouton dans section Grouping quand groupé par move_id)
-- [ ] **Appliquer opération sur la vue** (apply_on_view)
+- [x] **Appliquer opération sur la vue** (apply_on_view) - utilisé par batch edit avec Selector
 
 ---
 
@@ -109,8 +109,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ### Moyenne priorité
 
-4. Sélection avancée (tout sélectionner dans la vue)
-5. Appliquer opération sur la vue (apply_on_view)
+(Toutes les fonctionnalités moyennes priorités ont été implémentées)
 
 ### Basse priorité
 
@@ -140,3 +139,5 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 - [x] Menu Options avec sélection de taille de page et confirmation de suppression
 - [x] Classifier path navigation (affichage, unstack, reverse, concatenate)
 - [x] Bouton "+" pour ajouter un groupe au classifier (propriétés multiples)
+- [x] Sélection avancée avec Selector (select all in view, show only selected)
+- [x] Batch edit utilisant le Selector pour appliquer sur toute la vue

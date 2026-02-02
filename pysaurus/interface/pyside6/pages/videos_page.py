@@ -25,9 +25,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pysaurus.core.classes import Selector
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.interface.pyside6.app_context import AppContext
 from pysaurus.interface.pyside6.dialogs import (
+    BatchEditPropertyDialog,
     GoToPageDialog,
     GroupingDialog,
     SortingDialog,
@@ -82,6 +84,9 @@ class VideosPage(QWidget):
         self.confirm_not_found_deletion: bool = True  # Confirm before deleting "not found" entries
         self._classifier_path: list[str] = []  # Current classifier path
         self._is_classifying: bool = False  # True when classifier is active (multiple property)
+        self._selector: Selector = Selector(False, set())  # Selection state
+        self._show_only_selected: bool = False  # Toggle for showing only selected videos
+        self._view_count: int = 0  # Total videos in current view (for selector size)
         self._setup_ui()
         self._setup_shortcuts()
 
@@ -153,13 +158,25 @@ class VideosPage(QWidget):
         shortcut_next_group = QShortcut(QKeySequence(Qt.Key.Key_Down), self)
         shortcut_next_group.activated.connect(self._go_next_group)
 
-        # Ctrl+A - Select all
+        # Ctrl+A - Select all (current page)
         shortcut_select_all = QShortcut(QKeySequence("Ctrl+A"), self)
         shortcut_select_all.activated.connect(self._select_all)
+
+        # Ctrl+Shift+A - Select all in view
+        shortcut_select_all_view = QShortcut(QKeySequence("Ctrl+Shift+A"), self)
+        shortcut_select_all_view.activated.connect(self._select_all_in_view)
 
         # Escape - Clear selection
         shortcut_escape = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
         shortcut_escape.activated.connect(self._clear_selection)
+
+        # Ctrl+Shift+D - Toggle show only selected
+        shortcut_show_selected = QShortcut(QKeySequence("Ctrl+Shift+D"), self)
+        shortcut_show_selected.activated.connect(
+            lambda: self.btn_show_only_selected.setChecked(
+                not self.btn_show_only_selected.isChecked()
+            )
+        )
 
         # Enter - Open selected video
         shortcut_enter = QShortcut(QKeySequence(Qt.Key.Key_Return), self)
@@ -203,35 +220,61 @@ class VideosPage(QWidget):
 
     def _select_all(self):
         """Select all videos on the current page."""
+        for v in self._videos:
+            self._selector.include(v.video_id)
         self._selected_video_ids = {v.video_id for v in self._videos}
         self._update_selection_display()
 
+    def _select_all_in_view(self):
+        """Select all videos in the current filtered view (not just current page)."""
+        self._selector.select_all()
+        # Update local set for current page display
+        self._selected_video_ids = {v.video_id for v in self._videos}
+        self._update_selection_display()
+
+    def _toggle_show_only_selected(self, checked: bool = None):
+        """Toggle between showing all videos and showing only selected."""
+        if checked is None:
+            checked = self.btn_show_only_selected.isChecked()
+        self._show_only_selected = checked
+        self.page_number = 0
+        self.refresh()
+
     def _clear_selection(self):
         """Clear video selection."""
+        self._selector.deselect_all()
         self._selected_video_ids.clear()
         self._selected_video_id = None
+        # Reset show only selected if active
+        if self._show_only_selected:
+            self._show_only_selected = False
+            self.btn_show_only_selected.setChecked(False)
         self._update_selection_display()
 
     def _update_selection_display(self):
         """Update the visual display of selected videos."""
+        # Update selection from selector for current page
+        self._selected_video_ids = {
+            v.video_id for v in self._videos if self._selector.contains(v.video_id)
+        }
+
         if self._current_view == self.VIEW_GRID:
             for card in self._video_cards:
-                card.selected = card.video.video_id in self._selected_video_ids
+                card.selected = self._selector.contains(card.video.video_id)
         else:
             # Update list item selection
             for item in self._video_list_items:
-                item.selected = item.video.video_id in self._selected_video_ids
+                item.selected = self._selector.contains(item.video.video_id)
 
         # Update selection indicator and batch action buttons
-        count = len(self._selected_video_ids)
-        if count > 1:
+        # Use selector size for total selection count
+        count = self._selector.size_from(self._view_count)
+        if count > 0:
             self.selection_label.setText(f"{count} selected")
-            self.btn_batch_edit.setVisible(True)
-            self.btn_clear_selection.setVisible(True)
         else:
             self.selection_label.setText("")
-            self.btn_batch_edit.setVisible(False)
-            self.btn_clear_selection.setVisible(False)
+        self.btn_batch_edit.setEnabled(count > 0)
+        self.btn_clear_selection.setEnabled(count > 0)
 
     def _open_selected(self):
         """Open the selected video(s)."""
@@ -350,14 +393,28 @@ class VideosPage(QWidget):
         self.btn_batch_edit = QPushButton("Edit Properties...")
         self.btn_batch_edit.setToolTip("Edit properties for selected videos")
         self.btn_batch_edit.clicked.connect(self._on_batch_edit)
-        self.btn_batch_edit.setVisible(False)
+        self.btn_batch_edit.setEnabled(False)
         toolbar.addWidget(self.btn_batch_edit)
 
         self.btn_clear_selection = QPushButton("Clear Selection")
         self.btn_clear_selection.setToolTip("Clear selection (Escape)")
         self.btn_clear_selection.clicked.connect(self._clear_selection)
-        self.btn_clear_selection.setVisible(False)
+        self.btn_clear_selection.setEnabled(False)
         toolbar.addWidget(self.btn_clear_selection)
+
+        toolbar.addSeparator()
+
+        # Advanced selection buttons
+        self.btn_select_all_view = QPushButton("Select All in View")
+        self.btn_select_all_view.setToolTip("Select all videos in the current filtered view")
+        self.btn_select_all_view.clicked.connect(self._select_all_in_view)
+        toolbar.addWidget(self.btn_select_all_view)
+
+        self.btn_show_only_selected = QPushButton("Show Selected")
+        self.btn_show_only_selected.setToolTip("Toggle: show only selected videos")
+        self.btn_show_only_selected.setCheckable(True)
+        self.btn_show_only_selected.toggled.connect(self._toggle_show_only_selected)
+        toolbar.addWidget(self.btn_show_only_selected)
 
         return toolbar
 
@@ -803,10 +860,16 @@ class VideosPage(QWidget):
         if not self.ctx.provider:
             return
 
+        # Pass selector to backend if showing only selected
+        selector = self._selector if self._show_only_selected else None
+
         # Get videos from provider
         context: VideoSearchContext = self.ctx.get_videos(
-            self.page_size, self.page_number
+            self.page_size, self.page_number, selector
         )
+
+        # Store view count for selector size calculation
+        self._view_count = context.view_count
 
         # Update stats
         self.stats_label.setText(
@@ -1141,7 +1204,8 @@ class VideosPage(QWidget):
             card.clicked.connect(self._on_video_clicked)
             card.double_clicked.connect(self._on_video_double_clicked)
             card.context_menu_requested.connect(self._on_video_context_menu)
-            card.selected = video.video_id in self._selected_video_ids
+            card.selection_changed.connect(self._on_video_selection_changed)
+            card.selected = self._selector.contains(video.video_id)
             self.video_flow.addWidget(card)
             self._video_cards.append(card)
 
@@ -1163,9 +1227,10 @@ class VideosPage(QWidget):
             item.clicked.connect(self._on_video_clicked)
             item.double_clicked.connect(self._on_video_double_clicked)
             item.context_menu_requested.connect(self._on_video_context_menu)
+            item.selection_changed.connect(self._on_video_selection_changed)
 
             # Set selection state
-            item.selected = video.video_id in self._selected_video_ids
+            item.selected = self._selector.contains(video.video_id)
 
             # Insert before the stretch (which is at the end)
             self.list_layout.insertWidget(i, item)
@@ -1187,43 +1252,29 @@ class VideosPage(QWidget):
         self._selected_video_id = None
 
     def _on_video_clicked(self, video_id: int, modifiers=None):
-        """Handle video card click with optional modifier keys."""
-        # Find clicked video index
-        clicked_index = -1
+        """Handle video card click - track focused video but don't change selection."""
+        # Find clicked video index for tracking
         for i, video in enumerate(self._videos):
             if video.video_id == video_id:
-                clicked_index = i
+                self._last_clicked_index = i
                 break
 
-        if modifiers is None:
-            modifiers = Qt.KeyboardModifier.NoModifier
+        # Track focused video (for context menu, keyboard navigation, etc.)
+        self._selected_video_id = video_id
 
-        if modifiers & Qt.KeyboardModifier.ControlModifier:
-            # Ctrl+Click: Toggle selection
-            if video_id in self._selected_video_ids:
-                self._selected_video_ids.discard(video_id)
-            else:
-                self._selected_video_ids.add(video_id)
-            self._last_clicked_index = clicked_index
-
-        elif modifiers & Qt.KeyboardModifier.ShiftModifier:
-            # Shift+Click: Range selection
-            if self._last_clicked_index >= 0 and clicked_index >= 0:
-                start_idx = min(self._last_clicked_index, clicked_index)
-                end_idx = max(self._last_clicked_index, clicked_index)
-                for i in range(start_idx, end_idx + 1):
-                    if i < len(self._videos):
-                        self._selected_video_ids.add(self._videos[i].video_id)
-            else:
-                self._selected_video_ids = {video_id}
-                self._last_clicked_index = clicked_index
-
+    def _on_video_selection_changed(self, video_id: int, selected: bool):
+        """Handle checkbox selection change from video card/item."""
+        if selected:
+            self._selector.include(video_id)
         else:
-            # Normal click: Single selection
-            self._selected_video_ids = {video_id}
-            self._last_clicked_index = clicked_index
+            self._selector.exclude(video_id)
 
-        # Update legacy single selection tracking
+        # Track last clicked for shift-click ranges
+        for i, video in enumerate(self._videos):
+            if video.video_id == video_id:
+                self._last_clicked_index = i
+                break
+
         self._selected_video_id = video_id
         self._update_selection_display()
 
@@ -1588,8 +1639,9 @@ class VideosPage(QWidget):
                 QMessageBox.warning(self, "Error", f"Failed to delete: {e}")
 
     def _on_batch_edit(self):
-        """Open batch edit dialog for selected videos."""
-        if not self._selected_video_ids or not self.ctx.database:
+        """Show menu of properties to batch edit for selected videos."""
+        selection_count = self._selector.size_from(self._view_count)
+        if selection_count == 0 or not self.ctx.database:
             return
 
         prop_types = self.ctx.database.get_prop_types()
@@ -1602,12 +1654,57 @@ class VideosPage(QWidget):
             )
             return
 
-        from pysaurus.interface.pyside6.dialogs.batch_edit_dialog import BatchEditDialog
+        # Show menu of properties to choose from
+        menu = QMenu(self)
+        for prop_type in prop_types:
+            prop_name = prop_type["name"]
+            action = menu.addAction(prop_name)
+            action.setData(prop_type)
 
-        video_ids = list(self._selected_video_ids)
-        dialog = BatchEditDialog(video_ids, prop_types, self.ctx.database, self)
-        if dialog.exec():
-            self.refresh()
+        # Show menu at button position
+        action = menu.exec(self.btn_batch_edit.mapToGlobal(self.btn_batch_edit.rect().bottomLeft()))
+        if action:
+            prop_type = action.data()
+            self._edit_property_for_selection(prop_type)
+
+    def _edit_property_for_selection(self, prop_type: dict):
+        """Edit a specific property for selected videos."""
+        if not self.ctx.provider or not self.ctx.database:
+            return
+
+        prop_name = prop_type["name"]
+        selection_count = self._selector.size_from(self._view_count)
+
+        # Get current values and counts using apply_on_view
+        selector_dict = self._selector.to_dict()
+        values_and_counts = self.ctx.apply_on_view(
+            selector_dict, "count_property_values", prop_name
+        )
+
+        if values_and_counts is None:
+            values_and_counts = []
+
+        # Show the batch edit property dialog
+        result = BatchEditPropertyDialog.edit_property(
+            prop_name=prop_name,
+            prop_type=prop_type,
+            nb_videos=selection_count,
+            values_and_counts=values_and_counts,
+            parent=self,
+        )
+
+        if result:
+            to_add, to_remove = result
+            if to_add or to_remove:
+                # Apply changes using apply_on_view
+                self.ctx.apply_on_view(
+                    selector_dict,
+                    "edit_property_for_videos",
+                    prop_name,
+                    to_add,
+                    to_remove,
+                )
+                self.refresh()
 
     def _on_view_changed(self, index: int):
         """Handle view mode change."""

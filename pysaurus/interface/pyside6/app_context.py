@@ -197,9 +197,11 @@ class AppContext(QObject):
     # Synchronous operations (direct access, no threading)
     # =========================================================================
 
-    def get_videos(self, page_size: int, page_number: int) -> VideoSearchContext:
+    def get_videos(
+        self, page_size: int, page_number: int, selector=None
+    ) -> VideoSearchContext:
         """Return the context with videos (list[VideoPattern])."""
-        return self.provider.get_current_state(page_size, page_number)
+        return self.provider.get_current_state(page_size, page_number, selector)
 
     def close_database(self) -> None:
         """Close the database."""
@@ -285,6 +287,26 @@ class AppContext(QObject):
         """Focus on a specific property value (resets classifier and jumps to value)."""
         if self.provider:
             self.provider.classifier_focus_prop_val(prop_name, field_value)
+
+    # =========================================================================
+    # View operations with selector
+    # =========================================================================
+
+    def apply_on_view(self, selector_dict: dict, operation: str, *args):
+        """
+        Apply an operation on selected videos from the current view.
+
+        Args:
+            selector_dict: {"all": bool, "include": list, "exclude": list}
+            operation: "count_property_values" or "edit_property_for_videos"
+            *args: Additional arguments for the operation
+
+        Returns:
+            Result from the operation (e.g., list of [value, count] pairs)
+        """
+        if self.provider:
+            return self.provider.apply_on_view(selector_dict, operation, *args)
+        return None
 
     def close_app(self) -> None:
         """Close the application properly."""

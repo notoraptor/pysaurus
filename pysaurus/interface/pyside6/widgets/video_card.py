@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -54,6 +55,7 @@ class VideoCard(QFrame):
     clicked = Signal(int, object)  # video_id, Qt.KeyboardModifiers
     double_clicked = Signal(int)  # video_id
     context_menu_requested = Signal(int, object)  # video_id, QPoint
+    selection_changed = Signal(int, bool)  # video_id, selected
 
     # Base sizes (designed for 9pt font, will be scaled)
     BASE_THUMB_WIDTH = 200
@@ -101,14 +103,29 @@ class VideoCard(QFrame):
         self.duration_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         layout.addWidget(self.duration_label)
 
-        # Title
+        # Title row with checkbox
+        title_layout = QHBoxLayout()
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        title_layout.setSpacing(4)
+
+        self.checkbox = QCheckBox()
+        self.checkbox.setToolTip(f"Select video {self.video.video_id}")
+        self.checkbox.stateChanged.connect(self._on_checkbox_changed)
+        title_layout.addWidget(self.checkbox)
+
         title_str = str(self.video.title)
         self.title_label = QLabel(title_str)
         self.title_label.setToolTip(title_str)
         self.title_label.setWordWrap(True)
         self.title_label.setMaximumHeight(_get_scaled_size(50))
-        self.title_label.setStyleSheet("color: #000000; font-weight: bold;")
-        layout.addWidget(self.title_label)
+        self.title_label.setStyleSheet(
+            "color: #000000; font-weight: bold; text-decoration: underline;"
+        )
+        self.title_label.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.title_label.mousePressEvent = self._on_title_clicked
+        title_layout.addWidget(self.title_label, 1)
+
+        layout.addLayout(title_layout)
 
         # Info row: resolution and size
         info_layout = QHBoxLayout()
@@ -182,8 +199,8 @@ class VideoCard(QFrame):
                     border-radius: 6px;
                 }
                 VideoCard:hover {
-                    border-color: #ffb300;
-                    background-color: #fff8e1;
+                    border: 2px solid #ff9800;
+                    background-color: #ffecb3;
                 }
             """)
         else:
@@ -194,8 +211,8 @@ class VideoCard(QFrame):
                     border-radius: 6px;
                 }
                 VideoCard:hover {
-                    border-color: #999999;
-                    background-color: #f5f5f5;
+                    border: 2px solid #1976d2;
+                    background-color: #e3f2fd;
                 }
             """)
 
@@ -207,8 +224,24 @@ class VideoCard(QFrame):
     @selected.setter
     def selected(self, value: bool):
         """Set selection state."""
-        self._selected = value
+        if self._selected != value:
+            self._selected = value
+            # Update checkbox without triggering signal
+            self.checkbox.blockSignals(True)
+            self.checkbox.setChecked(value)
+            self.checkbox.blockSignals(False)
+            self._apply_style()
+
+    def _on_checkbox_changed(self, state: int):
+        """Handle checkbox state change."""
+        checked = state == Qt.CheckState.Checked.value
+        self._selected = checked
         self._apply_style()
+        self.selection_changed.emit(self.video.video_id, checked)
+
+    def _on_title_clicked(self, event):
+        """Handle title label click - toggle checkbox."""
+        self.checkbox.setChecked(not self.checkbox.isChecked())
 
     def mousePressEvent(self, event: QMouseEvent):
         """Handle mouse press."""

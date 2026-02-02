@@ -1,6 +1,9 @@
 """Dialog components for PySide6 interface."""
 
 from pysaurus.interface.pyside6.dialogs.batch_edit_dialog import BatchEditDialog
+from pysaurus.interface.pyside6.dialogs.batch_edit_property_dialog import (
+    BatchEditPropertyDialog,
+)
 from pysaurus.interface.pyside6.dialogs.edit_folders_dialog import EditFoldersDialog
 from pysaurus.interface.pyside6.dialogs.fill_property_dialog import FillPropertyDialog
 from pysaurus.interface.pyside6.dialogs.goto_page_dialog import GoToPageDialog
@@ -18,6 +21,7 @@ from pysaurus.interface.pyside6.dialogs.video_properties_dialog import (
 
 __all__ = [
     "BatchEditDialog",
+    "BatchEditPropertyDialog",
     "EditFoldersDialog",
     "FillPropertyDialog",
     "GoToPageDialog",

@@ -112,6 +112,33 @@ class MainWindow(QMainWindow):
             "&Generate Playlist (Ctrl+L)", self.videos_page._on_playlist
         )
 
+        # Selection menu
+        selection_menu = QMenu("&Selection", self)
+        menu_bar.addMenu(selection_menu)
+
+        selection_menu.addAction(
+            "Select &All (Page)\tCtrl+A", self.videos_page._select_all
+        )
+        selection_menu.addAction(
+            "Select All in &View\tCtrl+Shift+A", self.videos_page._select_all_in_view
+        )
+        selection_menu.addSeparator()
+        selection_menu.addAction(
+            "&Clear Selection\tEscape", self.videos_page._clear_selection
+        )
+        selection_menu.addSeparator()
+        self._action_show_only_selected = selection_menu.addAction(
+            "Show Only &Selected\tCtrl+Shift+D"
+        )
+        self._action_show_only_selected.setCheckable(True)
+        self._action_show_only_selected.triggered.connect(
+            self._on_toggle_show_only_selected
+        )
+        selection_menu.addSeparator()
+        selection_menu.addAction(
+            "&Edit Properties...", self.videos_page._on_batch_edit
+        )
+
         # Options menu
         options_menu = QMenu("&Options", self)
         menu_bar.addMenu(options_menu)
@@ -167,6 +194,11 @@ class MainWindow(QMainWindow):
         self.videos_page.find_similar_requested.connect(self._on_find_similar)
         self.videos_page.move_video_requested.connect(self._on_move_video)
         self.videos_page.status_message_requested.connect(self._on_status_message)
+
+        # Sync "Show Only Selected" menu with button
+        self.videos_page.btn_show_only_selected.toggled.connect(
+            self._action_show_only_selected.setChecked
+        )
 
         # Context signals
         self.ctx.notification_received.connect(self._on_notification)
@@ -419,6 +451,11 @@ class MainWindow(QMainWindow):
         # Update the videos page combo box to match
         self.videos_page.page_size_combo.setCurrentText(str(size))
         # This will trigger the page size change through the combo box signal
+
+    def _on_toggle_show_only_selected(self, checked: bool):
+        """Handle show only selected toggle from menu."""
+        # Sync the button state in videos_page
+        self.videos_page.btn_show_only_selected.setChecked(checked)
 
     def _on_confirm_not_found_changed(self, checked: bool):
         """Handle confirm deletion setting change."""

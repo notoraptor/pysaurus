@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -78,6 +79,7 @@ class VideoListItem(QFrame):
     clicked = Signal(int, object)  # video_id, modifiers
     double_clicked = Signal(int)  # video_id
     context_menu_requested = Signal(int, object)  # video_id, QPoint
+    selection_changed = Signal(int, bool)  # video_id, selected
 
     # Base sizes (designed for 9pt font, will be scaled)
     BASE_THUMB_WIDTH = 180
@@ -116,7 +118,7 @@ class VideoListItem(QFrame):
         main_layout.setContentsMargins(8, 8, 8, 8)
         main_layout.setSpacing(12)
 
-        # Thumbnail on the left
+        # Thumbnail
         self.thumb_label = QLabel()
         self.thumb_label.setFixedSize(self._thumb_width, self._thumb_height)
         self.thumb_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -131,7 +133,16 @@ class VideoListItem(QFrame):
         details_layout.setSpacing(3)
         details_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Row 1: Title
+        # Row 1: Checkbox + Title
+        title_row = QHBoxLayout()
+        title_row.setContentsMargins(0, 0, 0, 0)
+        title_row.setSpacing(4)
+
+        self.checkbox = QCheckBox()
+        self.checkbox.setToolTip(f"Select video {self.video.video_id}")
+        self.checkbox.stateChanged.connect(self._on_checkbox_changed)
+        title_row.addWidget(self.checkbox)
+
         # Note: title = meta_title or file_title, so when meta_title is empty,
         # title == file_title. In that case, apply character-level diffs to title.
         title_str = str(self.video.title)
@@ -142,16 +153,20 @@ class VideoListItem(QFrame):
         if title_is_file_title and self._file_title_diffs:
             # _apply_char_diff_highlights now handles break opportunities internally
             title_display = self._apply_char_diff_highlights(title_str)
-            title_html = f"<b>{title_display}</b>"
+            title_html = f'<b><u>{title_display}</u></b>'
         else:
             title_display = _add_break_opportunities(self._escape_html(title_str))
-            title_html = self._highlight_if_diff("title", f"<b>{title_display}</b>")
+            title_html = self._highlight_if_diff("title", f'<b><u>{title_display}</u></b>')
 
         self.title_label = WrappingLabel(title_html)
         self.title_label.setToolTip(title_str)
         self.title_label.setTextFormat(Qt.TextFormat.RichText)
         self.title_label.setStyleSheet("color: #000000;")
-        details_layout.addWidget(self.title_label)
+        self.title_label.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.title_label.mousePressEvent = self._on_title_clicked
+        title_row.addWidget(self.title_label, 1)
+
+        details_layout.addLayout(title_row)
 
         # Row 2: Filename (if different from title)
         if file_title and not title_is_file_title:
@@ -472,6 +487,9 @@ class VideoListItem(QFrame):
             """)
         elif not self.video.found:
             # Not found: light yellow background
+            # previous:
+            # border-color: #ffb300;
+            # background-color: #fff8e1;
             self.setStyleSheet("""
                 VideoListItem {
                     background-color: #fffde7;
@@ -479,11 +497,14 @@ class VideoListItem(QFrame):
                     border-radius: 6px;
                 }
                 VideoListItem:hover {
-                    border-color: #ffb300;
-                    background-color: #fff8e1;
+                    border: 2px solid #ff9800;
+                    background-color: #ffecb3;
                 }
             """)
         else:
+            # previous:
+            # border-color: #999999;
+            # background-color: #fafafa;
             self.setStyleSheet("""
                 VideoListItem {
                     background-color: #ffffff;
@@ -491,8 +512,8 @@ class VideoListItem(QFrame):
                     border-radius: 6px;
                 }
                 VideoListItem:hover {
-                    border-color: #999999;
-                    background-color: #fafafa;
+                    border: 2px solid #1976d2;
+                    background-color: #e3f2fd;
                 }
             """)
 
@@ -504,8 +525,24 @@ class VideoListItem(QFrame):
     @selected.setter
     def selected(self, value: bool):
         """Set selection state."""
-        self._selected = value
+        if self._selected != value:
+            self._selected = value
+            # Update checkbox without triggering signal
+            self.checkbox.blockSignals(True)
+            self.checkbox.setChecked(value)
+            self.checkbox.blockSignals(False)
+            self._apply_style()
+
+    def _on_checkbox_changed(self, state: int):
+        """Handle checkbox state change."""
+        checked = state == Qt.CheckState.Checked.value
+        self._selected = checked
         self._apply_style()
+        self.selection_changed.emit(self.video.video_id, checked)
+
+    def _on_title_clicked(self, event):
+        """Handle title label click - toggle checkbox."""
+        self.checkbox.setChecked(not self.checkbox.isChecked())
 
     def mousePressEvent(self, event: QMouseEvent):
         """Handle mouse press."""
