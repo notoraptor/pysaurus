@@ -174,6 +174,22 @@ class VideosPage(QWidget):
         shortcut_end = QShortcut(QKeySequence(Qt.Key.Key_End), self)
         shortcut_end.activated.connect(self._go_last)
 
+        # Ctrl+Shift+T - Reset sources
+        shortcut_reset_sources = QShortcut(QKeySequence("Ctrl+Shift+T"), self)
+        shortcut_reset_sources.activated.connect(self._clear_sources)
+
+        # Ctrl+Shift+G - Reset grouping
+        shortcut_reset_grouping = QShortcut(QKeySequence("Ctrl+Shift+G"), self)
+        shortcut_reset_grouping.activated.connect(self._clear_grouping)
+
+        # Ctrl+Shift+F - Reset search
+        shortcut_reset_search = QShortcut(QKeySequence("Ctrl+Shift+F"), self)
+        shortcut_reset_search.activated.connect(self._clear_search)
+
+        # Ctrl+P - Manage properties
+        shortcut_properties = QShortcut(QKeySequence("Ctrl+P"), self)
+        shortcut_properties.activated.connect(self._go_to_properties)
+
     def _focus_search(self):
         """Focus the search input."""
         self.search_input.setFocus()
@@ -404,7 +420,7 @@ class VideosPage(QWidget):
 
         self.btn_sources_clear = QPushButton("✕")
         self.btn_sources_clear.setObjectName("clearBtn")
-        self.btn_sources_clear.setToolTip("Reset to default sources")
+        self.btn_sources_clear.setToolTip("Reset to default sources (Ctrl+Shift+T)")
         self.btn_sources_clear.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
         )
@@ -435,7 +451,7 @@ class VideosPage(QWidget):
 
         self.btn_grouping_clear = QPushButton("✕")
         self.btn_grouping_clear.setObjectName("clearBtn")
-        self.btn_grouping_clear.setToolTip("Remove grouping")
+        self.btn_grouping_clear.setToolTip("Remove grouping (Ctrl+Shift+G)")
         self.btn_grouping_clear.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
         )
@@ -495,7 +511,7 @@ class VideosPage(QWidget):
 
         self.btn_search_clear = QPushButton("✕")
         self.btn_search_clear.setObjectName("clearBtn")
-        self.btn_search_clear.setToolTip("Clear search")
+        self.btn_search_clear.setToolTip("Clear search (Ctrl+Shift+F)")
         self.btn_search_clear.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
         )
@@ -1608,3 +1624,9 @@ class VideosPage(QWidget):
             context = self.ctx.get_videos(self.page_size, 0)
             self.page_number = max(0, context.nb_pages - 1)
             self.refresh()
+
+    def _go_to_properties(self):
+        """Navigate to properties page."""
+        main_window = self.window()
+        if hasattr(main_window, "show_properties_page"):
+            main_window.show_properties_page()

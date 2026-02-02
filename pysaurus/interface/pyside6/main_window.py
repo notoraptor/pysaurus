@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
         menu_bar.addMenu(view_menu)
 
         view_menu.addAction("&Videos", self.show_videos_page)
-        view_menu.addAction("&Properties", self.show_properties_page)
+        view_menu.addAction("&Properties (Ctrl+P)", self.show_properties_page)
         view_menu.addSeparator()
         view_menu.addAction(
             "&Generate Playlist (Ctrl+L)", self.videos_page._on_playlist

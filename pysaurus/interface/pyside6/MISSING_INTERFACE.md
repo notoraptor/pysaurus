@@ -42,14 +42,14 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 ---
 
-## 5. Raccourcis clavier manquants
+## 5. Raccourcis clavier
 
 | Raccourci Web | Action | PySide6 |
 |---------------|--------|---------|
-| Ctrl+Shift+T | Reset sources | Non |
-| Ctrl+Shift+G | Reset grouping | Non |
-| Ctrl+Shift+F | Reset search | Non |
-| Ctrl+P | Manage properties | Non |
+| Ctrl+Shift+T | Reset sources | Oui |
+| Ctrl+Shift+G | Reset grouping | Oui |
+| Ctrl+Shift+F | Reset search | Oui |
+| Ctrl+P | Manage properties | Oui |
 | Ctrl+L | Play list | Oui |
 
 ---
@@ -110,8 +110,7 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 
 4. Confirmer déplacements (move_id grouping)
 5. Sélection avancée (tout sélectionner dans la vue)
-6. Raccourcis clavier reset (Ctrl+Shift+T/G/F, Ctrl+P)
-7. Confirmer tous les déplacements uniques
+6. Confirmer tous les déplacements uniques
 
 ### Basse priorité
 
@@ -136,3 +135,4 @@ Comparaison entre l'interface web (`pysaurus/interface/web/src`) et l'interface 
 - [x] Renommer la base de données (menu Database)
 - [x] Éditer les dossiers sources (menu Database)
 - [x] Fermer la base de données (menu Database)
+- [x] Raccourcis clavier reset (Ctrl+Shift+T/G/F) et Ctrl+P pour les propriétés
