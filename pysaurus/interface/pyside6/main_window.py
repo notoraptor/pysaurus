@@ -10,11 +10,7 @@ from PySide6.QtWidgets import QMainWindow, QStackedWidget, QStatusBar, QMenuBar,
 
 from pysaurus.core.notifications import End
 from pysaurus.interface.pyside6.app_context import AppContext
-from pysaurus.interface.pyside6.pages import (
-    DatabasesPage,
-    PropertiesPage,
-    VideosPage,
-)
+from pysaurus.interface.pyside6.pages import DatabasesPage, PropertiesPage, VideosPage
 from pysaurus.interface.pyside6.pages.process_page import ProcessPage
 
 
@@ -88,7 +84,9 @@ class MainWindow(QMainWindow):
         view_menu.addAction("&Videos", self.show_videos_page)
         view_menu.addAction("&Properties", self.show_properties_page)
         view_menu.addSeparator()
-        view_menu.addAction("&Generate Playlist (Ctrl+L)", self.videos_page._on_playlist)
+        view_menu.addAction(
+            "&Generate Playlist (Ctrl+L)", self.videos_page._on_playlist
+        )
 
         # Help menu
         help_menu = QMenu("&Help", self)
@@ -174,10 +172,7 @@ class MainWindow(QMainWindow):
     # =========================================================================
 
     def _run_process(
-        self,
-        title: str,
-        operation: Callable[[], None],
-        on_end: Callable[[End], None],
+        self, title: str, operation: Callable[[], None], on_end: Callable[[End], None]
     ):
         """
         Run an operation with a dedicated ProcessPage.

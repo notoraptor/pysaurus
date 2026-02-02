@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
 
 from pysaurus.core.job_notifications import (
     JobProgressDisplay,
-    JobStep,
     JobToDo,
     NotificationCollector,
 )
@@ -145,10 +144,7 @@ class ProcessPage(QWidget):
     continue_clicked = Signal(object)  # Emits the End notification
 
     def __init__(
-        self,
-        title: str,
-        callback: Callable[[End], None] | None = None,
-        parent=None,
+        self, title: str, callback: Callable[[End], None] | None = None, parent=None
     ):
         super().__init__(parent)
         self.title = title
@@ -272,7 +268,9 @@ class ProcessPage(QWidget):
         if isinstance(notification, End):
             self._on_end(notification)
         elif isinstance(notification, ProfilingEnd):
-            self.add_log_entry(f"✓ {notification.name} ({notification.time})", bold=True)
+            self.add_log_entry(
+                f"✓ {notification.name} ({notification.time})", bold=True
+            )
 
     def _on_end(self, notification: End):
         """Handle end notification - show Continue button."""

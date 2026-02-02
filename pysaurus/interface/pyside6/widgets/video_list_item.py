@@ -197,16 +197,24 @@ class VideoListItem(QFrame):
 
         # Badge style: white text on dark background (using &nbsp; for padding since Qt ignores CSS padding)
         badge = "background-color: #333; color: white; font-weight: bold;"
-        ext_html = self._highlight_if_diff("extension", f'<span style="{badge}">&nbsp;&nbsp;{ext}&nbsp;&nbsp;</span>')
+        ext_html = self._highlight_if_diff(
+            "extension", f'<span style="{badge}">&nbsp;&nbsp;{ext}&nbsp;&nbsp;</span>'
+        )
         size_html = self._highlight_if_diff("size", f"<b>{size}</b>")
         container_html = self._highlight_if_diff("container_format", container)
-        video_codec_html = self._highlight_if_diff("video_codec", f'<span style="color: #666;">{video_codec}</span>')
-        audio_codec_html = self._highlight_if_diff("audio_codec", f'<span style="color: #666;">{audio_codec}</span>')
-        bit_rate_html = self._highlight_if_diff("bit_rate", f"<b><i>{bit_rate}/s</i></b>")
+        video_codec_html = self._highlight_if_diff(
+            "video_codec", f'<span style="color: #666;">{video_codec}</span>'
+        )
+        audio_codec_html = self._highlight_if_diff(
+            "audio_codec", f'<span style="color: #666;">{audio_codec}</span>'
+        )
+        bit_rate_html = self._highlight_if_diff(
+            "bit_rate", f"<b><i>{bit_rate}/s</i></b>"
+        )
         format_line = (
-            f'{ext_html} '
+            f"{ext_html} "
             f"{size_html} / {container_html} "
-            f'({video_codec_html}, {audio_codec_html}) '
+            f"({video_codec_html}, {audio_codec_html}) "
             f'<span style="{badge}">&nbsp;Bit rate&nbsp;</span> '
             f"{bit_rate_html}"
         )
@@ -228,19 +236,27 @@ class VideoListItem(QFrame):
             round(self.video.audio_bit_rate / 1000) if self.video.audio_bit_rate else 0
         )
 
-        duration_html = self._highlight_if_diff("length", f'<b style="color: #0066cc;">{duration}</b>')
-        width_html = self._highlight_if_diff("width", f'<b style="color: #006600;">{width}</b>')
-        height_html = self._highlight_if_diff("height", f'<b style="color: #006600;">{height}</b>')
+        duration_html = self._highlight_if_diff(
+            "length", f'<b style="color: #0066cc;">{duration}</b>'
+        )
+        width_html = self._highlight_if_diff(
+            "width", f'<b style="color: #006600;">{width}</b>'
+        )
+        height_html = self._highlight_if_diff(
+            "height", f'<b style="color: #006600;">{height}</b>'
+        )
         frame_rate_html = self._highlight_if_diff("frame_rate", f"{frame_rate} fps")
         bit_depth_html = self._highlight_if_diff("bit_depth", f"{bit_depth} bits")
         sample_rate_html = self._highlight_if_diff("sample_rate", f"{sample_rate} Hz")
         audio_bits_html = self._highlight_if_diff("audio_bits", f"{audio_bits} bits")
         channels_html = self._highlight_if_diff("channels", f"{channels} ch")
-        audio_bit_rate_html = self._highlight_if_diff("audio_bit_rate", f"{audio_bit_rate_kbps} Kb/s")
+        audio_bit_rate_html = self._highlight_if_diff(
+            "audio_bit_rate", f"{audio_bit_rate_kbps} Kb/s"
+        )
 
         video_line = (
-            f'{duration_html} | '
-            f'{width_html} x {height_html} '
+            f"{duration_html} | "
+            f"{width_html} x {height_html} "
             f'@ <span style="color: #666;">{frame_rate_html}, {bit_depth_html}</span> | '
             f'<span style="color: #666;">{sample_rate_html} x {audio_bits_html} '
             f"({channels_html}), {audio_bit_rate_html}</span>"
@@ -263,18 +279,20 @@ class VideoListItem(QFrame):
             else ""
         )
 
-        date_html = self._highlight_if_diff("date", f'<code style="color: #996600;">{date}</code>')
+        date_html = self._highlight_if_diff(
+            "date", f'<code style="color: #996600;">{date}</code>'
+        )
         date_line = date_html
         if date_entry_modified:
             date_mod_html = self._highlight_if_diff(
                 "date_entry_modified",
-                f'<code style="color: #996600;">{date_entry_modified}</code>'
+                f'<code style="color: #996600;">{date_entry_modified}</code>',
             )
             date_line += f' | <i style="color: #888;">(entry)</i> {date_mod_html}'
         if date_entry_opened:
             date_opened_html = self._highlight_if_diff(
                 "date_entry_opened",
-                f'<code style="color: #996600;">{date_entry_opened}</code>'
+                f'<code style="color: #996600;">{date_entry_opened}</code>',
             )
             date_line += f' | <i style="color: #888;">(opened)</i> {date_opened_html}'
 
@@ -297,7 +315,9 @@ class VideoListItem(QFrame):
         )
 
         audio_langs_html = self._highlight_if_diff("audio_languages", audio_str)
-        subtitle_langs_html = self._highlight_if_diff("subtitle_languages", subtitle_str)
+        subtitle_langs_html = self._highlight_if_diff(
+            "subtitle_languages", subtitle_str
+        )
         lang_line = (
             f'<b style="color: #333;">Audio:</b> {audio_langs_html} | '
             f'<b style="color: #333;">Subtitles:</b> {subtitle_langs_html}'

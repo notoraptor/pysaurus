@@ -1,5 +1,3 @@
-import pytest
-
 from pysaurus.video.video_features import VideoFeatures
 
 
@@ -104,19 +102,13 @@ class TestGetFileTitleDiffs:
 
     def test_two_identical_videos(self):
         """Two videos with identical titles."""
-        videos = [
-            MockVideo(1, "video_01"),
-            MockVideo(2, "video_01"),
-        ]
+        videos = [MockVideo(1, "video_01"), MockVideo(2, "video_01")]
         result = VideoFeatures.get_file_title_diffs(videos)
         assert result == {1: [], 2: []}  # Reference has [], second has [] (no diff)
 
     def test_two_different_videos(self):
         """Two videos with different titles."""
-        videos = [
-            MockVideo(1, "video_01"),
-            MockVideo(2, "video_02"),
-        ]
+        videos = [MockVideo(1, "video_01"), MockVideo(2, "video_02")]
         result = VideoFeatures.get_file_title_diffs(videos)
         assert result == {1: [], 2: [(7, 8)]}  # Reference has [], second has diff
 
@@ -136,26 +128,20 @@ class TestGetFileTitleDiffs:
 
     def test_first_video_is_reference(self):
         """First video in list is always the reference (empty diff list)."""
-        videos = [
-            MockVideo(100, "aaa"),
-            MockVideo(200, "bbb"),
-            MockVideo(300, "ccc"),
-        ]
+        videos = [MockVideo(100, "aaa"), MockVideo(200, "bbb"), MockVideo(300, "ccc")]
         result = VideoFeatures.get_file_title_diffs(videos)
         assert result[100] == []  # First video is always reference
 
     def test_none_file_title(self):
         """Handle None file_title gracefully."""
-        videos = [
-            MockVideo(1, None),
-            MockVideo(2, "video"),
-        ]
+        videos = [MockVideo(1, None), MockVideo(2, "video")]
         result = VideoFeatures.get_file_title_diffs(videos)
         # None becomes "" via str(), so entire "video" is diff
         assert result == {1: [], 2: [(0, 5)]}
 
     def test_iterator_input(self):
         """Should work with iterators, not just lists."""
+
         def video_generator():
             yield MockVideo(1, "video_01")
             yield MockVideo(2, "video_02")
@@ -165,10 +151,7 @@ class TestGetFileTitleDiffs:
 
     def test_custom_getfield(self):
         """Test with custom getfield function (like dict access)."""
-        videos = [
-            {"id": 1, "title": "video_01"},
-            {"id": 2, "title": "video_02"},
-        ]
+        videos = [{"id": 1, "title": "video_01"}, {"id": 2, "title": "video_02"}]
         result = VideoFeatures.get_file_title_diffs(
             videos,
             getfield=lambda obj, key: obj["id"] if key == "video_id" else obj["title"],

@@ -480,7 +480,6 @@ def _render_video_list_item(video: dict[str, Any], menu_actions: list):
 
     video_id = video.get("video_id", 0)
     title = video.get("title", "Untitled")
-    file_title = video.get("file_title", "")
     thumbnail = video.get("thumbnail_path")
     length = video.get("length", 0)
     width = video.get("width", 0)
@@ -741,7 +740,6 @@ def _show_video_info_dialog(video_id: int):
     container_format = video.get("container_format", "")
     properties = video.get("properties", {})
     date = video.get("date", "")
-    day = video.get("day", "")
 
     with (
         ui.dialog() as dialog,

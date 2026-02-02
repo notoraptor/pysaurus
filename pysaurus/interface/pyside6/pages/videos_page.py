@@ -255,15 +255,13 @@ class VideosPage(QWidget):
         try:
             # Call the playlist method from the API
             filename = self.ctx.api.playlist()
-            
+
             # Emit signal for status message
             self.status_message_requested.emit(f"Playlist opened: {filename}", 5000)
-            
+
         except Exception as e:
             QMessageBox.critical(
-                self,
-                "Error Creating Playlist",
-                f"Failed to create playlist: {str(e)}",
+                self, "Error Creating Playlist", f"Failed to create playlist: {str(e)}"
             )
 
     def _create_toolbar(self) -> QToolBar:
@@ -581,9 +579,7 @@ class VideosPage(QWidget):
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
         self.video_container = QWidget()
-        self.video_flow = FlowLayout(
-            self.video_container, h_spacing=10, v_spacing=10
-        )
+        self.video_flow = FlowLayout(self.video_container, h_spacing=10, v_spacing=10)
         # No top margin to align with sidebar top
         self.video_flow.setContentsMargins(3, 0, 3, 3)
         self.scroll_area.setWidget(self.video_container)
@@ -772,7 +768,8 @@ class VideosPage(QWidget):
 
             # Extract differing fields from common_fields (for similarity groups)
             self._diff_fields = {
-                field for field, is_common in context.common_fields.items()
+                field
+                for field, is_common in context.common_fields.items()
                 if not is_common
             }
             # Extract file title character-level diffs
@@ -1105,9 +1102,7 @@ class VideosPage(QWidget):
                 menu.addAction(
                     "Dismiss Similarity", lambda: self._dismiss_similarity(video_id)
                 )
-            menu.addAction(
-                "Reset Similarity", lambda: self._reset_similarity(video_id)
-            )
+            menu.addAction("Reset Similarity", lambda: self._reset_similarity(video_id))
             menu.addSeparator()
 
         menu.addAction("Properties...", lambda: self._show_properties(video_id))

@@ -441,30 +441,6 @@ class TestAPIBridgeIntegration:
         if data["groupDef"]:
             assert data["groupDef"]["field"] == "extension"
 
-    def test_sorting_changes_order(self, mock_database):
-        """Test that sorting changes video order."""
-        from pysaurus.interface.nicegui.api_bridge import APIBridge, NiceGuiAPI
-
-        bridge = APIBridge()
-        bridge._api = NiceGuiAPI()
-        bridge._api.database = mock_database
-
-        # Get videos sorted ascending
-        bridge.set_sorting(["filename"])
-        data_asc = bridge.backend(page_size=100, page_number=0)
-
-        # Get videos sorted descending
-        bridge.set_sorting(["-filename"])
-        data_desc = bridge.backend(page_size=100, page_number=0)
-
-        # If there are multiple videos, order should be different
-        if len(data_asc["videos"]) > 1 and len(data_desc["videos"]) > 1:
-            # First video of ascending should be last of descending (roughly)
-            asc_first = data_asc["videos"][0]["video_id"]
-            desc_first = data_desc["videos"][0]["video_id"]
-            # They should be different (unless all have same filename)
-            # Just verify the call works without error
-
     def test_prop_type_lifecycle(self, mock_database):
         """Test complete property type lifecycle."""
         from pysaurus.interface.nicegui.api_bridge import APIBridge, NiceGuiAPI

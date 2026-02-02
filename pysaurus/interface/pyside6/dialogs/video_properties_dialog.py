@@ -407,7 +407,6 @@ class VideoPropertiesDialog(QDialog):
             self._property_widgets[prop_type["name"]] = prop_widget
 
             # Create label with type info
-            ptype = prop_type["type"]
             is_multiple = prop_type["multiple"]
             enumeration = prop_type.get("enumeration")
 

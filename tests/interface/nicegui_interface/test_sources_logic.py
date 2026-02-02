@@ -4,7 +4,6 @@ Tests for the sources selection logic.
 Tests the helper functions used by the sources dialog.
 """
 
-
 # Import the functions we're testing
 from pysaurus.interface.nicegui.utils.constants import SOURCE_TREE
 

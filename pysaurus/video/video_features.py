@@ -51,7 +51,9 @@ class VideoFeatures:
         for video in other_videos:
             video_id = getfield(video, "video_id")
             title = str(getfield(video, "file_title") or "").lower()
-            result[video_id] = VideoFeatures._compute_diff_ranges(reference_title, title)
+            result[video_id] = VideoFeatures._compute_diff_ranges(
+                reference_title, title
+            )
 
         return result
 

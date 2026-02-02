@@ -326,7 +326,9 @@ class PropertiesPage(QWidget):
 
         # Convert action (only for string properties)
         if is_string:
-            convert_text = "Convert to Single Value" if multiple else "Convert to Multiple Values"
+            convert_text = (
+                "Convert to Single Value" if multiple else "Convert to Multiple Values"
+            )
             action_convert = menu.addAction(convert_text)
             action_convert.triggered.connect(
                 lambda _, n=name, m=multiple: self._on_convert(n, m)
