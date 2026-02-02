@@ -106,6 +106,16 @@ class MockVideoPattern:
     def moves(self) -> list:
         return self._data.get("moves", [])
 
+    def get_property(self, name: str, default=None):
+        """Get a property value by name."""
+        props = self.properties
+        if name in props:
+            values = props[name]
+            if isinstance(values, list):
+                return values if len(values) > 1 else (values[0] if values else default)
+            return values
+        return default
+
     def json(self, with_moves=False) -> dict:
         """Return video as dict for JSON serialization."""
         from pysaurus.core.duration import Duration
@@ -359,10 +369,98 @@ class MockProvider:
             return random.choice(videos)["video_id"]
         return 0
 
-    def apply_on_view(self, selector: dict, fn_name: str, *fn_args) -> dict[str, Any]:
+    def apply_on_view(self, selector: dict, fn_name: str, *fn_args):
         """Apply a function on selected videos."""
-        # Mock implementation - just return success
+        # Get selected video IDs based on selector
+        video_ids = self._get_selected_video_ids(selector)
+
+        if fn_name == "count_property_values":
+            # Count property values for selected videos
+            prop_name = fn_args[0] if fn_args else None
+            return self._count_property_values(video_ids, prop_name)
+
+        elif fn_name == "edit_property_for_videos":
+            # Edit property values for selected videos
+            prop_name = fn_args[0] if len(fn_args) > 0 else None
+            to_add = fn_args[1] if len(fn_args) > 1 else []
+            to_remove = fn_args[2] if len(fn_args) > 2 else []
+            return self._edit_property_for_videos(video_ids, prop_name, to_add, to_remove)
+
+        # Default: return success
         return {"applied": True, "fn_name": fn_name}
+
+    def _get_selected_video_ids(self, selector: dict) -> list[int]:
+        """Get video IDs matching the selector.
+
+        Selector format from Selector.to_dict():
+        - {'all': True, 'include': [], 'exclude': []} - all selected
+        - {'all': False, 'include': [1, 2, 3], 'exclude': []} - specific IDs included
+        - {'all': True, 'include': [], 'exclude': [4, 5]} - all except 4, 5
+        """
+        all_ids = [v["video_id"] for v in self._filter_videos()]
+
+        if not selector:
+            return all_ids
+
+        # Handle Selector.to_dict() format
+        if "all" in selector:
+            is_all = selector.get("all", False)
+            include = set(selector.get("include", []))
+            exclude = set(selector.get("exclude", []))
+
+            if is_all:
+                # All selected, minus excludes
+                return [vid for vid in all_ids if vid not in exclude]
+            else:
+                # Only includes
+                return [vid for vid in all_ids if vid in include]
+
+        # Fallback: legacy format
+        mode = selector.get("mode", "include")
+        selection = set(selector.get("selection", []))
+
+        if mode == "include":
+            return [vid for vid in all_ids if vid in selection]
+        else:  # exclude mode
+            return [vid for vid in all_ids if vid not in selection]
+
+    def _count_property_values(self, video_ids: list[int], prop_name: str) -> list[list]:
+        """Count property values for selected videos."""
+        value_counts: dict[Any, int] = {}
+        for video in self._db._videos:
+            if video["video_id"] in video_ids:
+                props = video.get("properties", {})
+                values = props.get(prop_name, [])
+                for val in values:
+                    value_counts[val] = value_counts.get(val, 0) + 1
+        return [[val, count] for val, count in value_counts.items()]
+
+    def _edit_property_for_videos(
+        self, video_ids: list[int], prop_name: str, to_add: list, to_remove: list
+    ) -> int:
+        """Edit property values for selected videos. Returns number of modified videos."""
+        modified = 0
+        for video in self._db._videos:
+            if video["video_id"] in video_ids:
+                props = video.setdefault("properties", {})
+                values = list(props.get(prop_name, []))
+                original = list(values)
+
+                # Remove values
+                for val in to_remove:
+                    if val in values:
+                        values.remove(val)
+
+                # Add values
+                for val in to_add:
+                    if val not in values:
+                        values.append(val)
+
+                if values != original:
+                    props[prop_name] = values
+                    modified += 1
+
+        return modified
 
     def get_classifier_path(self) -> list[str]:
         """Get current classifier path."""
@@ -388,6 +486,20 @@ class MockProvider:
     def refresh(self) -> None:
         """Refresh the provider state."""
         pass
+
+    def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
+        """Focus on a specific property value (resets classifier and jumps to value)."""
+        # Set grouping to the property
+        self._grouping = GroupDef(
+            field=prop_name,
+            is_property=True,
+            sorting="field",
+            reverse=False,
+            allow_singletons=True,
+        )
+        # Reset classifier path
+        self._classifier_path = []
+        self._group_id = 0
 
 
 class MockOps:
@@ -504,8 +616,20 @@ class MockDatabase:
         return self._folders
 
     def get_prop_types(self) -> list[dict]:
-        """Get property types."""
-        return self._prop_types
+        """Get property types in flat format for PySide6 interface."""
+        result = []
+        for pt in self._prop_types:
+            # Flatten the definition into the prop_type dict
+            definition = pt.get("definition", {})
+            flat_pt = {
+                "name": pt["name"],
+                "type": definition.get("type", "str"),
+                "multiple": pt.get("multiple", False),
+                "enumeration": definition.get("enumeration"),
+                "defaultValues": definition.get("defaultValues", []),
+            }
+            result.append(flat_pt)
+        return result
 
     def get_videos(
         self, include: list[str] | None = None, where: dict | None = None
