@@ -1193,11 +1193,14 @@ class VideosPage(QWidget):
 
         if self._current_view == self.VIEW_GRID:
             self._display_grid_view(videos)
-            # Reset scroll to top
-            self.scroll_area.verticalScrollBar().setValue(0)
         else:
             self._display_list_view(videos)
-            # Reset scroll to top
+
+    def _reset_scroll_to_top(self):
+        """Reset the scroll position to the top."""
+        if self._current_view == self.VIEW_GRID:
+            self.scroll_area.verticalScrollBar().setValue(0)
+        else:
             self.list_scroll_area.verticalScrollBar().setValue(0)
 
     def _display_grid_view(self, videos: list[VideoPattern]):
@@ -2002,6 +2005,7 @@ class VideosPage(QWidget):
             self.ctx.provider.set_group(index)
             self.page_number = 0
             self.refresh()
+            self._reset_scroll_to_top()
 
     def _on_go_to_page(self):
         """Show dialog to go to a specific page."""
@@ -2013,22 +2017,26 @@ class VideosPage(QWidget):
         if page is not None and page != self.page_number:
             self.page_number = page
             self.refresh()
+            self._reset_scroll_to_top()
 
     def _go_first(self):
         """Go to first page."""
         self.page_number = 0
         self.refresh()
+        self._reset_scroll_to_top()
 
     def _go_prev(self):
         """Go to previous page."""
         if self.page_number > 0:
             self.page_number -= 1
             self.refresh()
+            self._reset_scroll_to_top()
 
     def _go_next(self):
         """Go to next page."""
         self.page_number += 1
         self.refresh()
+        self._reset_scroll_to_top()
 
     def _go_last(self):
         """Go to last page."""
@@ -2036,6 +2044,7 @@ class VideosPage(QWidget):
             context = self.ctx.get_videos(self.page_size, 0)
             self.page_number = max(0, context.nb_pages - 1)
             self.refresh()
+            self._reset_scroll_to_top()
 
     def _go_to_properties(self):
         """Navigate to properties page."""
