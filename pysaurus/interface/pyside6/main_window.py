@@ -45,6 +45,8 @@ class MainWindow(QMainWindow):
         self._setup_ui()
         self._setup_menu()
         self._connect_signals()
+        # Start on databases page (after menu setup)
+        self.show_databases_page()
 
     def _setup_ui(self):
         """Set up the main UI components."""
@@ -70,9 +72,6 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Ready")
 
-        # Start on databases page
-        self.show_databases_page()
-
     def _setup_menu(self):
         """Set up the menu bar."""
         menu_bar = QMenuBar()
@@ -82,8 +81,6 @@ class MainWindow(QMainWindow):
         file_menu = QMenu("&File", self)
         menu_bar.addMenu(file_menu)
 
-        file_menu.addAction("&Databases", self.show_databases_page)
-        file_menu.addSeparator()
         file_menu.addAction("&Quit", self.close)
 
         # Database menu (only enabled when a database is open)
@@ -102,49 +99,53 @@ class MainWindow(QMainWindow):
         )
 
         # View menu
-        view_menu = QMenu("&View", self)
-        menu_bar.addMenu(view_menu)
+        self.view_menu = QMenu("&View", self)
+        menu_bar.addMenu(self.view_menu)
 
-        view_menu.addAction("&Videos", self.show_videos_page)
-        view_menu.addAction("&Properties (Ctrl+P)", self.show_properties_page)
-        view_menu.addSeparator()
-        view_menu.addAction(
+        self._action_view_videos = self.view_menu.addAction(
+            "&Videos", self.show_videos_page
+        )
+        self._action_view_properties = self.view_menu.addAction(
+            "&Properties (Ctrl+P)", self.show_properties_page
+        )
+        self.view_menu.addSeparator()
+        self._action_generate_playlist = self.view_menu.addAction(
             "&Generate Playlist (Ctrl+L)", self.videos_page._on_playlist
         )
 
-        # Selection menu
-        selection_menu = QMenu("&Selection", self)
-        menu_bar.addMenu(selection_menu)
+        # Selection menu (only relevant on videos page)
+        self.selection_menu = QMenu("&Selection", self)
+        menu_bar.addMenu(self.selection_menu)
 
-        selection_menu.addAction(
+        self.selection_menu.addAction(
             "Select &All (Page)\tCtrl+A", self.videos_page._select_all
         )
-        selection_menu.addAction(
+        self.selection_menu.addAction(
             "Select All in &View\tCtrl+Shift+A", self.videos_page._select_all_in_view
         )
-        selection_menu.addSeparator()
-        selection_menu.addAction(
+        self.selection_menu.addSeparator()
+        self.selection_menu.addAction(
             "&Clear Selection\tEscape", self.videos_page._clear_selection
         )
-        selection_menu.addSeparator()
-        self._action_show_only_selected = selection_menu.addAction(
+        self.selection_menu.addSeparator()
+        self._action_show_only_selected = self.selection_menu.addAction(
             "Show Only &Selected\tCtrl+Shift+D"
         )
         self._action_show_only_selected.setCheckable(True)
         self._action_show_only_selected.triggered.connect(
             self._on_toggle_show_only_selected
         )
-        selection_menu.addSeparator()
-        selection_menu.addAction(
+        self.selection_menu.addSeparator()
+        self.selection_menu.addAction(
             "&Edit Properties...", self.videos_page._on_batch_edit
         )
 
         # Options menu
-        options_menu = QMenu("&Options", self)
-        menu_bar.addMenu(options_menu)
+        self.options_menu = QMenu("&Options", self)
+        menu_bar.addMenu(self.options_menu)
 
-        # Page size submenu
-        page_size_menu = options_menu.addMenu("&Page Size")
+        # Page size submenu (only relevant on videos page)
+        self.page_size_menu = self.options_menu.addMenu("&Page Size")
         self._page_size_group = QActionGroup(self)
         self._page_size_group.setExclusive(True)
         self._page_size_actions = {}
@@ -155,14 +156,14 @@ class MainWindow(QMainWindow):
             if size == 20:  # Default
                 action.setChecked(True)
             self._page_size_group.addAction(action)
-            page_size_menu.addAction(action)
+            self.page_size_menu.addAction(action)
             self._page_size_actions[size] = action
         self._page_size_group.triggered.connect(self._on_page_size_action)
 
-        options_menu.addSeparator()
+        self.options_menu.addSeparator()
 
         # Confirm deletion for entries not found
-        self._action_confirm_not_found = options_menu.addAction(
+        self._action_confirm_not_found = self.options_menu.addAction(
             "Confirm &deletion for entries not found"
         )
         self._action_confirm_not_found.setCheckable(True)
@@ -317,10 +318,31 @@ class MainWindow(QMainWindow):
             "A native Qt6 desktop interface for managing video collections.",
         )
 
-    def _update_database_menu_state(self):
-        """Enable/disable database menu based on whether a database is open."""
+    def _update_menu_state(self):
+        """Enable/disable menus based on application state."""
         has_db = self.ctx.database is not None
+        on_videos_page = self.stack.currentIndex() == self.PAGE_VIDEOS
+
+        # Database menu: enabled when a database is open
         self.database_menu.setEnabled(has_db)
+
+        # View menu items: Videos/Properties need a database, Playlist needs videos page
+        self._action_view_videos.setEnabled(has_db)
+        self._action_view_properties.setEnabled(has_db)
+        self._action_generate_playlist.setEnabled(has_db and on_videos_page)
+
+        # Selection menu: only relevant on videos page with a database
+        self.selection_menu.setEnabled(has_db and on_videos_page)
+
+        # Options menu: Page Size only relevant on videos page
+        self.page_size_menu.setEnabled(on_videos_page)
+
+    def _update_database_menu_state(self):
+        """Enable/disable database menu based on whether a database is open.
+
+        Deprecated: Use _update_menu_state() instead.
+        """
+        self._update_menu_state()
 
     # =========================================================================
     # Database menu actions
@@ -420,6 +442,7 @@ class MainWindow(QMainWindow):
         """Navigate to databases page."""
         self.stack.setCurrentIndex(self.PAGE_DATABASES)
         self.setWindowTitle("Pysaurus - Databases")
+        self._update_menu_state()
 
     def show_videos_page(self):
         """Navigate to videos page."""
@@ -427,6 +450,7 @@ class MainWindow(QMainWindow):
             self.stack.setCurrentIndex(self.PAGE_VIDEOS)
             self.setWindowTitle(f"Pysaurus - {self.ctx.database.get_name()}")
             self.videos_page.refresh()
+            self._update_menu_state()
         else:
             self.show_databases_page()
 
@@ -438,6 +462,7 @@ class MainWindow(QMainWindow):
                 f"Pysaurus - Properties - {self.ctx.database.get_name()}"
             )
             self.properties_page.refresh()
+            self._update_menu_state()
         else:
             self.show_databases_page()
 
@@ -468,5 +493,16 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Handle window close event."""
-        self.ctx.close_app()
-        event.accept()
+        reply = QMessageBox.question(
+            self,
+            "Quit",
+            "Are you sure you want to quit?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.ctx.close_app()
+            event.accept()
+        else:
+            event.ignore()
