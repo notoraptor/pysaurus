@@ -149,6 +149,7 @@ FIELD_MAP = FieldMap(
         FieldInfo("video_codec", "video codec", GroupPerm.ALL, FieldType.STR),
         FieldInfo("video_codec_description", None, GroupPerm.ALL, FieldType.STR),
         FieldInfo("video_id", "video ID", GroupPerm.FORBIDDEN, FieldType.INT),
+        FieldInfo("watched", "watched", GroupPerm.ALL, FieldType.BOOL),
         FieldInfo("width", "width", GroupPerm.ALL, FieldType.INT),
         FieldInfo("year", "year", GroupPerm.ALL, FieldType.INT),
     ]

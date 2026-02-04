@@ -1508,6 +1508,9 @@ class VideosPage(QWidget):
         """Toggle the watched status of a video."""
         if self.ctx.ops:
             self.ctx.ops.mark_as_read(video_id)
+            # Update grouping if grouped by watched
+            if self.ctx.provider:
+                self.ctx.provider.manage_attributes_modified(["watched"], is_property=False)
             self.refresh()
 
     def _move_video(self, video_id: int):
