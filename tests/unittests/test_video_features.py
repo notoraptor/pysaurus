@@ -110,7 +110,8 @@ class TestGetFileTitleDiffs:
         """Two videos with different titles."""
         videos = [MockVideo(1, "video_01"), MockVideo(2, "video_02")]
         result = VideoFeatures.get_file_title_diffs(videos)
-        assert result == {1: [], 2: [(7, 8)]}  # Reference has [], second has diff
+        # Both have diffs: reference compared to second, second compared to reference
+        assert result == {1: [(7, 8)], 2: [(7, 8)]}
 
     def test_three_videos(self):
         """Three videos with varying differences."""
@@ -121,16 +122,17 @@ class TestGetFileTitleDiffs:
         ]
         result = VideoFeatures.get_file_title_diffs(videos)
         assert result == {
-            1: [],  # Reference
+            1: [(7, 8)],  # Reference compared to video_02
             2: [(7, 8)],  # "1" vs "2"
             3: [(7, 8)],  # "1" vs "3"
         }
 
-    def test_first_video_is_reference(self):
-        """First video in list is always the reference (empty diff list)."""
+    def test_first_video_compared_to_second(self):
+        """First video diffs are computed against the second video."""
         videos = [MockVideo(100, "aaa"), MockVideo(200, "bbb"), MockVideo(300, "ccc")]
         result = VideoFeatures.get_file_title_diffs(videos)
-        assert result[100] == []  # First video is always reference
+        # First video "aaa" compared to second "bbb" - all characters differ
+        assert result[100] == [(0, 3)]
 
     def test_none_file_title(self):
         """Handle None file_title gracefully."""
@@ -147,7 +149,7 @@ class TestGetFileTitleDiffs:
             yield MockVideo(2, "video_02")
 
         result = VideoFeatures.get_file_title_diffs(video_generator())
-        assert result == {1: [], 2: [(7, 8)]}
+        assert result == {1: [(7, 8)], 2: [(7, 8)]}
 
     def test_custom_getfield(self):
         """Test with custom getfield function (like dict access)."""
@@ -156,4 +158,30 @@ class TestGetFileTitleDiffs:
             videos,
             getfield=lambda obj, key: obj["id"] if key == "video_id" else obj["title"],
         )
-        assert result == {1: [], 2: [(7, 8)]}
+        assert result == {1: [(7, 8)], 2: [(7, 8)]}
+
+    def test_reference_with_suffix(self):
+        """Reference video has a suffix that should be highlighted."""
+        # This tests the bug fix: when reference is longer than other videos,
+        # the extra part should be highlighted on the reference too.
+        videos = [
+            MockVideo(1, "video.xxx (hb)"),  # Reference with suffix
+            MockVideo(2, "video.xxx"),  # Shorter, no suffix
+        ]
+        result = VideoFeatures.get_file_title_diffs(videos)
+        # Reference should have " (hb)" highlighted (positions 9-14)
+        assert result[1] == [(9, 14)]
+        # Second video has nothing extra to highlight (it's a prefix of reference)
+        assert result[2] == []
+
+    def test_second_video_with_suffix(self):
+        """Second video has a suffix that should be highlighted."""
+        videos = [
+            MockVideo(1, "video.xxx"),  # Reference, shorter
+            MockVideo(2, "video.xxx (hb)"),  # Longer with suffix
+        ]
+        result = VideoFeatures.get_file_title_diffs(videos)
+        # Reference compared to second: nothing extra (reference is shorter)
+        assert result[1] == []
+        # Second video has " (hb)" highlighted (positions 9-14)
+        assert result[2] == [(9, 14)]

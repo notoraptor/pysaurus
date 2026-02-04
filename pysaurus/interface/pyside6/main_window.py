@@ -4,16 +4,21 @@ Main window for PySide6 interface.
 Central window with QStackedWidget for page navigation.
 """
 
+from datetime import datetime
 from typing import Callable
 
-from PySide6.QtGui import QAction, QActionGroup
+from PySide6.QtCore import QEvent
+from PySide6.QtGui import QAction, QActionGroup, QTextCursor
 from PySide6.QtWidgets import (
+    QDialog,
     QMainWindow,
     QMenu,
     QMenuBar,
     QMessageBox,
+    QPlainTextEdit,
     QStackedWidget,
     QStatusBar,
+    QVBoxLayout,
 )
 
 from pysaurus.core.notifications import End
@@ -21,6 +26,24 @@ from pysaurus.interface.pyside6.app_context import AppContext
 from pysaurus.interface.pyside6.dialogs import EditFoldersDialog, RenameDialog
 from pysaurus.interface.pyside6.pages import DatabasesPage, PropertiesPage, VideosPage
 from pysaurus.interface.pyside6.pages.process_page import ProcessPage
+
+
+class SessionLogDialog(QDialog):
+    """Dialog to display the session log."""
+
+    def __init__(self, log_entries: list[str], parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Session Log")
+        self.resize(700, 500)
+
+        layout = QVBoxLayout(self)
+
+        self.text_edit = QPlainTextEdit()
+        self.text_edit.setReadOnly(True)
+        self.text_edit.setPlainText("\n".join(log_entries))
+        # Scroll to the end
+        self.text_edit.moveCursor(QTextCursor.MoveOperation.End)
+        layout.addWidget(self.text_edit)
 
 
 class MainWindow(QMainWindow):
@@ -42,6 +65,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.ctx = AppContext()
         self._process_page: ProcessPage | None = None
+        self._session_log: list[str] = []
+        self._session_start = datetime.now()
+        self._log_session_start()
         self._setup_ui()
         self._setup_menu()
         self._connect_signals()
@@ -67,10 +93,11 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.videos_page)  # Index 1
         self.stack.addWidget(self.properties_page)  # Index 2
 
-        # Status bar
+        # Status bar (click to clear message)
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Ready")
+        self.status_bar.installEventFilter(self)
 
     def _setup_menu(self):
         """Set up the menu bar."""
@@ -81,6 +108,8 @@ class MainWindow(QMainWindow):
         file_menu = QMenu("&File", self)
         menu_bar.addMenu(file_menu)
 
+        file_menu.addAction("Session &Log...", self._show_session_log)
+        file_menu.addSeparator()
         file_menu.addAction("&Quit", self.close)
 
         # Database menu (only enabled when a database is open)
@@ -256,12 +285,68 @@ class MainWindow(QMainWindow):
         self.show_videos_page()
 
     def _on_notification(self, notification):
-        """Handle generic notifications."""
-        self.status_bar.showMessage(str(notification), 3000)
+        """Handle generic notifications (logged separately, not displayed in status bar)."""
+        pass
 
-    def _on_status_message(self, message: str, timeout: int):
-        """Handle status message requests from pages."""
-        self.status_bar.showMessage(message, timeout)
+    def _on_status_message(self, message: str, timeout: int = 0):
+        """Handle status message requests from pages (timeout=0 means persistent)."""
+        self.status_bar.showMessage(message, 0)  # Persistent until clicked or replaced
+        self._log_message(message)
+
+    # =========================================================================
+    # Session logging
+    # =========================================================================
+
+    def _log_session_start(self):
+        """Log the session start time."""
+        start_str = self._session_start.strftime("%Y-%m-%d %H:%M:%S")
+        self._session_log.append(f"{'=' * 60}")
+        self._session_log.append(f"Session started: {start_str}")
+        self._session_log.append(f"{'=' * 60}")
+
+    def _log_message(self, message: str):
+        """Log a message with timestamp."""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        entry = f"[{timestamp}] {message}"
+        self._session_log.append(entry)
+        self._save_log_to_file(entry)
+
+    def _save_log_to_file(self, entry: str):
+        """Append a log entry to the session log file in the database folder."""
+        if not self.ctx.database:
+            return
+
+        db_folder = str(self.ctx.database.ways.db_folder)
+        log_file = db_folder + "/session_log.txt"
+
+        # If this is the first write for this session to this database,
+        # write the session header first
+        if not hasattr(self, "_log_file_initialized"):
+            self._log_file_initialized = set()
+
+        db_name = self.ctx.database.get_name()
+        if db_name not in self._log_file_initialized:
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write("\n")
+                for header_line in self._session_log[:-1]:  # All but the last entry
+                    f.write(header_line + "\n")
+            self._log_file_initialized.add(db_name)
+
+        # Append the entry
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+
+    def _show_session_log(self):
+        """Show the session log dialog."""
+        dialog = SessionLogDialog(self._session_log, self)
+        dialog.exec()
+
+    def eventFilter(self, obj, event):
+        """Clear status bar message on click."""
+        if obj is self.status_bar and event.type() == QEvent.Type.MouseButtonPress:
+            self.status_bar.clearMessage()
+            return True
+        return super().eventFilter(obj, event)
 
     # =========================================================================
     # Process page management

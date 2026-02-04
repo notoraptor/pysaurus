@@ -25,8 +25,9 @@ class VideoFeatures:
         """
         Compute character-level diff ranges for file titles in a similarity group.
 
-        Uses the first video's file_title as reference. For each other video,
-        computes which character ranges differ from the reference.
+        Uses the first video's file_title as reference. For each video,
+        computes which character ranges differ from the reference (or from
+        the second video for the reference itself).
 
         Args:
             videos: Iterable of video objects with video_id and file_title attributes
@@ -34,8 +35,7 @@ class VideoFeatures:
 
         Returns:
             Dict mapping video_id to list of (start, end) tuples indicating
-            character ranges that differ from the reference.
-            The reference video has an empty list.
+            character ranges that differ.
         """
         if not hasattr(videos, "__len__"):
             videos = list(videos)
@@ -46,7 +46,13 @@ class VideoFeatures:
         reference_id = getfield(first_video, "video_id")
         reference_title = str(getfield(first_video, "file_title") or "").lower()
 
-        result = {reference_id: []}  # Reference has no diffs
+        # For the reference, compute diffs against the second video
+        second_title = str(getfield(other_videos[0], "file_title") or "").lower()
+        result = {
+            reference_id: VideoFeatures._compute_diff_ranges(
+                second_title, reference_title
+            )
+        }
 
         for video in other_videos:
             video_id = getfield(video, "video_id")

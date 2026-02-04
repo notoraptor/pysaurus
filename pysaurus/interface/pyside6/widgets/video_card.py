@@ -103,7 +103,7 @@ class VideoCard(QFrame):
         self.duration_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         layout.addWidget(self.duration_label)
 
-        # Title row with checkbox
+        # Title row with checkbox (file_title in bold)
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(0, 0, 0, 0)
         title_layout.setSpacing(4)
@@ -113,9 +113,9 @@ class VideoCard(QFrame):
         self.checkbox.stateChanged.connect(self._on_checkbox_changed)
         title_layout.addWidget(self.checkbox)
 
-        title_str = str(self.video.title)
-        self.title_label = QLabel(title_str)
-        self.title_label.setToolTip(title_str)
+        file_title_str = str(self.video.file_title)
+        self.title_label = QLabel(file_title_str)
+        self.title_label.setToolTip(file_title_str)
         self.title_label.setWordWrap(True)
         self.title_label.setMaximumHeight(_get_scaled_size(50))
         self.title_label.setStyleSheet(
@@ -126,6 +126,17 @@ class VideoCard(QFrame):
         title_layout.addWidget(self.title_label, 1)
 
         layout.addLayout(title_layout)
+
+        # Meta title in italic (if available)
+        meta_title = self.video.meta_title
+        if meta_title:
+            meta_title_str = str(meta_title)
+            self.meta_title_label = QLabel(meta_title_str)
+            self.meta_title_label.setToolTip(meta_title_str)
+            self.meta_title_label.setWordWrap(True)
+            self.meta_title_label.setMaximumHeight(_get_scaled_size(40))
+            self.meta_title_label.setStyleSheet("color: #666666; font-style: italic;")
+            layout.addWidget(self.meta_title_label)
 
         # Info row: resolution and size
         info_layout = QHBoxLayout()

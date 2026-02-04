@@ -309,6 +309,9 @@ class VideosPage(QWidget):
             if self.ctx.database:
                 for video_id in video_ids:
                     self.ctx.database.video_entry_del(video_id)
+                self.status_message_requested.emit(
+                    f"{count} video(s) removed from database", 5000
+                )
                 self._clear_selection()
                 self.refresh()
 
@@ -1190,8 +1193,12 @@ class VideosPage(QWidget):
 
         if self._current_view == self.VIEW_GRID:
             self._display_grid_view(videos)
+            # Reset scroll to top
+            self.scroll_area.verticalScrollBar().setValue(0)
         else:
             self._display_list_view(videos)
+            # Reset scroll to top
+            self.list_scroll_area.verticalScrollBar().setValue(0)
 
     def _display_grid_view(self, videos: list[VideoPattern]):
         """Display videos in grid view."""
@@ -1294,6 +1301,8 @@ class VideosPage(QWidget):
         """Show context menu for a video."""
         menu = QMenu(self)
 
+        menu.addAction("Toggle Watched", lambda: self._toggle_watched(video_id))
+        menu.addSeparator()
         menu.addAction("Open", lambda: self._open_video(video_id))
         menu.addAction("Open in VLC", lambda: self._open_in_vlc(video_id))
         menu.addAction("Open Folder", lambda: self._open_folder(video_id))
@@ -1308,7 +1317,6 @@ class VideosPage(QWidget):
 
         menu.addSeparator()
         menu.addAction("Rename...", lambda: self._rename_video(video_id))
-        menu.addAction("Toggle Watched", lambda: self._toggle_watched(video_id))
         menu.addAction("Move to...", lambda: self._move_video(video_id))
         menu.addSeparator()
 
@@ -1571,6 +1579,9 @@ class VideosPage(QWidget):
         # Skip confirmation for "not found" entries if option is disabled
         if is_not_found and not self.confirm_not_found_deletion:
             self.ctx.database.video_entry_del(video_id)
+            self.status_message_requested.emit(
+                f"'{video_title}' removed from database", 3000
+            )
             self.refresh()
             return
 
@@ -1585,6 +1596,9 @@ class VideosPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             if self.ctx.database:
                 self.ctx.database.video_entry_del(video_id)
+                self.status_message_requested.emit(
+                    f"'{video_title}' removed from database", 5000
+                )
                 self.refresh()
 
     def _trash_video(self, video_id: int):
@@ -1608,10 +1622,10 @@ class VideosPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             try:
                 self.ctx.ops.trash_video(video_id)
-                self.refresh()
-                QMessageBox.information(
-                    self, "Success", f"'{video.title}' moved to trash."
+                self.status_message_requested.emit(
+                    f"'{video.title}' moved to trash", 5000
                 )
+                self.refresh()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to move to trash: {e}")
 
@@ -1638,10 +1652,10 @@ class VideosPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             try:
                 self.ctx.ops.delete_video(video_id)
-                self.refresh()
-                QMessageBox.information(
-                    self, "Success", f"'{video.title}' permanently deleted."
+                self.status_message_requested.emit(
+                    f"'{video.title}' permanently deleted", 5000
                 )
+                self.refresh()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to delete: {e}")
 

@@ -137,7 +137,7 @@ class VideoListItem(QFrame):
         details_layout.setSpacing(3)
         details_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Row 1: Checkbox + Title
+        # Row 1: Checkbox + File Title (always in bold)
         title_row = QHBoxLayout()
         title_row.setContentsMargins(0, 0, 0, 0)
         title_row.setSpacing(4)
@@ -147,23 +147,20 @@ class VideoListItem(QFrame):
         self.checkbox.stateChanged.connect(self._on_checkbox_changed)
         title_row.addWidget(self.checkbox)
 
-        # Note: title = meta_title or file_title, so when meta_title is empty,
-        # title == file_title. In that case, apply character-level diffs to title.
-        title_str = str(self.video.title)
         file_title = str(self.video.file_title)
-        title_is_file_title = title_str == file_title
 
-        # Apply character-level diff highlights if title is actually file_title
-        if title_is_file_title and self._file_title_diffs:
-            # _apply_char_diff_highlights now handles break opportunities internally
-            title_display = self._apply_char_diff_highlights(title_str)
-            title_html = f'<b><u>{title_display}</u></b>'
+        # Apply character-level diff highlights to file_title
+        if self._file_title_diffs:
+            file_title_display = self._apply_char_diff_highlights(file_title)
+            file_title_html = f'<b><u>{file_title_display}</u></b>'
         else:
-            title_display = _add_break_opportunities(self._escape_html(title_str))
-            title_html = self._highlight_if_diff("title", f'<b><u>{title_display}</u></b>')
+            file_title_display = _add_break_opportunities(self._escape_html(file_title))
+            file_title_html = self._highlight_if_diff(
+                "file_title", f'<b><u>{file_title_display}</u></b>'
+            )
 
-        self.title_label = WrappingLabel(title_html)
-        self.title_label.setToolTip(title_str)
+        self.title_label = WrappingLabel(file_title_html)
+        self.title_label.setToolTip(file_title)
         self.title_label.setTextFormat(Qt.TextFormat.RichText)
         self.title_label.setStyleSheet("color: #000000;")
         self.title_label.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -172,20 +169,20 @@ class VideoListItem(QFrame):
 
         details_layout.addLayout(title_row)
 
-        # Row 2: Filename (if different from title)
-        if file_title and not title_is_file_title:
-            # Apply character-level diff highlights (handles escaping + break opportunities)
-            if self._file_title_diffs:
-                # _apply_char_diff_highlights now handles break opportunities internally
-                file_title_display = self._apply_char_diff_highlights(file_title)
-            else:
-                file_title_display = _add_break_opportunities(
-                    self._escape_html(file_title)
-                )
-            file_title_label = WrappingLabel(f"<i>{file_title_display}</i>")
-            file_title_label.setStyleSheet("color: #666666;")
-            file_title_label.setTextFormat(Qt.TextFormat.RichText)
-            details_layout.addWidget(file_title_label)
+        # Row 2: Meta title in italic (if available)
+        meta_title = self.video.meta_title
+        if meta_title:
+            meta_title_str = str(meta_title)
+            meta_title_display = _add_break_opportunities(
+                self._escape_html(meta_title_str)
+            )
+            meta_title_html = self._highlight_if_diff(
+                "meta_title", f"<i>{meta_title_display}</i>"
+            )
+            meta_title_label = WrappingLabel(meta_title_html)
+            meta_title_label.setStyleSheet("color: #666666;")
+            meta_title_label.setTextFormat(Qt.TextFormat.RichText)
+            details_layout.addWidget(meta_title_label)
 
         # Row 3: Filename path (blue-violet like web interface, gray if watched)
         filename = str(self.video.filename) if self.video.filename else ""
@@ -410,7 +407,12 @@ class VideoListItem(QFrame):
 
                 # Clickable value labels
                 for value in values:
-                    value_label = QLabel(str(value))
+                    value_str = str(value)
+                    # Add break opportunities for long values
+                    value_display = _add_break_opportunities(self._escape_html(value_str))
+                    value_label = QLabel(value_display)
+                    value_label.setTextFormat(Qt.TextFormat.RichText)
+                    value_label.setWordWrap(True)
                     value_label.setStyleSheet(
                         "color: #1976d2; text-decoration: underline; "
                         "background-color: #e3f2fd; padding: 1px 4px; "
