@@ -50,7 +50,7 @@ def search_to_sql(search: SearchDef) -> tuple[str, list[str]]:
             query = "SELECT video_id FROM video_text WHERE video_text MATCH ?"
             where = [" ".join(terms)]
         else:
-            assert search.cond == "or"
+            # search.cond == "or"
             query = "SELECT video_id FROM video_text WHERE video_text MATCH ?"
             where = [" OR ".join(terms)]
     return query, where

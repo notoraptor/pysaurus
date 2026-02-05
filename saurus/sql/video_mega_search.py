@@ -22,7 +22,8 @@ def _build_where_clause(
     seen = set()
     for key, value in (where or {}).items():
         parsed = parser.parse(key, value)
-        assert parsed.field not in seen
+        if parsed.field in seen:
+            raise ValueError(f"Duplicate field in where clause: {parsed.field}")
         seen.add(parsed.field)
         if parsed.field in ("video_id", "filename"):
             builder = selection_builder

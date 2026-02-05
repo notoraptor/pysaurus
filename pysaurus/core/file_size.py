@@ -24,6 +24,12 @@ class FileSize:
     def __hash__(self):
         return hash(self.__raw)
 
+    def __int__(self):
+        return int(self.__raw)
+
+    def __float__(self):
+        return float(self.__raw)
+
     def __eq__(self, other):
         return isinstance(other, FileSize) and self.__raw == other.__raw
 

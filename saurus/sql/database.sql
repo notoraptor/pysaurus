@@ -198,3 +198,18 @@ CREATE INDEX IF NOT EXISTS idx_video_width ON video(width);
 CREATE INDEX IF NOT EXISTS idx_vpv_video_id ON video_property_value(video_id);
 CREATE INDEX IF NOT EXISTS idx_vpv_property_id ON video_property_value(property_id);
 CREATE INDEX IF NOT EXISTS idx_vpv_property_value ON video_property_value(property_id, property_value);
+CREATE INDEX IF NOT EXISTS idx_vpv_property_video ON video_property_value(property_id, video_id);
+
+----------------------------------------------------------------------------------------
+-- Indexes for video_error table.
+-- Used for error lookups by video_id.
+----------------------------------------------------------------------------------------
+
+CREATE INDEX IF NOT EXISTS idx_video_error_video_id ON video_error(video_id);
+
+----------------------------------------------------------------------------------------
+-- Indexes for video_language table.
+-- Used for language lookups by video_id.
+----------------------------------------------------------------------------------------
+
+CREATE INDEX IF NOT EXISTS idx_video_language_video_id ON video_language(video_id);

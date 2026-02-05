@@ -34,7 +34,7 @@
   length: 14s 833333µs
   meta_title: ''
   meta_title_numeric: ''
-  move_id: 700.42 KiB, 14s 833333µs
+  move_id: (700.42 KiB, 14s 833333µs)
   moves: []
   mtime: 1695770586.0
   not_found: true
@@ -133,7 +133,7 @@
   length: 12s 040000µs
   meta_title: ''
   meta_title_numeric: ''
-  move_id: 716.05 KiB, 12s 040000µs
+  move_id: (716.05 KiB, 12s 040000µs)
   moves: []
   mtime: 1695770574.0
   not_found: false

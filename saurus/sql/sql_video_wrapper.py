@@ -1,7 +1,9 @@
 from typing import Iterable
 
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.classes import StringedTuple
 from pysaurus.core.datestring import Date
+from pysaurus.core.semantic_text import SemanticText
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_pattern import MoveType, VideoPattern
 
@@ -253,8 +255,8 @@ class SQLVideoWrapper(VideoPattern):
         return self.filename.file_title
 
     @property
-    def file_title_numeric(self):
-        return self.filename.file_title
+    def file_title_numeric(self) -> SemanticText:
+        return SemanticText(self.file_title)
 
     @property
     def frame_rate(self):
@@ -265,12 +267,12 @@ class SQLVideoWrapper(VideoPattern):
         return self.meta_title or self.filename.file_title
 
     @property
-    def filename_numeric(self):
-        return self.filename.standard_path
+    def filename_numeric(self) -> SemanticText:
+        return SemanticText(self.filename.standard_path)
 
     @property
-    def move_id(self):
-        return f"{self.size}, {self.length}"
+    def move_id(self) -> StringedTuple:
+        return StringedTuple((self.size, self.length))
 
     @errors.setter
     def errors(self, errors):

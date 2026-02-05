@@ -48,7 +48,8 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
         if not thumb_folder.listdir():
             print(f"[{db_name}] Thumb folder is empty, deleting", file=sys.stderr)
             thumb_folder.delete()
-            assert not thumb_folder.exists()
+            if thumb_folder.exists():
+                raise RuntimeError(f"Failed to delete thumb folder: {thumb_folder}")
 
     # Delete previous SQL file if existing
     sql_path = ways.db_sql_path
@@ -56,14 +57,17 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
         prev_size = FileSize(sql_path.get_size())
         sql_path.delete()
         print(f"[{db_name}] Deleted old sql path ({prev_size})", file=sys.stderr)
-    assert not sql_path.exists()
+    if sql_path.exists():
+        raise RuntimeError(f"Failed to delete old SQL path: {sql_path}")
     new_db = PysaurusConnection(sql_path.path)
-    assert sql_path.isfile()
+    if not sql_path.isfile():
+        raise RuntimeError(f"Failed to create SQL database: {sql_path}")
 
     # Load database JSON
     json_backup = JsonBackup(ways.db_json_path, notifier)
     json_dict = json_backup.load()
-    assert isinstance(json_dict, dict)
+    if not isinstance(json_dict, dict):
+        raise TypeError(f"Expected dict from JSON backup, got {type(json_dict).__name__}")
 
     # Format data for SQL tables
     with Profiler(f"[{db_name}] Get and format data", notifier):
@@ -194,7 +198,8 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
     with Profiler(f"[{db_name}] Move thumbnails", notifier):
         video_filename_to_id = {video.filename.path: video.video_id for video in videos}
         thumb_sql_path = ways.db_thumb_sql_path
-        assert thumb_sql_path.isfile()
+        if not thumb_sql_path.isfile():
+            raise FileNotFoundError(f"Thumbnail database not found: {thumb_sql_path}")
         thm = ThumbnailManager(ways.db_thumb_sql_path)
         with Profiler(f"[{db_name}] read thumbnails", notifier):
             with thm.thumb_db:

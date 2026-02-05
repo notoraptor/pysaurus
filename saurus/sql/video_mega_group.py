@@ -1,6 +1,7 @@
 from typing import Sequence
 
 from pysaurus.core.classes import Selector
+from pysaurus.core.datestring import Date
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages
@@ -90,7 +91,7 @@ def video_mega_group(
                     f"LENGTH(value || '') {order_direction}, value {order_direction}"
                 )
             else:
-                assert grouping.sorting == grouping.COUNT
+                # grouping.sorting == grouping.COUNT
                 # Secondary sort by value for deterministic ordering when counts are equal
                 # Both sorts use same direction to match JSON behavior
                 order_field = f"size {order_direction}, value {order_direction}"
@@ -142,29 +143,66 @@ def video_mega_group(
                     super_query, super_params
                 )
             else:
-                super_query = f"""
-                SELECT
-                IIF(x.have_property = 0, NULL, xv.property_value) AS value,
-                COUNT(DISTINCT x.video_id) AS size
-                FROM
-                (SELECT
-                v.video_id AS video_id,
-                SUM(IIF(p.name = ?, 1, 0)) AS have_property
-                FROM video AS v
-                LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
-                LEFT JOIN property AS p ON pv.property_id = p.property_id
-                LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
-                WHERE v.discarded = 0 AND {source_query}
-                GROUP BY v.video_id)
-                AS x
-                LEFT JOIN video_property_value AS xv ON x.video_id = xv.video_id
-                LEFT JOIN property AS xp ON xv.property_id = xp.property_id
-                WHERE
-                (x.have_property > 0 AND xp.name = ?) OR (x.have_property = 0)
-                GROUP BY value {without_singletons}
-                ORDER BY {order_field}
-                """
-                super_params = [grouping.field] + source_params + [grouping.field]
+                # Get property metadata (default value and whether it's multiple)
+                prop_info = sql_db.query_one(
+                    """SELECT p.multiple, pe.enum_value
+                       FROM property p
+                       LEFT JOIN property_enumeration pe ON p.property_id = pe.property_id
+                       WHERE p.name = ?
+                       ORDER BY pe.rank
+                       LIMIT 1""",
+                    [grouping.field]
+                )
+                is_multiple = prop_info[0] if prop_info else 0
+                default_value = prop_info[1] if (prop_info and len(prop_info) > 1) else None
+
+                # For multiple properties, use NULL for videos without the property (to match JSON behavior)
+                # For single properties, use the default value
+                if is_multiple:
+                    # Multiple property: videos without the property should have NULL
+                    super_query = f"""
+                    SELECT xv.property_value AS value, COUNT(DISTINCT x.video_id) AS size
+                    FROM
+                    (SELECT v.video_id AS video_id
+                    FROM video AS v
+                    LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
+                    WHERE v.discarded = 0 AND {source_query})
+                    AS x
+                    LEFT JOIN (
+                        SELECT pv.video_id, pv.property_value
+                        FROM video_property_value pv
+                        JOIN property p ON pv.property_id = p.property_id
+                        WHERE p.name = ?
+                    ) AS xv ON x.video_id = xv.video_id
+                    GROUP BY value {without_singletons}
+                    ORDER BY {order_field}
+                    """
+                    super_params = source_params + [grouping.field]
+                else:
+                    # Single property: use default value for videos without the property
+                    super_query = f"""
+                    SELECT
+                    IIF(x.have_property = 0, ?, xv.property_value) AS value,
+                    COUNT(DISTINCT x.video_id) AS size
+                    FROM
+                    (SELECT
+                    v.video_id AS video_id,
+                    SUM(IIF(p.name = ?, 1, 0)) AS have_property
+                    FROM video AS v
+                    LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
+                    LEFT JOIN property AS p ON pv.property_id = p.property_id
+                    LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
+                    WHERE v.discarded = 0 AND {source_query}
+                    GROUP BY v.video_id)
+                    AS x
+                    LEFT JOIN video_property_value AS xv ON x.video_id = xv.video_id
+                    LEFT JOIN property AS xp ON xv.property_id = xp.property_id
+                    WHERE
+                    (x.have_property > 0 AND xp.name = ?) OR (x.have_property = 0)
+                    GROUP BY value {without_singletons}
+                    ORDER BY {order_field}
+                    """
+                    super_params = [default_value, grouping.field] + source_params + [grouping.field]
                 grouping_rows = sql_db.query(super_query, super_params)
         else:
             field = field_factory.get_field(grouping.field)
@@ -177,7 +215,7 @@ def video_mega_group(
                     field_factory.get_length(grouping.field) + " " + order_direction
                 )
             else:
-                assert grouping.sorting == grouping.COUNT
+                # grouping.sorting == grouping.COUNT
                 order_field = f"COUNT(v.video_id) {order_direction}"
 
             where_similarity_id = ""
@@ -196,9 +234,36 @@ def video_mega_group(
             )
 
         output_groups.clear()
-        output_groups.extend(
-            GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows
-        )
+        # Convert raw SQL values to appropriate types (FileSize for bit_rate, Date for dates, etc.)
+        if grouping and grouping.field in ("bit_rate", "size"):
+            output_groups.extend(
+                GroupCount(tuple(FileSize(v) if v is not None else None for v in row[:-1]), row[-1])
+                for row in grouping_rows
+            )
+        elif grouping and grouping.field in ("date", "date_entry_modified", "date_entry_opened"):
+            output_groups.extend(
+                GroupCount(tuple(Date(v) if v is not None else None for v in row[:-1]), row[-1])
+                for row in grouping_rows
+            )
+        elif grouping and grouping.field == "length":
+            # length is duration in seconds (not microseconds)
+            output_groups.extend(
+                GroupCount(tuple(Duration(v * 1_000_000) if v is not None else None for v in row[:-1]), row[-1])
+                for row in grouping_rows
+            )
+        elif grouping and grouping.field in ("size_length", "move_id"):
+            # Tuple fields: (file_size, length_microseconds)
+            output_groups.extend(
+                GroupCount(
+                    tuple((FileSize(row[0]), Duration(row[1] * 1_000_000)) if row[0] is not None else None),
+                    row[2]
+                )
+                for row in grouping_rows
+            )
+        else:
+            output_groups.extend(
+                GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows
+            )
 
         output.group_id = min(max(0, output.group_id), len(output_groups) - 1)
 
@@ -211,6 +276,20 @@ def video_mega_group(
         group = output_groups[output.group_id]
         if grouping.is_property:
             (field_value,) = group.value
+
+            # Get property metadata (default value and whether it's multiple)
+            prop_meta_info = sql_db.query_one(
+                """SELECT p.multiple, pe.enum_value
+                   FROM property p
+                   LEFT JOIN property_enumeration pe ON p.property_id = pe.property_id
+                   WHERE p.name = ?
+                   ORDER BY pe.rank
+                   LIMIT 1""",
+                [grouping.field]
+            )
+            is_multiple = prop_meta_info[0] if prop_meta_info else 0
+            default_value = prop_meta_info[1] if (prop_meta_info and len(prop_meta_info) > 1) else None
+
             if classifier:
                 expected = list(classifier)
                 if field_value is not None:
@@ -229,6 +308,7 @@ def video_mega_group(
                 """
                 params = [grouping.field] + expected + [len(expected)]
             elif field_value is None:
+                # For both single and multiple properties: videos without the property
                 query = """
                 SELECT
                 v.video_id AS video_id
@@ -238,6 +318,25 @@ def video_mega_group(
                 GROUP BY v.video_id HAVING SUM(IIF(p.name = ?, 1, 0)) = 0
                 """
                 params = [grouping.field]
+            elif not is_multiple and field_value == default_value:
+                # For single properties with default value: videos without property OR with explicit default
+                query = """
+                SELECT DISTINCT v.video_id
+                FROM video AS v
+                LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
+                LEFT JOIN property AS p ON pv.property_id = p.property_id
+                WHERE
+                    (p.name = ? AND pv.property_value = ?)
+                    OR v.video_id IN (
+                        SELECT vv.video_id
+                        FROM video AS vv
+                        LEFT JOIN video_property_value AS pvv ON vv.video_id = pvv.video_id
+                        LEFT JOIN property AS pp ON pvv.property_id = pp.property_id
+                        GROUP BY vv.video_id
+                        HAVING SUM(IIF(pp.name = ?, 1, 0)) = 0
+                    )
+                """
+                params = [grouping.field, field_value, grouping.field]
             else:
                 query = """
                 SELECT v.video_id FROM video_property_value AS v
@@ -248,8 +347,18 @@ def video_mega_group(
             where_group_query = f"v.video_id IN ({query})"
             where_group_params = params
         else:
+            # Extract raw values from FileSize/Date/Duration objects for SQL queries
+            def extract_raw(v):
+                if isinstance(v, (FileSize, Date)):
+                    return float(v)
+                elif isinstance(v, Duration):
+                    return v.t / 1_000_000  # Convert microseconds to seconds
+                else:
+                    return v
+
+            raw_values = tuple(extract_raw(v) for v in group.value)
             where_group_query, where_group_params = convert_dict_to_sql(
-                field_factory.get_conditions(grouping.field, group.value)
+                field_factory.get_conditions(grouping.field, raw_values)
             )
 
     where_builder = query_maker.where

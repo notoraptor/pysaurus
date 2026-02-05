@@ -1,7 +1,7 @@
 """
-Tests to compare JSON database with NewSQL and Saurus SQL database implementations.
+Tests to compare JSON database with Saurus SQL database implementation.
 
-These tests ensure that all database implementations return consistent
+These tests ensure that both database implementations return consistent
 results for all read operations defined in AbstractDatabase.
 
 The JSON database (fake_old_database) is the reference implementation.
@@ -12,13 +12,10 @@ import pytest
 from pysaurus.database.abstract_database import AbstractDatabase
 
 
-@pytest.fixture(params=["newsql", "saurus_sql"])
-def test_database(request, fake_new_database, fake_saurus_database) -> AbstractDatabase:
-    """Parametrized fixture that yields each database implementation to test."""
-    if request.param == "newsql":
-        return fake_new_database
-    else:
-        return fake_saurus_database
+@pytest.fixture
+def test_database(fake_saurus_database) -> AbstractDatabase:
+    """Fixture that yields the Saurus SQL database implementation to test."""
+    return fake_saurus_database
 
 
 class TestDatabaseComparison:

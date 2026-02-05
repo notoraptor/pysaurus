@@ -212,8 +212,10 @@ class QueryMaker:
             ...
         LIMIT <starting_row_0_indexed> <n_rows_to_return_from_offset>
         """
-        assert self._fields
-        assert self._main_table
+        if not self._fields:
+            raise ValueError("QueryMaker: no fields specified")
+        if not self._main_table:
+            raise ValueError("QueryMaker: no main table specified")
         query = f"SELECT {','.join(self._fields)} FROM {self._main_table}"
         for jointure in self._jointures:
             query += f" {jointure}"

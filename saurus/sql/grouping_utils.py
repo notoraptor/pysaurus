@@ -7,7 +7,8 @@ SQL_LENGTH = f"(v.duration * 1.0 / {FORMATTED_DURATION_TIME_BASE})"
 
 class SqlField:
     def __init__(self, name: str, definition: list[str], sortable=True):
-        assert name and definition
+        if not name or not definition:
+            raise ValueError(f"SqlField requires name and definition: {name=}, {definition=}")
         self.name = name
         self.definition = definition
         self.sortable = sortable
@@ -46,24 +47,33 @@ class SemanticField(SqlField):
 
 
 class SqlFieldFactory:
+    # Cache padding par base de données pour éviter de scanner tous les filenames à chaque fois
+    _padding_cache: dict[str, int] = {}
+
     def __init__(self, connection: PysaurusConnection):
-        padding_filenames = max(
-            (
-                get_longest_number_in_string(row[0])
-                for row in connection.query("SELECT filename FROM video")
-            ),
-            default=0,
-        )
-        padding_meta_titles = max(
-            (
-                get_longest_number_in_string(row[0])
-                for row in connection.query(
-                    "SELECT meta_title FROM video WHERE meta_title != ''"
-                )
-            ),
-            default=0,
-        )
-        padding = max(padding_filenames, padding_meta_titles)
+        # Utiliser le cache si disponible
+        db_path = connection.db_path or ":memory:"
+        if db_path not in self._padding_cache:
+            # Calculer le padding seulement si pas en cache
+            padding_filenames = max(
+                (
+                    get_longest_number_in_string(row[0])
+                    for row in connection.query("SELECT filename FROM video")
+                ),
+                default=0,
+            )
+            padding_meta_titles = max(
+                (
+                    get_longest_number_in_string(row[0])
+                    for row in connection.query(
+                        "SELECT meta_title FROM video WHERE meta_title != ''"
+                    )
+                ),
+                default=0,
+            )
+            self._padding_cache[db_path] = max(padding_filenames, padding_meta_titles)
+
+        padding = self._padding_cache[db_path]
         self.connection = connection
         self.fields: dict[str, SqlField] = {
             df.name: df
@@ -76,6 +86,7 @@ class SqlFieldFactory:
                 SqlField.auto("bit_rate"),
                 SqlField.auto("container_format"),
                 SqlField.auto("day"),
+                SqlField.auto("duration"),
                 SqlField.auto("frame_rate"),
                 SqlField.auto("filename"),
                 SqlField.auto("file_size"),
@@ -84,6 +95,8 @@ class SqlFieldFactory:
                 SqlField.auto("similarity_id"),
                 SqlField.auto("video_codec"),
                 SqlField.auto("video_codec_description"),
+                SqlField.auto("video_id"),
+                SqlField.auto("watched"),
                 SqlField.auto("width"),
                 SqlField.auto("year"),
                 SqlField.auto(title="date", name="mtime"),

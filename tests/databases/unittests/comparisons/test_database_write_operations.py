@@ -1,7 +1,7 @@
 """
-Tests for write operations on JSON and NewSQL databases.
+Tests for write operations on JSON and Saurus SQL databases.
 
-These tests use temporary copies of the databases (mem_old_database, mem_new_database)
+These tests use temporary copies of the databases (mem_old_database, mem_saurus_database)
 to ensure original files are not modified.
 
 Tests cover:
@@ -31,45 +31,45 @@ def get_category_from_filename(filename: str) -> str:
 class TestPropertyTypeOperations:
     """Test property type CRUD operations."""
 
-    def test_prop_type_add_string(self, mem_old_database, mem_new_database):
+    def test_prop_type_add_string(self, mem_old_database, mem_saurus_database):
         """Both should support adding a string property type."""
         prop_name = "test_tags"
 
         # Add property type (prop_type must be string name, not the type itself)
         mem_old_database.prop_type_add(prop_name, "str", "", True)
-        mem_new_database.prop_type_add(prop_name, "str", "", True)
+        mem_saurus_database.prop_type_add(prop_name, "str", "", True)
 
         # Verify
         old_props = mem_old_database.get_prop_types(name=prop_name)
-        new_props = mem_new_database.get_prop_types(name=prop_name)
+        new_props = mem_saurus_database.get_prop_types(name=prop_name)
 
         assert len(old_props) == len(new_props) == 1
         assert old_props[0]["name"] == new_props[0]["name"] == prop_name
-        assert old_props[0]["multiple"] is new_props[0]["multiple"] is True
+        assert bool(old_props[0]["multiple"]) == bool(new_props[0]["multiple"]) is True
 
-    def test_prop_type_add_int(self, mem_old_database, mem_new_database):
+    def test_prop_type_add_int(self, mem_old_database, mem_saurus_database):
         """Both should support adding an integer property type."""
         prop_name = "rating"
 
         mem_old_database.prop_type_add(prop_name, "int", 0, False)
-        mem_new_database.prop_type_add(prop_name, "int", 0, False)
+        mem_saurus_database.prop_type_add(prop_name, "int", 0, False)
 
         old_props = mem_old_database.get_prop_types(name=prop_name)
-        new_props = mem_new_database.get_prop_types(name=prop_name)
+        new_props = mem_saurus_database.get_prop_types(name=prop_name)
 
         assert len(old_props) == len(new_props) == 1
-        assert old_props[0]["multiple"] is new_props[0]["multiple"] is False
+        assert bool(old_props[0]["multiple"]) == bool(new_props[0]["multiple"]) is False
 
-    def test_prop_type_add_enum(self, mem_old_database, mem_new_database):
+    def test_prop_type_add_enum(self, mem_old_database, mem_saurus_database):
         """Both should support adding an enum property type."""
         prop_name = "quality"
         enum_values = ["low", "medium", "high"]
 
         mem_old_database.prop_type_add(prop_name, "str", enum_values, False)
-        mem_new_database.prop_type_add(prop_name, "str", enum_values, False)
+        mem_saurus_database.prop_type_add(prop_name, "str", enum_values, False)
 
         old_props = mem_old_database.get_prop_types(name=prop_name)
-        new_props = mem_new_database.get_prop_types(name=prop_name)
+        new_props = mem_saurus_database.get_prop_types(name=prop_name)
 
         assert len(old_props) == len(new_props) == 1
         # Enum values may be stored in different order, compare as sets
@@ -79,70 +79,70 @@ class TestPropertyTypeOperations:
             == set(enum_values)
         )
 
-    def test_prop_type_del(self, mem_old_database, mem_new_database):
+    def test_prop_type_del(self, mem_old_database, mem_saurus_database):
         """Both should support deleting a property type."""
         prop_name = "temp_prop"
 
         # Add then delete
         mem_old_database.prop_type_add(prop_name, "str", "", True)
-        mem_new_database.prop_type_add(prop_name, "str", "", True)
+        mem_saurus_database.prop_type_add(prop_name, "str", "", True)
 
         mem_old_database.prop_type_del(prop_name)
-        mem_new_database.prop_type_del(prop_name)
+        mem_saurus_database.prop_type_del(prop_name)
 
         # Verify deleted
         old_props = mem_old_database.get_prop_types(name=prop_name)
-        new_props = mem_new_database.get_prop_types(name=prop_name)
+        new_props = mem_saurus_database.get_prop_types(name=prop_name)
 
         assert len(old_props) == len(new_props) == 0
 
-    def test_prop_type_set_name(self, mem_old_database, mem_new_database):
+    def test_prop_type_set_name(self, mem_old_database, mem_saurus_database):
         """Both should support renaming a property type."""
         old_name = "old_prop"
         new_name = "new_prop"
 
         # Add property
         mem_old_database.prop_type_add(old_name, "str", "", True)
-        mem_new_database.prop_type_add(old_name, "str", "", True)
+        mem_saurus_database.prop_type_add(old_name, "str", "", True)
 
         # Rename
         mem_old_database.prop_type_set_name(old_name, new_name)
-        mem_new_database.prop_type_set_name(old_name, new_name)
+        mem_saurus_database.prop_type_set_name(old_name, new_name)
 
         # Verify old name gone, new name exists
         assert len(mem_old_database.get_prop_types(name=old_name)) == 0
-        assert len(mem_new_database.get_prop_types(name=old_name)) == 0
+        assert len(mem_saurus_database.get_prop_types(name=old_name)) == 0
         assert len(mem_old_database.get_prop_types(name=new_name)) == 1
-        assert len(mem_new_database.get_prop_types(name=new_name)) == 1
+        assert len(mem_saurus_database.get_prop_types(name=new_name)) == 1
 
-    def test_prop_type_set_multiple(self, mem_old_database, mem_new_database):
+    def test_prop_type_set_multiple(self, mem_old_database, mem_saurus_database):
         """Both should support changing the multiple flag."""
         prop_name = "tags"
 
         # Add as single value
         mem_old_database.prop_type_add(prop_name, "str", "", False)
-        mem_new_database.prop_type_add(prop_name, "str", "", False)
+        mem_saurus_database.prop_type_add(prop_name, "str", "", False)
 
         # Change to multiple
         mem_old_database.prop_type_set_multiple(prop_name, True)
-        mem_new_database.prop_type_set_multiple(prop_name, True)
+        mem_saurus_database.prop_type_set_multiple(prop_name, True)
 
         old_props = mem_old_database.get_prop_types(name=prop_name)
-        new_props = mem_new_database.get_prop_types(name=prop_name)
+        new_props = mem_saurus_database.get_prop_types(name=prop_name)
 
-        assert old_props[0]["multiple"] is new_props[0]["multiple"] is True
+        assert bool(old_props[0]["multiple"]) == bool(new_props[0]["multiple"]) is True
 
 
 class TestVideoPropertyOperations:
     """Test setting properties on videos."""
 
     @pytest.fixture
-    def databases_with_category(self, mem_old_database, mem_new_database):
+    def databases_with_category(self, mem_old_database, mem_saurus_database):
         """Setup databases with a 'test_category' property."""
         prop_name = "test_category"
         mem_old_database.prop_type_add(prop_name, "str", "", True)
-        mem_new_database.prop_type_add(prop_name, "str", "", True)
-        return mem_old_database, mem_new_database, prop_name
+        mem_saurus_database.prop_type_add(prop_name, "str", "", True)
+        return mem_old_database, mem_saurus_database, prop_name
 
     def test_videos_tag_set_single_video(self, databases_with_category):
         """Both should set property for a single video."""
@@ -250,33 +250,33 @@ class TestVideoPropertyOperations:
 class TestVideosSetField:
     """Test videos_set_field for various fields."""
 
-    def test_set_watched(self, mem_old_database, mem_new_database):
+    def test_set_watched(self, mem_old_database, mem_saurus_database):
         """Both should set the watched field."""
         video_id = mem_old_database.get_videos(include=["video_id"])[0].video_id
 
         mem_old_database.videos_set_field("watched", {video_id: True})
-        mem_new_database.videos_set_field("watched", {video_id: True})
+        mem_saurus_database.videos_set_field("watched", {video_id: True})
 
         old_video = mem_old_database.get_videos(where={"video_id": video_id})[0]
-        new_video = mem_new_database.get_videos(where={"video_id": video_id})[0]
+        new_video = mem_saurus_database.get_videos(where={"video_id": video_id})[0]
 
         assert old_video.watched is new_video.watched is True
 
-    def test_set_similarity_id(self, mem_old_database, mem_new_database):
+    def test_set_similarity_id(self, mem_old_database, mem_saurus_database):
         """Both should set similarity_id."""
         videos = mem_old_database.get_videos(include=["video_id"])[:2]
         video_id = videos[0].video_id
         sim_id = 12345
 
         mem_old_database.videos_set_field("similarity_id", {video_id: sim_id})
-        mem_new_database.videos_set_field("similarity_id", {video_id: sim_id})
+        mem_saurus_database.videos_set_field("similarity_id", {video_id: sim_id})
 
         old_video = mem_old_database.get_videos(where={"video_id": video_id})[0]
-        new_video = mem_new_database.get_videos(where={"video_id": video_id})[0]
+        new_video = mem_saurus_database.get_videos(where={"video_id": video_id})[0]
 
         assert old_video.similarity_id == new_video.similarity_id == sim_id
 
-    def test_set_multiple_fields(self, mem_old_database, mem_new_database):
+    def test_set_multiple_fields(self, mem_old_database, mem_saurus_database):
         """Both should handle setting multiple videos at once."""
         videos = mem_old_database.get_videos(include=["video_id"])[:10]
         video_ids = [v.video_id for v in videos]
@@ -284,11 +284,11 @@ class TestVideosSetField:
         changes = {vid: True for vid in video_ids}
 
         mem_old_database.videos_set_field("watched", changes)
-        mem_new_database.videos_set_field("watched", changes)
+        mem_saurus_database.videos_set_field("watched", changes)
 
         for vid in video_ids:
             old_v = mem_old_database.get_videos(where={"video_id": vid})[0]
-            new_v = mem_new_database.get_videos(where={"video_id": vid})[0]
+            new_v = mem_saurus_database.get_videos(where={"video_id": vid})[0]
             assert old_v.watched is new_v.watched is True
 
 
@@ -296,11 +296,11 @@ class TestPropertyValueOperations:
     """Test property value manipulation operations."""
 
     @pytest.fixture
-    def databases_with_tags(self, mem_old_database, mem_new_database):
+    def databases_with_tags(self, mem_old_database, mem_saurus_database):
         """Setup databases with a 'tags' property and some values."""
         prop_name = "tags"
         mem_old_database.prop_type_add(prop_name, "str", "", True)
-        mem_new_database.prop_type_add(prop_name, "str", "", True)
+        mem_saurus_database.prop_type_add(prop_name, "str", "", True)
 
         # Assign tags to videos based on category
         videos = mem_old_database.get_videos(include=["video_id", "filename"])[:50]
@@ -310,9 +310,9 @@ class TestPropertyValueOperations:
             updates[video.video_id] = [category, "test_tag"]
 
         mem_old_database.videos_tag_set(prop_name, updates)
-        mem_new_database.videos_tag_set(prop_name, updates)
+        mem_saurus_database.videos_tag_set(prop_name, updates)
 
-        return mem_old_database, mem_new_database, prop_name, list(updates.keys())
+        return mem_old_database, mem_saurus_database, prop_name, list(updates.keys())
 
     def test_delete_property_values(self, databases_with_tags):
         """Both should delete specific property values."""
@@ -397,41 +397,41 @@ class TestPropertyValueOperations:
 class TestValidation:
     """Test validation functions."""
 
-    def test_validate_prop_values_string(self, mem_old_database, mem_new_database):
+    def test_validate_prop_values_string(self, mem_old_database, mem_saurus_database):
         """Both should validate string property values."""
         prop_name = "test_str"
         mem_old_database.prop_type_add(prop_name, "str", "", True)
-        mem_new_database.prop_type_add(prop_name, "str", "", True)
+        mem_saurus_database.prop_type_add(prop_name, "str", "", True)
 
         old_result = mem_old_database.ops.validate_prop_values(
             prop_name, ["value1", "value2"]
         )
-        new_result = mem_new_database.ops.validate_prop_values(
+        new_result = mem_saurus_database.ops.validate_prop_values(
             prop_name, ["value1", "value2"]
         )
 
         assert old_result == new_result == ["value1", "value2"]
 
-    def test_validate_prop_values_int(self, mem_old_database, mem_new_database):
+    def test_validate_prop_values_int(self, mem_old_database, mem_saurus_database):
         """Both should validate integer property values."""
         prop_name = "test_int"
         mem_old_database.prop_type_add(prop_name, "int", 0, False)
-        mem_new_database.prop_type_add(prop_name, "int", 0, False)
+        mem_saurus_database.prop_type_add(prop_name, "int", 0, False)
 
         old_result = mem_old_database.ops.validate_prop_values(prop_name, [42])
-        new_result = mem_new_database.ops.validate_prop_values(prop_name, [42])
+        new_result = mem_saurus_database.ops.validate_prop_values(prop_name, [42])
 
         assert old_result == new_result == [42]
 
-    def test_validate_prop_values_enum(self, mem_old_database, mem_new_database):
+    def test_validate_prop_values_enum(self, mem_old_database, mem_saurus_database):
         """Both should validate enum values."""
         prop_name = "test_enum"
         enum_values = ["a", "b", "c"]
         mem_old_database.prop_type_add(prop_name, "str", enum_values, False)
-        mem_new_database.prop_type_add(prop_name, "str", enum_values, False)
+        mem_saurus_database.prop_type_add(prop_name, "str", enum_values, False)
 
         old_result = mem_old_database.ops.validate_prop_values(prop_name, ["a"])
-        new_result = mem_new_database.ops.validate_prop_values(prop_name, ["a"])
+        new_result = mem_saurus_database.ops.validate_prop_values(prop_name, ["a"])
 
         assert old_result == new_result == ["a"]
 
@@ -439,11 +439,11 @@ class TestValidation:
 class TestSetPropertyForVideos:
     """Test set_property_for_videos method."""
 
-    def test_set_property_for_videos(self, mem_old_database, mem_new_database):
+    def test_set_property_for_videos(self, mem_old_database, mem_saurus_database):
         """Both should set property for multiple videos."""
         prop_name = "custom_tag"
         mem_old_database.prop_type_add(prop_name, "str", "", True)
-        mem_new_database.prop_type_add(prop_name, "str", "", True)
+        mem_saurus_database.prop_type_add(prop_name, "str", "", True)
 
         videos = mem_old_database.get_videos(include=["video_id"])[:20]
         video_ids = [v.video_id for v in videos]
@@ -451,37 +451,37 @@ class TestSetPropertyForVideos:
         updates = {vid: ["custom_value"] for vid in video_ids}
 
         mem_old_database.ops.set_property_for_videos(prop_name, updates)
-        mem_new_database.ops.set_property_for_videos(prop_name, updates)
+        mem_saurus_database.ops.set_property_for_videos(prop_name, updates)
 
         # Verify
         old_tags = mem_old_database.videos_tag_get(prop_name, indices=video_ids)
-        new_tags = mem_new_database.videos_tag_get(prop_name, indices=video_ids)
+        new_tags = mem_saurus_database.videos_tag_get(prop_name, indices=video_ids)
 
         for vid in video_ids:
             assert old_tags[vid] == new_tags[vid] == ["custom_value"]
 
-    def test_set_property_for_videos_merge(self, mem_old_database, mem_new_database):
+    def test_set_property_for_videos_merge(self, mem_old_database, mem_saurus_database):
         """Both should merge property values."""
         prop_name = "merge_tag"
         mem_old_database.prop_type_add(prop_name, "str", "", True)
-        mem_new_database.prop_type_add(prop_name, "str", "", True)
+        mem_saurus_database.prop_type_add(prop_name, "str", "", True)
 
         video_id = mem_old_database.get_videos(include=["video_id"])[0].video_id
 
         # Set initial
         mem_old_database.ops.set_property_for_videos(prop_name, {video_id: ["a"]})
-        mem_new_database.ops.set_property_for_videos(prop_name, {video_id: ["a"]})
+        mem_saurus_database.ops.set_property_for_videos(prop_name, {video_id: ["a"]})
 
         # Merge
         mem_old_database.ops.set_property_for_videos(
             prop_name, {video_id: ["b"]}, merge=True
         )
-        mem_new_database.ops.set_property_for_videos(
+        mem_saurus_database.ops.set_property_for_videos(
             prop_name, {video_id: ["b"]}, merge=True
         )
 
         old_tags = mem_old_database.videos_tag_get(prop_name, indices=[video_id])
-        new_tags = mem_new_database.videos_tag_get(prop_name, indices=[video_id])
+        new_tags = mem_saurus_database.videos_tag_get(prop_name, indices=[video_id])
 
         assert sorted(old_tags[video_id]) == sorted(new_tags[video_id]) == ["a", "b"]
 
@@ -489,21 +489,21 @@ class TestSetPropertyForVideos:
 class TestMarkAsWatched:
     """Test mark_as_watched and mark_as_read methods."""
 
-    def test_mark_as_watched(self, mem_old_database, mem_new_database):
+    def test_mark_as_watched(self, mem_old_database, mem_saurus_database):
         """Both should mark video as watched."""
         video_id = mem_old_database.get_videos(include=["video_id"])[0].video_id
 
         mem_old_database.ops.mark_as_watched(video_id)
-        mem_new_database.ops.mark_as_watched(video_id)
+        mem_saurus_database.ops.mark_as_watched(video_id)
 
         old_v = mem_old_database.get_videos(where={"video_id": video_id})[0]
-        new_v = mem_new_database.get_videos(where={"video_id": video_id})[0]
+        new_v = mem_saurus_database.get_videos(where={"video_id": video_id})[0]
 
         assert bool(old_v.watched) is bool(new_v.watched) is True
         assert old_v.date_entry_opened.time > 0
         assert new_v.date_entry_opened.time > 0
 
-    def test_mark_as_read_toggle(self, mem_old_database, mem_new_database):
+    def test_mark_as_read_toggle(self, mem_old_database, mem_saurus_database):
         """Both should toggle watched status."""
         video_id = mem_old_database.get_videos(include=["video_id"])[0].video_id
 
@@ -513,13 +513,13 @@ class TestMarkAsWatched:
 
         # Toggle
         old_result = mem_old_database.ops.mark_as_read(video_id)
-        new_result = mem_new_database.ops.mark_as_read(video_id)
+        new_result = mem_saurus_database.ops.mark_as_read(video_id)
 
         assert old_result == new_result == (not initial_watched)
 
         # Toggle back
         old_result2 = mem_old_database.ops.mark_as_read(video_id)
-        new_result2 = mem_new_database.ops.mark_as_read(video_id)
+        new_result2 = mem_saurus_database.ops.mark_as_read(video_id)
 
         assert old_result2 == new_result2 == initial_watched
 
@@ -527,7 +527,7 @@ class TestMarkAsWatched:
 class TestSetSimilarities:
     """Test similarity operations."""
 
-    def test_set_similarities(self, mem_old_database, mem_new_database):
+    def test_set_similarities(self, mem_old_database, mem_saurus_database):
         """Both should set similarities the same way."""
         videos = mem_old_database.get_videos(include=["video_id"])[:5]
         video_ids = [v.video_id for v in videos]
@@ -536,26 +536,26 @@ class TestSetSimilarities:
         similarities = {vid: 100 for vid in video_ids}
 
         mem_old_database.ops.set_similarities(similarities)
-        mem_new_database.ops.set_similarities(similarities)
+        mem_saurus_database.ops.set_similarities(similarities)
 
         # Verify
         for vid in video_ids:
             old_v = mem_old_database.get_videos(where={"video_id": vid})[0]
-            new_v = mem_new_database.get_videos(where={"video_id": vid})[0]
+            new_v = mem_saurus_database.get_videos(where={"video_id": vid})[0]
             assert old_v.similarity_id == new_v.similarity_id == 100
 
-    def test_set_similarities_from_list(self, mem_old_database, mem_new_database):
+    def test_set_similarities_from_list(self, mem_old_database, mem_saurus_database):
         """Both should set similarities from lists."""
         videos = mem_old_database.get_videos(include=["video_id"])[:3]
         video_ids = [v.video_id for v in videos]
         sim_ids = [1, 2, 3]
 
         mem_old_database.ops.set_similarities_from_list(video_ids, sim_ids)
-        mem_new_database.ops.set_similarities_from_list(video_ids, sim_ids)
+        mem_saurus_database.ops.set_similarities_from_list(video_ids, sim_ids)
 
         for vid, expected_sim in zip(video_ids, sim_ids):
             old_v = mem_old_database.get_videos(where={"video_id": vid})[0]
-            new_v = mem_new_database.get_videos(where={"video_id": vid})[0]
+            new_v = mem_saurus_database.get_videos(where={"video_id": vid})[0]
             assert old_v.similarity_id == new_v.similarity_id == expected_sim
 
 
@@ -565,17 +565,17 @@ class TestCategoryPropertyFullWorkflow:
     based on video folder structure.
     """
 
-    def test_populate_category_from_folders(self, mem_old_database, mem_new_database):
+    def test_populate_category_from_folders(self, mem_old_database, mem_saurus_database):
         """Populate test_folder_category property based on folder structure."""
         prop_name = "test_folder_category"
 
         # Create property
         mem_old_database.prop_type_add(prop_name, "str", "", True)
-        mem_new_database.prop_type_add(prop_name, "str", "", True)
+        mem_saurus_database.prop_type_add(prop_name, "str", "", True)
 
         # Get all videos and extract categories
         old_videos = mem_old_database.get_videos(include=["video_id", "filename"])
-        new_videos = mem_new_database.get_videos(include=["video_id", "filename"])
+        new_videos = mem_saurus_database.get_videos(include=["video_id", "filename"])
 
         # Build updates
         old_updates = {}
@@ -592,14 +592,14 @@ class TestCategoryPropertyFullWorkflow:
 
         # Apply updates
         mem_old_database.videos_tag_set(prop_name, old_updates)
-        mem_new_database.videos_tag_set(prop_name, new_updates)
+        mem_saurus_database.videos_tag_set(prop_name, new_updates)
 
         # Verify same counts
         sample_ids = list(old_updates.keys())[:100]
         old_count = mem_old_database.ops.count_property_for_videos(
             sample_ids, prop_name
         )
-        new_count = mem_new_database.ops.count_property_for_videos(
+        new_count = mem_saurus_database.ops.count_property_for_videos(
             sample_ids, prop_name
         )
 
@@ -607,7 +607,76 @@ class TestCategoryPropertyFullWorkflow:
 
         # Verify individual values match
         old_tags = mem_old_database.videos_tag_get(prop_name)
-        new_tags = mem_new_database.videos_tag_get(prop_name)
+        new_tags = mem_saurus_database.videos_tag_get(prop_name)
 
         for vid in sample_ids:
             assert old_tags.get(vid, []) == new_tags.get(vid, [])
+
+
+class TestCRUDOperations:
+    """Test critical CRUD operations (Create, Read, Update, Delete)."""
+
+    # Video ID to delete (same in both JSON and SQL databases)
+    VIDEO_ID_TO_DELETE = 0
+
+    def test_video_entry_del(self, mem_old_database, mem_saurus_database):
+        """Test deleting a video entry."""
+        # Use hardcoded video_id for deterministic testing
+        video_id = self.VIDEO_ID_TO_DELETE
+
+        # Verify the video exists in both databases
+        old_videos = mem_old_database.get_videos(
+            include=["video_id", "filename"], where={"video_id": video_id}
+        )
+        new_videos = mem_saurus_database.get_videos(
+            include=["video_id", "filename"], where={"video_id": video_id}
+        )
+
+        assert len(old_videos) == 1, f"Video {video_id} not found in JSON database"
+        assert len(new_videos) == 1, f"Video {video_id} not found in SQL database"
+
+        video_to_delete = old_videos[0]
+
+        # Count videos before deletion
+        old_count_before = len(mem_old_database.get_videos())
+        new_count_before = len(mem_saurus_database.get_videos())
+
+        assert old_count_before == new_count_before, "Initial counts differ"
+
+        # Initialize provider (for JSON database - needed before delete)
+        # This forces the provider layers to be initialized
+        if hasattr(mem_old_database, 'provider'):
+            mem_old_database.provider.get_view_indices()
+
+        # Delete the video
+        mem_old_database.video_entry_del(video_id)
+        mem_saurus_database.video_entry_del(video_id)
+
+        # Count videos after deletion
+        old_count_after = len(mem_old_database.get_videos())
+        new_count_after = len(mem_saurus_database.get_videos())
+
+        # Both should have one less video
+        assert old_count_after == old_count_before - 1, "JSON count didn't decrease"
+        assert new_count_after == new_count_before - 1, "SQL count didn't decrease"
+        assert old_count_after == new_count_after, "Counts differ after deletion"
+
+        # Verify the video doesn't exist anymore
+        old_videos_after = mem_old_database.get_videos(include=["video_id"])
+        new_videos_after = mem_saurus_database.get_videos(include=["video_id"])
+
+        old_ids = {v.video_id for v in old_videos_after}
+        new_ids = {v.video_id for v in new_videos_after}
+
+        assert video_id not in old_ids, "Video still exists in JSON after deletion"
+        assert video_id not in new_ids, "Video still exists in SQL after deletion"
+        assert old_ids == new_ids, "Video ID sets differ after deletion"
+
+
+# ==============================================================================
+# Note: Other CRUD tests (videos_add, delete_video, etc.) were moved to
+# test_video_lifecycle.py which uses a real test video and tests the complete
+# lifecycle: scan → add → delete (both DB and filesystem).
+#
+# See: tests/databases/unittests/comparisons/test_video_lifecycle.py
+# ==============================================================================

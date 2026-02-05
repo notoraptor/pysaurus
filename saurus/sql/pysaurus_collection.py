@@ -20,6 +20,7 @@ from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
 from saurus.sql.sql_useful_constants import WRITABLE_FIELDS
 from saurus.sql.video_mega_search import video_mega_search
+from saurus.sql.video_mega_utils import _get_video_moves
 
 logger = logging.getLogger(__name__)
 
@@ -102,13 +103,14 @@ class PysaurusCollection(AbstractDatabase):
 
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
-        video_indices = list(updates.keys())
-        if len(video_indices) == 1 and video_indices[0] is None:
+        video_ids = list(updates.keys())
+        if len(video_ids) == 1 and video_ids[0] is None:
             placeholders_string = None
         else:
-            assert all(isinstance(video_id, int) for video_id in video_indices)
-            placeholders_string = ",".join(["?"] * len(video_indices))
-        for video_id in video_indices:
+            if not all(isinstance(video_id, int) for video_id in video_ids):
+                raise TypeError("All video_ids must be integers")
+            placeholders_string = ",".join(["?"] * len(video_ids))
+        for video_id in video_ids:
             updates[video_id] = pt.instantiate(updates[video_id])
 
         property_id = pt.property_id
@@ -124,7 +126,7 @@ class PysaurusCollection(AbstractDatabase):
                     [(property_id, value) for value in values],
                 )
             else:
-                all_video_indices = [
+                all_video_ids = [
                     row["video_id"]
                     for row in self.db.query_all("SELECT video_id FROM video")
                 ]
@@ -138,7 +140,7 @@ class PysaurusCollection(AbstractDatabase):
                     "(video_id, property_id, property_value) VALUES (?, ?, ?)",
                     (
                         (video_id, property_id, value)
-                        for video_id in all_video_indices
+                        for video_id in all_video_ids
                         for value in values
                     ),
                 )
@@ -162,7 +164,7 @@ class PysaurusCollection(AbstractDatabase):
                         f"DELETE FROM video_property_value "
                         f"WHERE property_id = ? "
                         f"AND video_id IN ({placeholders_string})",
-                        [property_id] + video_indices,
+                        [property_id] + video_ids,
                     )
                 self.db.modify_many(
                     "INSERT OR IGNORE INTO video_property_value "
@@ -191,11 +193,11 @@ class PysaurusCollection(AbstractDatabase):
                     f"FROM video AS v JOIN video_property_text AS t "
                     f"ON v.video_id = t.video_id "
                     f"WHERE v.video_id IN ({placeholders_string})",
-                    video_indices,
+                    video_ids,
                 )
                 self.db.modify(
                     f"DELETE FROM video_text WHERE video_id IN ({placeholders_string})",
-                    video_indices,
+                    video_ids,
                 )
             self.db.modify_many(
                 "INSERT INTO video_text "
@@ -242,19 +244,20 @@ class PysaurusCollection(AbstractDatabase):
             ),
         )
         if string_properties:
-            (new_texts,) = self.db.query_all(
+            new_texts = self.db.query_one(
                 "SELECT v.video_id, v.filename, v.meta_title, t.property_text "
                 "FROM video AS v JOIN video_property_text AS t "
                 "ON v.video_id = t.video_id "
                 "WHERE v.video_id = ?",
                 [video_id],
             )
-            self.db.modify("DELETE FROM video_text WHERE video_id = ?", [video_id])
-            self.db.modify(
-                "INSERT INTO video_text "
-                "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
-                new_texts,
-            )
+            if new_texts:
+                self.db.modify("DELETE FROM video_text WHERE video_id = ?", [video_id])
+                self.db.modify(
+                    "INSERT INTO video_text "
+                    "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
+                    new_texts,
+                )
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
@@ -292,12 +295,14 @@ class PysaurusCollection(AbstractDatabase):
         )
 
     def prop_type_del(self, name: str):
-        video_indices = []
+        video_ids = []
         pt = self.db.query_one(
             "SELECT property_id, type FROM property WHERE name = ?", [name]
         )
+        if pt is None:
+            raise ValueError(f"Property not found: {name}")
         if pt["type"] == "str":
-            video_indices = [
+            video_ids = [
                 row[0]
                 for row in self.db.query(
                     "SELECT DISTINCT video_id FROM video_property_value "
@@ -308,19 +313,12 @@ class PysaurusCollection(AbstractDatabase):
 
         self.db.modify("DELETE FROM property WHERE name = ?", [name])
 
-        if video_indices:
+        if video_ids:
             updates = self.db.query_all(
                 f"SELECT property_text, video_id FROM video_property_text "
-                f"WHERE video_id IN ({','.join(['?'] * len(video_indices))})",
-                video_indices,
+                f"WHERE video_id IN ({','.join(['?'] * len(video_ids))})",
+                video_ids,
             )
-            # Seems irrelevant:
-            # updated_indices = [row[1] for row in updates]
-            # self.db.modify(
-            #     f"UPDATE video_text SET properties = '' "
-            #     f"WHERE video_id NOT IN ({','.join(['?'] * len(updated_indices))})",
-            #     updated_indices,
-            # )
             self.db.modify_many(
                 "UPDATE video_text SET properties = ? WHERE video_id = ?", updates
             )
@@ -391,16 +389,21 @@ class PysaurusCollection(AbstractDatabase):
             )
         return output
 
+    def videos_get_moves(self) -> Iterable[tuple[int, list[dict]]]:
+        return _get_video_moves(self.db)
+
     def video_entry_set_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
         path = AbsolutePath.ensure(path)
-        assert path.isfile()
+        if not path.isfile():
+            raise FileNotFoundError(f"File not found: {path}")
         (video,) = self.get_videos(
             include=["filename"], where={"video_id": video_id, "unreadable": False}
         )
         old_filename = AbsolutePath.ensure(video.filename)
-        assert old_filename != path
+        if old_filename == path:
+            raise ValueError(f"New path is the same as old path: {path}")
 
         self.db.modify(
             "UPDATE video SET filename = ? WHERE video_id = ?", [path.path, video_id]
@@ -440,7 +443,8 @@ class PysaurusCollection(AbstractDatabase):
         entry_map: dict[str, VideoEntry] = {
             entry.filename: entry for entry in video_entries
         }
-        assert len(entry_map) == len(video_entries)
+        if len(entry_map) != len(video_entries):
+            raise ValueError("Duplicate filenames in video_entries")
         filenames = list(entry_map.keys())
         for row in self.db.query(
             f"SELECT video_id, filename, meta_title FROM video "
@@ -494,13 +498,18 @@ class PysaurusCollection(AbstractDatabase):
                 for rank, code in enumerate(entry.subtitle_languages)
             )
 
-        indice_parameters = [[entry.video_id] for entry in entries]
-        self.db.modify_many(
-            "DELETE FROM video_error WHERE video_id = ?", indice_parameters
-        )
-        self.db.modify_many(
-            "DELETE FROM video_language WHERE video_id = ?", indice_parameters
-        )
+        # Consolider les DELETE avec IN clause pour meilleures performances
+        video_ids = [entry.video_id for entry in entries]
+        if video_ids:
+            placeholders = ','.join(['?'] * len(video_ids))
+            self.db.modify(
+                f"DELETE FROM video_error WHERE video_id IN ({placeholders})",
+                video_ids
+            )
+            self.db.modify(
+                f"DELETE FROM video_language WHERE video_id IN ({placeholders})",
+                video_ids
+            )
         self.db.modify_many(
             "INSERT INTO video_error (video_id, error) VALUES (?, ?)", to_add_errors
         )
@@ -528,7 +537,8 @@ class PysaurusCollection(AbstractDatabase):
             dicts,
         )
         entry_map = {entry.filename: entry for entry in entries}
-        assert len(entry_map) == len(entries)
+        if len(entry_map) != len(entries):
+            raise ValueError("Duplicate filenames in entries")
         nb_indices = 0
         for row in self.db.query(
             f"SELECT filename, video_id FROM video "
@@ -537,7 +547,10 @@ class PysaurusCollection(AbstractDatabase):
         ):
             entry_map[row[0]].video_id = row[1]
             nb_indices += 1
-        assert nb_indices == len(entries)
+        if nb_indices != len(entries):
+            raise RuntimeError(
+                f"Expected {len(entries)} video IDs, got {nb_indices}"
+            )
         errors = [
             (entry.video_id, error) for entry in entries for error in entry.errors
         ]
@@ -562,7 +575,8 @@ class PysaurusCollection(AbstractDatabase):
 
     def _update_video_texts(self, entries: list[VideoEntry]):
         entry_map = {entry.video_id: entry for entry in entries}
-        assert len(entry_map) == len(entries)
+        if len(entry_map) != len(entries):
+            raise ValueError("Duplicate video_ids in entries")
         texts = []
         for row in self.db.query(
             f"SELECT video_id, property_text FROM video_property_text "
@@ -577,36 +591,6 @@ class PysaurusCollection(AbstractDatabase):
             texts,
         )
 
-    def videos_get_moves(self) -> Iterable[tuple[int, list[dict]]]:
-        for row in self.db.query(
-            """
-    SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
-    FROM video
-    WHERE unreadable = 0 AND discarded = 0
-    GROUP BY file_size, duration, duration_time_base_not_null
-    HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
-                    """
-        ):
-            not_found = []
-            found = []
-            for piece in row[0].split(","):
-                str_video_id, str_is_file, str_hex_filename = piece.split("-")
-                video_id = int(str_video_id)
-                if int(str_is_file):
-                    found.append(
-                        {
-                            "video_id": video_id,
-                            "filename": AbsolutePath(
-                                bytes.fromhex(str_hex_filename).decode("utf-8")
-                            ).standard_path,
-                        }
-                    )
-                else:
-                    not_found.append(video_id)
-            assert not_found and found, (not_found, found)
-            for id_not_found in not_found:
-                yield id_not_found, found
-
     def _thumbnails_add(self, filename_to_thumb_name: dict[str, str]) -> None:
         filename_to_video_id = {
             row[0]: row[1]
@@ -616,7 +600,11 @@ class PysaurusCollection(AbstractDatabase):
                 list(filename_to_thumb_name.keys()),
             )
         }
-        assert len(filename_to_video_id) == len(filename_to_thumb_name)
+        if len(filename_to_video_id) != len(filename_to_thumb_name):
+            raise RuntimeError(
+                f"Expected {len(filename_to_thumb_name)} videos, "
+                f"found {len(filename_to_video_id)}"
+            )
         self.db.modify_many(
             "INSERT OR REPLACE INTO video_thumbnail (video_id, thumbnail) VALUES (?, ?)",
             (

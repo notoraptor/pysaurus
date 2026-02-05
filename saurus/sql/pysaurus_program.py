@@ -34,7 +34,8 @@ class PysaurusProgram:
         self.config = Config()
         self.config_path = self.app_dir / "config.json"
         if self.config_path.exists():
-            assert self.config_path.isfile()
+            if not self.config_path.isfile():
+                raise RuntimeError(f"Config path exists but is not a file: {self.config_path}")
             self.config = Config(parse_json(self.config_path))
         # TODO Load lang (not yet correctly handled)
         self.lang_dir = (self.app_dir / "lang").mkdir()
@@ -46,7 +47,8 @@ class PysaurusProgram:
 
     def open_database(self, name: str) -> PysaurusCollection:
         path = self.dbs_dir / name
-        assert path in self.databases
+        if path not in self.databases:
+            raise KeyError(f"Database not found: {name}")
         if self.databases[path] is None:
             self.databases[path] = PysaurusCollection(path)
         return self.databases[path]

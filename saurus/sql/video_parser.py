@@ -8,7 +8,8 @@ class FieldQuery:
     __slots__ = ("table", "field", "values")
 
     def __init__(self, field: str, values: Sequence, prefix=""):
-        assert values
+        if not values:
+            raise ValueError(f"FieldQuery requires at least one value for field {field}")
         self.field = field
         self.values = values
         self.table = prefix
@@ -47,7 +48,8 @@ class VideoFieldQueryParser:
 
     @classmethod
     def _assert_video_table_field(cls, value: str) -> str:
-        assert getattr(F, value)
+        if not hasattr(F, value):
+            raise ValueError(f"Unknown video field: {value}")
         return value
 
     def video_id(self, value) -> FieldQuery:
