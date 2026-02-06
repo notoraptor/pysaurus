@@ -35,7 +35,9 @@ class PysaurusProgram:
         self.config_path = self.app_dir / "config.json"
         if self.config_path.exists():
             if not self.config_path.isfile():
-                raise RuntimeError(f"Config path exists but is not a file: {self.config_path}")
+                raise RuntimeError(
+                    f"Config path exists but is not a file: {self.config_path}"
+                )
             self.config = Config(parse_json(self.config_path))
         # TODO Load lang (not yet correctly handled)
         self.lang_dir = (self.app_dir / "lang").mkdir()

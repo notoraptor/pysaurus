@@ -135,7 +135,11 @@ def _get_video_moves(db: PysaurusConnection) -> Iterable[tuple[int, list[dict]]]
         ORDER BY file_size, duration, duration_time_base_not_null, is_file DESC
         """
     ):
-        group_key = (row[3], row[4], row[5])  # file_size, duration, duration_time_base_not_null
+        group_key = (
+            row[3],
+            row[4],
+            row[5],
+        )  # file_size, duration, duration_time_base_not_null
 
         # Nouveau groupe détecté
         if current_group != group_key:
@@ -155,10 +159,9 @@ def _get_video_moves(db: PysaurusConnection) -> Iterable[tuple[int, list[dict]]]
         filename = row[2]
 
         if is_file:
-            found.append({
-                "video_id": video_id,
-                "filename": AbsolutePath(filename).standard_path,
-            })
+            found.append(
+                {"video_id": video_id, "filename": AbsolutePath(filename).standard_path}
+            )
         else:
             not_found.append(video_id)
 

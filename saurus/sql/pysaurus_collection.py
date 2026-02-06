@@ -501,14 +501,13 @@ class PysaurusCollection(AbstractDatabase):
         # Consolider les DELETE avec IN clause pour meilleures performances
         video_ids = [entry.video_id for entry in entries]
         if video_ids:
-            placeholders = ','.join(['?'] * len(video_ids))
+            placeholders = ",".join(["?"] * len(video_ids))
             self.db.modify(
-                f"DELETE FROM video_error WHERE video_id IN ({placeholders})",
-                video_ids
+                f"DELETE FROM video_error WHERE video_id IN ({placeholders})", video_ids
             )
             self.db.modify(
                 f"DELETE FROM video_language WHERE video_id IN ({placeholders})",
-                video_ids
+                video_ids,
             )
         self.db.modify_many(
             "INSERT INTO video_error (video_id, error) VALUES (?, ?)", to_add_errors
@@ -548,9 +547,7 @@ class PysaurusCollection(AbstractDatabase):
             entry_map[row[0]].video_id = row[1]
             nb_indices += 1
         if nb_indices != len(entries):
-            raise RuntimeError(
-                f"Expected {len(entries)} video IDs, got {nb_indices}"
-            )
+            raise RuntimeError(f"Expected {len(entries)} video IDs, got {nb_indices}")
         errors = [
             (entry.video_id, error) for entry in entries for error in entry.errors
         ]

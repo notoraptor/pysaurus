@@ -4,9 +4,6 @@ Tests for PySide6 DatabasesPage.
 Tests the database selection and creation page.
 """
 
-import pytest
-from PySide6.QtCore import Qt
-
 
 class TestDatabasesPageCreation:
     """Tests for DatabasesPage initialization."""
@@ -139,7 +136,9 @@ class TestDatabasesPageSignals:
         qtbot.addWidget(page)
 
         signals = []
-        page.database_opening.connect(lambda name, update: signals.append((name, update)))
+        page.database_opening.connect(
+            lambda name, update: signals.append((name, update))
+        )
 
         # Find first database widget and trigger open
         if page._db_widgets:
@@ -158,7 +157,9 @@ class TestDatabasesPageSignals:
 
         # Mock QMessageBox to auto-accept
         monkeypatch.setattr(
-            QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Yes
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
         )
 
         signals = []
@@ -201,7 +202,9 @@ class TestDatabasesPageValidation:
         assert len(warnings) == 1
         assert "name" in warnings[0][2].lower()
 
-    def test_create_without_sources_shows_warning(self, qtbot, mock_context, monkeypatch):
+    def test_create_without_sources_shows_warning(
+        self, qtbot, mock_context, monkeypatch
+    ):
         """Test that creating without sources shows warning."""
         from pysaurus.interface.pyside6.pages.databases_page import DatabasesPage
         from PySide6.QtWidgets import QMessageBox

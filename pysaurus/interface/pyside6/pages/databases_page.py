@@ -315,10 +315,7 @@ class DatabasesPage(QWidget):
         """Add files to sources."""
         ext_filter = " ".join(f"*.{ext}" for ext in sorted(VIDEO_SUPPORTED_EXTENSIONS))
         files, _ = QFileDialog.getOpenFileNames(
-            self,
-            "Select Video Files",
-            "",
-            f"Video files ({ext_filter});;All files (*)",
+            self, "Select Video Files", "", f"Video files ({ext_filter});;All files (*)"
         )
         existing = self._get_existing_paths()
         added = 0

@@ -450,14 +450,10 @@ class MainWindow(QMainWindow):
             try:
                 self.ctx.rename_database(new_name)
                 self.setWindowTitle(f"Pysaurus - {new_name}")
-                self.status_bar.showMessage(
-                    f"Database renamed to '{new_name}'", 3000
-                )
+                self.status_bar.showMessage(f"Database renamed to '{new_name}'", 3000)
             except Exception as e:
                 QMessageBox.critical(
-                    self,
-                    "Rename Failed",
-                    f"Failed to rename database:\n{e}",
+                    self, "Rename Failed", f"Failed to rename database:\n{e}"
                 )
 
     def _on_edit_folders(self):
@@ -469,9 +465,7 @@ class MainWindow(QMainWindow):
         db_name = self.ctx.database.get_name()
 
         new_folders = EditFoldersDialog.edit_folders(
-            folders=current_folders,
-            database_name=db_name,
-            parent=self,
+            folders=current_folders, database_name=db_name, parent=self
         )
 
         if new_folders is not None:
@@ -494,9 +488,7 @@ class MainWindow(QMainWindow):
                         self._on_update_database()
                 except Exception as e:
                     QMessageBox.critical(
-                        self,
-                        "Update Failed",
-                        f"Failed to update folders:\n{e}",
+                        self, "Update Failed", f"Failed to update folders:\n{e}"
                     )
 
     def _on_close_database(self):

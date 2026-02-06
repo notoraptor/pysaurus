@@ -9,7 +9,9 @@ class FieldQuery:
 
     def __init__(self, field: str, values: Sequence, prefix=""):
         if not values:
-            raise ValueError(f"FieldQuery requires at least one value for field {field}")
+            raise ValueError(
+                f"FieldQuery requires at least one value for field {field}"
+            )
         self.field = field
         self.values = values
         self.table = prefix

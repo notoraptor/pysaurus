@@ -7,8 +7,6 @@ Ensures:
 - Wrapping works correctly in list view
 """
 
-import pytest
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from tests.mocks.mock_database import MockVideoPattern

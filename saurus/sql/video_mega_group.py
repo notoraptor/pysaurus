@@ -151,10 +151,12 @@ def video_mega_group(
                        WHERE p.name = ?
                        ORDER BY pe.rank
                        LIMIT 1""",
-                    [grouping.field]
+                    [grouping.field],
                 )
                 is_multiple = prop_info[0] if prop_info else 0
-                default_value = prop_info[1] if (prop_info and len(prop_info) > 1) else None
+                default_value = (
+                    prop_info[1] if (prop_info and len(prop_info) > 1) else None
+                )
 
                 # For multiple properties, use NULL for videos without the property (to match JSON behavior)
                 # For single properties, use the default value
@@ -202,7 +204,11 @@ def video_mega_group(
                     GROUP BY value {without_singletons}
                     ORDER BY {order_field}
                     """
-                    super_params = [default_value, grouping.field] + source_params + [grouping.field]
+                    super_params = (
+                        [default_value, grouping.field]
+                        + source_params
+                        + [grouping.field]
+                    )
                 grouping_rows = sql_db.query(super_query, super_params)
         else:
             field = field_factory.get_field(grouping.field)
@@ -237,26 +243,45 @@ def video_mega_group(
         # Convert raw SQL values to appropriate types (FileSize for bit_rate, Date for dates, etc.)
         if grouping and grouping.field in ("bit_rate", "size"):
             output_groups.extend(
-                GroupCount(tuple(FileSize(v) if v is not None else None for v in row[:-1]), row[-1])
+                GroupCount(
+                    tuple(FileSize(v) if v is not None else None for v in row[:-1]),
+                    row[-1],
+                )
                 for row in grouping_rows
             )
-        elif grouping and grouping.field in ("date", "date_entry_modified", "date_entry_opened"):
+        elif grouping and grouping.field in (
+            "date",
+            "date_entry_modified",
+            "date_entry_opened",
+        ):
             output_groups.extend(
-                GroupCount(tuple(Date(v) if v is not None else None for v in row[:-1]), row[-1])
+                GroupCount(
+                    tuple(Date(v) if v is not None else None for v in row[:-1]), row[-1]
+                )
                 for row in grouping_rows
             )
         elif grouping and grouping.field == "length":
             # length is duration in seconds (not microseconds)
             output_groups.extend(
-                GroupCount(tuple(Duration(v * 1_000_000) if v is not None else None for v in row[:-1]), row[-1])
+                GroupCount(
+                    tuple(
+                        Duration(v * 1_000_000) if v is not None else None
+                        for v in row[:-1]
+                    ),
+                    row[-1],
+                )
                 for row in grouping_rows
             )
         elif grouping and grouping.field in ("size_length", "move_id"):
             # Tuple fields: (file_size, length_microseconds)
             output_groups.extend(
                 GroupCount(
-                    tuple((FileSize(row[0]), Duration(row[1] * 1_000_000)) if row[0] is not None else None),
-                    row[2]
+                    tuple(
+                        (FileSize(row[0]), Duration(row[1] * 1_000_000))
+                        if row[0] is not None
+                        else None
+                    ),
+                    row[2],
                 )
                 for row in grouping_rows
             )
@@ -285,10 +310,14 @@ def video_mega_group(
                    WHERE p.name = ?
                    ORDER BY pe.rank
                    LIMIT 1""",
-                [grouping.field]
+                [grouping.field],
             )
             is_multiple = prop_meta_info[0] if prop_meta_info else 0
-            default_value = prop_meta_info[1] if (prop_meta_info and len(prop_meta_info) > 1) else None
+            default_value = (
+                prop_meta_info[1]
+                if (prop_meta_info and len(prop_meta_info) > 1)
+                else None
+            )
 
             if classifier:
                 expected = list(classifier)

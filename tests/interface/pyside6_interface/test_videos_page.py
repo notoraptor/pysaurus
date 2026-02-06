@@ -4,11 +4,6 @@ Tests for PySide6 VideosPage.
 Tests the main video browsing page with mock database.
 """
 
-import pytest
-from PySide6.QtCore import Qt
-
-from tests.interface.pyside6_interface.conftest import MockAppContext
-
 
 class TestVideosPageCreation:
     """Tests for VideosPage initialization."""

@@ -384,7 +384,9 @@ class MockProvider:
             prop_name = fn_args[0] if len(fn_args) > 0 else None
             to_add = fn_args[1] if len(fn_args) > 1 else []
             to_remove = fn_args[2] if len(fn_args) > 2 else []
-            return self._edit_property_for_videos(video_ids, prop_name, to_add, to_remove)
+            return self._edit_property_for_videos(
+                video_ids, prop_name, to_add, to_remove
+            )
 
         # Default: return success
         return {"applied": True, "fn_name": fn_name}
@@ -424,7 +426,9 @@ class MockProvider:
         else:  # exclude mode
             return [vid for vid in all_ids if vid not in selection]
 
-    def _count_property_values(self, video_ids: list[int], prop_name: str) -> list[list]:
+    def _count_property_values(
+        self, video_ids: list[int], prop_name: str
+    ) -> list[list]:
         """Count property values for selected videos."""
         value_counts: dict[Any, int] = {}
         for video in self._db._videos:

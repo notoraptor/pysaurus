@@ -4,9 +4,6 @@ Tests for PySide6 PropertiesPage.
 Tests the property management page.
 """
 
-import pytest
-from PySide6.QtCore import Qt
-
 
 class TestPropertiesPageCreation:
     """Tests for PropertiesPage initialization."""
@@ -221,7 +218,9 @@ class TestPropertiesPageActions:
 
         # Mock QMessageBox to auto-accept
         monkeypatch.setattr(
-            QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Yes
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
         )
 
         initial_count = len(mock_context.database.get_prop_types())
@@ -266,7 +265,9 @@ class TestPropertiesPageActions:
 
         # Mock QMessageBox to auto-accept
         monkeypatch.setattr(
-            QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Yes
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
         )
         monkeypatch.setattr(QMessageBox, "information", lambda *args, **kwargs: None)
 

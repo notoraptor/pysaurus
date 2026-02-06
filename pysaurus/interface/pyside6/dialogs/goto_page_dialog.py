@@ -73,9 +73,7 @@ class GoToPageDialog(QDialog):
         return self.page_spin.value() - 1
 
     @staticmethod
-    def get_page_number(
-        current_page: int, total_pages: int, parent=None
-    ) -> int | None:
+    def get_page_number(current_page: int, total_pages: int, parent=None) -> int | None:
         """
         Static method to show dialog and get page number.
 

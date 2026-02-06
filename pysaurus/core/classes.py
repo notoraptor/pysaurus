@@ -269,17 +269,9 @@ class Selector:
     def to_dict(self) -> dict:
         """Convert selector to dictionary format for backend API."""
         if self._to_exclude:
-            return {
-                "all": True,
-                "include": [],
-                "exclude": list(self._selection),
-            }
+            return {"all": True, "include": [], "exclude": list(self._selection)}
         else:
-            return {
-                "all": False,
-                "include": list(self._selection),
-                "exclude": [],
-            }
+            return {"all": False, "include": list(self._selection), "exclude": []}
 
     @classmethod
     def parse_dict(cls, selector: dict):

@@ -8,7 +8,9 @@ SQL_LENGTH = f"(v.duration * 1.0 / {FORMATTED_DURATION_TIME_BASE})"
 class SqlField:
     def __init__(self, name: str, definition: list[str], sortable=True):
         if not name or not definition:
-            raise ValueError(f"SqlField requires name and definition: {name=}, {definition=}")
+            raise ValueError(
+                f"SqlField requires name and definition: {name=}, {definition=}"
+            )
         self.name = name
         self.definition = definition
         self.sortable = sortable

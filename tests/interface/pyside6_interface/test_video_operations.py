@@ -6,7 +6,6 @@ Tests:
 - Property modifications (batch edit)
 """
 
-import pytest
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 
@@ -209,7 +208,13 @@ class TestVideoPropertyModification:
         monkeypatch.setattr(
             BatchEditPropertyDialog,
             "edit_property",
-            staticmethod(lambda prop_name, prop_type, nb_videos, values_and_counts, parent=None: (["horror"], ["action"])),
+            staticmethod(
+                lambda prop_name,
+                prop_type,
+                nb_videos,
+                values_and_counts,
+                parent=None: (["horror"], ["action"])
+            ),
         )
 
         # Get a prop_type

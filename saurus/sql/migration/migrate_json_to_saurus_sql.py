@@ -67,7 +67,9 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
     json_backup = JsonBackup(ways.db_json_path, notifier)
     json_dict = json_backup.load()
     if not isinstance(json_dict, dict):
-        raise TypeError(f"Expected dict from JSON backup, got {type(json_dict).__name__}")
+        raise TypeError(
+            f"Expected dict from JSON backup, got {type(json_dict).__name__}"
+        )
 
     # Format data for SQL tables
     with Profiler(f"[{db_name}] Get and format data", notifier):

@@ -152,11 +152,11 @@ class VideoListItem(QFrame):
         # Apply character-level diff highlights to file_title
         if self._file_title_diffs:
             file_title_display = self._apply_char_diff_highlights(file_title)
-            file_title_html = f'<b><u>{file_title_display}</u></b>'
+            file_title_html = f"<b><u>{file_title_display}</u></b>"
         else:
             file_title_display = _add_break_opportunities(self._escape_html(file_title))
             file_title_html = self._highlight_if_diff(
-                "file_title", f'<b><u>{file_title_display}</u></b>'
+                "file_title", f"<b><u>{file_title_display}</u></b>"
             )
 
         self.title_label = WrappingLabel(file_title_html)
@@ -409,7 +409,9 @@ class VideoListItem(QFrame):
                 for value in values:
                     value_str = str(value)
                     # Add break opportunities for long values
-                    value_display = _add_break_opportunities(self._escape_html(value_str))
+                    value_display = _add_break_opportunities(
+                        self._escape_html(value_str)
+                    )
                     value_label = QLabel(value_display)
                     value_label.setTextFormat(Qt.TextFormat.RichText)
                     value_label.setWordWrap(True)
@@ -422,14 +424,14 @@ class VideoListItem(QFrame):
                     value_label.setToolTip(f"Filter by {prop_name} = {value}")
                     # Capture prop_name and value for the lambda
                     value_label.mousePressEvent = (
-                        lambda e, pn=prop_name, v=value: self._on_property_value_clicked(pn, v)
+                        lambda e,
+                        pn=prop_name,
+                        v=value: self._on_property_value_clicked(pn, v)
                     )
                     props_layout.addWidget(value_label)
 
             # Style the container
-            props_widget.setStyleSheet(
-                "background-color: #f5f5f5; border-radius: 2px;"
-            )
+            props_widget.setStyleSheet("background-color: #f5f5f5; border-radius: 2px;")
             details_layout.addWidget(props_widget)
 
         main_layout.addLayout(details_layout, 1)

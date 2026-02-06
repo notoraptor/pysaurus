@@ -5,7 +5,6 @@ Tests BatchEditPropertyDialog and VideoPropertiesDialog.
 """
 
 import pytest
-from PySide6.QtCore import Qt
 
 from tests.mocks.mock_database import MockVideoPattern
 
@@ -27,11 +26,7 @@ class TestBatchEditPropertyDialog:
     @pytest.fixture
     def values_and_counts(self):
         """Sample values with counts."""
-        return [
-            ["action", 3],
-            ["comedy", 2],
-            ["drama", 1],
-        ]
+        return [["action", 3], ["comedy", 2], ["drama", 1]]
 
     def test_dialog_creation(self, qtbot, prop_type_string_multiple, values_and_counts):
         """Test that dialog can be created."""
@@ -292,12 +287,7 @@ class TestMultipleValuesWidget:
     @pytest.fixture
     def prop_type_multiple(self):
         """Multiple string property type."""
-        return {
-            "name": "tags",
-            "type": "str",
-            "multiple": True,
-            "enumeration": None,
-        }
+        return {"name": "tags", "type": "str", "multiple": True, "enumeration": None}
 
     @pytest.fixture
     def prop_type_enum(self):

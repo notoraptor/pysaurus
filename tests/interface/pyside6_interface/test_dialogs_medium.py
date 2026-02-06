@@ -193,7 +193,9 @@ class TestGroupingDialog:
         dialog.type_combo.setCurrentIndex(1)
 
         # Field combo should have property names
-        fields = [dialog.field_combo.itemData(i) for i in range(dialog.field_combo.count())]
+        fields = [
+            dialog.field_combo.itemData(i) for i in range(dialog.field_combo.count())
+        ]
         assert "genre" in fields
         assert "rating" in fields
 

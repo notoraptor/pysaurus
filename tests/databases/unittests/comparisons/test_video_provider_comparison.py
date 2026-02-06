@@ -395,20 +395,21 @@ def normalize_group_value(value):
         return tuple(normalize_group_value(v) for v in value)
     s = str(value)
     # Normalize empty string to None (JSON uses '', SQL uses None for missing properties)
-    if s == '':
+    if s == "":
         return None
     # Normalize boolean representation (SQL uses 0/1, Python uses False/True)
-    if s == '0':
-        return 'False'
-    if s == '1':
-        return 'True'
+    if s == "0":
+        return "False"
+    if s == "1":
+        return "True"
     # Remove trailing .0 from float strings (e.g., '1000000.0' -> '1000000')
-    if s.endswith('.0') and s[:-2].replace('-', '', 1).isdigit():
+    if s.endswith(".0") and s[:-2].replace("-", "", 1).isdigit():
         return s[:-2]
     # Normalize whitespace (for *_numeric fields with padding)
     # SQL padding adds spaces: 'test_ 009889 _' -> 'test_009889_'
     import re
-    s = re.sub(r'\s+', '', s)  # Remove all whitespace
+
+    s = re.sub(r"\s+", "", s)  # Remove all whitespace
     return s
 
 
@@ -498,8 +499,7 @@ def assert_grouping_identical(
         old_groups = {old_values[i]: old_stats[i].count for i in range(len(old_stats))}
         new_groups = {new_values[i]: new_stats[i].count for i in range(len(new_stats))}
         assert old_groups == new_groups, (
-            f"Groups differ for {field_name}: "
-            f"JSON={old_groups}, SQL={new_groups}"
+            f"Groups differ for {field_name}: JSON={old_groups}, SQL={new_groups}"
         )
 
         # Compare ordering (group values in order)
@@ -1520,7 +1520,9 @@ class TestProviderClassifier:
 # ==============================================================================
 
 
-def setup_property_with_values(db, prop_name: str, prop_type: str, multiple: bool, assignments: dict):
+def setup_property_with_values(
+    db, prop_name: str, prop_type: str, multiple: bool, assignments: dict
+):
     """
     Helper to create a property and assign values to videos.
 
@@ -1538,12 +1540,7 @@ def setup_property_with_values(db, prop_name: str, prop_type: str, multiple: boo
 
     # Use appropriate default value for each type
     # (empty string "" causes issues with non-string types)
-    default_values = {
-        "str": "",
-        "int": 0,
-        "float": 0.0,
-        "bool": False
-    }
+    default_values = {"str": "", "int": 0, "float": 0.0, "bool": False}
     definition = default_values.get(prop_type, "")
 
     # Create the property
@@ -1568,8 +1565,16 @@ def old_provider_with_test_properties(mem_old_database):
     db = mem_old_database
 
     # Clean up any existing test properties first
-    test_props = ["test_color", "test_tags", "test_rating", "test_scores",
-                  "test_price", "test_measurements", "test_is_favorite", "test_flags"]
+    test_props = [
+        "test_color",
+        "test_tags",
+        "test_rating",
+        "test_scores",
+        "test_price",
+        "test_measurements",
+        "test_is_favorite",
+        "test_flags",
+    ]
     for prop_name in test_props:
         try:
             db.prop_type_del(prop_name)
@@ -1624,8 +1629,12 @@ def old_provider_with_test_properties(mem_old_database):
     # float single: assign simple float values
     float_single_assignments = {}
     for i, vid in enumerate(video_ids):
-        float_single_assignments[vid] = round(1.0 + (i % 10) * 0.5, 1)  # 1.0, 1.5, 2.0, ..., 5.5
-    setup_property_with_values(db, "test_price", "float", False, float_single_assignments)
+        float_single_assignments[vid] = round(
+            1.0 + (i % 10) * 0.5, 1
+        )  # 1.0, 1.5, 2.0, ..., 5.5
+    setup_property_with_values(
+        db, "test_price", "float", False, float_single_assignments
+    )
 
     # float multi: assign multiple float values
     float_multi_assignments = {}
@@ -1636,13 +1645,17 @@ def old_provider_with_test_properties(mem_old_database):
             float_multi_assignments[vid] = [2.5, 3.5]
         else:
             float_multi_assignments[vid] = [1.5, 3.5]
-    setup_property_with_values(db, "test_measurements", "float", True, float_multi_assignments)
+    setup_property_with_values(
+        db, "test_measurements", "float", True, float_multi_assignments
+    )
 
     # bool single: assign boolean values
     bool_single_assignments = {}
     for i, vid in enumerate(video_ids):
         bool_single_assignments[vid] = i % 2 == 0  # Alternate True/False
-    setup_property_with_values(db, "test_is_favorite", "bool", False, bool_single_assignments)
+    setup_property_with_values(
+        db, "test_is_favorite", "bool", False, bool_single_assignments
+    )
 
     # bool multi: assign multiple boolean values
     bool_multi_assignments = {}
@@ -1666,8 +1679,16 @@ def new_provider_with_test_properties(mem_saurus_database):
     db = mem_saurus_database
 
     # Clean up any existing test properties first
-    test_props = ["test_color", "test_tags", "test_rating", "test_scores",
-                  "test_price", "test_measurements", "test_is_favorite", "test_flags"]
+    test_props = [
+        "test_color",
+        "test_tags",
+        "test_rating",
+        "test_scores",
+        "test_price",
+        "test_measurements",
+        "test_is_favorite",
+        "test_flags",
+    ]
     for prop_name in test_props:
         try:
             db.prop_type_del(prop_name)
@@ -1723,7 +1744,9 @@ def new_provider_with_test_properties(mem_saurus_database):
     float_single_assignments = {}
     for i, vid in enumerate(video_ids):
         float_single_assignments[vid] = round(1.0 + (i % 10) * 0.5, 1)
-    setup_property_with_values(db, "test_price", "float", False, float_single_assignments)
+    setup_property_with_values(
+        db, "test_price", "float", False, float_single_assignments
+    )
 
     # float multi
     float_multi_assignments = {}
@@ -1734,13 +1757,17 @@ def new_provider_with_test_properties(mem_saurus_database):
             float_multi_assignments[vid] = [2.5, 3.5]
         else:
             float_multi_assignments[vid] = [1.5, 3.5]
-    setup_property_with_values(db, "test_measurements", "float", True, float_multi_assignments)
+    setup_property_with_values(
+        db, "test_measurements", "float", True, float_multi_assignments
+    )
 
     # bool single
     bool_single_assignments = {}
     for i, vid in enumerate(video_ids):
         bool_single_assignments[vid] = i % 2 == 0
-    setup_property_with_values(db, "test_is_favorite", "bool", False, bool_single_assignments)
+    setup_property_with_values(
+        db, "test_is_favorite", "bool", False, bool_single_assignments
+    )
 
     # bool multi
     bool_multi_assignments = {}
@@ -2003,9 +2030,9 @@ class TestPropertyClassifier:
             key = s.value
             # SQL stores property values as strings, convert back to bool
             if key is not None and isinstance(key, str):
-                if key in ('0', 'False', 'false'):
+                if key in ("0", "False", "false"):
                     key = False
-                elif key in ('1', 'True', 'true'):
+                elif key in ("1", "True", "true"):
                     key = True
             new_groups[key] = s.count
         assert old_groups == new_groups, "Classifier bool multi: group stats differ"
@@ -2041,8 +2068,12 @@ class TestGroupIdentification:
         new_p = mem_new_provider
 
         # Group by extension (simple field with multiple groups)
-        old_p.set_groups("extension", allow_singletons=True, sorting="count", reverse=True)
-        new_p.set_groups("extension", allow_singletons=True, sorting="count", reverse=True)
+        old_p.set_groups(
+            "extension", allow_singletons=True, sorting="count", reverse=True
+        )
+        new_p.set_groups(
+            "extension", allow_singletons=True, sorting="count", reverse=True
+        )
 
         old_p.get_view_indices()
         new_p.get_view_indices()
@@ -2071,9 +2102,7 @@ class TestGroupIdentification:
                 f"JSON={len(old_ids)} videos, SQL={len(new_ids)} videos"
             )
 
-    def test_classifier_stats_identical(
-        self, mem_old_provider, mem_new_provider
-    ):
+    def test_classifier_stats_identical(self, mem_old_provider, mem_new_provider):
         """Verify that get_classifier_stats() returns identical group values and counts."""
         old_p = mem_old_provider
         new_p = mem_new_provider
@@ -2133,16 +2162,18 @@ class TestGroupIdentification:
                 f"JSON={len(old_ids)}, SQL={len(new_ids)}"
             )
 
-    def test_group_identification_mechanism(
-        self, mem_old_provider, mem_new_provider
-    ):
+    def test_group_identification_mechanism(self, mem_old_provider, mem_new_provider):
         """Document and verify the group identification mechanism (index-based)."""
         old_p = mem_old_provider
         new_p = mem_new_provider
 
         # Group by a field with known values
-        old_p.set_groups("extension", allow_singletons=True, sorting="field", reverse=False)
-        new_p.set_groups("extension", allow_singletons=True, sorting="field", reverse=False)
+        old_p.set_groups(
+            "extension", allow_singletons=True, sorting="field", reverse=False
+        )
+        new_p.set_groups(
+            "extension", allow_singletons=True, sorting="field", reverse=False
+        )
 
         old_p.get_view_indices()
         new_p.get_view_indices()
@@ -2235,8 +2266,12 @@ class TestCornerCases:
         new_groups = {s.value: s.count for s in new_stats}
 
         # Normalize empty strings to None for comparison
-        old_groups_normalized = {(k if k != '' else None): v for k, v in old_groups.items()}
-        new_groups_normalized = {(k if k != '' else None): v for k, v in new_groups.items()}
+        old_groups_normalized = {
+            (k if k != "" else None): v for k, v in old_groups.items()
+        }
+        new_groups_normalized = {
+            (k if k != "" else None): v for k, v in new_groups.items()
+        }
 
         assert old_groups_normalized == new_groups_normalized, (
             f"Group stats differ for empty values:\nJSON={old_groups}\nSQL={new_groups}"
@@ -2248,8 +2283,12 @@ class TestCornerCases:
         new_p = mem_new_provider
 
         # Test with allow_singletons=False (exclude groups with only 1 video)
-        old_p.set_groups("extension", allow_singletons=False, sorting="count", reverse=True)
-        new_p.set_groups("extension", allow_singletons=False, sorting="count", reverse=True)
+        old_p.set_groups(
+            "extension", allow_singletons=False, sorting="count", reverse=True
+        )
+        new_p.set_groups(
+            "extension", allow_singletons=False, sorting="count", reverse=True
+        )
 
         old_p.get_view_indices()
         new_p.get_view_indices()
@@ -2267,7 +2306,9 @@ class TestCornerCases:
         # Compare group stats
         old_groups = {s.value: s.count for s in old_stats}
         new_groups = {s.value: s.count for s in new_stats}
-        assert old_groups == new_groups, "Group stats differ with allow_singletons=False"
+        assert old_groups == new_groups, (
+            "Group stats differ with allow_singletons=False"
+        )
 
     def test_grouping_with_sorting_variations(self, mem_old_provider, mem_new_provider):
         """Test different sorting modes (field, count, length) and reverse."""
@@ -2277,17 +2318,21 @@ class TestCornerCases:
         # Test combinations of sorting and reverse
         test_cases = [
             ("field", False),  # Sort by field value ascending
-            ("field", True),   # Sort by field value descending
+            ("field", True),  # Sort by field value descending
             ("count", False),  # Sort by count ascending
-            ("count", True),   # Sort by count descending
+            ("count", True),  # Sort by count descending
         ]
 
         for sorting, reverse in test_cases:
             old_p.reset()
             new_p.reset()
 
-            old_p.set_groups("extension", allow_singletons=True, sorting=sorting, reverse=reverse)
-            new_p.set_groups("extension", allow_singletons=True, sorting=sorting, reverse=reverse)
+            old_p.set_groups(
+                "extension", allow_singletons=True, sorting=sorting, reverse=reverse
+            )
+            new_p.set_groups(
+                "extension", allow_singletons=True, sorting=sorting, reverse=reverse
+            )
 
             old_p.get_view_indices()
             new_p.get_view_indices()
@@ -2313,8 +2358,12 @@ class TestCornerCases:
         old_p.set_search("mkv")  # Search for videos with "mkv" in name
         new_p.set_search("mkv")
 
-        old_p.set_groups("extension", allow_singletons=True, sorting="count", reverse=True)
-        new_p.set_groups("extension", allow_singletons=True, sorting="count", reverse=True)
+        old_p.set_groups(
+            "extension", allow_singletons=True, sorting="count", reverse=True
+        )
+        new_p.set_groups(
+            "extension", allow_singletons=True, sorting="count", reverse=True
+        )
 
         old_p.get_view_indices()
         new_p.get_view_indices()
@@ -2351,8 +2400,12 @@ class TestCornerCases:
         old_p.set_sources([["readable"]])
         new_p.set_sources([["readable"]])
 
-        old_p.set_groups("extension", allow_singletons=True, sorting="count", reverse=True)
-        new_p.set_groups("extension", allow_singletons=True, sorting="count", reverse=True)
+        old_p.set_groups(
+            "extension", allow_singletons=True, sorting="count", reverse=True
+        )
+        new_p.set_groups(
+            "extension", allow_singletons=True, sorting="count", reverse=True
+        )
 
         old_p.get_view_indices()
         new_p.get_view_indices()
@@ -2372,7 +2425,6 @@ class TestCornerCases:
 # ==============================================================================
 # Critical CRUD Operations Tests
 # ==============================================================================
-
 
 
 # ==============================================================================

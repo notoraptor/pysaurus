@@ -115,10 +115,7 @@ class EditFoldersDialog(QDialog):
     def _on_add_folder(self):
         """Add a new folder."""
         folder = QFileDialog.getExistingDirectory(
-            self,
-            "Select Folder",
-            "",
-            QFileDialog.Option.ShowDirsOnly,
+            self, "Select Folder", "", QFileDialog.Option.ShowDirsOnly
         )
         if folder:
             folder = _normalize_path(folder)
@@ -136,10 +133,7 @@ class EditFoldersDialog(QDialog):
         """Add video files."""
         ext_filter = " ".join(f"*.{ext}" for ext in sorted(VIDEO_SUPPORTED_EXTENSIONS))
         files, _ = QFileDialog.getOpenFileNames(
-            self,
-            "Select Video Files",
-            "",
-            f"Video files ({ext_filter});;All files (*)",
+            self, "Select Video Files", "", f"Video files ({ext_filter});;All files (*)"
         )
         added = 0
         for file in files:
@@ -189,8 +183,7 @@ class EditFoldersDialog(QDialog):
             reply = QMessageBox.warning(
                 self,
                 "No Sources",
-                "The database has no sources.\n\n"
-                "Are you sure you want to continue?",
+                "The database has no sources.\n\nAre you sure you want to continue?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )

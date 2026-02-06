@@ -565,7 +565,9 @@ class TestCategoryPropertyFullWorkflow:
     based on video folder structure.
     """
 
-    def test_populate_category_from_folders(self, mem_old_database, mem_saurus_database):
+    def test_populate_category_from_folders(
+        self, mem_old_database, mem_saurus_database
+    ):
         """Populate test_folder_category property based on folder structure."""
         prop_name = "test_folder_category"
 
@@ -645,7 +647,7 @@ class TestCRUDOperations:
 
         # Initialize provider (for JSON database - needed before delete)
         # This forces the provider layers to be initialized
-        if hasattr(mem_old_database, 'provider'):
+        if hasattr(mem_old_database, "provider"):
             mem_old_database.provider.get_view_indices()
 
         # Delete the video

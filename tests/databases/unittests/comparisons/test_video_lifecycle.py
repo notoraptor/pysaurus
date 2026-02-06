@@ -12,16 +12,15 @@ The approach:
 5. Test operations (delete, etc.)
 6. Verify both database and filesystem state
 """
+
 import shutil
 from pathlib import Path
 
-import pytest
-
-from pysaurus.database.abstract_database import AbstractDatabase
-
 
 # Path to the minimal test video (committed to git)
-TEST_VIDEO_PATH = Path(__file__).parent.parent.parent.parent / "fixtures" / "test_video_minimal.mp4"
+TEST_VIDEO_PATH = (
+    Path(__file__).parent.parent.parent.parent / "fixtures" / "test_video_minimal.mp4"
+)
 
 
 class TestVideoLifecycleAdd:
@@ -47,8 +46,12 @@ class TestVideoLifecycleAdd:
         old_filenames_before = {str(v.filename) for v in old_videos_before}
         new_filenames_before = {str(v.filename) for v in new_videos_before}
 
-        assert str(temp_video_path) not in old_filenames_before, "Video already in JSON database"
-        assert str(temp_video_path) not in new_filenames_before, "Video already in SQL database"
+        assert str(temp_video_path) not in old_filenames_before, (
+            "Video already in JSON database"
+        )
+        assert str(temp_video_path) not in new_filenames_before, (
+            "Video already in SQL database"
+        )
 
         # Add temp directory to database folders
         from pysaurus.core.absolute_path import AbsolutePath
@@ -74,25 +77,35 @@ class TestVideoLifecycleAdd:
 
         # Verify video is NOW in databases
         old_videos_after = mem_old_database.get_videos(include=["filename", "video_id"])
-        new_videos_after = mem_saurus_database.get_videos(include=["filename", "video_id"])
+        new_videos_after = mem_saurus_database.get_videos(
+            include=["filename", "video_id"]
+        )
 
         old_filenames_after = {str(v.filename): v.video_id for v in old_videos_after}
         new_filenames_after = {str(v.filename): v.video_id for v in new_videos_after}
 
-        assert str(temp_video_path) in old_filenames_after, "Video not added to JSON database"
-        assert str(temp_video_path) in new_filenames_after, "Video not added to SQL database"
+        assert str(temp_video_path) in old_filenames_after, (
+            "Video not added to JSON database"
+        )
+        assert str(temp_video_path) in new_filenames_after, (
+            "Video not added to SQL database"
+        )
 
         # Get video_ids
         old_video_id = old_filenames_after[str(temp_video_path)]
         new_video_id = new_filenames_after[str(temp_video_path)]
 
-        print(f"Video added successfully:")
+        print("Video added successfully:")
         print(f"  JSON video_id: {old_video_id}")
         print(f"  SQL video_id: {new_video_id}")
 
         # Verify counts increased
-        assert len(old_videos_after) == len(old_videos_before) + 1, "JSON count didn't increase"
-        assert len(new_videos_after) == len(new_videos_before) + 1, "SQL count didn't increase"
+        assert len(old_videos_after) == len(old_videos_before) + 1, (
+            "JSON count didn't increase"
+        )
+        assert len(new_videos_after) == len(new_videos_before) + 1, (
+            "SQL count didn't increase"
+        )
 
 
 class TestVideoLifecycleDelete:
@@ -136,7 +149,9 @@ class TestVideoLifecycleDelete:
         videos = mem_old_database.get_videos(include=["filename", "video_id"])
         video_dict = {str(v.filename): v.video_id for v in videos}
 
-        assert str(temp_video_path) in video_dict, "Video not added to database after scan"
+        assert str(temp_video_path) in video_dict, (
+            "Video not added to database after scan"
+        )
         video_id = video_dict[str(temp_video_path)]
 
         print(f"Video added with video_id: {video_id}")
@@ -151,7 +166,7 @@ class TestVideoLifecycleDelete:
         ops = DatabaseOperations(mem_old_database)
 
         # Initialize provider (needed for JSON database)
-        if hasattr(mem_old_database, 'provider'):
+        if hasattr(mem_old_database, "provider"):
             mem_old_database.provider.get_view_indices()
 
         returned_path = ops.delete_video(video_id)
@@ -160,7 +175,9 @@ class TestVideoLifecycleDelete:
         assert str(returned_path) == str(temp_video_path), "Returned path should match"
 
         # Verify file was DELETED from filesystem
-        assert not temp_video_path.exists(), "Video file should be deleted from filesystem"
+        assert not temp_video_path.exists(), (
+            "Video file should be deleted from filesystem"
+        )
 
         # Verify video was DELETED from database
         count_after = len(mem_old_database.get_videos())
@@ -171,7 +188,7 @@ class TestVideoLifecycleDelete:
 
         assert video_id not in video_ids_after, "Video should not exist in database"
 
-        print(f"Video deleted successfully:")
+        print("Video deleted successfully:")
         print(f"  video_id: {video_id}")
         print(f"  File deleted: {temp_video_path}")
-        print(f"  DB entry deleted: Yes")
+        print("  DB entry deleted: Yes")

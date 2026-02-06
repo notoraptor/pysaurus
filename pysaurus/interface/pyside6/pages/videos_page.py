@@ -81,11 +81,17 @@ class VideosPage(QWidget):
         self._file_title_diffs: dict[int, list[tuple[int, int]]] = {}  # Character diffs
         self._grouped_by_moves: bool = False  # True when grouped by move_id
         self._total_pages: int = 1  # Total number of pages (for go to page dialog)
-        self.confirm_not_found_deletion: bool = True  # Confirm before deleting "not found" entries
+        self.confirm_not_found_deletion: bool = (
+            True  # Confirm before deleting "not found" entries
+        )
         self._classifier_path: list[str] = []  # Current classifier path
-        self._is_classifying: bool = False  # True when classifier is active (multiple property)
+        self._is_classifying: bool = (
+            False  # True when classifier is active (multiple property)
+        )
         self._selector: Selector = Selector(False, set())  # Selection state
-        self._show_only_selected: bool = False  # Toggle for showing only selected videos
+        self._show_only_selected: bool = (
+            False  # Toggle for showing only selected videos
+        )
         self._view_count: int = 0  # Total videos in current view (for selector size)
         self._setup_ui()
         self._setup_shortcuts()
@@ -409,7 +415,9 @@ class VideosPage(QWidget):
 
         # Advanced selection buttons
         self.btn_select_all_view = QPushButton("Select All in View")
-        self.btn_select_all_view.setToolTip("Select all videos in the current filtered view")
+        self.btn_select_all_view.setToolTip(
+            "Select all videos in the current filtered view"
+        )
         self.btn_select_all_view.clicked.connect(self._select_all_in_view)
         toolbar.addWidget(self.btn_select_all_view)
 
@@ -1510,7 +1518,9 @@ class VideosPage(QWidget):
             self.ctx.ops.mark_as_read(video_id)
             # Update grouping if grouped by watched
             if self.ctx.provider:
-                self.ctx.provider.manage_attributes_modified(["watched"], is_property=False)
+                self.ctx.provider.manage_attributes_modified(
+                    ["watched"], is_property=False
+                )
             self.refresh()
 
     def _move_video(self, video_id: int):
@@ -1689,7 +1699,9 @@ class VideosPage(QWidget):
             action.setData(prop_type)
 
         # Show menu at button position
-        action = menu.exec(self.btn_batch_edit.mapToGlobal(self.btn_batch_edit.rect().bottomLeft()))
+        action = menu.exec(
+            self.btn_batch_edit.mapToGlobal(self.btn_batch_edit.rect().bottomLeft())
+        )
         if action:
             prop_type = action.data()
             self._edit_property_for_selection(prop_type)
