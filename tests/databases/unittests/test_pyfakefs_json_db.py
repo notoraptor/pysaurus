@@ -29,7 +29,7 @@ PROBLÈMES RENCONTRÉS:
 
 RECOMMANDATION:
 - Pour mem_old_database: Continuer avec shutil.copytree() + tmp_path
-- Pour mem_new_database/mem_saurus_database: Continuer avec copie en mémoire SQLite
+- Pour mem_saurus_database: Continuer avec copie en mémoire SQLite
 
 Ces tests sont gardés comme documentation de la tentative d'utilisation
 de pyfakefs et des raisons de son échec.

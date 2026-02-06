@@ -1,7 +1,6 @@
 import os
 
 from pysaurus.application.application import Application
-from pysaurus.database.newsql.newsql_database import NewSqlDatabase
 from saurus.sql.pysaurus_collection import PysaurusCollection
 from saurus.sql.pysaurus_connection import PysaurusConnection
 
@@ -11,10 +10,6 @@ TEST_DB_FOLDER = os.path.join(TEST_HOME_DIR, ".Pysaurus", "databases", "test_dat
 
 def get_old_app() -> Application:
     return Application(home_dir=TEST_HOME_DIR)
-
-
-def get_new_sql_database() -> NewSqlDatabase:
-    return NewSqlDatabase(TEST_DB_FOLDER)
 
 
 def get_saurus_sql_database() -> PysaurusCollection:

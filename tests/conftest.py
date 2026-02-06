@@ -4,14 +4,12 @@ import shutil
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.database.newsql.newsql_database import NewSqlDatabase
 from saurus.sql.pysaurus_collection import PysaurusCollection
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from tests.mocks.mock_database import MockDatabase
 from tests.utils import (
     TEST_DB_FOLDER,
     TEST_HOME_DIR,
-    get_new_sql_database,
     get_old_app,
     get_saurus_sql_database,
 )
@@ -30,11 +28,6 @@ def fake_old_app():
 @pytest.fixture
 def fake_old_database(fake_old_app) -> AbstractDatabase:
     return fake_old_app.open_database_from_name("test_database")
-
-
-@pytest.fixture
-def fake_new_database() -> NewSqlDatabase:
-    return get_new_sql_database()
 
 
 @pytest.fixture
@@ -71,18 +64,6 @@ def mem_old_database(tmp_path) -> AbstractDatabase:
     # Create Application with the temp home dir
     app = Application(home_dir=str(temp_home))
     return app.open_database_from_name("test_database")
-
-
-@pytest.fixture
-def mem_new_database() -> NewSqlDatabase:
-    """
-    NewSQL database loaded entirely in memory.
-
-    Uses sqlite3.backup() to copy the database to memory.
-    Much faster than copying files to disk.
-    All operations are done in memory, original files are not modified.
-    """
-    return NewSqlDatabase.from_memory_copy(TEST_DB_FOLDER)
 
 
 @pytest.fixture
