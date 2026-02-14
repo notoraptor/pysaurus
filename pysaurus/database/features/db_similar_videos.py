@@ -8,13 +8,37 @@ from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
+from pysaurus.imgsimsearch.abstract_approximate_comparator import (
+    AbstractApproximateComparator,
+)
 from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
-from pysaurus.imgsimsearch.approximate_comparator_annoy import (
-    ApproximateComparatorAnnoy,
+from pysaurus.imgsimsearch.approximate_comparator_numpy import (
+    ApproximateComparatorNumpy,
 )
 from pysaurus.imgsimsearch.python_fine_comparator import compare_miniatures
 
 SIM_LIMIT = float(Fraction(88, 100))
+
+
+class _CompareAllProvider(AbstractImageProvider):
+    """Wrapper that forces all videos to be compared (similarity always None)."""
+
+    __slots__ = ("_imp",)
+
+    def __init__(self, imp: AbstractImageProvider):
+        self._imp = imp
+
+    def count(self) -> int:
+        return self._imp.count()
+
+    def items(self) -> Iterable[tuple[Any, Image]]:
+        return self._imp.items()
+
+    def length(self, filename) -> float:
+        return self._imp.length(filename)
+
+    def similarity(self, filename) -> int | None:
+        return None
 
 
 class DbImageProvider(AbstractImageProvider):
@@ -92,11 +116,54 @@ class DbSimilarVideos:
     def _find_similar_videos(
         cls, db: AbstractDatabase, miniatures: list[Miniature] = None
     ):
+        similarities = cls._compute_similar_videos(
+            db, miniatures, ApproximateComparatorNumpy
+        )
+
         imp = DbImageProvider(db)
-        ac = ApproximateComparatorAnnoy(imp)
+        video_indices = [m.video_id for m in miniatures]
+        db.ops.set_similarities({video_id: -1 for video_id in video_indices})
+
+        similarities.sort(key=imp.to_sortable_group)
+        db.ops.set_similarities(
+            {
+                imp.video_id(filename): similarity_id
+                for similarity_id, group in enumerate(similarities)
+                for filename in group
+            }
+        )
+
+    @classmethod
+    def _compute_similar_videos(
+        cls,
+        db: AbstractDatabase,
+        miniatures: list[Miniature],
+        comparator_class: type[AbstractApproximateComparator],
+        compare_all: bool = False,
+    ) -> list[set[str]]:
+        """Compute similarity groups (read-only, does not write to db).
+
+        Args:
+            db: Database to read videos from.
+            miniatures: Pre-computed miniatures.
+            comparator_class: Approximate comparator class to use.
+            compare_all: If True, compare all videos (ignore existing
+                similarity_id). If False, only compare new videos and
+                merge with existing similarity groups.
+
+        Returns:
+            List of sets of filenames, each set being a similarity group.
+        """
+        imp = DbImageProvider(db)
+        comparator_imp = _CompareAllProvider(imp) if compare_all else imp
+        ac = comparator_class(comparator_imp)
         combined = ac.get_comparable_images_cos()
         new_similarities = compare_miniatures(miniatures, combined, SIM_LIMIT)
 
+        if compare_all:
+            return new_similarities
+
+        # Merge with old similarities
         old_similarities = {}
         for filename, _ in imp.items():
             similarity_id = imp.similarity(filename)
@@ -112,16 +179,4 @@ class DbSimilarVideos:
             f, *fs = group
             for other in fs:
                 graph.connect(f, other)
-        similarities = [group for group in graph.pop_groups() if len(group) > 1]
-
-        video_indices = [m.video_id for m in miniatures]
-        db.ops.set_similarities({video_id: -1 for video_id in video_indices})
-
-        similarities.sort(key=imp.to_sortable_group)
-        db.ops.set_similarities(
-            {
-                imp.video_id(filename): similarity_id
-                for similarity_id, group in enumerate(similarities)
-                for filename in group
-            }
-        )
+        return [group for group in graph.pop_groups() if len(group) > 1]
