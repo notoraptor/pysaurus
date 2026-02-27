@@ -22,7 +22,6 @@ ignored
 __enamlcache__
 htmlcov
 coverage.json
-CLAUDE.md
 
 .*.json
 
