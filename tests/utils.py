@@ -12,14 +12,14 @@ def get_old_app() -> Application:
     return Application(home_dir=TEST_HOME_DIR)
 
 
-def get_saurus_sql_database() -> PysaurusCollection:
+def get_saurus_sql_database(folder: str = TEST_DB_FOLDER) -> PysaurusCollection:
     """
     Get a PysaurusCollection with an in-memory copy of the database.
 
     Uses skullite's copy_from() to create an in-memory copy,
     so the returned object can be used directly without `with` statement.
     """
-    collection = PysaurusCollection(TEST_DB_FOLDER)
+    collection = PysaurusCollection(folder)
     memory_db = PysaurusConnection(None)
     memory_db.copy_from(collection.db)
     collection.db = memory_db

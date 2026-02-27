@@ -1,18 +1,13 @@
 import os
+import pathlib
 import shutil
 
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
 from saurus.sql.pysaurus_collection import PysaurusCollection
-from saurus.sql.pysaurus_connection import PysaurusConnection
 from tests.mocks.mock_database import MockDatabase
-from tests.utils import (
-    TEST_DB_FOLDER,
-    TEST_HOME_DIR,
-    get_old_app,
-    get_saurus_sql_database,
-)
+from tests.utils import TEST_HOME_DIR, get_old_app, get_saurus_sql_database
 
 EXAMPLE_DB_NAME = "example_db_in_pysaurus"
 EXAMPLE_DB_FOLDER = os.path.join(
@@ -40,13 +35,9 @@ def fake_saurus_database() -> PysaurusCollection:
 # =============================================================================
 
 
-def _ignore_sqlite_wal_files(directory, files):
-    """Ignore SQLite WAL files that may appear/disappear during copy."""
-    return [f for f in files if f.endswith(("-wal", "-shm"))]
-
-
-@pytest.fixture
-def mem_old_database(tmp_path) -> AbstractDatabase:
+def _get_json_writable_database(
+    tmp_path: pathlib.Path, db_name: str
+) -> AbstractDatabase:
     """
     JSON database loaded in a temporary directory.
 
@@ -63,22 +54,24 @@ def mem_old_database(tmp_path) -> AbstractDatabase:
 
     # Create Application with the temp home dir
     app = Application(home_dir=str(temp_home))
-    return app.open_database_from_name("test_database")
+    return app.open_database_from_name(db_name)
+
+
+def _ignore_sqlite_wal_files(directory, files):
+    """Ignore SQLite WAL files that may appear/disappear during copy."""
+    return [f for f in files if f.endswith(("-wal", "-shm"))]
+
+
+@pytest.fixture
+def mem_old_database(tmp_path) -> AbstractDatabase:
+    return _get_json_writable_database(tmp_path, "test_database")
 
 
 @pytest.fixture
 def mem_saurus_database() -> PysaurusCollection:
-    """
-    Saurus SQL database loaded entirely in memory.
-
-    Uses skullite's copy_from() to create an in-memory copy.
-    All operations are done in memory, original files are not modified.
-    """
-    collection = PysaurusCollection(TEST_DB_FOLDER)
-    memory_db = PysaurusConnection(None)
-    memory_db.copy_from(collection.db)
-    collection.db = memory_db
-    return collection
+    # For SQL, read and write fixtures are the same,
+    # since testing database is always an in-memory copy.
+    return get_saurus_sql_database()
 
 
 # =============================================================================
@@ -87,12 +80,9 @@ def mem_saurus_database() -> PysaurusCollection:
 
 
 @pytest.fixture
-def example_json_database() -> AbstractDatabase:
+def example_json_database(fake_old_app) -> AbstractDatabase:
     """JSON database from example_db_in_pysaurus (read-only, on disk)."""
-    from pysaurus.application.application import Application
-
-    app = Application(home_dir=TEST_HOME_DIR)
-    return app.open_database_from_name(EXAMPLE_DB_NAME)
+    return fake_old_app.open_database_from_name(EXAMPLE_DB_NAME)
 
 
 @pytest.fixture
@@ -104,22 +94,13 @@ def example_saurus_database() -> PysaurusCollection:
 @pytest.fixture
 def example_json_database_memory(tmp_path) -> AbstractDatabase:
     """JSON database from example_db_in_pysaurus (in-memory copy for writes)."""
-    from pysaurus.application.application import Application
-
-    temp_home = tmp_path / "home_dir_test"
-    shutil.copytree(TEST_HOME_DIR, temp_home, ignore=_ignore_sqlite_wal_files)
-    app = Application(home_dir=str(temp_home))
-    return app.open_database_from_name(EXAMPLE_DB_NAME)
+    return _get_json_writable_database(tmp_path, EXAMPLE_DB_NAME)
 
 
 @pytest.fixture
 def example_saurus_database_memory() -> PysaurusCollection:
     """Saurus SQL database from example_db_in_pysaurus (in-memory copy for writes)."""
-    collection = PysaurusCollection(EXAMPLE_DB_FOLDER)
-    memory_db = PysaurusConnection(None)
-    memory_db.copy_from(collection.db)
-    collection.db = memory_db
-    return collection
+    return get_saurus_sql_database(EXAMPLE_DB_FOLDER)
 
 
 # =============================================================================

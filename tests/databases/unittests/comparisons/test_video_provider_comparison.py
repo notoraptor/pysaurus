@@ -1578,7 +1578,7 @@ def old_provider_with_test_properties(mem_old_database):
     for prop_name in test_props:
         try:
             db.prop_type_del(prop_name)
-        except:
+        except Exception:
             pass  # Property doesn't exist, that's fine
 
     # Get some video IDs to assign properties to
@@ -1692,7 +1692,7 @@ def new_provider_with_test_properties(mem_saurus_database):
     for prop_name in test_props:
         try:
             db.prop_type_del(prop_name)
-        except:
+        except Exception:
             pass  # Property doesn't exist, that's fine
 
     # Get some video IDs to assign properties to
@@ -2079,7 +2079,7 @@ class TestGroupIdentification:
         new_p.get_view_indices()
 
         old_stats = old_p.get_classifier_stats()
-        new_stats = new_p.get_classifier_stats()
+        new_p.get_classifier_stats()
 
         # Test selecting different group indices
         for idx in [0, len(old_stats) // 2, len(old_stats) - 1]:
@@ -2096,7 +2096,6 @@ class TestGroupIdentification:
 
             # Compare
             old_group_value = old_stats[idx].value
-            new_group_value = new_stats[idx].value
             assert old_ids == new_ids, (
                 f"Group {idx} (value={old_group_value}) has different videos: "
                 f"JSON={len(old_ids)} videos, SQL={len(new_ids)} videos"
@@ -2143,7 +2142,7 @@ class TestGroupIdentification:
         new_p.get_view_indices()
 
         old_stats = old_p.get_classifier_stats()
-        new_stats = new_p.get_classifier_stats()
+        new_p.get_classifier_stats()
 
         # Select the second group (if it exists)
         if len(old_stats) > 1:

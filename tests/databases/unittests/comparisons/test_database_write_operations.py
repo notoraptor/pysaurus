@@ -637,8 +637,6 @@ class TestCRUDOperations:
         assert len(old_videos) == 1, f"Video {video_id} not found in JSON database"
         assert len(new_videos) == 1, f"Video {video_id} not found in SQL database"
 
-        video_to_delete = old_videos[0]
-
         # Count videos before deletion
         old_count_before = len(mem_old_database.get_videos())
         new_count_before = len(mem_saurus_database.get_videos())

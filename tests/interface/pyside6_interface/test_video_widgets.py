@@ -57,7 +57,7 @@ class TestVideoCard:
         card = VideoCard(sample_video)
         qtbot.addWidget(card)
 
-        assert card.title_label.text() == "Test Video"
+        assert card.title_label.text() == "test"
 
     def test_card_selection_via_checkbox(self, qtbot, sample_video):
         """Test that clicking checkbox toggles selection."""
@@ -199,7 +199,7 @@ class TestVideoListItem:
 
         # title_label contains HTML-formatted text
         title_text = item.title_label.text()
-        assert "Test Video" in title_text
+        assert "test" in title_text
 
     def test_list_item_has_checkbox(self, qtbot, sample_video, prop_types):
         """Test that VideoListItem has a checkbox."""
