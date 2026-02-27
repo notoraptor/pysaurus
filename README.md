@@ -26,17 +26,6 @@ https://github.com/spotify/annoy/issues/188
 
 Tested on Linux (Ubuntu 20.04.6 LTS)
 
-## Flet
-
-Error:
-```
-flet: error while loading shared libraries: libmpv.so.1: cannot open shared object file
-```
-Fix:
-```
-sudo apt install libmpv1
-```
-
 ## Qt / QWebEnginePage
 
 Code:

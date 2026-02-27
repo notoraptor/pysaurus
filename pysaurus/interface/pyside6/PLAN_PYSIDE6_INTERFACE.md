@@ -9,7 +9,7 @@ Réécriture de l'interface utilisateur de Pysaurus en utilisant PySide6 (Qt6) p
 ### 1. Appels directs (pas de `__run_feature__`)
 
 ```python
-# ❌ Ancienne approche (NiceGUI/Web) - indirection via strings
+# ❌ Ancienne approche (Web) - indirection via strings
 result = api_bridge.__run_feature__("open_video", video_id)
 data = api_bridge.backend(page_size, page_number)  # retourne dict
 

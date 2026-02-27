@@ -1,7 +1,7 @@
 """
 Mock database for fast unit testing.
 
-Provides in-memory implementation of database interfaces used by NiceGUI.
+Provides in-memory implementation of database interfaces for testing.
 Loads test data from JSON, all operations happen in memory.
 """
 

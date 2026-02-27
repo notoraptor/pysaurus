@@ -61,8 +61,6 @@ Multiple implementations in `interface/`:
 - `using_pywebview/` — PyWebView (primary on Windows)
 - `qtwebview/` — Qt WebView
 - `pyside6/` — PySide6
-- `nicegui/` — NiceGUI web interface
-- `flet_interface/` — Flet (experimental)
 
 Backend API shared across GUIs: `interface/api/` (feature_api.py, gui_api.py).
 
