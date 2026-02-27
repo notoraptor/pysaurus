@@ -153,6 +153,8 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
             [(path.path,) for path in sources],
             many=True,
         )
+        # Drop insert trigger so we can bulk-insert video_text ourselves
+        new_db.modify("DROP TRIGGER IF EXISTS on_video_insert")
         new_db.modify(
             f"INSERT INTO video "
             f"({','.join(video_fields)}) "
@@ -194,6 +196,14 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
             "(video_id, filename, meta_title, properties) VALUES(?, ?, ?, ?)",
             video_texts,
             many=True,
+        )
+        # Recreate trigger
+        new_db.modify(
+            "CREATE TRIGGER IF NOT EXISTS on_video_insert INSERT ON video "
+            "BEGIN "
+            "INSERT INTO video_text(video_id, filename, meta_title) "
+            "VALUES (NEW.video_id, NEW.filename, NEW.meta_title); "
+            "END"
         )
 
     # Move thumbnails into new SQL database

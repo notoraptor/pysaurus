@@ -26,13 +26,8 @@ def get_runtime(i, video: Video, key):
 
 
 def get_driver_id(i, video: Video, key):
-    """
-    Return the driver ID of the video.
-    We convert it to a string to avoid issues with
-    SQLite and other databases that may not support
-    large integers or have different integer sizes.
-    """
-    return str(video.runtime.driver_id)
+    value = video.runtime.driver_id
+    return str(value) if value is not None else None
 
 
 VIDEO_FIELDS = [
@@ -65,6 +60,7 @@ VIDEO_FIELDS = [
     "date_entry_modified",
     "date_entry_opened",
     "similarity_id",
+    "watched",
 ]
 VIDEO_FIELDS_NO_VIDEO_ID = VIDEO_FIELDS[1:]
 VIDEO_FIELD_GETTER = {
@@ -97,6 +93,7 @@ VIDEO_FIELD_GETTER = {
     "date_entry_modified": get_default,
     "date_entry_opened": get_default,
     "similarity_id": get_default,
+    "watched": get_default,
 }
 
 

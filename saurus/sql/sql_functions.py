@@ -2,8 +2,8 @@ from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.semantic_text import pad_numbers_in_string
 
 
-def pysaurus_get_disk(filename: str, driver_id: int) -> str:
-    return AbsolutePath(filename).get_drive_name() or str(driver_id)
+def pysaurus_get_disk(filename: str, driver_id: str) -> str:
+    return AbsolutePath(filename).get_drive_name() or driver_id
 
 
 def pysaurus_get_extension(filename: str) -> str:
