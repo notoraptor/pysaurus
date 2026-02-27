@@ -13,7 +13,7 @@ All commands must be run with `uv run`:
 ```bash
 # Run the application (default GUI: pywebview on Windows, qt on Linux)
 uv run -m pysaurus
-uv run -m pysaurus pywebview   # or: qt, pyside6
+uv run -m pysaurus pywebview   # or: qtwebview, pyside6
 
 # Run all tests
 uv run pytest
@@ -36,7 +36,7 @@ uv run ruff format .
 
 ### Entry Point
 
-`pysaurus/__main__.py` — selects GUI at runtime based on CLI argument (`pywebview`, `qt`, `pyside6`). Default: pywebview (Windows), qt (Linux).
+`pysaurus/__main__.py` — selects GUI at runtime based on CLI argument (`pywebview`, `qtwebview`, `pyside6`). Default: pywebview (Windows), qtwebview (Linux).
 
 ### Database Layer
 

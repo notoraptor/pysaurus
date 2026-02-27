@@ -5,9 +5,9 @@ if __name__ == "__main__":
     from pysaurus.core.modules import System
 
     PYWEBVIEW = "pywebview"
-    QT = "qt"
+    QTWEBVIEW = "qtwebview"
     PYSIDE6 = "pyside6"
-    GUIS = (PYWEBVIEW, QT, PYSIDE6)
+    GUIS = (PYWEBVIEW, QTWEBVIEW, PYSIDE6)
 
     class UnknownGUI(Exception):
         def __init__(self, expected, given):
@@ -20,10 +20,10 @@ if __name__ == "__main__":
         if System.is_windows():
             if gui not in GUIS:
                 fatal(UnknownGUI(GUIS, gui))
-        elif gui not in (QT, PYSIDE6):
-            fatal(UnknownGUI((QT, PYSIDE6), gui))
+        elif gui not in (QTWEBVIEW, PYSIDE6):
+            fatal(UnknownGUI((QTWEBVIEW, PYSIDE6), gui))
     else:
-        gui = PYWEBVIEW if System.is_windows() else QT
+        gui = PYWEBVIEW if System.is_windows() else QTWEBVIEW
     if gui == PYWEBVIEW:
         from pysaurus.interface.using_pywebview.webview_app import main
     elif gui == PYSIDE6:
