@@ -25,11 +25,11 @@ class MoveValuesDialog(QDialog):
     - Target property must be string type
     """
 
-    def __init__(self, source_prop: dict, prop_types: list, database, parent=None):
+    def __init__(self, source_prop: dict, prop_types: list, ctx, parent=None):
         super().__init__(parent)
         self.source_prop = source_prop
         self.prop_types = prop_types
-        self.database = database
+        self.ctx = ctx
 
         self._selected_values: list = []
         self._target_prop: dict | None = None
@@ -118,13 +118,13 @@ class MoveValuesDialog(QDialog):
         """Load all values for the source property."""
         self.values_list.clear()
 
-        if not self.database:
+        if not self.ctx.has_database():
             return
 
         # Get all values with counts
         from collections import Counter
 
-        all_values = self.database.videos_tag_get(self.source_prop["name"])
+        all_values = self.ctx.get_property_values(self.source_prop["name"])
         counter = Counter()
         for values in all_values.values():
             counter.update(values)

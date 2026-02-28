@@ -288,12 +288,12 @@ class VideosPage(QWidget):
         if self.search_input.hasFocus():
             self._on_search()
             return
-        if self._selected_video_id and self.ctx.ops:
-            self.ctx.ops.open_video(self._selected_video_id)
-        elif self._selected_video_ids and self.ctx.ops:
+        if self._selected_video_id and self.ctx.has_database():
+            self.ctx.open_video(self._selected_video_id)
+        elif self._selected_video_ids and self.ctx.has_database():
             # Open the first selected video
             video_id = next(iter(self._selected_video_ids))
-            self.ctx.ops.open_video(video_id)
+            self.ctx.open_video(video_id)
 
     def _delete_selected(self):
         """Delete the selected video(s) from the database."""
@@ -312,9 +312,9 @@ class VideosPage(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            if self.ctx.database:
+            if self.ctx.has_database():
                 for video_id in video_ids:
-                    self.ctx.database.video_entry_del(video_id)
+                    self.ctx.delete_video_entry(video_id)
                 self.status_message_requested.emit(
                     f"{count} video(s) removed from database", 5000
                 )
@@ -323,12 +323,12 @@ class VideosPage(QWidget):
 
     def _on_playlist(self):
         """Generate and open a playlist of the current view."""
-        if not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
         try:
             # Call the playlist method from the API
-            filename = self.ctx.api.playlist()
+            filename = self.ctx.playlist()
 
             # Emit signal for status message
             self.status_message_requested.emit(f"Playlist opened: {filename}", 5000)
@@ -868,7 +868,7 @@ class VideosPage(QWidget):
 
     def refresh(self):
         """Refresh the video list."""
-        if not self.ctx.provider:
+        if not self.ctx.has_database():
             return
 
         # Pass selector to backend if showing only selected
@@ -915,12 +915,8 @@ class VideosPage(QWidget):
             self._update_group_bar(context)
 
             # If grouping is active but no group is selected, select the first one
-            if (
-                context.group_id is None
-                and context.classifier_stats
-                and self.ctx.provider
-            ):
-                self.ctx.provider.set_group(0)
+            if context.group_id is None and context.classifier_stats:
+                self.ctx.set_group(0)
                 # Re-fetch videos with the selected group
                 context = self.ctx.get_videos(self.page_size, self.page_number)
                 self._current_group_index = 0
@@ -1015,8 +1011,8 @@ class VideosPage(QWidget):
 
         # Check if grouping is on a multiple property (classifier is only for multiple props)
         is_multiple_property = False
-        if context.grouping and context.grouping.is_property and self.ctx.database:
-            prop_types = self.ctx.database.get_prop_types(
+        if context.grouping and context.grouping.is_property and self.ctx.has_database():
+            prop_types = self.ctx.get_prop_types(
                 name=context.grouping.field, multiple=True
             )
             is_multiple_property = len(prop_types) > 0
@@ -1305,8 +1301,7 @@ class VideosPage(QWidget):
 
     def _on_video_double_clicked(self, video_id: int):
         """Handle video card double-click (open video)."""
-        if self.ctx.ops:
-            self.ctx.ops.open_video(video_id)
+        self.ctx.open_video(video_id)
 
     def _on_video_context_menu(self, video_id: int, pos):
         """Show context menu for a video."""
@@ -1363,18 +1358,15 @@ class VideosPage(QWidget):
 
     def _open_video(self, video_id: int):
         """Open a video with default player."""
-        if self.ctx.ops:
-            self.ctx.ops.open_video(video_id)
+        self.ctx.open_video(video_id)
 
     def _open_in_vlc(self, video_id: int):
         """Open a video in VLC via server."""
-        if self.ctx.api:
-            self.ctx.api.open_from_server(video_id)
+        self.ctx.open_from_server(video_id)
 
     def _open_folder(self, video_id: int):
-        """Open the folder containing the video."""
-        if self.ctx.api:
-            self.ctx.api.open_containing_folder(video_id)
+        """Open the folder containing a video."""
+        self.ctx.open_containing_folder(video_id)
 
     def _get_video_by_id(self, video_id: int):
         """Get video object by ID from current page."""
@@ -1413,7 +1405,7 @@ class VideosPage(QWidget):
     def _rename_video(self, video_id: int):
         """Rename video (change file title)."""
         video = self._get_video_by_id(video_id)
-        if not video or not self.ctx.ops:
+        if not video or not self.ctx.has_database():
             return
 
         current_title = str(video.file_title)
@@ -1427,16 +1419,13 @@ class VideosPage(QWidget):
 
         if ok and new_title and new_title != current_title:
             try:
-                self.ctx.ops.change_video_file_title(video_id, new_title)
+                self.ctx.rename_video(video_id, new_title)
                 self.refresh()
             except Exception as e:
                 QMessageBox.warning(self, "Rename Failed", str(e))
 
     def _dismiss_similarity(self, video_id: int):
         """Dismiss similarity for a video (mark as no match)."""
-        if not self.ctx.ops:
-            return
-
         reply = QMessageBox.question(
             self,
             "Dismiss Similarity",
@@ -1446,14 +1435,11 @@ class VideosPage(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.ctx.ops.set_similarities_from_list([video_id], [-1])
+            self.ctx.dismiss_similarity(video_id)
             self.refresh()
 
     def _reset_similarity(self, video_id: int):
         """Reset similarity for a video (mark as not compared)."""
-        if not self.ctx.ops:
-            return
-
         reply = QMessageBox.question(
             self,
             "Reset Similarity",
@@ -1463,7 +1449,7 @@ class VideosPage(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.ctx.ops.set_similarities_from_list([video_id], [None])
+            self.ctx.reset_similarity(video_id)
             self.refresh()
 
     def _confirm_move(self, src_video_id: int, dst_video_id: int):
@@ -1514,23 +1500,19 @@ class VideosPage(QWidget):
 
     def _toggle_watched(self, video_id: int):
         """Toggle the watched status of a video."""
-        if self.ctx.ops:
-            self.ctx.ops.mark_as_read(video_id)
-            # Update grouping if grouped by watched
-            if self.ctx.provider:
-                self.ctx.provider.manage_attributes_modified(
-                    ["watched"], is_property=False
-                )
-            self.refresh()
+        self.ctx.mark_as_read(video_id)
+        # Update grouping if grouped by watched
+        self.ctx.notify_attributes_modified(["watched"], is_property=False)
+        self.refresh()
 
     def _move_video(self, video_id: int):
         """Move a video file to a different folder."""
-        if not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
         # Get database folders for initial directory
-        folders = list(self.ctx.database.get_folders())
-        initial_dir = str(folders[0]) if folders else ""
+        folders = self.ctx.get_database_folders()
+        initial_dir = folders[0] if folders else ""
 
         # Show folder selection dialog
         directory = QFileDialog.getExistingDirectory(
@@ -1541,10 +1523,9 @@ class VideosPage(QWidget):
             return
 
         # Confirm the move
-        videos = self.ctx.database.get_videos(where={"video_id": video_id})
-        if not videos:
+        video = self.ctx.get_video_by_id(video_id)
+        if not video:
             return
-        video = videos[0]
 
         reply = QMessageBox.question(
             self,
@@ -1559,33 +1540,31 @@ class VideosPage(QWidget):
 
     def _show_properties(self, video_id: int):
         """Show properties dialog for a video."""
-        if not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
-        videos = self.ctx.database.get_videos(where={"video_id": video_id})
-        if not videos:
+        video = self.ctx.get_video_by_id(video_id)
+        if not video:
             return
-        video = videos[0]
 
-        prop_types = self.ctx.database.get_prop_types()
-        dialog = VideoPropertiesDialog(video, prop_types, self.ctx.database, self)
+        prop_types = self.ctx.get_prop_types()
+        dialog = VideoPropertiesDialog(video, prop_types, self.ctx, self)
         if dialog.exec():
             # Refresh to show any property changes
             self.refresh()
 
     def _delete_video(self, video_id: int):
         """Delete a single video from the database (with confirmation)."""
-        if not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
         # Get video from current page (VideoPattern has found property)
         video = self._get_video_by_id(video_id)
         if not video:
             # Fallback to database query
-            videos = self.ctx.database.get_videos(where={"video_id": video_id})
-            if not videos:
+            video_entry = self.ctx.get_video_by_id(video_id)
+            if not video_entry:
                 return
-            video_entry = videos[0]
             video_title = video_entry.meta_title or video_entry.filename
             is_not_found = not video_entry.is_file
         else:
@@ -1594,7 +1573,7 @@ class VideosPage(QWidget):
 
         # Skip confirmation for "not found" entries if option is disabled
         if is_not_found and not self.confirm_not_found_deletion:
-            self.ctx.database.video_entry_del(video_id)
+            self.ctx.delete_video_entry(video_id)
             self.status_message_requested.emit(
                 f"'{video_title}' removed from database", 3000
             )
@@ -1610,22 +1589,17 @@ class VideosPage(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            if self.ctx.database:
-                self.ctx.database.video_entry_del(video_id)
-                self.status_message_requested.emit(
-                    f"'{video_title}' removed from database", 5000
-                )
-                self.refresh()
+            self.ctx.delete_video_entry(video_id)
+            self.status_message_requested.emit(
+                f"'{video_title}' removed from database", 5000
+            )
+            self.refresh()
 
     def _trash_video(self, video_id: int):
         """Move a video file to system trash (with confirmation)."""
-        if not self.ctx.ops:
+        video = self.ctx.get_video_by_id(video_id)
+        if not video:
             return
-
-        videos = self.ctx.database.get_videos(where={"video_id": video_id})
-        if not videos:
-            return
-        video = videos[0]
 
         reply = QMessageBox.question(
             self,
@@ -1637,7 +1611,7 @@ class VideosPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                self.ctx.ops.trash_video(video_id)
+                self.ctx.trash_video(video_id)
                 self.status_message_requested.emit(
                     f"'{video.title}' moved to trash", 5000
                 )
@@ -1647,13 +1621,9 @@ class VideosPage(QWidget):
 
     def _delete_video_file(self, video_id: int):
         """Permanently delete a video file (with confirmation)."""
-        if not self.ctx.ops:
+        video = self.ctx.get_video_by_id(video_id)
+        if not video:
             return
-
-        videos = self.ctx.database.get_videos(where={"video_id": video_id})
-        if not videos:
-            return
-        video = videos[0]
 
         reply = QMessageBox.warning(
             self,
@@ -1667,7 +1637,7 @@ class VideosPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                self.ctx.ops.delete_video(video_id)
+                self.ctx.delete_video_file(video_id)
                 self.status_message_requested.emit(
                     f"'{video.title}' permanently deleted", 5000
                 )
@@ -1678,10 +1648,10 @@ class VideosPage(QWidget):
     def _on_batch_edit(self):
         """Show menu of properties to batch edit for selected videos."""
         selection_count = self._selector.size_from(self._view_count)
-        if selection_count == 0 or not self.ctx.database:
+        if selection_count == 0 or not self.ctx.has_database():
             return
 
-        prop_types = self.ctx.database.get_prop_types()
+        prop_types = self.ctx.get_prop_types()
         if not prop_types:
             QMessageBox.information(
                 self,
@@ -1708,7 +1678,7 @@ class VideosPage(QWidget):
 
     def _edit_property_for_selection(self, prop_type: dict):
         """Edit a specific property for selected videos."""
-        if not self.ctx.provider or not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
         prop_name = prop_type["name"]
@@ -1763,53 +1733,50 @@ class VideosPage(QWidget):
         """Handle edit sources button."""
         # Get current sources from provider
         current_sources = None
-        if self.ctx.provider:
-            state = self.ctx.provider.get_current_state(1, 0)
+        state = self.ctx.get_provider_state()
+        if state:
             current_sources = state.sources if hasattr(state, "sources") else None
 
         dialog = SourcesDialog(current_sources, self)
         if dialog.exec():
             sources = dialog.get_sources()
-            if self.ctx.provider:
-                self.ctx.provider.set_sources(sources)
-                self.page_number = 0
-                self.refresh()
+            self.ctx.set_sources(sources)
+            self.page_number = 0
+            self.refresh()
 
     def _on_set_grouping(self):
         """Handle set grouping button."""
         # Get current grouping
         current_grouping = None
-        if self.ctx.provider:
-            state = self.ctx.provider.get_current_state(1, 0)
-            if state.grouping:
-                current_grouping = {
-                    "field": state.grouping.field,
-                    "is_property": state.grouping.is_property,
-                    "sorting": state.grouping.sorting,
-                    "reverse": state.grouping.reverse,
-                    "allow_singletons": state.grouping.allow_singletons,
-                }
+        state = self.ctx.get_provider_state()
+        if state and state.grouping:
+            current_grouping = {
+                "field": state.grouping.field,
+                "is_property": state.grouping.is_property,
+                "sorting": state.grouping.sorting,
+                "reverse": state.grouping.reverse,
+                "allow_singletons": state.grouping.allow_singletons,
+            }
 
         # Get property types
-        prop_types = self.ctx.database.get_prop_types() if self.ctx.database else []
+        prop_types = self.ctx.get_prop_types()
 
         dialog = GroupingDialog(prop_types, current_grouping, self)
         if dialog.exec():
             grouping = dialog.get_grouping()
-            if self.ctx.provider:
-                if grouping is None:
-                    # Clear grouping
-                    self.ctx.provider.set_groups(None)
-                else:
-                    self.ctx.provider.set_groups(
-                        field=grouping["field"],
-                        is_property=grouping["is_property"],
-                        sorting=grouping["sorting"],
-                        reverse=grouping["reverse"],
-                        allow_singletons=grouping["allow_singletons"],
-                    )
-                self.page_number = 0
-                self.refresh()
+            if grouping is None:
+                # Clear grouping
+                self.ctx.clear_groups()
+            else:
+                self.ctx.set_groups(
+                    field=grouping["field"],
+                    is_property=grouping["is_property"],
+                    sorting=grouping["sorting"],
+                    reverse=grouping["reverse"],
+                    allow_singletons=grouping["allow_singletons"],
+                )
+            self.page_number = 0
+            self.refresh()
 
     def _on_search(self):
         """Handle search on Enter key."""
@@ -1818,84 +1785,71 @@ class VideosPage(QWidget):
     def _do_search(self, mode: str):
         """Perform search with given mode."""
         query = self.search_input.text().strip()
-        if query and self.ctx.provider:
-            self.ctx.provider.set_search(query, mode)
+        if query:
+            self.ctx.set_search(query, mode)
             self.page_number = 0
             self.refresh()
 
     def _clear_search(self):
         """Clear the search."""
         self.search_input.clear()
-        if self.ctx.provider:
-            self.ctx.provider.set_search("", "and")
-            self.page_number = 0
-            self.refresh()
+        self.ctx.set_search("", "and")
+        self.page_number = 0
+        self.refresh()
 
     def _clear_sources(self):
         """Reset sources to default."""
-        if self.ctx.provider:
-            self.ctx.provider.set_sources(None)
-            self.page_number = 0
-            self.refresh()
+        self.ctx.set_sources(None)
+        self.page_number = 0
+        self.refresh()
 
     def _clear_grouping(self):
         """Remove grouping."""
-        if self.ctx.provider:
-            self.ctx.provider.set_groups(None)
-            self.page_number = 0
-            self.refresh()
+        self.ctx.clear_groups()
+        self.page_number = 0
+        self.refresh()
 
     def _clear_sorting(self):
         """Reset sorting to default."""
-        if self.ctx.provider:
-            self.ctx.provider.set_sort(None)
-            self.page_number = 0
-            self.refresh()
+        self.ctx.set_sorting(None)
+        self.page_number = 0
+        self.refresh()
 
     def _on_set_sorting(self):
         """Handle set sorting button."""
         # Get current sorting
         current_sorting = None
-        if self.ctx.provider:
-            state = self.ctx.provider.get_current_state(1, 0)
-            if state.sorting:
-                video_sorting = state.get_video_sorting()
-                current_sorting = list(video_sorting)  # list of (field, reverse) tuples
+        state = self.ctx.get_provider_state()
+        if state and state.sorting:
+            video_sorting = state.get_video_sorting()
+            current_sorting = list(video_sorting)  # list of (field, reverse) tuples
 
         dialog = SortingDialog(current_sorting, self)
         if dialog.exec():
             sorting_tuples = dialog.get_sorting()
-            if self.ctx.provider:
-                # Convert (field, reverse) tuples to "-field" or "+field" strings
-                sorting_strings = [
-                    f"-{field}" if reverse else f"+{field}"
-                    for field, reverse in sorting_tuples
-                ]
-                self.ctx.provider.set_sort(sorting_strings)
-                self.page_number = 0
-                self.refresh()
+            # Convert (field, reverse) tuples to "-field" or "+field" strings
+            sorting_strings = [
+                f"-{field}" if reverse else f"+{field}"
+                for field, reverse in sorting_tuples
+            ]
+            self.ctx.set_sorting(sorting_strings)
+            self.page_number = 0
+            self.refresh()
 
     def _on_random_video(self):
         """Open a random video and configure search to show it."""
-        if self.ctx.provider:
-            # Get a random video ID and configure search with it
-            video_id = self.ctx.provider.get_random_found_video_id()
-            if video_id:
-                # Reset grouping and configure search with video ID
-                self.ctx.provider.reset_parameters(
-                    self.ctx.provider.LAYER_GROUPING,
-                    self.ctx.provider.LAYER_CLASSIFIER,
-                    self.ctx.provider.LAYER_GROUP,
-                )
-                self.ctx.provider.set_search(str(video_id), "id")
-                # Update search input to show the video ID
-                self.search_input.setText(str(video_id))
-                # Open the video
-                if self.ctx.ops:
-                    self.ctx.ops.open_video(video_id)
-                # Refresh display
-                self.page_number = 0
-                self.refresh()
+        video_id = self.ctx.get_random_video_id()
+        if video_id:
+            # Reset grouping and configure search with video ID
+            self.ctx.reset_grouping_and_classifier()
+            self.ctx.set_search(str(video_id), "id")
+            # Update search input to show the video ID
+            self.search_input.setText(str(video_id))
+            # Open the video
+            self.ctx.open_video(video_id)
+            # Refresh display
+            self.page_number = 0
+            self.refresh()
 
     def _on_update_database(self):
         """Update/rescan the database."""
@@ -1927,31 +1881,31 @@ class VideosPage(QWidget):
 
     def _on_classifier_add_group(self):
         """Add the current group to the classifier path."""
-        if self._current_group_index >= 0 and self.ctx.provider:
+        if self._current_group_index >= 0:
             self.ctx.classifier_select_group(self._current_group_index)
             self.page_number = 0
             self.refresh()
 
     def _on_classifier_unstack(self):
         """Remove the last value from the classifier path."""
-        if self._classifier_path and self.ctx.provider:
+        if self._classifier_path:
             self.ctx.classifier_back()
             self.page_number = 0
             self.refresh()
 
     def _on_classifier_reverse(self):
         """Reverse the classifier path order."""
-        if self._classifier_path and self.ctx.provider:
+        if self._classifier_path:
             self.ctx.classifier_reverse()
             self.refresh()
 
     def _on_classifier_concatenate(self):
         """Show dialog to concatenate path values into a string property."""
-        if not self._classifier_path or not self.ctx.database:
+        if not self._classifier_path or not self.ctx.has_database():
             return
 
         # Get string properties to concatenate into
-        prop_types = self.ctx.database.get_prop_types()
+        prop_types = self.ctx.get_prop_types()
         string_props = [p for p in prop_types if p["type"] == "str"]
 
         if not string_props:
@@ -2016,11 +1970,10 @@ class VideosPage(QWidget):
         if not self._group_stats or index < 0 or index >= len(self._group_stats):
             return
 
-        if self.ctx.provider:
-            self.ctx.provider.set_group(index)
-            self.page_number = 0
-            self.refresh()
-            self._reset_scroll_to_top()
+        self.ctx.set_group(index)
+        self.page_number = 0
+        self.refresh()
+        self._reset_scroll_to_top()
 
     def _on_go_to_page(self):
         """Show dialog to go to a specific page."""
@@ -2055,7 +2008,7 @@ class VideosPage(QWidget):
 
     def _go_last(self):
         """Go to last page."""
-        if self.ctx.provider:
+        if self.ctx.has_database():
             context = self.ctx.get_videos(self.page_size, 0)
             self.page_number = max(0, context.nb_pages - 1)
             self.refresh()

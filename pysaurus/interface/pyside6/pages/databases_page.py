@@ -278,7 +278,7 @@ class DatabasesPage(QWidget):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
-            self.ctx.application.delete_database_from_name(name)
+            self.ctx.delete_database_by_name(name)
             self._refresh_database_list()
 
     def _normalize_path(self, path: str) -> str:

@@ -223,27 +223,27 @@ class TestVideoPropertiesDialog:
             }
         )
 
-    def test_dialog_creation(self, qtbot, sample_video, mock_database):
+    def test_dialog_creation(self, qtbot, sample_video, mock_context):
         """Test that dialog can be created."""
         from pysaurus.interface.pyside6.dialogs.video_properties_dialog import (
             VideoPropertiesDialog,
         )
 
-        prop_types = mock_database.get_prop_types()
-        dialog = VideoPropertiesDialog(sample_video, prop_types, mock_database)
+        prop_types = mock_context.get_prop_types()
+        dialog = VideoPropertiesDialog(sample_video, prop_types, mock_context)
         qtbot.addWidget(dialog)
 
         assert dialog.video == sample_video
         assert "Test Video" in dialog.windowTitle()
 
-    def test_dialog_has_tabs(self, qtbot, sample_video, mock_database):
+    def test_dialog_has_tabs(self, qtbot, sample_video, mock_context):
         """Test that dialog has Info and Properties tabs."""
         from pysaurus.interface.pyside6.dialogs.video_properties_dialog import (
             VideoPropertiesDialog,
         )
 
-        prop_types = mock_database.get_prop_types()
-        dialog = VideoPropertiesDialog(sample_video, prop_types, mock_database)
+        prop_types = mock_context.get_prop_types()
+        dialog = VideoPropertiesDialog(sample_video, prop_types, mock_context)
         qtbot.addWidget(dialog)
 
         # Find tab widget
@@ -253,27 +253,27 @@ class TestVideoPropertiesDialog:
         assert tabs is not None
         assert tabs.count() == 2
 
-    def test_dialog_loads_properties(self, qtbot, sample_video, mock_database):
+    def test_dialog_loads_properties(self, qtbot, sample_video, mock_context):
         """Test that dialog loads video properties."""
         from pysaurus.interface.pyside6.dialogs.video_properties_dialog import (
             VideoPropertiesDialog,
         )
 
-        prop_types = mock_database.get_prop_types()
-        dialog = VideoPropertiesDialog(sample_video, prop_types, mock_database)
+        prop_types = mock_context.get_prop_types()
+        dialog = VideoPropertiesDialog(sample_video, prop_types, mock_context)
         qtbot.addWidget(dialog)
 
         # Should have property widgets
         assert len(dialog._property_widgets) == 2  # genre, rating
 
-    def test_dialog_shows_video_info(self, qtbot, sample_video, mock_database):
+    def test_dialog_shows_video_info(self, qtbot, sample_video, mock_context):
         """Test that dialog shows video info."""
         from pysaurus.interface.pyside6.dialogs.video_properties_dialog import (
             VideoPropertiesDialog,
         )
 
-        prop_types = mock_database.get_prop_types()
-        dialog = VideoPropertiesDialog(sample_video, prop_types, mock_database)
+        prop_types = mock_context.get_prop_types()
+        dialog = VideoPropertiesDialog(sample_video, prop_types, mock_context)
         qtbot.addWidget(dialog)
 
         # Dialog should have valid size and be properly constructed

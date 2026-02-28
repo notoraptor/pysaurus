@@ -313,10 +313,10 @@ class MainWindow(QMainWindow):
 
     def _save_log_to_file(self, entry: str):
         """Append a log entry to the session log file in the database folder."""
-        if not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
-        db_folder = str(self.ctx.database.ways.db_folder)
+        db_folder = self.ctx.get_database_folder_path()
         log_file = db_folder + "/session_log.txt"
 
         # If this is the first write for this session to this database,
@@ -324,7 +324,7 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "_log_file_initialized"):
             self._log_file_initialized = set()
 
-        db_name = self.ctx.database.get_name()
+        db_name = self.ctx.get_database_name()
         if db_name not in self._log_file_initialized:
             with open(log_file, "a", encoding="utf-8") as f:
                 f.write("\n")
@@ -405,7 +405,7 @@ class MainWindow(QMainWindow):
 
     def _update_menu_state(self):
         """Enable/disable menus based on application state."""
-        has_db = self.ctx.database is not None
+        has_db = self.ctx.has_database()
         on_videos_page = self.stack.currentIndex() == self.PAGE_VIDEOS
 
         # Database menu: enabled when a database is open
@@ -435,10 +435,10 @@ class MainWindow(QMainWindow):
 
     def _on_rename_database(self):
         """Handle rename database action."""
-        if not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
-        current_name = self.ctx.database.get_name()
+        current_name = self.ctx.get_database_name()
         new_name = RenameDialog.get_name(
             title=f"Rename Database: {current_name}",
             current_name=current_name,
@@ -458,11 +458,11 @@ class MainWindow(QMainWindow):
 
     def _on_edit_folders(self):
         """Handle edit folders action."""
-        if not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
         current_folders = self.ctx.get_database_folders()
-        db_name = self.ctx.database.get_name()
+        db_name = self.ctx.get_database_name()
 
         new_folders = EditFoldersDialog.edit_folders(
             folders=current_folders, database_name=db_name, parent=self
@@ -493,10 +493,10 @@ class MainWindow(QMainWindow):
 
     def _on_close_database(self):
         """Handle close database action."""
-        if not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
-        db_name = self.ctx.database.get_name()
+        db_name = self.ctx.get_database_name()
         reply = QMessageBox.question(
             self,
             "Close Database",
@@ -523,9 +523,9 @@ class MainWindow(QMainWindow):
 
     def show_videos_page(self):
         """Navigate to videos page."""
-        if self.ctx.database:
+        if self.ctx.has_database():
             self.stack.setCurrentIndex(self.PAGE_VIDEOS)
-            self.setWindowTitle(f"Pysaurus - {self.ctx.database.get_name()}")
+            self.setWindowTitle(f"Pysaurus - {self.ctx.get_database_name()}")
             self.videos_page.refresh()
             self._update_menu_state()
         else:
@@ -533,10 +533,10 @@ class MainWindow(QMainWindow):
 
     def show_properties_page(self):
         """Navigate to properties page."""
-        if self.ctx.database:
+        if self.ctx.has_database():
             self.stack.setCurrentIndex(self.PAGE_PROPERTIES)
             self.setWindowTitle(
-                f"Pysaurus - Properties - {self.ctx.database.get_name()}"
+                f"Pysaurus - Properties - {self.ctx.get_database_name()}"
             )
             self.properties_page.refresh()
             self._update_menu_state()

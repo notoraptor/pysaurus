@@ -244,10 +244,10 @@ class PropertiesPage(QWidget):
 
     def refresh(self):
         """Refresh the properties list."""
-        if not self.ctx.database:
+        if not self.ctx.has_database():
             return
 
-        self._prop_types = self.ctx.database.get_prop_types()
+        self._prop_types = self.ctx.get_prop_types()
         self.props_table.setRowCount(len(self._prop_types))
 
         for i, prop_type in enumerate(self._prop_types):
@@ -399,7 +399,7 @@ class PropertiesPage(QWidget):
                     definition = enum_values
 
         try:
-            self.ctx.database.prop_type_add(name, prop_type, definition, multiple)
+            self.ctx.create_prop_type(name, prop_type, definition, multiple)
             self._reset_form()
             self.refresh()
             QMessageBox.information(
@@ -424,7 +424,7 @@ class PropertiesPage(QWidget):
             return
 
         try:
-            self.ctx.database.prop_type_set_name(name, new_name)
+            self.ctx.rename_prop_type(name, new_name)
             self.refresh()
             QMessageBox.information(
                 self, "Success", f"Property renamed to '{new_name}'."
@@ -444,7 +444,7 @@ class PropertiesPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                self.ctx.database.prop_type_del(name)
+                self.ctx.delete_prop_type(name)
                 self.refresh()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to delete property: {e}")
@@ -462,7 +462,7 @@ class PropertiesPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                self.ctx.database.prop_type_set_multiple(name, not currently_multiple)
+                self.ctx.set_prop_type_multiple(name, not currently_multiple)
                 self.refresh()
                 QMessageBox.information(
                     self, "Success", f"Property '{name}' converted to {target}."
@@ -483,7 +483,7 @@ class PropertiesPage(QWidget):
         if not prop_type:
             return
 
-        dialog = PropertyValuesDialog(name, prop_type, self.ctx.database, self)
+        dialog = PropertyValuesDialog(name, prop_type, self.ctx, self)
         dialog.exec()
 
         if dialog.was_modified():
@@ -502,12 +502,12 @@ class PropertiesPage(QWidget):
         if not prop_type:
             return
 
-        dialog = MoveValuesDialog(prop_type, self._prop_types, self.ctx.database, self)
+        dialog = MoveValuesDialog(prop_type, self._prop_types, self.ctx, self)
         if dialog.exec():
             values, target_prop, concatenate = dialog.get_result()
             if values and target_prop:
                 try:
-                    count = self.ctx.algos.move_property_values(
+                    count = self.ctx.move_property_values(
                         values, name, target_prop["name"], concatenate=concatenate
                     )
                     QMessageBox.information(
@@ -539,7 +539,7 @@ class PropertiesPage(QWidget):
 
                 if reply == QMessageBox.StandardButton.Yes:
                     try:
-                        self.ctx.algos.fill_property_with_terms(
+                        self.ctx.fill_property_with_terms(
                             prop_type["name"], only_empty=only_empty
                         )
                         QMessageBox.information(

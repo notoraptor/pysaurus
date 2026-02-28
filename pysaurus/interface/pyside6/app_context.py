@@ -17,6 +17,7 @@ from pysaurus.core.notifications import (
     ProfilingStart,
 )
 from pysaurus.interface.pyside6.pyside6_api import PySide6API
+from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
 
 
@@ -51,7 +52,7 @@ class AppContext(QObject):
 
     def __init__(self):
         super().__init__()
-        self.api = PySide6API()
+        self._api = PySide6API()
 
         # Current notification handler (e.g., ProcessPage)
         # When set, notifications are routed to this handler instead of signals
@@ -68,10 +69,10 @@ class AppContext(QObject):
         )
 
         # Set callback to emit the internal signal from background thread
-        self.api.set_notification_callback(self._on_notification_from_thread)
+        self._api.set_notification_callback(self._on_notification_from_thread)
 
         # Set callback for exceptions from background threads
-        self.api.set_exception_callback(self._on_exception_from_thread)
+        self._api.set_exception_callback(self._on_exception_from_thread)
 
     def set_notification_handler(self, handler):
         """
@@ -152,33 +153,33 @@ class AppContext(QObject):
             )
 
     # =========================================================================
-    # Direct access to layers (no JSON serialization)
+    # Private access to layers (no JSON serialization)
     # =========================================================================
 
     @property
-    def database(self):
+    def _database(self):
         """AbstractDatabase or None."""
-        return self.api.database
+        return self._api.database
 
     @property
-    def provider(self):
+    def _provider(self):
         """VideoProvider or None."""
-        return self.database.provider if self.database else None
+        return self._database.provider if self._database else None
 
     @property
-    def ops(self):
+    def _ops(self):
         """DatabaseOperations or None."""
-        return self.database.ops if self.database else None
+        return self._database.ops if self._database else None
 
     @property
-    def algos(self):
+    def _algos(self):
         """DatabaseAlgorithms or None."""
-        return self.database.algos if self.database else None
+        return self._database.algos if self._database else None
 
     @property
-    def application(self):
+    def _application(self):
         """Application instance."""
-        return self.api.application
+        return self._api.application
 
     # =========================================================================
     # Long operations (via @process in GuiAPI, executed in thread)
@@ -186,33 +187,33 @@ class AppContext(QObject):
 
     def get_database_names(self) -> list[str]:
         """List of database names."""
-        return self.api.application.get_database_names()
+        return self._api.application.get_database_names()
 
     def create_database(
         self, name: str, folders: list[str], update: bool = True
     ) -> None:
         """Create a database (threaded). Emits database_ready when done."""
-        self.api.create_database(name, folders, update)
+        self._api.create_database(name, folders, update)
 
     def open_database(self, name: str, update: bool = True) -> None:
         """Open a database (threaded). Emits database_ready when done."""
-        self.api.open_database(name, update)
+        self._api.open_database(name, update)
 
     def update_database(self) -> None:
         """Refresh the database (threaded). Emits database_ready when done."""
-        self.api.update_database()
+        self._api.update_database()
 
     def find_similar_videos(self) -> None:
         """Find similar videos (threaded). Emits database_ready when done."""
-        self.api.find_similar_videos()
+        self._api.find_similar_videos()
 
     def move_video_file(self, video_id: int, directory: str) -> None:
         """Move a video file (threaded). Emits done/cancelled/ended."""
-        self.api.move_video_file(video_id, directory)
+        self._api.move_video_file(video_id, directory)
 
     def cancel_operation(self) -> None:
         """Cancel the current operation."""
-        self.api.cancel_copy()
+        self._api.cancel_copy()
 
     # =========================================================================
     # Synchronous operations (direct access, no threading)
@@ -222,50 +223,50 @@ class AppContext(QObject):
         self, page_size: int, page_number: int, selector=None
     ) -> VideoSearchContext:
         """Return the context with videos (list[VideoPattern])."""
-        return self.provider.get_current_state(page_size, page_number, selector)
+        return self._provider.get_current_state(page_size, page_number, selector)
 
     def close_database(self) -> None:
         """Close the database."""
-        self.api.close_database()
+        self._api.close_database()
 
     def delete_database(self) -> None:
         """Delete the database."""
-        self.api.delete_database()
+        self._api.delete_database()
 
     def rename_database(self, new_name: str) -> None:
         """Rename the database and update the application registry."""
-        if self.database:
+        if self._database:
             # Get old path before renaming
-            old_path = self.database.ways.db_folder
+            old_path = self._database.ways.db_folder
             # Perform the rename (this changes ways.db_folder)
-            self.database.rename(new_name)
+            self._database.rename(new_name)
             # Get new path after renaming
-            new_path = self.database.ways.db_folder
+            new_path = self._database.ways.db_folder
             # Update Application.databases dictionary
-            if old_path in self.application.databases:
-                del self.application.databases[old_path]
-                self.application.databases[new_path] = self.database
+            if old_path in self._application.databases:
+                del self._application.databases[old_path]
+                self._application.databases[new_path] = self._database
 
     def get_database_folders(self) -> list[str]:
         """Get the database source folders."""
-        if self.database:
-            return [str(f) for f in self.database.get_folders()]
+        if self._database:
+            return [str(f) for f in self._database.get_folders()]
         return []
 
     def set_database_folders(self, folders: list[str]) -> None:
         """Set the database source folders."""
-        if self.ops:
-            self.ops.set_folders(folders)
+        if self._ops:
+            self._ops.set_folders(folders)
 
     def confirm_move(self, src_video_id: int, dst_video_id: int) -> None:
         """Confirm a video move (transfer metadata from src to dst, delete src)."""
-        if self.ops:
-            self.ops.move_video_entry(src_video_id, dst_video_id)
+        if self._ops:
+            self._ops.move_video_entry(src_video_id, dst_video_id)
 
     def confirm_unique_moves(self) -> int:
         """Confirm all unique video moves (1-to-1 mappings). Returns count."""
-        if self.algos:
-            return self.algos.confirm_unique_moves()
+        if self._algos:
+            return self._algos.confirm_unique_moves()
         return 0
 
     # =========================================================================
@@ -274,18 +275,18 @@ class AppContext(QObject):
 
     def classifier_select_group(self, group_id: int) -> None:
         """Add a group value to the classifier path."""
-        if self.provider:
-            self.provider.classifier_select_group(group_id)
+        if self._provider:
+            self._provider.classifier_select_group(group_id)
 
     def classifier_back(self) -> None:
         """Remove the last value from the classifier path."""
-        if self.provider:
-            self.provider.classifier_back()
+        if self._provider:
+            self._provider.classifier_back()
 
     def classifier_reverse(self) -> list:
         """Reverse the classifier path order. Returns the new path."""
-        if self.provider:
-            return self.provider.classifier_reverse()
+        if self._provider:
+            return self._provider.classifier_reverse()
         return []
 
     def classifier_concatenate_path(self, to_property: str) -> None:
@@ -295,19 +296,19 @@ class AppContext(QObject):
         Joins all path values with spaces and moves them to the target property.
         Clears the classifier path after concatenation.
         """
-        if self.provider and self.algos:
-            path = self.provider.get_classifier_path()
-            from_property = self.provider.get_grouping().field
-            self.provider.set_classifier_path([])
-            self.provider.set_group(0)
-            self.algos.move_property_values(
+        if self._provider and self._algos:
+            path = self._provider.get_classifier_path()
+            from_property = self._provider.get_grouping().field
+            self._provider.set_classifier_path([])
+            self._provider.set_group(0)
+            self._algos.move_property_values(
                 path, from_property, to_property, concatenate=True
             )
 
     def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
         """Focus on a specific property value (resets classifier and jumps to value)."""
-        if self.provider:
-            self.provider.classifier_focus_prop_val(prop_name, field_value)
+        if self._provider:
+            self._provider.classifier_focus_prop_val(prop_name, field_value)
 
     # =========================================================================
     # View operations with selector
@@ -325,10 +326,245 @@ class AppContext(QObject):
         Returns:
             Result from the operation (e.g., list of [value, count] pairs)
         """
-        if self.provider:
-            return self.provider.apply_on_view(selector_dict, operation, *args)
+        if self._provider:
+            return self._provider.apply_on_view(selector_dict, operation, *args)
         return None
 
     def close_app(self) -> None:
         """Close the application properly."""
-        self.api.close_app()
+        self._api.close_app()
+
+    # =========================================================================
+    # Facade methods — State
+    # =========================================================================
+
+    def has_database(self) -> bool:
+        """Return whether a database is currently open."""
+        return self._database is not None
+
+    def get_database_name(self) -> str:
+        """Return the name of the current database."""
+        return self._database.get_name() if self._database else ""
+
+    def get_database_folder_path(self) -> str:
+        """Return the database folder path as a string."""
+        return str(self._database.ways.db_folder) if self._database else ""
+
+    # =========================================================================
+    # Facade methods — Application
+    # =========================================================================
+
+    def delete_database_by_name(self, name: str) -> None:
+        """Delete a database by name from the application registry."""
+        self._application.delete_database_from_name(name)
+
+    # =========================================================================
+    # Facade methods — Property types
+    # =========================================================================
+
+    def get_prop_types(self, **kwargs) -> list[dict]:
+        """Return property type definitions."""
+        if self._database:
+            return self._database.get_prop_types(**kwargs)
+        return []
+
+    def create_prop_type(self, name, prop_type, definition, multiple) -> None:
+        """Create a new property type."""
+        self._database.prop_type_add(name, prop_type, definition, multiple)
+
+    def rename_prop_type(self, name, new_name) -> None:
+        """Rename a property type."""
+        self._database.prop_type_set_name(name, new_name)
+
+    def delete_prop_type(self, name) -> None:
+        """Delete a property type."""
+        self._database.prop_type_del(name)
+
+    def set_prop_type_multiple(self, name, multiple) -> None:
+        """Set whether a property type allows multiple values."""
+        self._database.prop_type_set_multiple(name, multiple)
+
+    # =========================================================================
+    # Facade methods — Video entries
+    # =========================================================================
+
+    def delete_video_entry(self, video_id) -> None:
+        """Delete a video entry from the database."""
+        if self._database:
+            self._database.video_entry_del(video_id)
+
+    def get_video_by_id(self, video_id) -> VideoPattern | None:
+        """Return a single video by ID, or None."""
+        if not self._database:
+            return None
+        videos = self._database.get_videos(where={"video_id": video_id})
+        return videos[0] if videos else None
+
+    # =========================================================================
+    # Facade methods — Video operations
+    # =========================================================================
+
+    def open_video(self, video_id) -> None:
+        """Open a video with the default player."""
+        if self._ops:
+            self._ops.open_video(video_id)
+
+    def rename_video(self, video_id, new_title) -> None:
+        """Rename a video file title."""
+        if self._ops:
+            self._ops.change_video_file_title(video_id, new_title)
+
+    def dismiss_similarity(self, video_id) -> None:
+        """Dismiss similarity for a video (mark as no match)."""
+        if self._ops:
+            self._ops.set_similarities_from_list([video_id], [-1])
+
+    def reset_similarity(self, video_id) -> None:
+        """Reset similarity status for a video."""
+        if self._ops:
+            self._ops.set_similarities_from_list([video_id], [None])
+
+    def mark_as_read(self, video_id) -> None:
+        """Toggle the watched/read status of a video."""
+        if self._ops:
+            self._ops.mark_as_read(video_id)
+
+    def trash_video(self, video_id) -> None:
+        """Move a video file to system trash."""
+        if self._ops:
+            self._ops.trash_video(video_id)
+
+    def delete_video_file(self, video_id) -> None:
+        """Permanently delete a video file."""
+        if self._ops:
+            self._ops.delete_video(video_id)
+
+    # =========================================================================
+    # Facade methods — Provider / view
+    # =========================================================================
+
+    def set_group(self, group_id) -> None:
+        """Select a group by index."""
+        if self._provider:
+            self._provider.set_group(group_id)
+
+    def notify_attributes_modified(self, fields, is_property) -> None:
+        """Notify the provider that video attributes have been modified."""
+        if self._provider:
+            self._provider.manage_attributes_modified(fields, is_property=is_property)
+
+    def get_provider_state(self) -> "VideoSearchContext | None":
+        """Return the current provider state (minimal, for reading parameters)."""
+        if self._provider:
+            return self._provider.get_current_state(1, 0)
+        return None
+
+    def set_sources(self, sources) -> None:
+        """Set the video sources filter."""
+        if self._provider:
+            self._provider.set_sources(sources)
+
+    def set_groups(self, *, field, is_property, sorting, reverse, allow_singletons) -> None:
+        """Set the grouping parameters."""
+        if self._provider:
+            self._provider.set_groups(
+                field=field,
+                is_property=is_property,
+                sorting=sorting,
+                reverse=reverse,
+                allow_singletons=allow_singletons,
+            )
+
+    def clear_groups(self) -> None:
+        """Clear (remove) the current grouping."""
+        if self._provider:
+            self._provider.set_groups(None)
+
+    def set_search(self, text, cond) -> None:
+        """Set the search filter."""
+        if self._provider:
+            self._provider.set_search(text, cond)
+
+    def set_sorting(self, sorting) -> None:
+        """Set the sorting order."""
+        if self._provider:
+            self._provider.set_sort(sorting)
+
+    def get_random_video_id(self) -> int | None:
+        """Return a random found video ID."""
+        if self._provider:
+            return self._provider.get_random_found_video_id()
+        return None
+
+    def reset_grouping_and_classifier(self) -> None:
+        """Reset grouping, classifier, and group layers to defaults."""
+        if self._provider:
+            self._provider.reset_parameters(
+                self._provider.LAYER_GROUPING,
+                self._provider.LAYER_CLASSIFIER,
+                self._provider.LAYER_GROUP,
+            )
+
+    # =========================================================================
+    # Facade methods — API
+    # =========================================================================
+
+    def playlist(self) -> str:
+        """Generate and open a playlist. Returns the filename."""
+        return self._api.playlist()
+
+    def open_from_server(self, video_id) -> None:
+        """Open a video in VLC via server."""
+        self._api.open_from_server(video_id)
+
+    def open_containing_folder(self, video_id) -> None:
+        """Open the folder containing a video."""
+        self._api.open_containing_folder(video_id)
+
+    # =========================================================================
+    # Facade methods — Property values (for dialogs)
+    # =========================================================================
+
+    def get_property_values(self, prop_name) -> dict[int, list]:
+        """Return all values for a property: {video_id: [values]}."""
+        if self._database:
+            return self._database.videos_tag_get(prop_name)
+        return {}
+
+    def delete_property_values(self, prop_name, values) -> None:
+        """Delete specific property values from all videos."""
+        if self._algos:
+            self._algos.delete_property_values(prop_name, values)
+
+    def replace_property_values(self, prop_name, old_values, new_value) -> bool:
+        """Replace property values across all videos. Returns success."""
+        if self._algos:
+            return self._algos.replace_property_values(prop_name, old_values, new_value)
+        return False
+
+    def apply_on_prop_value(self, prop_name, modifier) -> None:
+        """Apply a modifier to all values of a property."""
+        if self._ops:
+            self._ops.apply_on_prop_value(prop_name, modifier)
+
+    def set_video_properties(self, video_id, properties) -> None:
+        """Set properties for a single video."""
+        if self._database:
+            self._database.video_entry_set_tags(video_id, properties)
+
+    # =========================================================================
+    # Facade methods — Algorithms
+    # =========================================================================
+
+    def move_property_values(self, values, from_name, to_name, *, concatenate) -> int:
+        """Move property values between properties. Returns affected video count."""
+        if self._algos:
+            return self._algos.move_property_values(
+                values, from_name, to_name, concatenate=concatenate
+            )
+        return 0
+
+    def fill_property_with_terms(self, prop_name, *, only_empty) -> None:
+        """Fill a property with terms extracted from video filenames."""
+        if self._algos:
+            self._algos.fill_property_with_terms(prop_name, only_empty=only_empty)

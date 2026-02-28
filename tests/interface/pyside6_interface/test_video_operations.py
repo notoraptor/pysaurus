@@ -61,7 +61,7 @@ class TestVideoPropertyModification:
 
         # Count genre values for all videos
         selector = {"mode": "exclude", "selection": []}  # Select all
-        result = mock_context.provider.apply_on_view(
+        result = mock_context.apply_on_view(
             selector, "count_property_values", "genre"
         )
 
@@ -82,7 +82,7 @@ class TestVideoPropertyModification:
 
         # Count only videos 1 and 2
         selector = {"mode": "include", "selection": [1, 2]}
-        result = mock_context.provider.apply_on_view(
+        result = mock_context.apply_on_view(
             selector, "count_property_values", "genre"
         )
 
@@ -101,7 +101,7 @@ class TestVideoPropertyModification:
 
         # Add "comedy" to all videos
         selector = {"mode": "exclude", "selection": []}
-        mock_context.provider.apply_on_view(
+        mock_context.apply_on_view(
             selector, "edit_property_for_videos", "genre", ["comedy"], []
         )
 
@@ -123,7 +123,7 @@ class TestVideoPropertyModification:
 
         # Remove "action" from all videos
         selector = {"mode": "exclude", "selection": []}
-        mock_context.provider.apply_on_view(
+        mock_context.apply_on_view(
             selector, "edit_property_for_videos", "genre", [], ["action"]
         )
 
@@ -145,7 +145,7 @@ class TestVideoPropertyModification:
 
         # Replace "action" with "thriller"
         selector = {"mode": "exclude", "selection": []}
-        mock_context.provider.apply_on_view(
+        mock_context.apply_on_view(
             selector, "edit_property_for_videos", "genre", ["thriller"], ["action"]
         )
 
@@ -167,7 +167,7 @@ class TestVideoPropertyModification:
 
         # Only modify videos 1 and 2
         selector = {"mode": "include", "selection": [1, 2]}
-        mock_context.provider.apply_on_view(
+        mock_context.apply_on_view(
             selector, "edit_property_for_videos", "genre", ["comedy"], []
         )
 

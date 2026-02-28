@@ -238,7 +238,7 @@ class TestDatabasesPageRefresh:
         initial_count = len(page._db_widgets)
 
         # Add a database name
-        mock_context.application._database_names.append("third_database")
+        mock_context._application._database_names.append("third_database")
         page.refresh()
 
         assert len(page._db_widgets) == initial_count + 1

@@ -31,11 +31,11 @@ class PropertyValuesDialog(QDialog):
     - Apply modifiers (lowercase, uppercase)
     """
 
-    def __init__(self, prop_name: str, prop_type: dict, database, parent=None):
+    def __init__(self, prop_name: str, prop_type: dict, ctx, parent=None):
         super().__init__(parent)
         self.prop_name = prop_name
         self.prop_type = prop_type
-        self.database = database
+        self.ctx = ctx
         self._values_count: dict[str, int] = {}
         self._modified = False
 
@@ -121,11 +121,11 @@ class PropertyValuesDialog(QDialog):
         self.values_list.clear()
         self._values_count.clear()
 
-        if not self.database:
+        if not self.ctx.has_database():
             return
 
         # Get all values with counts
-        all_values = self.database.videos_tag_get(self.prop_name)
+        all_values = self.ctx.get_property_values(self.prop_name)
         counter = Counter()
         for values in all_values.values():
             counter.update(values)
@@ -196,7 +196,7 @@ class PropertyValuesDialog(QDialog):
 
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                self.database.algos.delete_property_values(self.prop_name, values)
+                self.ctx.delete_property_values(self.prop_name, values)
                 self._modified = True
                 self._load_values()
             except Exception as e:
@@ -238,7 +238,7 @@ class PropertyValuesDialog(QDialog):
                 return
 
         try:
-            self.database.algos.replace_property_values(
+            self.ctx.replace_property_values(
                 self.prop_name, [old_value], new_value
             )
             self._modified = True
@@ -258,7 +258,7 @@ class PropertyValuesDialog(QDialog):
 
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                self.database.ops.apply_on_prop_value(self.prop_name, modifier)
+                self.ctx.apply_on_prop_value(self.prop_name, modifier)
                 self._modified = True
                 self._load_values()
             except Exception as e:

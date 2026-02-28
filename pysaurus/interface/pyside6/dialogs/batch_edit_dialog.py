@@ -199,11 +199,11 @@ class BatchEditDialog(QDialog):
     - An appropriate input widget based on the property type
     """
 
-    def __init__(self, video_ids: list[int], prop_types: list, database, parent=None):
+    def __init__(self, video_ids: list[int], prop_types: list, ctx, parent=None):
         super().__init__(parent)
         self.video_ids = video_ids
         self.prop_types = prop_types
-        self.database = database
+        self.ctx = ctx
         self._property_widgets: dict[str, tuple[QCheckBox, QWidget]] = {}
 
         self.setWindowTitle(f"Edit Properties - {len(video_ids)} videos")
@@ -323,7 +323,7 @@ class BatchEditDialog(QDialog):
 
     def _on_accept(self):
         """Apply changes and close dialog."""
-        if not self.database:
+        if not self.ctx.has_database():
             self.accept()
             return
 
@@ -375,6 +375,6 @@ class BatchEditDialog(QDialog):
                     properties[name] = [value]
 
             for video_id in self.video_ids:
-                self.database.video_entry_set_tags(video_id, properties)
+                self.ctx.set_video_properties(video_id, properties)
 
         self.accept()

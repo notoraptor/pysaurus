@@ -200,7 +200,7 @@ class TestPropertiesPageCreate:
         assert "success" in infos[0][1].lower()
 
         # Property should be added to database
-        prop_names = [pt["name"] for pt in mock_context.database.get_prop_types()]
+        prop_names = [pt["name"] for pt in mock_context.get_prop_types()]
         assert "new_property" in prop_names
 
 
@@ -223,12 +223,12 @@ class TestPropertiesPageActions:
             lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
         )
 
-        initial_count = len(mock_context.database.get_prop_types())
+        initial_count = len(mock_context.get_prop_types())
 
         # Delete genre property
         page._on_delete("genre")
 
-        assert len(mock_context.database.get_prop_types()) == initial_count - 1
+        assert len(mock_context.get_prop_types()) == initial_count - 1
 
     def test_rename_property(self, qtbot, mock_context, monkeypatch):
         """Test renaming a property."""
@@ -250,7 +250,7 @@ class TestPropertiesPageActions:
         page._on_rename("genre")
 
         # Check that property was renamed
-        prop_names = [pt["name"] for pt in mock_context.database.get_prop_types()]
+        prop_names = [pt["name"] for pt in mock_context.get_prop_types()]
         assert "new_genre" in prop_names
         assert "genre" not in prop_names
 
@@ -275,6 +275,6 @@ class TestPropertiesPageActions:
         page._on_convert("genre", True)
 
         # Check that property was converted
-        prop_types = mock_context.database.get_prop_types()
+        prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
         assert genre_prop["multiple"] is False

@@ -235,11 +235,11 @@ class VideoPropertiesDialog(QDialog):
     - Properties: Editable custom properties
     """
 
-    def __init__(self, video: VideoPattern, prop_types: list, database, parent=None):
+    def __init__(self, video: VideoPattern, prop_types: list, ctx, parent=None):
         super().__init__(parent)
         self.video = video
         self.prop_types = prop_types
-        self.database = database
+        self.ctx = ctx
         self._property_widgets: dict[str, QWidget] = {}
 
         self.setWindowTitle(f"Properties - {video.title}")
@@ -462,7 +462,7 @@ class VideoPropertiesDialog(QDialog):
 
     def _load_properties(self):
         """Load current property values into widgets."""
-        if not self.database:
+        if not self.ctx.has_database():
             return
 
         for prop_type in self.prop_types:
@@ -516,7 +516,7 @@ class VideoPropertiesDialog(QDialog):
 
     def _on_accept(self):
         """Save changes and close dialog."""
-        if not self.database:
+        if not self.ctx.has_database():
             self.accept()
             return
 
@@ -574,6 +574,6 @@ class VideoPropertiesDialog(QDialog):
                     properties[name] = value
                 else:
                     properties[name] = [value]
-            self.database.video_entry_set_tags(self.video.video_id, properties)
+            self.ctx.set_video_properties(self.video.video_id, properties)
 
         self.accept()

@@ -47,85 +47,257 @@ class MockAppContext:
         self._database = mock_database
         self._application = MockApplication()
 
-    @property
-    def database(self):
-        """AbstractDatabase (mock)."""
-        return self._database
+    # State
 
-    @property
-    def provider(self):
-        """VideoProvider (mock)."""
-        return self._database.provider if self._database else None
+    def has_database(self) -> bool:
+        return self._database is not None
 
-    @property
-    def ops(self):
-        """DatabaseOperations (mock)."""
-        return self._database.ops if self._database else None
+    def get_database_name(self) -> str:
+        return self._database.get_name() if self._database else ""
 
-    @property
-    def algos(self):
-        """DatabaseAlgorithms (mock)."""
-        return self._database.algos if self._database else None
+    def get_database_folder_path(self) -> str:
+        return str(self._database.ways.db_folder) if self._database else ""
 
-    @property
-    def application(self):
-        """Application (mock)."""
-        return self._application
+    # Application
 
     def get_database_names(self) -> list[str]:
-        """Get list of database names."""
         return self._application.get_database_names()
 
+    def delete_database_by_name(self, name: str) -> None:
+        self._application.delete_database_from_name(name)
+
+    # Property types
+
+    def get_prop_types(self, **kwargs) -> list[dict]:
+        if self._database:
+            return self._database.get_prop_types(**kwargs)
+        return []
+
+    def create_prop_type(self, name, prop_type, definition, multiple) -> None:
+        self._database.prop_type_add(name, prop_type, definition, multiple)
+
+    def rename_prop_type(self, name, new_name) -> None:
+        self._database.prop_type_set_name(name, new_name)
+
+    def delete_prop_type(self, name) -> None:
+        self._database.prop_type_del(name)
+
+    def set_prop_type_multiple(self, name, multiple) -> None:
+        self._database.prop_type_set_multiple(name, multiple)
+
+    # Video entries
+
+    def delete_video_entry(self, video_id) -> None:
+        if self._database:
+            self._database.video_entry_del(video_id)
+
+    def get_video_by_id(self, video_id):
+        if not self._database:
+            return None
+        videos = self._database.get_videos(where={"video_id": video_id})
+        return videos[0] if videos else None
+
+    # Video operations
+
+    def open_video(self, video_id) -> None:
+        if self._database and self._database.ops:
+            self._database.ops.open_video(video_id)
+
+    def rename_video(self, video_id, new_title) -> None:
+        if self._database and self._database.ops:
+            self._database.ops.change_video_file_title(video_id, new_title)
+
+    def dismiss_similarity(self, video_id) -> None:
+        if self._database and self._database.ops:
+            self._database.ops.set_similarities_from_list([video_id], [-1])
+
+    def reset_similarity(self, video_id) -> None:
+        if self._database and self._database.ops:
+            self._database.ops.set_similarities_from_list([video_id], [None])
+
+    def mark_as_read(self, video_id) -> None:
+        if self._database and self._database.ops:
+            self._database.ops.mark_as_read(video_id)
+
+    def trash_video(self, video_id) -> None:
+        if self._database and self._database.ops:
+            self._database.ops.trash_video(video_id)
+
+    def delete_video_file(self, video_id) -> None:
+        if self._database and self._database.ops:
+            self._database.ops.delete_video(video_id)
+
+    # Provider / view
+
     def get_videos(self, page_size: int, page_number: int, selector=None):
-        """Return the context with videos."""
-        return self.provider.get_current_state(page_size, page_number, selector)
+        provider = self._database.provider if self._database else None
+        return provider.get_current_state(page_size, page_number, selector)
+
+    def set_group(self, group_id) -> None:
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.set_group(group_id)
+
+    def notify_attributes_modified(self, fields, is_property) -> None:
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.manage_attributes_modified(fields, is_property=is_property)
+
+    def get_provider_state(self):
+        provider = self._database.provider if self._database else None
+        if provider:
+            return provider.get_current_state(1, 0)
+        return None
+
+    def set_sources(self, sources) -> None:
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.set_sources(sources)
+
+    def set_groups(self, *, field, is_property, sorting, reverse, allow_singletons) -> None:
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.set_groups(
+                field=field,
+                is_property=is_property,
+                sorting=sorting,
+                reverse=reverse,
+                allow_singletons=allow_singletons,
+            )
+
+    def clear_groups(self) -> None:
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.set_groups(None)
+
+    def set_search(self, text, cond) -> None:
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.set_search(text, cond)
+
+    def set_sorting(self, sorting) -> None:
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.set_sort(sorting)
+
+    def get_random_video_id(self):
+        provider = self._database.provider if self._database else None
+        if provider:
+            return provider.get_random_found_video_id()
+        return None
+
+    def reset_grouping_and_classifier(self) -> None:
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.reset_parameters(
+                provider.LAYER_GROUPING,
+                provider.LAYER_CLASSIFIER,
+                provider.LAYER_GROUP,
+            )
+
+    # API
+
+    def playlist(self) -> str:
+        return ""
+
+    def open_from_server(self, video_id) -> None:
+        pass
+
+    def open_containing_folder(self, video_id) -> None:
+        pass
+
+    # Property values (for dialogs)
+
+    def get_property_values(self, prop_name) -> dict[int, list]:
+        if self._database:
+            return self._database.videos_tag_get(prop_name)
+        return {}
+
+    def delete_property_values(self, prop_name, values) -> None:
+        if self._database and self._database.algos:
+            self._database.algos.delete_property_values(prop_name, values)
+
+    def replace_property_values(self, prop_name, old_values, new_value) -> bool:
+        if self._database and self._database.algos:
+            return self._database.algos.replace_property_values(
+                prop_name, old_values, new_value
+            )
+        return False
+
+    def apply_on_prop_value(self, prop_name, modifier) -> None:
+        if self._database and self._database.ops:
+            self._database.ops.apply_on_prop_value(prop_name, modifier)
+
+    def set_video_properties(self, video_id, properties) -> None:
+        if self._database:
+            self._database.video_entry_set_tags(video_id, properties)
+
+    # Algorithms
+
+    def move_property_values(self, values, from_name, to_name, *, concatenate) -> int:
+        if self._database and self._database.algos:
+            return self._database.algos.move_property_values(
+                values, from_name, to_name, concatenate=concatenate
+            )
+        return 0
+
+    def fill_property_with_terms(self, prop_name, *, only_empty) -> None:
+        if self._database and self._database.algos:
+            self._database.algos.fill_property_with_terms(
+                prop_name, only_empty=only_empty
+            )
+
+    # Other existing methods
 
     def get_database_folders(self) -> list[str]:
-        """Get database folders."""
-        return [str(f) for f in self._database.get_folders()]
+        if self._database:
+            return [str(f) for f in self._database.get_folders()]
+        return []
 
     def classifier_select_group(self, group_id: int) -> None:
-        """Add a group value to the classifier path."""
-        if self.provider:
-            self.provider.classifier_select_group(group_id)
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.classifier_select_group(group_id)
 
     def classifier_back(self) -> None:
-        """Remove the last value from the classifier path."""
-        if self.provider:
-            self.provider.classifier_back()
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.classifier_back()
 
     def classifier_reverse(self) -> list:
-        """Reverse the classifier path order."""
-        if self.provider:
-            return self.provider.classifier_reverse()
+        provider = self._database.provider if self._database else None
+        if provider:
+            return provider.classifier_reverse()
         return []
 
     def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
-        """Focus on a specific property value."""
-        if self.provider:
-            self.provider.classifier_focus_prop_val(prop_name, field_value)
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.classifier_focus_prop_val(prop_name, field_value)
 
     def apply_on_view(self, selector_dict: dict, operation: str, *args):
-        """Apply an operation on selected videos."""
-        if self.provider:
-            return self.provider.apply_on_view(selector_dict, operation, *args)
+        provider = self._database.provider if self._database else None
+        if provider:
+            return provider.apply_on_view(selector_dict, operation, *args)
         return None
 
     def confirm_unique_moves(self) -> int:
-        """Confirm all unique video moves."""
         return 0
 
+    def confirm_move(self, src_video_id: int, dst_video_id: int) -> None:
+        pass
+
     def rename_database(self, new_name: str) -> None:
-        """Rename the database."""
         if self._database:
             self._database.rename(new_name)
 
     def close_database(self) -> None:
-        """Close the database (no-op for mock)."""
+        pass
+
+    def close_app(self) -> None:
         pass
 
     def set_database_folders(self, folders: list[str]) -> None:
-        """Set database folders (no-op for mock)."""
         pass
 
 
