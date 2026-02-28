@@ -17,19 +17,26 @@ class PySide6API(GuiAPI):
     - Notification system
     - All methods from FeatureAPI and GuiAPI
 
-    The only addition is a configurable callback for notifications,
-    allowing AppContext to convert them to Qt signals.
+    Additions:
+    - Configurable callback for notifications (AppContext -> Qt signals)
+    - Configurable callback for exceptions from background threads
+    - Overridden _run_thread() to catch and transfer exceptions to main thread
     """
 
-    __slots__ = ("_qt_notification_callback",)
+    __slots__ = ("_qt_notification_callback", "_exception_callback")
 
     def __init__(self):
         super().__init__()
         self._qt_notification_callback = None
+        self._exception_callback = None
 
     def set_notification_callback(self, callback):
         """Configure the callback for notifications (used by AppContext)."""
         self._qt_notification_callback = callback
+
+    def set_exception_callback(self, callback):
+        """Configure the callback for exceptions from background threads."""
+        self._exception_callback = callback
 
     def _notify(self, notification: Notification) -> None:
         """
@@ -39,3 +46,15 @@ class PySide6API(GuiAPI):
         """
         if self._qt_notification_callback:
             self._qt_notification_callback(notification)
+
+    def _run_thread(self, function, *args, **kwargs):
+        """Override to transfer exceptions from background threads to main thread."""
+
+        def wrapper():
+            try:
+                function(*args, **kwargs)
+            except Exception as exc:
+                if self._exception_callback:
+                    self._exception_callback(exc)
+
+        return super()._run_thread(wrapper)

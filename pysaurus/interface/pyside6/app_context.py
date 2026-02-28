@@ -32,6 +32,10 @@ class AppContext(QObject):
     # (emitted from background thread, received in main thread)
     _notification_from_thread = Signal(object)
 
+    # Internal signal for thread-safe exception delivery
+    # (emitted from background thread, received in main thread)
+    _exception_from_thread = Signal(object)
+
     # Public Qt signals for backend notifications
     notification_received = Signal(object)  # Notification (any type)
     database_ready = Signal()  # DatabaseReady
@@ -58,8 +62,16 @@ class AppContext(QObject):
             self._process_notification, Qt.ConnectionType.QueuedConnection
         )
 
+        # Connect exception signal to re-raise in main thread
+        self._exception_from_thread.connect(
+            self._handle_exception, Qt.ConnectionType.QueuedConnection
+        )
+
         # Set callback to emit the internal signal from background thread
         self.api.set_notification_callback(self._on_notification_from_thread)
+
+        # Set callback for exceptions from background threads
+        self.api.set_exception_callback(self._on_exception_from_thread)
 
     def set_notification_handler(self, handler):
         """
@@ -83,6 +95,15 @@ class AppContext(QObject):
         Emits internal signal to safely transfer to main thread.
         """
         self._notification_from_thread.emit(notification)
+
+    def _on_exception_from_thread(self, exception):
+        """Called from background thread. Emits signal to transfer to main thread."""
+        self._exception_from_thread.emit(exception)
+
+    @Slot(object)
+    def _handle_exception(self, exception):
+        """Called in the main thread. Re-raises so that sys.excepthook intercepts it."""
+        raise exception
 
     @Slot(object)
     def _process_notification(self, notification: Notification):

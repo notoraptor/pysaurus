@@ -4,10 +4,13 @@ Entry point for PySide6 interface.
 
 import logging
 import sys
+import traceback
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
+from pysaurus.core.core_exceptions import ApplicationError
 from pysaurus.core.informer import Information
+from pysaurus.interface.common.qt_utils import ExceptHookForQt
 from pysaurus.interface.pyside6.main_window import MainWindow
 
 logger = logging.getLogger(__name__)
@@ -94,6 +97,35 @@ def _setup_scaled_font(app: QApplication) -> None:
         )
 
 
+class PySide6ExceptHook(ExceptHookForQt):
+    def sys_except_hook(self, cls, exception, trace):
+        if isinstance(exception, ApplicationError):
+            logger.warning(f"Application error: {exception}")
+            QMessageBox.warning(None, "Error", str(exception))
+        else:
+            tb_str = "".join(traceback.format_exception(cls, exception, trace))
+            logger.error(f"Fatal error: {exception}")
+            sys.__excepthook__(cls, exception, trace)
+            msg = QMessageBox(
+                QMessageBox.Icon.Critical,
+                "Fatal Error",
+                f"An unexpected error occurred:\n\n{type(exception).__name__}: {exception}",
+            )
+            msg.setDetailedText(tb_str)
+            msg.exec()
+            self.cleanup()
+            self.qt_app.exit(1)
+
+    def thread_except_hook(self, arg):
+        logger.error(f"Thread exception: {arg.thread.name}")
+        sys.__excepthook__(arg.exc_type, arg.exc_value, arg.exc_traceback)
+        self.cleanup()
+        self.qt_app.exit(1)
+
+    def cleanup(self):
+        pass
+
+
 def _run():
     """Run the Qt application."""
     app = QApplication(sys.argv)
@@ -102,6 +134,9 @@ def _run():
 
     # Apply DPI-based font scaling for high resolution screens
     _setup_scaled_font(app)
+
+    # Register exception hooks for uncaught exceptions
+    PySide6ExceptHook(app).register()
 
     window = MainWindow()
     window.show()
