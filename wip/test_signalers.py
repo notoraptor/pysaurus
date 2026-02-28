@@ -24,6 +24,12 @@ def run_process(signaler):
     signaler.send(1)
 
 
+@pytest.fixture(autouse=True)
+def skip_if_parallel(request, worker_id):
+    if worker_id != "master":
+        pytest.skip("Skip test: won't run well in parallel")
+
+
 @pytest.mark.parametrize("signaler", (IntersignFile, IntersignListener))
 class TestSignaler:
     def test_simple(self, signaler):

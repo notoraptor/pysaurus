@@ -7,6 +7,27 @@ from pathlib import Path
 from typing import Any, Callable
 
 
+import socket
+from contextlib import closing
+
+def get_random_unused_port():
+    # **NB**: Currently unused
+
+    # Create a new socket
+    # AF_INET refers to the IPv4 address family
+    # SOCK_STREAM refers to the TCP protocol
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        # Bind to an empty host and port 0
+        # The OS will pick a random, available port (ephemeral port)
+        s.bind(('', 0))
+        # Get the port number assigned by the OS
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        port = s.getsockname()[1]
+        # The port is held by the socket until the 'with' block is exited (closing the socket)
+        # This prevents a race condition where another process immediately grabs the port
+        return port
+
+
 def _get_sentinel_path() -> Path:
     file_title = f".{Path(__file__).resolve().stem}"
     return Path(f"./{file_title}.sentinel").resolve()
