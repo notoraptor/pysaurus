@@ -228,6 +228,13 @@ def _compute_results_and_stats(
     )
 
 
+def _thumbnail_join_if_needed(source_query: str) -> str:
+    """Return LEFT JOIN video_thumbnail clause if source_query references vt."""
+    if "vt." in source_query:
+        return "LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id"
+    return ""
+
+
 def _get_property_order_field(grouping: GroupDef, order_direction: str) -> str:
     if grouping.sorting == grouping.FIELD:
         return f"value {order_direction}"
@@ -250,46 +257,42 @@ def _query_property_groups_with_classifier(
     order_field: str,
     without_singletons: str,
 ) -> list[tuple]:
+    prop_id, _, _ = _get_property_metadata(sql_db, grouping.field)
     placeholders = ["?"] * len(classifier)
+    vt_join = _thumbnail_join_if_needed(source_query)
     query = f"""
     SELECT v.video_id
     FROM video AS v
+    {vt_join}
     JOIN video_property_value AS vv
-    ON v.video_id = vv.video_id
-    JOIN property AS p
-    ON vv.property_id = p.property_id
-    LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
-    WHERE
-    v.discarded = 0 AND {source_query} AND p.name = ?
+        ON v.video_id = vv.video_id AND vv.property_id = ?
+    WHERE v.discarded = 0 AND {source_query}
     AND vv.property_value IN ({",".join(placeholders)})
-    GROUP BY vv.video_id
+    GROUP BY v.video_id
     HAVING COUNT(vv.property_value) = ?
     """
-    params = source_params + [grouping.field] + classifier + [len(classifier)]
+    params = [prop_id] + source_params + classifier + [len(classifier)]
     nb_classified_videos = len(sql_db.query_all(query, params))
     super_query = f"""
     SELECT xv.property_value AS value, COUNT(x.video_id) AS size
     FROM
     (SELECT v.video_id AS video_id
     FROM video AS v
+    {vt_join}
     JOIN video_property_value AS vv
-    ON v.video_id = vv.video_id
-    JOIN property AS p
-    ON vv.property_id = p.property_id
-    LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
-    WHERE
-    v.discarded = 0 AND {source_query} AND p.name = ?
+        ON v.video_id = vv.video_id AND vv.property_id = ?
+    WHERE v.discarded = 0 AND {source_query}
     AND vv.property_value IN ({",".join(placeholders)})
-    GROUP BY vv.video_id
+    GROUP BY v.video_id
     HAVING COUNT(vv.property_value) = ?)
     AS x
-    JOIN video_property_value AS xv ON x.video_id = xv.video_id
-    JOIN property AS xp ON xv.property_id = xp.property_id
-    WHERE xp.name = ? AND value NOT IN ({",".join(placeholders)})
+    JOIN video_property_value AS xv
+        ON x.video_id = xv.video_id AND xv.property_id = ?
+    WHERE value NOT IN ({",".join(placeholders)})
     GROUP BY value {without_singletons}
     ORDER BY {order_field}
     """
-    super_params = params + [grouping.field] + classifier
+    super_params = params + [prop_id] + classifier
     return [(None, nb_classified_videos)] + sql_db.query_all(super_query, super_params)
 
 
@@ -301,58 +304,36 @@ def _query_property_groups_without_classifier(
     order_field: str,
     without_singletons: str,
 ) -> list[Sequence]:
-    is_multiple, default_value = _get_property_metadata(sql_db, grouping.field)
+    prop_id, is_multiple, default_value = _get_property_metadata(sql_db, grouping.field)
+    vt_join = _thumbnail_join_if_needed(source_query)
 
-    # For multiple properties, use NULL for videos without the property (to match JSON behavior)
-    # For single properties, use the default value
     if is_multiple:
-        # Multiple property: videos without the property should have NULL
-        super_query = f"""
-        SELECT xv.property_value AS value, COUNT(DISTINCT x.video_id) AS size
-        FROM
-        (SELECT v.video_id AS video_id
+        query = f"""
+        SELECT pv.property_value AS value, COUNT(DISTINCT v.video_id) AS size
         FROM video AS v
-        LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
-        WHERE v.discarded = 0 AND {source_query})
-        AS x
-        LEFT JOIN (
-            SELECT pv.video_id, pv.property_value
-            FROM video_property_value pv
-            JOIN property p ON pv.property_id = p.property_id
-            WHERE p.name = ?
-        ) AS xv ON x.video_id = xv.video_id
-        GROUP BY value {without_singletons}
-        ORDER BY {order_field}
-        """
-        super_params = source_params + [grouping.field]
-    else:
-        # Single property: use default value for videos without the property
-        super_query = f"""
-        SELECT
-        IIF(x.have_property = 0, ?, xv.property_value) AS value,
-        COUNT(DISTINCT x.video_id) AS size
-        FROM
-        (SELECT
-        v.video_id AS video_id,
-        SUM(IIF(p.name = ?, 1, 0)) AS have_property
-        FROM video AS v
-        LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
-        LEFT JOIN property AS p ON pv.property_id = p.property_id
-        LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
+        {vt_join}
+        LEFT JOIN video_property_value AS pv
+            ON v.video_id = pv.video_id AND pv.property_id = ?
         WHERE v.discarded = 0 AND {source_query}
-        GROUP BY v.video_id)
-        AS x
-        LEFT JOIN video_property_value AS xv ON x.video_id = xv.video_id
-        LEFT JOIN property AS xp ON xv.property_id = xp.property_id
-        WHERE
-        (x.have_property > 0 AND xp.name = ?) OR (x.have_property = 0)
         GROUP BY value {without_singletons}
         ORDER BY {order_field}
         """
-        super_params = (
-            [default_value, grouping.field] + source_params + [grouping.field]
-        )
-    return sql_db.query_all(super_query, super_params)
+        params = [prop_id] + source_params
+    else:
+        query = f"""
+        SELECT
+            COALESCE(pv.property_value, ?) AS value,
+            COUNT(v.video_id) AS size
+        FROM video AS v
+        {vt_join}
+        LEFT JOIN video_property_value AS pv
+            ON v.video_id = pv.video_id AND pv.property_id = ?
+        WHERE v.discarded = 0 AND {source_query}
+        GROUP BY value {without_singletons}
+        ORDER BY {order_field}
+        """
+        params = [default_value, prop_id] + source_params
+    return sql_db.query_all(query, params)
 
 
 def _query_field_groups(
@@ -486,7 +467,7 @@ def _filter_by_selected_property_group(
     classifier: Sequence[str],
     field_value,
 ) -> tuple[str, list]:
-    is_multiple, default_value = _get_property_metadata(sql_db, grouping.field)
+    prop_id, is_multiple, default_value = _get_property_metadata(sql_db, grouping.field)
 
     if classifier:
         expected = list(classifier)
@@ -494,54 +475,39 @@ def _filter_by_selected_property_group(
             expected.append(field_value)
         placeholders = ["?"] * len(expected)
         query = f"""
-        SELECT v.video_id
-        FROM video_property_value AS v
-        JOIN property AS p
-        ON v.property_id = p.property_id
-        WHERE
-        p.name = ?
-        AND v.property_value IN ({",".join(placeholders)})
-        GROUP BY v.video_id
-        HAVING COUNT(v.property_value) = ?
+        SELECT video_id
+        FROM video_property_value
+        WHERE property_id = ?
+        AND property_value IN ({",".join(placeholders)})
+        GROUP BY video_id
+        HAVING COUNT(property_value) = ?
         """
-        params = [grouping.field] + expected + [len(expected)]
+        params = [prop_id] + expected + [len(expected)]
     elif field_value is None:
-        # For both single and multiple properties: videos without the property
         query = """
-        SELECT
-        v.video_id AS video_id
-        FROM video AS v
-        LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
-        LEFT JOIN property AS p ON pv.property_id = p.property_id
-        GROUP BY v.video_id HAVING SUM(IIF(p.name = ?, 1, 0)) = 0
+        SELECT video_id FROM video
+        WHERE video_id NOT IN (
+            SELECT video_id FROM video_property_value WHERE property_id = ?
+        )
         """
-        params = [grouping.field]
+        params = [prop_id]
     elif not is_multiple and field_value == default_value:
-        # For single properties with default value: videos without property OR with explicit default
         query = """
-        SELECT DISTINCT v.video_id
-        FROM video AS v
-        LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
-        LEFT JOIN property AS p ON pv.property_id = p.property_id
-        WHERE
-            (p.name = ? AND pv.property_value = ?)
-            OR v.video_id IN (
-                SELECT vv.video_id
-                FROM video AS vv
-                LEFT JOIN video_property_value AS pvv ON vv.video_id = pvv.video_id
-                LEFT JOIN property AS pp ON pvv.property_id = pp.property_id
-                GROUP BY vv.video_id
-                HAVING SUM(IIF(pp.name = ?, 1, 0)) = 0
-            )
+        SELECT video_id FROM video_property_value
+        WHERE property_id = ? AND property_value = ?
+        UNION
+        SELECT video_id FROM video
+        WHERE video_id NOT IN (
+            SELECT video_id FROM video_property_value WHERE property_id = ?
+        )
         """
-        params = [grouping.field, field_value, grouping.field]
+        params = [prop_id, field_value, prop_id]
     else:
         query = """
-        SELECT v.video_id FROM video_property_value AS v
-        JOIN property AS p ON v.property_id = p.property_id
-        WHERE p.name = ? AND v.property_value = ?
+        SELECT video_id FROM video_property_value
+        WHERE property_id = ? AND property_value = ?
         """
-        params = [grouping.field, field_value]
+        params = [prop_id, field_value]
     return f"v.video_id IN ({query})", params
 
 
@@ -601,9 +567,9 @@ def _get_property_value_converter(
 
 def _get_property_metadata(
     sql_db: PysaurusConnection, property_name: str
-) -> tuple[bool, str | None]:
+) -> tuple[int, bool, str | None]:
     prop_info = sql_db.query_one(
-        """SELECT p.multiple, pe.enum_value
+        """SELECT p.property_id, p.multiple, pe.enum_value
            FROM property p
            LEFT JOIN property_enumeration pe ON p.property_id = pe.property_id
            WHERE p.name = ?
@@ -611,6 +577,7 @@ def _get_property_metadata(
            LIMIT 1""",
         [property_name],
     )
-    is_multiple = prop_info[0] if prop_info else 0
-    default_value = prop_info[1] if (prop_info and len(prop_info) > 1) else None
-    return is_multiple, default_value
+    property_id = prop_info[0] if prop_info else 0
+    is_multiple = prop_info[1] if prop_info else 0
+    default_value = prop_info[2] if (prop_info and len(prop_info) > 2) else None
+    return property_id, is_multiple, default_value

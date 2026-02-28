@@ -242,6 +242,48 @@ class BenchmarkAPI:
             output.append("...")
         return "\n".join(output)
 
+    def groupby(
+        self,
+        field: str,
+        is_property: bool = False,
+        sorting: str = "field",
+        reverse: bool = False,
+        allow_singletons: bool = True,
+        top: int = 10,
+    ):
+        """Group videos by field or property and show top groups.
+
+        Args:
+            field: Field name (e.g. audio_bit_rate) or property name (e.g. actress).
+            is_property: True if field is a custom property.
+            sorting: Sort groups by "field", "count", or "length".
+            reverse: Reverse sort order.
+            allow_singletons: Include groups with only 1 video.
+            top: Number of top groups to display.
+        """
+        provider = self._db.provider
+        with PerfCounter() as t:
+            provider.set_groups(
+                field,
+                is_property=is_property,
+                sorting=sorting,
+                reverse=reverse,
+                allow_singletons=allow_singletons,
+            )
+            provider.get_view_indices()
+            group_def = provider.get_group_def()
+        elapsed = t.microseconds / 1000
+        print(f"({elapsed:.3f} ms)")
+        if not group_def:
+            return "No grouping."
+        groups = group_def["groups"]
+        lines = [f"{len(groups)} group(s)"]
+        for g in groups[:top]:
+            lines.append(f"  {g['value']}: {g['count']}")
+        if len(groups) > top:
+            lines.append(f"  ... ({len(groups) - top} more)")
+        return "\n".join(lines)
+
     def sort(self, fields=""):
         """Sort videos by comma-separated fields."""
         fields = str(fields)
