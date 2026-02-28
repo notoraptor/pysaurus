@@ -47,10 +47,11 @@ class PysaurusCollection(AbstractDatabase):
         self.db.modify("UPDATE collection SET date_updated = ?", [date.time])
 
     def get_folders(self) -> Iterable[AbsolutePath]:
-        return [
-            AbsolutePath(row["source"])
-            for row in self.db.query("SELECT source FROM collection_source")
-        ]
+        with self.db:
+            return [
+                AbsolutePath(row["source"])
+                for row in self.db.query("SELECT source FROM collection_source")
+            ]
 
     def _set_folders(self, folders: list[AbsolutePath]) -> None:
         folders_tree = PathTree(folders)
@@ -76,20 +77,21 @@ class PysaurusCollection(AbstractDatabase):
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
         output = {}
-        for row in self.db.query(
-            "SELECT pv.video_id, pv.property_value "
-            "FROM video_property_value AS pv "
-            "JOIN property AS p "
-            "ON pv.property_id = p.property_id "
-            "WHERE p.name = ?"
-            + (
-                f" AND pv.video_id IN ({','.join(['?'] * len(indices))})"
-                if indices
-                else ""
-            ),
-            [name] + list(indices),
-        ):
-            output.setdefault(row[0], []).append(pt.from_string(row[1]))
+        with self.db:
+            for row in self.db.query(
+                "SELECT pv.video_id, pv.property_value "
+                "FROM video_property_value AS pv "
+                "JOIN property AS p "
+                "ON pv.property_id = p.property_id "
+                "WHERE p.name = ?"
+                + (
+                    f" AND pv.video_id IN ({','.join(['?'] * len(indices))})"
+                    if indices
+                    else ""
+                ),
+                [name] + list(indices),
+            ):
+                output.setdefault(row[0], []).append(pt.from_string(row[1]))
         return output
 
     def videos_tag_set(
@@ -302,14 +304,15 @@ class PysaurusCollection(AbstractDatabase):
         if pt is None:
             raise ValueError(f"Property not found: {name}")
         if pt["type"] == "str":
-            video_ids = [
-                row[0]
-                for row in self.db.query(
-                    "SELECT DISTINCT video_id FROM video_property_value "
-                    "WHERE property_id = ?",
-                    [pt["property_id"]],
-                )
-            ]
+            with self.db:
+                video_ids = [
+                    row[0]
+                    for row in self.db.query(
+                        "SELECT DISTINCT video_id FROM video_property_value "
+                        "WHERE property_id = ?",
+                        [pt["property_id"]],
+                    )
+                ]
 
         self.db.modify("DELETE FROM property WHERE name = ?", [name])
 
@@ -446,15 +449,16 @@ class PysaurusCollection(AbstractDatabase):
         if len(entry_map) != len(video_entries):
             raise ValueError("Duplicate filenames in video_entries")
         filenames = list(entry_map.keys())
-        for row in self.db.query(
-            f"SELECT video_id, filename, meta_title FROM video "
-            f"WHERE filename IN ({','.join(['?'] * len(filenames))})",
-            filenames,
-        ):
-            entry = entry_map[row[1]]
-            entry.video_id = row[0]
-            if entry.meta_title != row[2]:
-                entry_with_new_meta_titles.append(entry)
+        with self.db:
+            for row in self.db.query(
+                f"SELECT video_id, filename, meta_title FROM video "
+                f"WHERE filename IN ({','.join(['?'] * len(filenames))})",
+                filenames,
+            ):
+                entry = entry_map[row[1]]
+                entry.video_id = row[0]
+                if entry.meta_title != row[2]:
+                    entry_with_new_meta_titles.append(entry)
         old_entries = [entry for entry in video_entries if entry.video_id is not None]
         new_entries = [entry for entry in video_entries if entry.video_id is None]
         self._update_video_entries(old_entries, runtime_info)
@@ -539,13 +543,14 @@ class PysaurusCollection(AbstractDatabase):
         if len(entry_map) != len(entries):
             raise ValueError("Duplicate filenames in entries")
         nb_indices = 0
-        for row in self.db.query(
-            f"SELECT filename, video_id FROM video "
-            f"WHERE filename IN ({','.join(['?'] * len(entries))})",
-            [entry.filename for entry in entries],
-        ):
-            entry_map[row[0]].video_id = row[1]
-            nb_indices += 1
+        with self.db:
+            for row in self.db.query(
+                f"SELECT filename, video_id FROM video "
+                f"WHERE filename IN ({','.join(['?'] * len(entries))})",
+                [entry.filename for entry in entries],
+            ):
+                entry_map[row[0]].video_id = row[1]
+                nb_indices += 1
         if nb_indices != len(entries):
             raise RuntimeError(f"Expected {len(entries)} video IDs, got {nb_indices}")
         errors = [
@@ -575,13 +580,14 @@ class PysaurusCollection(AbstractDatabase):
         if len(entry_map) != len(entries):
             raise ValueError("Duplicate video_ids in entries")
         texts = []
-        for row in self.db.query(
-            f"SELECT video_id, property_text FROM video_property_text "
-            f"WHERE video_id IN ({','.join(['?'] * len(entries))})",
-            [entry.video_id for entry in entries],
-        ):
-            entry = entry_map[row[0]]
-            texts.append((entry.video_id, entry.filename, entry.meta_title, row[1]))
+        with self.db:
+            for row in self.db.query(
+                f"SELECT video_id, property_text FROM video_property_text "
+                f"WHERE video_id IN ({','.join(['?'] * len(entries))})",
+                [entry.video_id for entry in entries],
+            ):
+                entry = entry_map[row[0]]
+                texts.append((entry.video_id, entry.filename, entry.meta_title, row[1]))
         self.db.modify_many(
             "INSERT OR REPLACE INTO video_text "
             "(video_id, filename, meta_title, properties) VALUES (?, ?, ?, ?)",
@@ -589,14 +595,15 @@ class PysaurusCollection(AbstractDatabase):
         )
 
     def _thumbnails_add(self, filename_to_thumb_name: dict[str, str]) -> None:
-        filename_to_video_id = {
-            row[0]: row[1]
-            for row in self.db.query(
-                f"SELECT filename, video_id FROM video "
-                f"WHERE filename IN ({','.join(['?'] * len(filename_to_thumb_name))})",
-                list(filename_to_thumb_name.keys()),
-            )
-        }
+        with self.db:
+            filename_to_video_id = {
+                row[0]: row[1]
+                for row in self.db.query(
+                    f"SELECT filename, video_id FROM video "
+                    f"WHERE filename IN ({','.join(['?'] * len(filename_to_thumb_name))})",
+                    list(filename_to_thumb_name.keys()),
+                )
+            }
         if len(filename_to_video_id) != len(filename_to_thumb_name):
             raise RuntimeError(
                 f"Expected {len(filename_to_thumb_name)} videos, "

@@ -188,7 +188,8 @@ def video_mega_search(
         {where_clause}
         {query_order}
         """
-        return [row[0] for row in db.query(query, params)]
+        with db:
+            return [row[0] for row in db.query(query, params)]
 
     # Standard path: full video search
     needs_thumbnail = _needs_thumbnail_join(include, where)

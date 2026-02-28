@@ -192,7 +192,8 @@ def _compute_results_and_stats(
     ):
         query_maker_view = query_maker_select.copy()
         query_maker_view.set_field(field_video_id)
-        view_indices = [row[0] for row in db.query(*query_maker_view.to_sql())]
+        with db:
+            view_indices = [row[0] for row in db.query(*query_maker_view.to_sql())]
 
         nb_pages = compute_nb_pages(context.selection_count, context.page_size)
         context.nb_pages = nb_pages
@@ -296,7 +297,7 @@ def _query_property_groups_without_classifier(
     grouping: GroupDef,
     order_field: str,
     without_singletons: str,
-) -> list[tuple]:
+) -> list[Sequence]:
     is_multiple, default_value = _get_property_metadata(sql_db, grouping.field)
 
     # For multiple properties, use NULL for videos without the property (to match JSON behavior)
@@ -348,7 +349,7 @@ def _query_property_groups_without_classifier(
         super_params = (
             [default_value, grouping.field] + source_params + [grouping.field]
         )
-    return sql_db.query(super_query, super_params)
+    return sql_db.query_all(super_query, super_params)
 
 
 def _query_field_groups(
@@ -357,7 +358,7 @@ def _query_field_groups(
     source_params: list,
     grouping: GroupDef,
     field_factory: SqlFieldFactory,
-) -> list[tuple]:
+) -> list[Sequence]:
     order_direction = "DESC" if grouping.reverse else "ASC"
     field = field_factory.get_field(grouping.field)
     if grouping.sorting == grouping.FIELD:
@@ -377,7 +378,7 @@ def _query_field_groups(
         where_similarity_id = (
             " AND v.similarity_id IS NOT NULL AND v.similarity_id != -1"
         )
-    return sql_db.query(
+    return sql_db.query_all(
         f"SELECT {field}, COUNT(v.video_id) AS size "
         f"FROM video AS v "
         f"LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id "

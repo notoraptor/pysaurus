@@ -17,7 +17,8 @@ def _get_videos(
     include: Sequence[str] | None = None,
     with_moves: bool = False,
 ) -> list[VideoPattern]:
-    videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
+    with db:
+        videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
 
     # Early return if no videos or minimal include (no extra data needed)
     if not videos:
@@ -50,31 +51,34 @@ def _get_videos(
     json_properties = {}
 
     if with_errors:
-        for row in db.query(
-            f"SELECT video_id, error FROM video_error "
-            f"WHERE video_id IN ({placeholders})",
-            video_ids,
-        ):
-            errors[row[0]].append(row[1])
+        with db:
+            for row in db.query(
+                f"SELECT video_id, error FROM video_error "
+                f"WHERE video_id IN ({placeholders})",
+                video_ids,
+            ):
+                errors[row[0]].append(row[1])
     if with_audio_languages or with_subtitle_languages:
-        for row in db.query(
-            f"SELECT stream, video_id, lang_code FROM video_language "
-            f"WHERE video_id IN ({placeholders}) "
-            f"ORDER BY stream ASC, video_id ASC, rank ASC",
-            video_ids,
-        ):
-            languages[row[0]][row[1]].append(row[2])
+        with db:
+            for row in db.query(
+                f"SELECT stream, video_id, lang_code FROM video_language "
+                f"WHERE video_id IN ({placeholders}) "
+                f"ORDER BY stream ASC, video_id ASC, rank ASC",
+                video_ids,
+            ):
+                languages[row[0]][row[1]].append(row[2])
     if with_properties:
         prop_types: dict[int, PropTypeValidator] = {
             desc["property_id"]: PropTypeValidator(desc)
             for desc in prop_type_search(db)
         }
-        for row in db.query(
-            f"SELECT video_id, property_id, property_value "
-            f"FROM video_property_value WHERE video_id IN ({placeholders})",
-            video_ids,
-        ):
-            properties[row[0]].setdefault(row[1], []).append(row[2])
+        with db:
+            for row in db.query(
+                f"SELECT video_id, property_id, property_value "
+                f"FROM video_property_value WHERE video_id IN ({placeholders})",
+                video_ids,
+            ):
+                properties[row[0]].setdefault(row[1], []).append(row[2])
         json_properties = {
             video_id: {
                 prop_types[property_id].name: prop_types[property_id].from_strings(
@@ -110,62 +114,66 @@ def _get_videos(
 def _get_video_moves(db: PysaurusConnection) -> Iterable[tuple[int, list[dict]]]:
     # Optimisé : évite GROUP_CONCAT qui peut créer des strings de plusieurs MB
     # Utilise une requête structurée avec window functions
-    current_group = None
-    not_found = []
-    found = []
+    with db:
+        current_group = None
+        not_found = []
+        found = []
 
-    for row in db.query(
-        """
-        WITH move_groups AS (
-            SELECT
-                video_id,
-                is_file,
-                filename,
-                file_size,
-                duration,
-                duration_time_base_not_null,
-                COUNT(*) OVER (PARTITION BY file_size, duration, duration_time_base_not_null) as group_count,
-                SUM(is_file) OVER (PARTITION BY file_size, duration, duration_time_base_not_null) as found_count
-            FROM video
-            WHERE unreadable = 0 AND discarded = 0
-        )
-        SELECT video_id, is_file, filename, file_size, duration, duration_time_base_not_null
-        FROM move_groups
-        WHERE group_count > 1 AND found_count > 0 AND found_count < group_count
-        ORDER BY file_size, duration, duration_time_base_not_null, is_file DESC
-        """
-    ):
-        group_key = (
-            row[3],
-            row[4],
-            row[5],
-        )  # file_size, duration, duration_time_base_not_null
-
-        # Nouveau groupe détecté
-        if current_group != group_key:
-            # Émettre le groupe précédent si existe
-            if current_group is not None and not_found and found:
-                for id_not_found in not_found:
-                    yield id_not_found, found
-
-            # Réinitialiser pour nouveau groupe
-            current_group = group_key
-            not_found = []
-            found = []
-
-        # Accumuler vidéos du groupe actuel
-        video_id = row[0]
-        is_file = row[1]
-        filename = row[2]
-
-        if is_file:
-            found.append(
-                {"video_id": video_id, "filename": AbsolutePath(filename).standard_path}
+        for row in db.query(
+            """
+            WITH move_groups AS (
+                SELECT
+                    video_id,
+                    is_file,
+                    filename,
+                    file_size,
+                    duration,
+                    duration_time_base_not_null,
+                    COUNT(*) OVER (PARTITION BY file_size, duration, duration_time_base_not_null) as group_count,
+                    SUM(is_file) OVER (PARTITION BY file_size, duration, duration_time_base_not_null) as found_count
+                FROM video
+                WHERE unreadable = 0 AND discarded = 0
             )
-        else:
-            not_found.append(video_id)
+            SELECT video_id, is_file, filename, file_size, duration, duration_time_base_not_null
+            FROM move_groups
+            WHERE group_count > 1 AND found_count > 0 AND found_count < group_count
+            ORDER BY file_size, duration, duration_time_base_not_null, is_file DESC
+            """
+        ):
+            group_key = (
+                row[3],
+                row[4],
+                row[5],
+            )  # file_size, duration, duration_time_base_not_null
 
-    # Émettre le dernier groupe
-    if current_group is not None and not_found and found:
-        for id_not_found in not_found:
-            yield id_not_found, found
+            # Nouveau groupe détecté
+            if current_group != group_key:
+                # Émettre le groupe précédent si existe
+                if current_group is not None and not_found and found:
+                    for id_not_found in not_found:
+                        yield id_not_found, found
+
+                # Réinitialiser pour nouveau groupe
+                current_group = group_key
+                not_found = []
+                found = []
+
+            # Accumuler vidéos du groupe actuel
+            video_id = row[0]
+            is_file = row[1]
+            filename = row[2]
+
+            if is_file:
+                found.append(
+                    {
+                        "video_id": video_id,
+                        "filename": AbsolutePath(filename).standard_path,
+                    }
+                )
+            else:
+                not_found.append(video_id)
+
+        # Émettre le dernier groupe
+        if current_group is not None and not_found and found:
+            for id_not_found in not_found:
+                yield id_not_found, found

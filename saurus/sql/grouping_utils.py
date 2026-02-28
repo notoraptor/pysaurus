@@ -57,22 +57,23 @@ class SqlFieldFactory:
         db_path = connection.db_path or ":memory:"
         if db_path not in self._padding_cache:
             # Calculer le padding seulement si pas en cache
-            padding_filenames = max(
-                (
-                    get_longest_number_in_string(row[0])
-                    for row in connection.query("SELECT filename FROM video")
-                ),
-                default=0,
-            )
-            padding_meta_titles = max(
-                (
-                    get_longest_number_in_string(row[0])
-                    for row in connection.query(
-                        "SELECT meta_title FROM video WHERE meta_title != ''"
-                    )
-                ),
-                default=0,
-            )
+            with connection:
+                padding_filenames = max(
+                    (
+                        get_longest_number_in_string(row[0])
+                        for row in connection.query("SELECT filename FROM video")
+                    ),
+                    default=0,
+                )
+                padding_meta_titles = max(
+                    (
+                        get_longest_number_in_string(row[0])
+                        for row in connection.query(
+                            "SELECT meta_title FROM video WHERE meta_title != ''"
+                        )
+                    ),
+                    default=0,
+                )
             self._padding_cache[db_path] = max(padding_filenames, padding_meta_titles)
 
         padding = self._padding_cache[db_path]
