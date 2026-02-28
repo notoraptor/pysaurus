@@ -1,12 +1,12 @@
 """
-Test complet de FeatureAPI pour garantir la non-régression lors du refactoring.
+Full FeatureAPI test to ensure non-regression during refactoring.
 
-Ce test sert de contrat d'interface pour FeatureAPI. Il doit passer:
-- AVANT le refactoring de AbstractDatabase
-- APRÈS le refactoring (DatabaseOperations + DatabaseAlgorithms)
+This test serves as an interface contract for FeatureAPI. It must pass:
+- BEFORE the AbstractDatabase refactoring
+- AFTER the refactoring (DatabaseOperations + DatabaseAlgorithms)
 
-Le test vérifie que toutes les fonctionnalités exposées par FeatureAPI
-fonctionnent correctement, indépendamment de l'architecture interne.
+The test verifies that all features exposed by FeatureAPI work correctly,
+regardless of the internal architecture.
 """
 
 import pytest

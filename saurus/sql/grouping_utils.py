@@ -49,14 +49,14 @@ class SemanticField(SqlField):
 
 
 class SqlFieldFactory:
-    # Cache padding par base de données pour éviter de scanner tous les filenames à chaque fois
+    # Per-database padding cache to avoid scanning all filenames every time
     _padding_cache: dict[str, int] = {}
 
     def __init__(self, connection: PysaurusConnection):
-        # Utiliser le cache si disponible
+        # Use cache if available
         db_path = connection.db_path or ":memory:"
         if db_path not in self._padding_cache:
-            # Calculer le padding seulement si pas en cache
+            # Compute padding only if not cached
             with connection:
                 padding_filenames = max(
                     (

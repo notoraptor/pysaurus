@@ -603,7 +603,7 @@ def _test_infinite_loop_protection():
 
 def test_undefined_reference():
     with pytest.raises(KeyError):
-        f = Lambda(V.x, [V.y])  # V.y n'est pas défini
+        f = Lambda(V.x, [V.y])  # V.y is not defined
         f(1)
 
 

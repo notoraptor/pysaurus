@@ -1,38 +1,38 @@
 """
-Test expérimental pour vérifier si pyfakefs fonctionne avec la base JSON.
+Experimental test to check if pyfakefs works with the JSON database.
 
-CONCLUSION: pyfakefs NE FONCTIONNE PAS pour ce cas d'usage.
+CONCLUSION: pyfakefs DOES NOT WORK for this use case.
 
-La base JSON utilise:
-- Fichiers JSON pour les données
-- Fichiers pickle pour les indexes
-- SQLite pour les thumbnails
-- multiprocessing.Manager() pour les notifications
+The JSON database uses:
+- JSON files for data
+- Pickle files for indexes
+- SQLite for thumbnails
+- multiprocessing.Manager() for notifications
 
-PROBLÈMES RENCONTRÉS:
+ISSUES ENCOUNTERED:
 
-1. ✅ RÉSOLU: Fichiers du package pysaurus nécessaires
-   - Solution: Application() ne charge plus les fichiers de langue au __init__
+1. RESOLVED: Package files needed by pysaurus
+   - Solution: Application() no longer loads language files in __init__
 
-2. ✅ RÉSOLU: Fichier SQL externe pour thumbnails
-   - Solution: Script SQL embarqué directement dans le code Python
+2. RESOLVED: External SQL file for thumbnails
+   - Solution: SQL script embedded directly in the Python code
 
-3. ❌ BLOQUANT: multiprocessing.Manager() incompatible avec pyfakefs
-   - Erreur: OSError: [Errno 9] Bad file descriptor
-   - Cause: pyfakefs ne peut pas simuler les file descriptors bas-niveau
-     utilisés par multiprocessing pour la communication inter-processus
-   - Localisation: pysaurus/core/informer.py:39 crée un Manager()
+3. BLOCKING: multiprocessing.Manager() incompatible with pyfakefs
+   - Error: OSError: [Errno 9] Bad file descriptor
+   - Cause: pyfakefs cannot simulate the low-level file descriptors
+     used by multiprocessing for inter-process communication
+   - Location: pysaurus/core/informer.py:39 creates a Manager()
 
-4. ❌ BLOQUANT: SQLite opérations bas-niveau (fcntl, flock)
-   - Même si on résout multiprocessing, SQLite utilise des appels
-     système que pyfakefs ne simule pas complètement
+4. BLOCKING: SQLite low-level operations (fcntl, flock)
+   - Even if multiprocessing is resolved, SQLite uses system calls
+     that pyfakefs does not fully simulate
 
-RECOMMANDATION:
-- Pour mem_old_database: Continuer avec shutil.copytree() + tmp_path
-- Pour mem_saurus_database: Continuer avec copie en mémoire SQLite
+RECOMMENDATION:
+- For mem_old_database: Continue with shutil.copytree() + tmp_path
+- For mem_saurus_database: Continue with in-memory SQLite copy
 
-Ces tests sont gardés comme documentation de la tentative d'utilisation
-de pyfakefs et des raisons de son échec.
+These tests are kept as documentation of the attempt to use pyfakefs
+and the reasons for its failure.
 """
 
 import pytest

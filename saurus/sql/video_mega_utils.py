@@ -112,8 +112,8 @@ def _get_videos(
 
 
 def _get_video_moves(db: PysaurusConnection) -> Iterable[tuple[int, list[dict]]]:
-    # Optimisé : évite GROUP_CONCAT qui peut créer des strings de plusieurs MB
-    # Utilise une requête structurée avec window functions
+    # Optimized: avoids GROUP_CONCAT which can produce multi-MB strings.
+    # Uses a structured query with window functions instead.
     with db:
         current_group = None
         not_found = []
@@ -146,19 +146,19 @@ def _get_video_moves(db: PysaurusConnection) -> Iterable[tuple[int, list[dict]]]
                 row[5],
             )  # file_size, duration, duration_time_base_not_null
 
-            # Nouveau groupe détecté
+            # New group detected
             if current_group != group_key:
-                # Émettre le groupe précédent si existe
+                # Emit previous group if it exists
                 if current_group is not None and not_found and found:
                     for id_not_found in not_found:
                         yield id_not_found, found
 
-                # Réinitialiser pour nouveau groupe
+                # Reset for new group
                 current_group = group_key
                 not_found = []
                 found = []
 
-            # Accumuler vidéos du groupe actuel
+            # Accumulate videos for current group
             video_id = row[0]
             is_file = row[1]
             filename = row[2]
@@ -173,7 +173,7 @@ def _get_video_moves(db: PysaurusConnection) -> Iterable[tuple[int, list[dict]]]
             else:
                 not_found.append(video_id)
 
-        # Émettre le dernier groupe
+        # Emit last group
         if current_group is not None and not_found and found:
             for id_not_found in not_found:
                 yield id_not_found, found

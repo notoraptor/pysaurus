@@ -7,11 +7,11 @@ from flask import Flask, send_from_directory
 from pysaurus.core.informer import Information
 from pysaurus.interface.using_pywebview.webview_server import Backend
 
-# Définir le répertoire à servir
+# Define the directory to serve
 DIRECTORY = os.path.join(os.path.dirname(__file__), "..", "web")
 assert os.path.isdir(DIRECTORY)
 
-# Créer une application Flask
+# Create a Flask application
 app = Flask(__name__)
 
 
@@ -25,7 +25,7 @@ def index():
     return send_from_directory(DIRECTORY, "index.html")
 
 
-# Fonction pour démarrer le serveur Flask
+# Start the Flask server
 def start_flask_server():
     app.run(port=5000)
 

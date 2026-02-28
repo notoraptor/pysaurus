@@ -502,7 +502,7 @@ class PysaurusCollection(AbstractDatabase):
                 for rank, code in enumerate(entry.subtitle_languages)
             )
 
-        # Consolider les DELETE avec IN clause pour meilleures performances
+        # Consolidate DELETEs with IN clause for better performance
         video_ids = [entry.video_id for entry in entries]
         if video_ids:
             placeholders = ",".join(["?"] * len(video_ids))
