@@ -423,10 +423,8 @@ class VideoListItem(QFrame):
                     value_label.setCursor(Qt.CursorShape.PointingHandCursor)
                     value_label.setToolTip(f"Filter by {prop_name} = {value}")
                     # Capture prop_name and value for the lambda
-                    value_label.mousePressEvent = (
-                        lambda e,
-                        pn=prop_name,
-                        v=value: self._on_property_value_clicked(pn, v)
+                    value_label.mousePressEvent = lambda e, pn=prop_name, v=value: (
+                        self._on_property_value_clicked(pn, v)
                     )
                     props_layout.addWidget(value_label)
 

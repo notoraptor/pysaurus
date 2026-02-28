@@ -209,11 +209,10 @@ class TestVideoPropertyModification:
             BatchEditPropertyDialog,
             "edit_property",
             staticmethod(
-                lambda prop_name,
-                prop_type,
-                nb_videos,
-                values_and_counts,
-                parent=None: (["horror"], ["action"])
+                lambda prop_name, prop_type, nb_videos, values_and_counts, parent=None: (
+                    ["horror"],
+                    ["action"],
+                )
             ),
         )
 
