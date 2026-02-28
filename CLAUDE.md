@@ -15,6 +15,9 @@ All commands must be run with `uv run`:
 uv run -m pysaurus
 uv run -m pysaurus pywebview   # or: qtwebview, pyside6
 
+# Run CLI (benchmark/debug console, configured via .pysaurus.yaml)
+uv run -m pysaurus.interface.console.run --backend sql --db <name>
+
 # Run all tests
 uv run pytest
 
@@ -34,6 +37,18 @@ uv run ruff format .
 
 ## Architecture
 
+### High-level Flow
+
+```
+__main__.py (GUI selector)
+    → Interface Layer (PyWebView / PySide6 / QtWebView)
+        → GuiAPI / FeatureAPI (proxy-based API)
+            → AbstractDatabase
+                ├─ .ops → DatabaseOperations (CRUD)
+                ├─ .algos → DatabaseAlgorithms (batch processing)
+                └─ .provider → AbstractVideoProvider (filtering pipeline)
+```
+
 ### Entry Point
 
 `pysaurus/__main__.py` — selects GUI at runtime based on CLI argument (`pywebview`, `qtwebview`, `pyside6`). Default: pywebview (Windows), qtwebview (Linux).
@@ -42,14 +57,34 @@ uv run ruff format .
 
 Layered separation of concerns:
 - **`database/abstract_database.py`** — minimal abstract interface (~20 methods)
-- **`database/database_operations.py`** — high-level CRUD operations
-- **`database/database_algorithms.py`** — batch processing (update, miniatures, moves)
-- **`database/jsdb/json_database.py`** — current implementation using JSON file persistence
+- **`database/database_operations.py`** — high-level CRUD operations (accessed via `db.ops`)
+- **`database/database_algorithms.py`** — batch processing: update, miniatures, moves (accessed via `db.algos`)
+
+Two backend implementations, selected by `USE_SQL` flag in `database/database.py` (currently `True`):
+- **`database/jsdb/json_database.py`** — legacy JSON file persistence
+- **`saurus/sql/pysaurus_collection.py`** — current SQLite implementation (uses `skullite` wrapper)
+
+### SQL Layer (`saurus/sql/`)
+
+- **`pysaurus_collection.py`** — implements `AbstractDatabase` with SQLite
+- **`pysaurus_connection.py`** — extends `Skullite` (from `skullite` package), loads schema from `database.sql`
+- **`saurus_provider.py`** — implements `AbstractVideoProvider` with SQL queries
+- **`video_mega_group.py` / `video_mega_search.py`** — SQL query builders for grouping and search
+- **`migration/`** — tools for JSON → SQL migration and verification
 
 ### Video Provider
 
 `video_provider/abstract_video_provider.py` — layered filtering/grouping pipeline:
 LAYER_SOURCE → LAYER_GROUPING → LAYER_CLASSIFIER → LAYER_GROUP → LAYER_SEARCH → LAYER_SORT
+
+Two implementations: `JsonDatabaseVideoProvider` (Python-based) and `SaurusProvider` (SQL-based).
+
+### API Layer (`interface/api/`)
+
+- **`FeatureAPI`** — base API class exposing 50+ features via proxy pattern. Proxies delegate to `db`, `db.ops`, `db.algos`, `db.provider`, or external tools (clipboard, file dialogs).
+- **`GuiAPI`** — extends `FeatureAPI` with Flask video server, thread management, and VLC integration.
+
+All GUI frontends call the same API, ensuring consistent behavior.
 
 ### Properties System
 
@@ -62,8 +97,6 @@ Multiple implementations in `interface/`:
 - `qtwebview/` — Qt WebView
 - `pyside6/` — PySide6
 
-Backend API shared across GUIs: `interface/api/` (feature_api.py, gui_api.py).
-
 ### Image Similarity Search
 
 `imgsimsearch/` — uses NumPy for feature extraction and cosine similarity. Annoy was removed because it requires system dependencies (Visual C++ on Windows).
@@ -71,7 +104,7 @@ Backend API shared across GUIs: `interface/api/` (feature_api.py, gui_api.py).
 ### External Editable Dependencies
 
 - `videre` (at `../videre`) — video extraction
-- `skullite` (at `../skullite`) — utility library
+- `skullite` (at `../skullite`) — SQLite wrapper library
 - `saurus/sql/` — SQL collection layer (local)
 
 ## Code Style
@@ -83,5 +116,8 @@ Backend API shared across GUIs: `interface/api/` (feature_api.py, gui_api.py).
 ## Testing
 
 - pytest with `asyncio_mode = "auto"`
-- Test fixtures provide three tiers: `mock_database` (fast in-memory), `mem_*` (temp directory copies), `fake_old_*` / `example_*` (on-disk)
+- Test fixtures provide three tiers:
+  - **Fast mock**: `mock_database` / `mock_database_readonly` — pure in-memory, no I/O
+  - **Writable copies**: `mem_old_database`, `mem_saurus_database`, `example_*_memory` — `shutil.copytree` to `tmp_path`
+  - **Read-only on-disk**: `fake_old_database`, `fake_saurus_database`, `example_json_database`, `example_saurus_database`
 - `pyfakefs` for filesystem mocking, `pytest-qt` for Qt tests, `pytest-xdist` for parallel runs
