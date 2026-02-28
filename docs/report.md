@@ -14,6 +14,8 @@ Lire les documents dans cet ordre :
 
 5. **[audit_state_effects.md](audit_state_effects.md)** — *Point 5* : pour chaque feature, analyse de l'état qui change en backend et de ce qui doit se mettre à jour dans l'UI. Identifie 6 problèmes de notification provider (P1-P6), 4 problèmes UI PySide6 (U1-U4), et 2 features manquantes (M1-M2).
 
+6. **[audit_blocking.md](audit_blocking.md)** — Caractère bloquant des opérations et protection contre les double-exécutions. Analyse chaque handler PySide6 pour déterminer s'il est correctement protégé contre les double-clics et les appels multiples. Identifie 7 problèmes (B1-B7) classés par priorité.
+
 ## Résumé des problèmes identifiés
 
 ### Problèmes backend (notifications manquantes)
@@ -35,6 +37,18 @@ Lire les documents dans cet ordre :
 | U2 | `mark_as_read` : notification provider manuelle (fragile) |
 | U3 | Suppression batch : pas de `to_save()` pour grouper les sauvegardes |
 | U4 | `apply_on_prop_value` non implémenté |
+
+### Problèmes de blocage / double-exécution
+
+| ID | Méthode | Risque | Description |
+|----|---------|--------|-------------|
+| B1 | `properties_page._on_create()` | Haut | Bouton persistant, double-clic crée deux propriétés |
+| B2 | `videos_page._toggle_watched()` | Haut (théorique) | Aucune protection, toggle double = retour état initial |
+| B3 | `PropertyValuesDialog` boutons internes | Moyen | Delete/modifiers sans désactivation après confirmation |
+| B4 | `VideoPropertiesDialog` bouton OK | Moyen | Double-clic rapide avant fermeture du dialog |
+| B5 | `databases_page._on_db_open()` | Moyen | Signal émis sans protection, double-clic naturel |
+| B6 | `properties_page._on_convert()` | Moyen (théorique) | Toggle double après confirmation |
+| B7 | `_on_confirm_unique_moves()` | Moyen | Bouton persistant sans désactivation |
 
 ### Features manquantes
 
