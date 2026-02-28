@@ -6,8 +6,8 @@ authors = [{ name = "notoraptor" }]
 requires-python = ">=3.13,<3.14"
 readme = "README.md"
 dependencies = [
-    "moviepy>=2.1.2",
-    "Pillow>=11.3.0",
+    "moviepy>=2.2.1",
+    "pillow>=11.3.0",
     "ujson>=5.10.0",
     "Flask>=3.1.0",
     "av>=15.0.0",
