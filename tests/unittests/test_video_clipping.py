@@ -58,26 +58,30 @@ class TestVideoClip:
         assert os.path.isfile(output)
 
     def test_normal_clip_produces_valid_video(self, video_in_tmp):
-        from moviepy.video.io.VideoFileClip import VideoFileClip
+        import av
 
         output = VideoClipping.video_clip(
             video_in_tmp, time_start=0, clip_seconds=5, unique_id="test"
         )
-        clip = VideoFileClip(output)
-        assert clip.duration == pytest.approx(5.0, abs=0.5)
-        clip.close()
+        container = av.open(output)
+        stream = container.streams.video[0]
+        duration = float(stream.duration * stream.time_base)
+        assert duration == pytest.approx(5.0, abs=0.5)
+        container.close()
 
     def test_time_end_clamped_to_duration(self, video_in_tmp):
+        import av
+
         # time_start=10, clip_seconds=10 => time_end=20 > 15, clamped to 15
         output = VideoClipping.video_clip(
             video_in_tmp, time_start=10, clip_seconds=10, unique_id="test"
         )
         assert os.path.isfile(output)
-        from moviepy.video.io.VideoFileClip import VideoFileClip
-
-        clip = VideoFileClip(output)
-        assert clip.duration == pytest.approx(5.0, abs=0.5)
-        clip.close()
+        container = av.open(output)
+        stream = container.streams.video[0]
+        duration = float(stream.duration * stream.time_base)
+        assert duration == pytest.approx(5.0, abs=0.5)
+        container.close()
 
     def test_time_start_beyond_duration_raises_zero_length(self, video_in_tmp):
         # time_start=20 > duration=15, both clamped to 15 => ZeroLengthError
