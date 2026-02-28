@@ -4,7 +4,7 @@ group_def:
   group_id: 0
   groups:
   - count: 90
-    value: 0
+    value: false
   is_property: false
   reverse: false
   sorting: field

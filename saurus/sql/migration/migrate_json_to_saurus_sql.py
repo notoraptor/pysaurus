@@ -12,6 +12,7 @@ from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.jsdb.jsdb_prop_type import PropType
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_manager import ThumbnailManager
+from saurus.sql.migration.db_comparison import format_prop_val
 from saurus.sql.migration.video_inliner import (
     get_all_fields,
     get_all_getters,
@@ -230,10 +231,6 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
             )
 
     print(f"[{db_name}] Finished, {FileSize(sql_path.get_size())}", file=sys.stderr)
-
-
-def format_prop_val(values, typ):
-    return ((int(v) if typ is bool else v) for v in values)
 
 
 if __name__ == "__main__":

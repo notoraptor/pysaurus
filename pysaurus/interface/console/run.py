@@ -6,6 +6,7 @@ import traceback
 from pathlib import Path
 
 import fire
+import yaml
 
 from pysaurus.core.perf_counter import PerfCounter
 from pysaurus.database.abstract_database import AbstractDatabase
@@ -13,28 +14,52 @@ from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.jsdb.json_database import JsonDatabase
 from saurus.sql.pysaurus_collection import PysaurusCollection
 
+CONFIG_FILE = ".pysaurus.yaml"
+
 
 def main():
+    defaults = _load_config()
     parser = argparse.ArgumentParser(description="Pysaurus CLI benchmark")
     parser.add_argument(
         "--backend",
         choices=["json", "sql"],
-        required=True,
+        default=defaults.get("backend"),
         help="Database backend (json or sql)",
     )
-    parser.add_argument("--db", required=True, help="Database name")
-    parser.add_argument("--home", default=None, help="Home directory (default: ~)")
+    parser.add_argument("--db", default=defaults.get("db"), help="Database name")
+    parser.add_argument(
+        "--home", default=defaults.get("home"), help="Home directory (default: ~)"
+    )
     args, remaining = parser.parse_known_args()
+
+    if not args.backend:
+        parser.error("--backend is required (or set cli.backend in .pysaurus.yaml)")
+    if not args.db:
+        parser.error("--db is required (or set cli.db in .pysaurus.yaml)")
 
     db = _open_database(args.db, args.backend, args.home)
     api = BenchmarkAPI(db)
 
     if remaining:
-        fire.Fire(api, command=remaining)
+        fire.Fire(api, command=_to_fire_command(remaining))
     else:
         _repl(api)
 
     print("Done.")
+
+
+def _load_config() -> dict:
+    config_path = Path(CONFIG_FILE)
+    if not config_path.is_file():
+        return {}
+    with open(config_path) as f:
+        data = yaml.safe_load(f)
+    if not isinstance(data, dict):
+        return {}
+    cli = data.get("cli")
+    if not isinstance(cli, dict):
+        return {}
+    return cli
 
 
 def _open_database(db_name: str, backend: str, home: str) -> AbstractDatabase:
@@ -57,10 +82,20 @@ def _open_database(db_name: str, backend: str, home: str) -> AbstractDatabase:
     return db
 
 
+def _to_fire_command(parts):
+    if parts and parts[0].lower() in ("help", "h"):
+        if len(parts) >= 2:
+            return [parts[1], "--", "--help"]
+        return ["--", "--help"]
+    return parts
+
+
 def _repl(api):
     print(
-        "\n[CONSOLE INTERFACE] "
-        '("exit", "e", "quit", "q" or Ctrl+C to exit, "help" or "h" for help)'
+        "\n[CONSOLE INTERFACE]\n"
+        "  exit, e, quit, q, Ctrl+C  Exit\n"
+        "  help, h                   List commands\n"
+        "  help <command>            Help for a command"
     )
 
     while True:
@@ -73,14 +108,8 @@ def _repl(api):
             lower = line.lower()
             if lower in ("exit", "e", "quit", "q"):
                 break
-            if lower == "help" or lower == "h":
-                fire.Fire(api, command=["--", "--help"])
-                continue
             parts = shlex.split(line)
-            if len(parts) >= 2 and parts[0].lower() in ("help", "h"):
-                fire.Fire(api, command=[parts[1], "--", "--help"])
-                continue
-            fire.Fire(api, command=parts)
+            fire.Fire(api, command=_to_fire_command(parts))
         except SystemExit:
             pass
         except KeyboardInterrupt:
@@ -100,10 +129,16 @@ def _repl(api):
 class BenchmarkAPI:
     """Pysaurus CLI benchmark commands."""
 
-    __slots__ = ("_db",)
+    __slots__ = ("_db", "_provider_ready")
 
     def __init__(self, db: AbstractDatabase):
         self._db = db
+        self._provider_ready = False
+
+    def _ensure_provider(self):
+        if not self._provider_ready:
+            self._db.provider.get_view_indices()
+            self._provider_ready = True
 
     def backend(self):
         """Show database backend class name."""
@@ -121,6 +156,19 @@ class BenchmarkAPI:
         for f in result:
             print(f" {f}")
         return f"{len(result)} folder(s)"
+
+    def update(self):
+        """Update database: scan folders for new/modified videos."""
+        self._db.algos.refresh()
+        return "Database updated."
+
+    def delete_entry(self, video_id: int):
+        """Delete a video entry from database (keeps file on disk)."""
+        self._ensure_provider()
+        with PerfCounter() as t:
+            self._db.video_entry_del(video_id)
+        print(f"({t.microseconds / 1000:.3f} ms)")
+        return f"Deleted entry for video_id {video_id}."
 
     def count(self, query=""):
         """Count videos matching query flags."""
@@ -187,7 +235,12 @@ class BenchmarkAPI:
             self._db.provider.set_search(text)
             indices = self._db.provider.get_view_indices()
         print(f"({t.microseconds / 1000:.3f} ms)")
-        return f"{len(indices)} result(s)"
+        output = [f"{len(indices)} result(s)"] + [
+            str(video_id) for video_id in indices[:10]
+        ]
+        if len(indices) > 10:
+            output.append("...")
+        return "\n".join(output)
 
     def sort(self, fields=""):
         """Sort videos by comma-separated fields."""

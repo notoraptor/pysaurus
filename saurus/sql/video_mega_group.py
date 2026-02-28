@@ -1,4 +1,4 @@
-from typing import Iterable, Sequence
+from typing import Callable, Iterable, Sequence
 
 from pysaurus.core.classes import Selector
 from pysaurus.core.datestring import Date
@@ -82,8 +82,10 @@ def video_mega_group(
         if not grouping.allow_singletons:
             without_singletons = "HAVING size > 1"
         order_direction = "DESC" if grouping.reverse else "ASC"
+        prop_value_converter = None
         if grouping.is_property:
             order_field = _get_property_order_field(grouping, order_direction)
+            prop_value_converter = _get_property_value_converter(sql_db, grouping.field)
             if classifier:
                 grouping_rows = _query_property_groups_with_classifier(
                     sql_db,
@@ -109,9 +111,9 @@ def video_mega_group(
             )
 
         output_groups.clear()
-        output_groups.extend(_convert_grouping_rows(grouping.field, grouping_rows))
-
-        output.group_id = min(max(0, output.group_id), len(output_groups) - 1)
+        output_groups.extend(
+            _convert_grouping_rows(grouping.field, grouping_rows, prop_value_converter)
+        )
 
         if not output_groups:
             # Make sure to find nothing
@@ -119,6 +121,7 @@ def video_mega_group(
             _compute_results_and_stats(sql_db, output, query_maker, include=include)
             return output
 
+        output.group_id = min(max(0, output.group_id), len(output_groups) - 1)
         group = output_groups[output.group_id]
         if grouping.is_property:
             (field_value,) = group.value
@@ -378,6 +381,12 @@ def _query_field_groups(
         where_similarity_id = (
             " AND v.similarity_id IS NOT NULL AND v.similarity_id != -1"
         )
+
+    if grouping.field == "move_id":
+        return _query_move_id_groups(
+            sql_db, source_query, source_params, order_direction, without_singletons
+        )
+
     return sql_db.query_all(
         f"SELECT {field}, COUNT(v.video_id) AS size "
         f"FROM video AS v "
@@ -389,50 +398,86 @@ def _query_field_groups(
     )
 
 
+def _query_move_id_groups(
+    sql_db: PysaurusConnection,
+    source_query: str,
+    source_params: list,
+    order_direction: str,
+    without_singletons: str,
+) -> list[Sequence]:
+    """Query move_id groups matching JSON behavior.
+
+    Videos with potential moves (same file_size/duration/time_base
+    with both found and not-found entries) get (file_size, length).
+    Videos without moves get NULL, forming one group.
+    """
+    length_expr = "(v.duration * 1.0 / COALESCE(NULLIF(v.duration_time_base, 0), 1))"
+    query = f"""
+    WITH move_candidates AS (
+        SELECT file_size, duration, duration_time_base_not_null
+        FROM video
+        WHERE unreadable = 0 AND discarded = 0
+        GROUP BY file_size, duration, duration_time_base_not_null
+        HAVING COUNT(*) > 1
+            AND SUM(is_file) > 0
+            AND SUM(is_file) < COUNT(*)
+    )
+    SELECT
+        IIF(mc.file_size IS NOT NULL, v.file_size, NULL) AS move_file_size,
+        IIF(mc.file_size IS NOT NULL, {length_expr}, NULL) AS move_length,
+        COUNT(v.video_id) AS size
+    FROM video AS v
+    LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
+    LEFT JOIN move_candidates AS mc
+        ON v.file_size = mc.file_size
+        AND v.duration = mc.duration
+        AND v.duration_time_base_not_null = mc.duration_time_base_not_null
+    WHERE v.discarded = 0 AND {source_query}
+    GROUP BY move_file_size, move_length {without_singletons}
+    ORDER BY move_file_size {order_direction}, move_length {order_direction}
+    """
+    return sql_db.query_all(query, source_params)
+
+
+_FIELD_CONVERTERS: dict[str, Callable] = {
+    "bit_rate": FileSize,
+    "size": FileSize,
+    "date": Date,
+    "date_entry_modified": Date,
+    "date_entry_opened": Date,
+    "length": lambda v: Duration(v * 1_000_000),
+    "year": int,
+    "watched": bool,
+}
+
+
 def _convert_grouping_rows(
-    grouping_field: str, grouping_rows: list[tuple]
+    grouping_field: str,
+    grouping_rows: list[tuple],
+    prop_value_converter: Callable | None = None,
 ) -> Iterable[GroupCount]:
-    # Convert raw SQL values to appropriate types (FileSize for bit_rate, Date for dates, etc.)
-    if grouping_field in ("bit_rate", "size"):
+    if grouping_field in ("size_length", "move_id"):
+        # Composite fields: (file_size, length) or None for videos without moves
         return (
             GroupCount(
-                tuple(FileSize(v) if v is not None else None for v in row[:-1]), row[-1]
-            )
-            for row in grouping_rows
-        )
-    elif grouping_field in ("date", "date_entry_modified", "date_entry_opened"):
-        return (
-            GroupCount(
-                tuple(Date(v) if v is not None else None for v in row[:-1]), row[-1]
-            )
-            for row in grouping_rows
-        )
-    elif grouping_field == "length":
-        # length is duration in seconds (not microseconds)
-        return (
-            GroupCount(
-                tuple(
-                    Duration(v * 1_000_000) if v is not None else None for v in row[:-1]
-                ),
-                row[-1],
-            )
-            for row in grouping_rows
-        )
-    elif grouping_field in ("size_length", "move_id"):
-        # Tuple fields: (file_size, length_microseconds)
-        return (
-            GroupCount(
-                tuple(
-                    (FileSize(row[0]), Duration(row[1] * 1_000_000))
-                    if row[0] is not None
-                    else None
-                ),
+                (FileSize(row[0]), Duration(row[1] * 1_000_000))
+                if row[0] is not None
+                else None,
                 row[2],
             )
             for row in grouping_rows
         )
-    else:
-        return (GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows)
+
+    converter = _FIELD_CONVERTERS.get(grouping_field, prop_value_converter)
+    if converter is not None:
+        return (
+            GroupCount(
+                tuple(converter(v) if v is not None else None for v in row[:-1]),
+                row[-1],
+            )
+            for row in grouping_rows
+        )
+    return (GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows)
 
 
 def _filter_by_selected_property_group(
@@ -500,9 +545,36 @@ def _filter_by_selected_property_group(
     return f"v.video_id IN ({query})", params
 
 
+def _filter_by_no_moves() -> tuple[str, list]:
+    """Filter for videos that have no potential moves."""
+    query = """
+    v.video_id NOT IN (
+        SELECT v2.video_id FROM video AS v2
+        JOIN (
+            SELECT file_size, duration, duration_time_base_not_null
+            FROM video
+            WHERE unreadable = 0 AND discarded = 0
+            GROUP BY file_size, duration, duration_time_base_not_null
+            HAVING COUNT(*) > 1
+                AND SUM(is_file) > 0
+                AND SUM(is_file) < COUNT(*)
+        ) AS mc
+        ON v2.file_size = mc.file_size
+        AND v2.duration = mc.duration
+        AND v2.duration_time_base_not_null = mc.duration_time_base_not_null
+        WHERE v2.unreadable = 0 AND v2.discarded = 0
+    )
+    """
+    return query, []
+
+
 def _filter_by_selected_field_group(
     group: GroupCount, grouping: GroupDef, field_factory: SqlFieldFactory
 ) -> tuple[str, list]:
+    if grouping.field == "move_id" and group.value is None:
+        # Videos without potential moves
+        return _filter_by_no_moves()
+
     # Extract raw values from FileSize/Date/Duration objects for SQL queries
     def extract_raw(v):
         if isinstance(v, (FileSize, Date)):
@@ -514,6 +586,17 @@ def _filter_by_selected_field_group(
 
     raw_values = tuple(extract_raw(v) for v in group.value)
     return convert_dict_to_sql(field_factory.get_conditions(grouping.field, raw_values))
+
+
+def _get_property_value_converter(
+    sql_db: PysaurusConnection, property_name: str
+) -> Callable:
+    """Return a converter function for property values from SQL (TEXT) to Python types."""
+    from pysaurus.properties.properties import PROP_UNIT_CONVERTER
+
+    row = sql_db.query_one("SELECT type FROM property WHERE name = ?", [property_name])
+    prop_type = row["type"] if row else "str"
+    return PROP_UNIT_CONVERTER[prop_type]
 
 
 def _get_property_metadata(

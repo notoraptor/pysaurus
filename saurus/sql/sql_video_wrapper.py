@@ -271,8 +271,8 @@ class SQLVideoWrapper(VideoPattern):
         return SemanticText(self.filename.standard_path)
 
     @property
-    def move_id(self) -> StringedTuple:
-        return StringedTuple((self.size, self.length))
+    def move_id(self) -> StringedTuple | None:
+        return StringedTuple((self.size, self.length)) if self._moves else None
 
     @errors.setter
     def errors(self, errors):

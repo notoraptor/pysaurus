@@ -146,8 +146,7 @@ class TestSortingDialog:
 
         result = dialog.get_sorting()
 
-        # get_sorting() returns lists, not tuples
-        expected = [["title", False], ["date", True]]
+        expected = [("title", False), ("date", True)]
         assert result == expected
 
 

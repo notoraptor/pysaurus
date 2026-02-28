@@ -70,10 +70,17 @@ def create_test_video(duration_seconds=1, output_path=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create a minimal test video.")
     parser.add_argument(
-        "duration", nargs="?", type=int, default=1, help="Duration in seconds (default: 1)"
+        "duration",
+        nargs="?",
+        type=int,
+        default=1,
+        help="Duration in seconds (default: 1)",
     )
     parser.add_argument(
-        "output", nargs="?", default=None, help="Output file path (default: auto-generated)"
+        "output",
+        nargs="?",
+        default=None,
+        help="Output file path (default: auto-generated)",
     )
     args = parser.parse_args()
     create_test_video(args.duration, args.output)

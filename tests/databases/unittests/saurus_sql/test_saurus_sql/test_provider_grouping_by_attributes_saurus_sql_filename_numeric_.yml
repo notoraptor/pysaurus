@@ -1,7 +1,7 @@
 group_def:
   allow_singletons: false
   field: filename_numeric
-  group_id: -1
+  group_id: 0
   groups: []
   is_property: false
   reverse: false

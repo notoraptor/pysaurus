@@ -107,15 +107,11 @@ class TestVideoClip:
         from pysaurus.core.modules import FNV64
 
         expected_id = FNV64.hash(os.path.abspath(video_in_tmp))
-        output = VideoClipping.video_clip(
-            video_in_tmp, time_start=0, clip_seconds=3
-        )
+        output = VideoClipping.video_clip(video_in_tmp, time_start=0, clip_seconds=3)
         assert output == f"{expected_id}_0_3.mp4"
 
     def test_default_clip_seconds(self, video_in_tmp):
-        output = VideoClipping.video_clip(
-            video_in_tmp, time_start=0, unique_id="test"
-        )
+        output = VideoClipping.video_clip(video_in_tmp, time_start=0, unique_id="test")
         # Default clip_seconds=10, video is 15s, so clip should be ~10s
         assert output == "test_0_10.mp4"
         assert os.path.isfile(output)

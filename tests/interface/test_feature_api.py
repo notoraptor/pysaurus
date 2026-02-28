@@ -224,7 +224,7 @@ class TestFeatureAPIDatabase:
         assert initial_count
 
         # Get a video to delete
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         video_id = video.video_id
 
         # Make sure provider is updated
@@ -253,7 +253,7 @@ class TestFeatureAPIDatabase:
         api.__run_feature__("create_prop_type", "test_tags", "str", "", True)
 
         # Get a video
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         video_id = video.video_id
 
         # Set properties
@@ -279,11 +279,11 @@ class TestFeatureAPIDatabase:
         api.__run_feature__("create_prop_type", "to_prop", "str", "", True)
 
         # Get a video and add values to from_prop
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         video_id = video.video_id
         db.videos_tag_set("from_prop", {video_id: ["value1", "value2"]})
 
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         assert {
             k: v for k, v in video.properties.items() if k in ("from_prop", "to_prop")
         } == {"from_prop": ["value1", "value2"]}
@@ -291,7 +291,7 @@ class TestFeatureAPIDatabase:
         # Move values
         api.__run_feature__("move_property_values", ["value1"], "from_prop", "to_prop")
 
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         assert {
             k: v for k, v in video.properties.items() if k in ("from_prop", "to_prop")
         } == {"from_prop": ["value2"], "to_prop": ["value1"]}
@@ -309,17 +309,17 @@ class TestFeatureAPIDatabase:
         api.__run_feature__("create_prop_type", "test_delete", "str", "", True)
 
         # Add values
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         video_id = video.video_id
         db.videos_tag_set("test_delete", {video_id: ["delete_me", "keep_me"]})
 
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         assert video.properties["test_delete"] == ["delete_me", "keep_me"]
 
         # Delete specific value (returns None, not a list)
         api.__run_feature__("delete_property_values", "test_delete", ["delete_me"])
 
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         assert video.properties["test_delete"] == ["keep_me"]
 
         # Cleanup
@@ -334,11 +334,11 @@ class TestFeatureAPIDatabase:
         api.__run_feature__("create_prop_type", "test_replace", "str", "", True)
 
         # Add values
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         video_id = video.video_id
         db.videos_tag_set("test_replace", {video_id: ["old_value"]})
 
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         assert video.properties["test_replace"] == ["old_value"]
 
         # Replace
@@ -346,7 +346,7 @@ class TestFeatureAPIDatabase:
             "replace_property_values", "test_replace", ["old_value"], "new_value"
         )
 
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         assert video.properties["test_replace"] == ["new_value"]
 
         # Cleanup
@@ -378,7 +378,7 @@ class TestFeatureAPIDatabase:
         api.__run_feature__("create_prop_type", "test_modify", "str", "", True)
 
         # Add values
-        video = db.get_videos(include=["video_id"])[0]
+        video = db.get_videos(include=["video_id", "properties"])[0]
         video_id = video.video_id
         db.videos_tag_set("test_modify", {video_id: ["UPPERCASE"]})
 

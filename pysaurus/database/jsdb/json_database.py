@@ -613,8 +613,14 @@ class JsonDatabase(AbstractDatabase):
             }
         else:
             assert all(isinstance(video_id, int) for video_id in updates.keys())
+        modified = False
         for video_id, prop_values in updates.items():
-            self._jsondb_update_prop_values(video_id, name, prop_values, action=action)
+            if self._jsondb_update_prop_values(
+                video_id, name, prop_values, action=action
+            ):
+                modified = True
+        if modified:
+            self._notify_fields_modified([name], is_property=True)
 
     def video_entry_set_tags(
         self, video_id: int, properties: dict, merge=False

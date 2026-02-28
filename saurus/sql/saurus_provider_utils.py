@@ -69,6 +69,8 @@ class GroupCount:
     __repr__ = __str__
 
     def get_value(self):
+        if self.value is None:
+            return None
         return self.value[0] if len(self.value) == 1 else self.value
 
     def get_printable_value(self):
