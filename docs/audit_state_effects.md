@@ -183,13 +183,29 @@ Pour chaque feature, ce document identifie :
 
 ## 5. Opérations Provider (filtrage/tri/groupement)
 
-### `set_sources`, `set_groups`, `set_search`, `set_sort`, `set_group`
+### `set_sources`, `set_search`, `set_sort`
 | Aspect | Détail |
 |--------|--------|
-| **État** | PROV:sources / PROV:grouping / PROV:search / PROV:sort / PROV:group |
-| **Ce qui change** | Le filtre/tri/groupement actif |
+| **État** | PROV:sources / PROV:search / PROV:sort |
+| **Ce qui change** | Le filtre/tri actif |
 | **UI requise** | Recalculer et réafficher la liste de vidéos, mettre à jour les indicateurs de filtre dans la sidebar |
-| **PySide6** | Appel via façade AppContext (`ctx.set_sources()`, `ctx.set_groups()`, `ctx.set_search()`, `ctx.set_sorting()`, `ctx.set_group()`) puis `refresh()`. OK. |
+| **PySide6** | Appel via façade AppContext (`ctx.set_sources()`, `ctx.set_search()`, `ctx.set_sorting()`) puis `refresh()`. OK. |
+
+### `set_groups`
+| Aspect | Détail |
+|--------|--------|
+| **État** | PROV:grouping (+ réinitialise PROV:classifier, PROV:group, PROV:search, PROV:sort) |
+| **Ce qui change** | Le groupement actif ; les layers en aval (classifieur, groupe sélectionné, recherche, tri) sont réinitialisés |
+| **UI requise** | Afficher la barre de groupes avec la liste des groupes et leurs compteurs, sélectionner le premier groupe par défaut, recalculer et réafficher la liste de vidéos du groupe sélectionné, mettre à jour les indicateurs de filtre dans la sidebar |
+| **PySide6** | `ctx.set_groups(...)` puis `refresh()`. OK. |
+
+### `set_group`
+| Aspect | Détail |
+|--------|--------|
+| **État** | PROV:group |
+| **Ce qui change** | Le groupe sélectionné dans le groupement actif |
+| **UI requise** | Mettre à jour la sélection dans la barre de groupes, recalculer et réafficher la liste de vidéos du nouveau groupe sélectionné |
+| **PySide6** | `ctx.set_group(...)` puis `refresh()`. OK. |
 
 ### `classifier_select_group`, `classifier_back`, `classifier_reverse`, `classifier_focus_prop_val`
 | Aspect | Détail |

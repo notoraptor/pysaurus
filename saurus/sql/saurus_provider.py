@@ -72,11 +72,11 @@ class SaurusProvider(AbstractVideoProvider):
             page_number=page_number,
             with_moves=grouped_by_moves,
         )
-        output.classifier_stats = self.get_classifier_stats()
-        output.source_count = self.count_source_videos()
         self.group = output.group_id
         self._groups = output.result_groups
         self._view_indices = [video.video_id for video in output.result]
+        output.classifier_stats = self.get_classifier_stats()
+        output.source_count = self.count_source_videos()
         return output
 
     def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
