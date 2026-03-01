@@ -58,18 +58,23 @@ Cas multi-émissions résolus par 4 nouvelles méthodes dédiées dans AppContex
 | main_window.py | 6 | Auto-refresh `_on_state_changed` (3) + navigation de page (3) |
 | **Total** | **13** | Tous nécessaires (UI pur ou infrastructure auto-refresh) |
 
-### Étape 3 : Correction des problèmes P1-P6 (à faire)
+### Étape 3 : Correction des problèmes de notification provider ✅
 
-Corriger les notifications manquantes dans le backend (identifiées dans `audit_state_effects.md`). Grâce au système automatique, ces corrections se refléteront instantanément dans l'UI sans toucher au code PySide6.
+Notifications manquantes dans le backend corrigées (identifiées dans `audit_state_effects.md`). Grâce au système automatique, ces corrections se reflètent instantanément dans l'UI sans toucher au code PySide6.
 
-| ID | Correction |
-|----|-----------|
-| P1 | Ajouter `_notify_fields_modified(["watched", "date_entry_opened"])` dans `mark_as_watched` |
-| P2 | Ajouter `provider.delete(video_id)` dans `video_entry_del` |
-| P3 | Ajouter `_notify_fields_modified(props)` dans `video_entry_set_tags` |
-| P4 | Ajouter `_notify_fields_modified([name])` dans `delete_property_values` |
-| P5 | Réinitialiser le groupement si groupé par la propriété supprimée dans `prop_type_del` |
-| P6 | Ajouter notification dans `video_entry_set_filename` |
+| ID | Correction | Statut |
+|----|-----------|--------|
+| P1 | `_notify_fields_modified(["watched", "date_entry_opened"])` dans `mark_as_watched` ; `_notify_fields_modified(["watched"])` dans `mark_as_read` | **Corrigé** |
+| P2 | `video_entry_del` appelle déjà `provider.delete()` + `_notify_fields_modified(["move_id"])` | Non-problème |
+| P3 | `_notify_fields_modified(properties.keys(), is_property=True)` dans `video_entry_set_tags` (SQL) | **Corrigé** |
+| P4 | `_notify_fields_modified([name], is_property=True)` dans `delete_property_values` | **Corrigé** |
+| P5 | `_notify_fields_modified([name], is_property=True)` dans `prop_type_del` (JSON + SQL) | **Corrigé** |
+| P6 | `video_entry_set_filename` appelle déjà `_notify_fields_modified` | Non-problème |
+
+Corrections UI complémentaires :
+- **U1** : `state_changed.emit()` ajouté après `open_video` et `open_from_server` dans `app_context.py`
+- **U2** : appel redondant à `manage_attributes_modified` retiré de `toggle_watched`
+- **U3** : `delete_video_entries` enveloppé dans `to_save()` pour regrouper N sauvegardes en une seule
 
 ## Bénéfices attendus
 
