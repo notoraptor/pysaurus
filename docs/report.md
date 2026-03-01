@@ -16,6 +16,8 @@ Lire les documents dans cet ordre :
 
 6. **[audit_blocking.md](audit_blocking.md)** — Caractère bloquant des opérations et protection contre les double-exécutions. Analyse chaque handler PySide6 pour déterminer s'il est correctement protégé contre les double-clics et les appels multiples. Identifie 7 problèmes (B1-B7) classés par priorité.
 
+7. **[plan_auto_refresh.md](plan_auto_refresh.md)** — Plan pour remplacer les 39 refresh() manuels (sur 44) par un système automatique basé sur un signal `state_changed` dans AppContext. Trois étapes : signal automatique, suppression des refresh manuels, correction des notifications backend P1-P6.
+
 ## Résumé des problèmes identifiés
 
 ### Problèmes backend (notifications manquantes)
