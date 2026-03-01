@@ -562,11 +562,18 @@ class MockOps:
         """Set similarity IDs from list."""
         pass
 
-    def apply_on_prop_value(
-        self, prop_name: str, prop_value: Any, fn_name: str, *fn_args
-    ) -> None:
-        """Apply function on property value."""
-        pass
+    def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
+        """Apply a modifier function to property values."""
+        from pysaurus.database.property_value_modifier import PropertyValueModifier
+
+        function = getattr(PropertyValueModifier(), mod_name)
+        for v in self._db._videos:
+            props = v.get("properties", {})
+            if prop_name in props:
+                old_values = props[prop_name]
+                new_values = [function(value) for value in old_values]
+                if old_values and new_values != old_values:
+                    props[prop_name] = new_values
 
     def move_video_entry(self, video_id: int, new_path: str) -> bool:
         """Move video entry to new path."""
@@ -756,6 +763,33 @@ class MockDatabase:
             video["filename"] = str(new_path)
             return old_path
         return None
+
+    def delete_property_values(self, name: str, values: list) -> None:
+        """Delete property values across all videos."""
+        values_set = set(values)
+        for v in self._videos:
+            props = v.get("properties", {})
+            if name in props:
+                props[name] = [val for val in props[name] if val not in values_set]
+                if not props[name]:
+                    del props[name]
+
+    def replace_property_values(
+        self, name: str, old_values: list, new_value: object
+    ) -> bool:
+        """Replace property values across all videos."""
+        old_set = set(old_values)
+        modified = False
+        for v in self._videos:
+            props = v.get("properties", {})
+            if name in props:
+                current = set(props[name])
+                removed = current & old_set
+                if removed:
+                    next_values = (current - old_set) | {new_value}
+                    props[name] = sorted(next_values)
+                    modified = True
+        return modified
 
     def refresh(self) -> None:
         """Refresh database (no-op for mock)."""

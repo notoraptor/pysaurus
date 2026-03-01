@@ -309,11 +309,11 @@ Pour chaque feature, ce document identifie :
 | U1 | `open_video` / `open_from_server` | Pas de `state_changed` après ouverture → indicateur "watched" non mis à jour | **Corrigé** — `state_changed.emit()` ajouté dans `app_context.py` |
 | U2 | `mark_as_read` / `toggle_watched` | Appel redondant à `manage_attributes_modified` dans `toggle_watched` | **Corrigé** — notification déplacée dans `mark_as_read` (Ops), appel redondant retiré de `app_context.py` |
 | U3 | `delete_video_entries` (batch) | Appelle `video_entry_del` dans une boucle sans `to_save()` → N sauvegardes | **Corrigé** — `to_save()` ajouté dans `app_context.py` |
-| U4 | `apply_on_prop_value` | Feature non implémentée dans PySide6 | Ouvert (basse priorité) |
+| U4 | `apply_on_prop_value` | Feature supposée manquante dans PySide6 | Non-problème — déjà implémenté dans `PropertyValuesDialog` via boutons modifiers (capitalize, lowercase, etc.) |
 
 ### Features manquantes
 
 | # | Feature | Impact | Note |
 |---|---------|--------|------|
-| M1 | `apply_on_prop_value` | Pas de normalisation de valeurs (strip, lower...) depuis PySide6 | Ouvert (basse priorité) |
+| M1 | `apply_on_prop_value` | Supposé manquant dans PySide6 | Non-problème — accessible via `PropertyValuesDialog` → boutons modifiers |
 | M2 | `set_language` / `get_language_names` | Pas d'i18n dans PySide6 (tout en anglais) | Ignoré — le système des langages doit être entièrement repensé |
