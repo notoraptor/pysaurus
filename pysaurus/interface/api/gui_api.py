@@ -81,6 +81,7 @@ class GuiAPI(FeatureAPI):
         return url
 
     def cancel_copy(self) -> None:
+        # TODO Rethink Move/Copy feature
         if self.copy_work is not None and not self.copy_work.terminated:
             self.copy_work.cancel = True
         else:

@@ -238,9 +238,7 @@ class PropertyValuesDialog(QDialog):
                 return
 
         try:
-            self.ctx.replace_property_values(
-                self.prop_name, [old_value], new_value
-            )
+            self.ctx.replace_property_values(self.prop_name, [old_value], new_value)
             self._modified = True
             self._load_values()
         except Exception as e:

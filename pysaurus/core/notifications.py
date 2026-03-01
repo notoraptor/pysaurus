@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Self, Sequence
 
 from pysaurus.core.classes import StringPrinter, ToDict
 from pysaurus.core.functions import camel_case_to_snake_case
@@ -48,7 +48,7 @@ class MissingThumbnails(Notification):
 class VideoInfoErrors(Notification):
     __slots__ = ("video_errors",)
 
-    def __init__(self, video_errors: dict[str, list[str]]):
+    def __init__(self, video_errors: dict[str, Sequence[str]]):
         super().__init__()
         self.video_errors = {
             str(file_name): sorted(errors) for file_name, errors in video_errors.items()

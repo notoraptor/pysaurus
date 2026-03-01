@@ -10,6 +10,7 @@ from typing import Any, Callable
 import socket
 from contextlib import closing
 
+
 def get_random_unused_port():
     # **NB**: Currently unused
 
@@ -19,7 +20,7 @@ def get_random_unused_port():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         # Bind to an empty host and port 0
         # The OS will pick a random, available port (ephemeral port)
-        s.bind(('', 0))
+        s.bind(("", 0))
         # Get the port number assigned by the OS
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         port = s.getsockname()[1]

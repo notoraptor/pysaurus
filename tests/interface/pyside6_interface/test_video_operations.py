@@ -61,9 +61,7 @@ class TestVideoPropertyModification:
 
         # Count genre values for all videos
         selector = {"mode": "exclude", "selection": []}  # Select all
-        result = mock_context.apply_on_view(
-            selector, "count_property_values", "genre"
-        )
+        result = mock_context.apply_on_view(selector, "count_property_values", "genre")
 
         # Convert to dict for easier checking
         counts = {val: count for val, count in result}
@@ -82,9 +80,7 @@ class TestVideoPropertyModification:
 
         # Count only videos 1 and 2
         selector = {"mode": "include", "selection": [1, 2]}
-        result = mock_context.apply_on_view(
-            selector, "count_property_values", "genre"
-        )
+        result = mock_context.apply_on_view(selector, "count_property_values", "genre")
 
         counts = {val: count for val, count in result}
 

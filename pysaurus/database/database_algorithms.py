@@ -44,10 +44,6 @@ class DatabaseAlgorithms:
 
         self.db: AbstractDatabase = db
 
-    @property
-    def notifier(self):
-        return self.db.notifier
-
     def refresh(self) -> None:
         """Update database and refresh provider."""
         self.update()

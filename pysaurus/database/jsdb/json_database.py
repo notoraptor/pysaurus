@@ -74,7 +74,7 @@ class JsonDatabase(AbstractDatabase):
         to_build = not thumb_sql_path.exists()
         self._thumb_mgr = ThumbnailManager(thumb_sql_path)
         if to_build:
-            with Profiler("Build thumbnail SQL database", self.notifier):
+            with self._profiler("Build thumbnail SQL database"):
                 self._thumb_mgr.build(
                     self.get_videos(
                         include=["filename", "thumbnail_path"], where={"readable": True}
@@ -87,7 +87,7 @@ class JsonDatabase(AbstractDatabase):
     def _jsondb_load(self, folders: Iterable[PathType] | None = None):
         to_save = False
 
-        with Profiler("loading JSON file", self.notifier):
+        with self._profiler("loading JSON file"):
             # Loading JSON file
             backup = JsonBackup(self.ways.db_json_path, self.notifier)
             json_dict = backup.load()
@@ -98,7 +98,7 @@ class JsonDatabase(AbstractDatabase):
         version = json_dict.get("version", -1)
         assert version <= self._version
         if version < self._version:
-            with Profiler("patch", self.notifier):
+            with self._profiler("patch"):
                 patch_database_json(json_dict, version)
             to_save = True
 
@@ -122,7 +122,7 @@ class JsonDatabase(AbstractDatabase):
             self._prop_types[prop_type.name] = prop_type
 
         # Parsing videos.
-        with Profiler("parsing videos", self.notifier):
+        with self._profiler("parsing videos"):
             folders_tree = PathTree(self._folders)
             self._videos = {
                 video_state.filename: video_state
@@ -325,7 +325,7 @@ class JsonDatabase(AbstractDatabase):
                 }
             terms = functions.string_to_pieces(text)
             if cond == "exact":
-                with Profiler(f"query exact: {text}", self.notifier):
+                with self._profiler(f"query exact: {text}"):
                     selection = (
                         filename
                         for filename in self._indexer.query_and(filenames, terms)
@@ -636,3 +636,6 @@ class JsonDatabase(AbstractDatabase):
             )
         ]
         self._notify_fields_modified(modified, is_property=True)
+
+    def _profiler(self, title: str) -> Profiler:
+        return Profiler(title, self.notifier)
