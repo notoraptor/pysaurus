@@ -162,15 +162,14 @@ class DatabaseAlgorithms:
         miniatures_path = self.db.ways.db_miniatures_path
         prev_miniatures = Miniatures.read_miniatures_file(miniatures_path)
 
-        # Import operations for has_video
-        from pysaurus.database.database_operations import DatabaseOperations
-
-        ops = DatabaseOperations(self.db)
+        existing_filenames = {
+            row.filename for row in self.db.get_videos(include=["filename"])
+        }
 
         valid_miniatures = {
             filename: miniature
             for filename, miniature in prev_miniatures.items()
-            if ops.has_video(filename=filename)
+            if filename in existing_filenames
             and ImageUtils.THUMBNAIL_SIZE == (miniature.width, miniature.height)
         }
 

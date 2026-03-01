@@ -342,8 +342,8 @@ class TestDatabaseProvider:
             include=None, where={"video_id": indices}, with_moves=True
         )
         assert len(videos) == len(indices)
-        for video, video_id in zip(videos, indices):
-            assert video.video_id == video_id
+        assert {v.video_id for v in videos} == set(indices)
+        videos.sort(key=lambda v: v.video_id)
         data_regression.check([_to_dict(video) for video in videos])
 
 

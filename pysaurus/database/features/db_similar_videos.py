@@ -16,6 +16,7 @@ from pysaurus.imgsimsearch.approximate_comparator_numpy import (
     ApproximateComparatorNumpy,
 )
 from pysaurus.imgsimsearch.python_fine_comparator import compare_miniatures
+from pysaurus.video.video_pattern import VideoPattern
 
 SIM_LIMIT = float(Fraction(88, 100))
 
@@ -45,7 +46,7 @@ class DbImageProvider(AbstractImageProvider):
     __slots__ = ("videos",)
 
     def __init__(self, db: AbstractDatabase):
-        self.videos = {
+        self.videos: dict[str, VideoPattern] = {
             video.filename.path: video
             for video in db.get_videos(
                 include=[
@@ -64,7 +65,7 @@ class DbImageProvider(AbstractImageProvider):
     def count(self) -> int:
         return len(self.videos)
 
-    def items(self) -> Iterable[tuple[Any, Image]]:
+    def items(self) -> Iterable[tuple[str, Image]]:
         for filename, video in self.videos.items():
             yield filename, ImageUtils.from_blob(video.thumbnail)
 
@@ -72,11 +73,11 @@ class DbImageProvider(AbstractImageProvider):
         video = self.videos[filename]
         return video.duration / video.duration_time_base
 
-    def video_id(self, filename) -> int:
-        return self.videos[filename].video_id
-
     def similarity(self, filename) -> int | None:
         return self.videos[filename].similarity_id
+
+    def video_id(self, filename) -> int:
+        return self.videos[filename].video_id
 
     def to_sortable_group(self, group: set[str]) -> tuple:
         return (
@@ -91,36 +92,27 @@ class DbSimilarVideos:
     @Profiler.profile()
     def find_similar_videos(cls, db: AbstractDatabase) -> None:
         miniatures: list[Miniature] = db.algos.ensure_miniatures()
-        video_indices = [m.video_id for m in miniatures]
-        previous_sim = [
-            row.similarity_id
-            for row in db.get_videos(
-                include=["similarity_id"], where={"video_id": video_indices}
-            )
-        ]
+        similarities, imp = cls._compute_similar_videos(
+            db, miniatures, ApproximateComparatorNumpy
+        )
+        previous_sim = {
+            video.video_id: video.similarity_id for video in imp.videos.values()
+        }
         with db.to_save():
-            # db.set_similarities({video_id: None for video_id in video_indices})
             try:
-                cls._find_similar_videos(db, miniatures)
+                cls._apply_similarities(db, miniatures, similarities, imp)
             except Exception:
-                # Restore previous similarities.
-                db.ops.set_similarities(
-                    {
-                        video_id: prev_sim_id
-                        for video_id, prev_sim_id in zip(video_indices, previous_sim)
-                    }
-                )
+                db.ops.set_similarities(previous_sim)
                 raise
 
     @classmethod
-    def _find_similar_videos(
-        cls, db: AbstractDatabase, miniatures: list[Miniature] = None
+    def _apply_similarities(
+        cls,
+        db: AbstractDatabase,
+        miniatures: list[Miniature],
+        similarities: list[set[str]],
+        imp: DbImageProvider,
     ):
-        similarities = cls._compute_similar_videos(
-            db, miniatures, ApproximateComparatorNumpy
-        )
-
-        imp = DbImageProvider(db)
         video_indices = [m.video_id for m in miniatures]
         db.ops.set_similarities({video_id: -1 for video_id in video_indices})
 
@@ -140,7 +132,7 @@ class DbSimilarVideos:
         miniatures: list[Miniature],
         comparator_class: type[AbstractApproximateComparator],
         compare_all: bool = False,
-    ) -> list[set[str]]:
+    ) -> tuple[list[set[str]], DbImageProvider]:
         """Compute similarity groups (read-only, does not write to db).
 
         Args:
@@ -152,20 +144,21 @@ class DbSimilarVideos:
                 merge with existing similarity groups.
 
         Returns:
-            List of sets of filenames, each set being a similarity group.
+            Tuple of (similarity groups, image provider).
         """
-        imp = DbImageProvider(db)
+        with Profiler("Loading thumbnails from database.", db.notifier):
+            imp = DbImageProvider(db)
         comparator_imp = _CompareAllProvider(imp) if compare_all else imp
         ac = comparator_class(comparator_imp)
         combined = ac.get_comparable_images_cos()
         new_similarities = compare_miniatures(miniatures, combined, SIM_LIMIT)
 
         if compare_all:
-            return new_similarities
+            return new_similarities, imp
 
         # Merge with old similarities
         old_similarities = {}
-        for filename, _ in imp.items():
+        for filename in imp.videos:
             similarity_id = imp.similarity(filename)
             if similarity_id not in (None, -1):
                 old_similarities.setdefault(similarity_id, []).append(filename)
@@ -179,4 +172,4 @@ class DbSimilarVideos:
             f, *fs = group
             for other in fs:
                 graph.connect(f, other)
-        return [group for group in graph.pop_groups() if len(group) > 1]
+        return [group for group in graph.pop_groups() if len(group) > 1], imp

@@ -8,9 +8,11 @@ from pathlib import Path
 import fire
 import yaml
 
+from pysaurus.core.informer import Information
 from pysaurus.core.perf_counter import PerfCounter
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_utils import DatabaseLoaded
+from pysaurus.database.features.db_similar_videos import DbSimilarVideos
 from pysaurus.database.jsdb.json_database import JsonDatabase
 from saurus.sql.pysaurus_collection import PysaurusCollection
 
@@ -40,10 +42,11 @@ def main():
     db = _open_database(args.db, args.backend, args.home)
     api = BenchmarkAPI(db)
 
-    if remaining:
-        fire.Fire(api, command=_to_fire_command(remaining))
-    else:
-        _repl(api)
+    with Information():
+        if remaining:
+            fire.Fire(api, command=_to_fire_command(remaining))
+        else:
+            _repl(api)
 
     print("Done.")
 
@@ -307,6 +310,13 @@ class BenchmarkAPI:
             result = DatabaseLoaded(self._db)
         print(f"({t.microseconds / 1000:.3f} ms)")
         return str(result)
+
+    def similar(self):
+        """Find similar videos using image similarity search."""
+        with PerfCounter() as t:
+            DbSimilarVideos.find_similar_videos(self._db)
+        print(f"({t.microseconds / 1000:.3f} ms)")
+        return "Similar videos computed."
 
     def repeat(self, command: str = "", n: int = 1):
         """Repeat a command N times and report timing."""

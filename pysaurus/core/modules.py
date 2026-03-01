@@ -147,7 +147,7 @@ class ImageUtils:
         return image
 
     @staticmethod
-    def from_blob(binary_data) -> Image:
+    def from_blob(binary_data) -> Image.Image:
         blob = BytesIO(binary_data)
         return ImageUtils.open_rgb_image(blob)
 
