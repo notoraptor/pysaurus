@@ -424,7 +424,7 @@ class JsonDatabase(AbstractDatabase):
             del self._prop_types[name]
             for video in self._videos.values():
                 video.remove_property(name)
-            self.save()
+            self._notify_fields_modified([name], is_property=True)
 
     def prop_type_set_name(self, old_name, new_name) -> None:
         if self.get_prop_types(name=old_name):

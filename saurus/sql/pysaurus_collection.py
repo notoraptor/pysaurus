@@ -260,6 +260,7 @@ class PysaurusCollection(AbstractDatabase):
                     "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
                     new_texts,
                 )
+        self._notify_fields_modified(list(properties.keys()), is_property=True)
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
@@ -325,6 +326,7 @@ class PysaurusCollection(AbstractDatabase):
             self.db.modify_many(
                 "UPDATE video_text SET properties = ? WHERE video_id = ?", updates
             )
+        self._notify_fields_modified([name], is_property=True)
 
     def prop_type_set_name(self, old_name, new_name):
         if self.get_prop_types(name=old_name):

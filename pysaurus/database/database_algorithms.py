@@ -44,6 +44,10 @@ class DatabaseAlgorithms:
 
         self.db: AbstractDatabase = db
 
+    @property
+    def notifier(self):
+        return self.db.notifier
+
     def refresh(self) -> None:
         """Update database and refresh provider."""
         self.update()
@@ -328,6 +332,7 @@ class DatabaseAlgorithms:
     def delete_property_values(self, name: str, values: list) -> None:
         """Delete property values across all videos."""
         self.db.videos_tag_set(name, {None: values}, action=self.db.action.REMOVE)
+        self.db._notify_fields_modified([name], is_property=True)
 
     def replace_property_values(
         self, name: str, old_values: list, new_value: object

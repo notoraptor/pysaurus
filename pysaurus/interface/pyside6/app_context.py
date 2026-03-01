@@ -467,13 +467,9 @@ class AppContext(QObject):
             self.state_changed.emit()
 
     def toggle_watched(self, video_id) -> None:
-        """Toggle watched status and notify the provider."""
+        """Toggle watched status."""
         if self._ops:
             self._ops.mark_as_read(video_id)
-            if self._provider:
-                self._provider.manage_attributes_modified(
-                    ["watched"], is_property=False
-                )
             self.state_changed.emit()
 
     def trash_video(self, video_id) -> None:

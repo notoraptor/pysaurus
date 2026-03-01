@@ -293,21 +293,21 @@ Pour chaque feature, ce document identifie :
 
 ### Problèmes de notification provider
 
-| # | Feature | Problème | Sévérité | Correction suggérée |
-|---|---------|----------|----------|---------------------|
-| P1 | `open_video` / `open_from_server` | `mark_as_watched` ne notifie pas le provider. Si groupé par `watched`, pas de mise à jour auto. | Moyenne | Ajouter `_notify_fields_modified(["watched", "date_entry_opened"])` dans `mark_as_watched` |
-| P2 | `video_entry_del` | Ne notifie pas le provider. | Basse (compensé par `refresh()` dans PySide6) | Ajouter `provider.delete(video_id)` + `save()` |
-| P3 | `video_entry_set_tags` | Ne notifie pas le provider si les propriétés modifiées affectent le groupement. | Moyenne | Ajouter `_notify_fields_modified(list(properties.keys()), is_property=True)` |
-| P4 | `delete_property_values` | `videos_tag_set(action=REMOVE)` sans notification provider. | Moyenne | Ajouter `_notify_fields_modified([name], is_property=True)` dans `delete_property_values` |
-| P5 | `prop_type_del` | Si on est groupé par la propriété supprimée, état incohérent. | Haute | Réinitialiser le groupement si `grouping.field == name` |
-| P6 | `change_video_file_title` | `video_entry_set_filename` ne notifie pas le provider pour le changement de `filename`. | Basse (compensé par `refresh()`) | Ajouter notification si besoin |
+| # | Feature | Problème | Statut |
+|---|---------|----------|--------|
+| P1 | `mark_as_watched` / `mark_as_read` | Ne notifiaient pas le provider | **Corrigé** — `_notify_fields_modified` ajouté dans `database_operations.py` |
+| P2 | `video_entry_del` | Les deux implémentations appellent déjà `provider.delete()` + `_notify_fields_modified(["move_id"])` | Non-problème |
+| P3 | `video_entry_set_tags` (SQL) | Ne notifiait pas le provider | **Corrigé** — `_notify_fields_modified` ajouté dans `pysaurus_collection.py` |
+| P4 | `delete_property_values` | `videos_tag_set(action=REMOVE)` sans notification provider | **Corrigé** — `_notify_fields_modified` ajouté dans `database_algorithms.py` |
+| P5 | `prop_type_del` | Si groupé par la propriété supprimée, état incohérent | **Corrigé** — `_notify_fields_modified` ajouté dans `json_database.py` et `pysaurus_collection.py` |
+| P6 | `change_video_file_title` | Les deux implémentations de `video_entry_set_filename` appellent déjà `_notify_fields_modified` | Non-problème |
 
 ### Problèmes UI PySide6
 
 | # | Feature | Problème | Sévérité | Correction suggérée |
 |---|---------|----------|----------|---------------------|
 | U1 | `open_from_server` (VLC) | Pas de `refresh()` après ouverture VLC → indicateur "watched" non mis à jour | Moyenne | Ajouter `self.refresh()` ou notifier le changement |
-| U2 | `mark_as_read` | Appel manuel à `manage_attributes_modified` → fragile, devrait être dans Ops | Basse | Déplacer la notification dans `mark_as_read` de DatabaseOperations |
+| U2 | `mark_as_read` / `toggle_watched` | Appel redondant à `manage_attributes_modified` dans `toggle_watched` | **Corrigé** — notification déplacée dans `mark_as_read` (Ops), appel redondant retiré de `app_context.py` |
 | U3 | `video_entry_del` (batch Delete) | Appelle `video_entry_del` dans une boucle sans `to_save()` → N sauvegardes | Basse (perf) | Utiliser `db.to_save()` pour regrouper les sauvegardes |
 | U4 | `apply_on_prop_value` | Feature non implémentée dans PySide6 | Basse | Ajouter dans PropertiesPage ou PropertyValuesDialog |
 

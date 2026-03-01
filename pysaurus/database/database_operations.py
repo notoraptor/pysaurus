@@ -69,11 +69,13 @@ class DatabaseOperations:
         """Mark video as watched with current timestamp."""
         self.db.videos_set_field("date_entry_opened", {video_id: Date.now().time})
         self.db.videos_set_field("watched", {video_id: True})
+        self._notify_fields_modified(["date_entry_opened", "watched"])
 
     def mark_as_read(self, video_id: int) -> bool:
         """Toggle watched status and return new value."""
         (row,) = self.db.get_videos(where={"video_id": video_id})
         self.db.videos_set_field("watched", {video_id: not row.watched})
+        self._notify_fields_modified(["watched"])
         (row,) = self.db.get_videos(where={"video_id": video_id})
         return row.watched
 
