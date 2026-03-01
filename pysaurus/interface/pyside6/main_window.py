@@ -377,6 +377,9 @@ class MainWindow(QMainWindow):
             operation: Function to call to start the operation
             on_end: Callback when operation ends (receives End notification)
         """
+        if self._process_page is not None:
+            return  # Already running a process
+
         # Clean up any existing process page
         self._cleanup_process_page()
 

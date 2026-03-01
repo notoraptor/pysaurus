@@ -145,20 +145,20 @@ Ces opérations sont **sûres** car idempotentes : les exécuter deux fois produ
 
 ### Risque haut
 
-| # | Méthode | Problème | Correction suggérée |
-|---|---------|----------|---------------------|
-| B1 | `properties_page._on_create()` | Bouton persistant, pas de protection : double-clic crée deux propriétés (la 2e échoue avec erreur) | Désactiver le bouton pendant l'exécution |
-| B2 | `videos_page._toggle_watched()` | Menu contextuel, aucune protection : double-clic toggle deux fois (retour état initial, déroutant pour l'utilisateur) | Non prioritaire : le menu contextuel se ferme après le premier clic, empêchant le double-clic. Risque théorique. |
+| # | Méthode | Problème | Correction | Statut |
+|---|---------|----------|------------|--------|
+| B1 | `properties_page._on_create()` | Bouton persistant, pas de protection : double-clic crée deux propriétés (la 2e échoue avec erreur) | `btn_create.setEnabled(False)` pendant l'exécution, `finally: setEnabled(True)` | **Corrigé** |
+| B2 | `videos_page._toggle_watched()` | Menu contextuel, aucune protection : double-clic toggle deux fois | Non prioritaire : le menu contextuel se ferme après le premier clic. Risque théorique. | Non-problème |
 
 ### Risque moyen
 
-| # | Méthode | Problème | Correction suggérée |
-|---|---------|----------|---------------------|
-| B3 | `PropertyValuesDialog` : boutons "Delete Selected" et modificateurs | Boutons persistants dans un dialog ouvert, confirmation mais pas de désactivation après | Désactiver le bouton après l'opération, ou rafraîchir la liste (ce qui invalide la sélection) |
-| B4 | `VideoPropertiesDialog` : bouton OK | Double-clic rapide avant fermeture → double appel `set_video_properties` | Désactiver le bouton OK dans `_on_accept()` avant l'appel backend |
-| B5 | `databases_page._on_db_open()` | Signal `database_opening` émis sans protection ; `mouseDoubleClickEvent` émet aussi le signal | Ajouter un guard flag dans `_on_db_open()` ou ignorer les signaux quand un process est déjà en cours dans MainWindow |
-| B6 | `properties_page._on_convert()` | Après confirmation, double-clic toggle deux fois → retour état initial | Même remarque que B2 : via menu contextuel, risque faible en pratique |
-| B7 | `_on_confirm_unique_moves()` | Bouton persistant en sidebar, après confirmation pas de désactivation | Désactiver le bouton pendant l'exécution |
+| # | Méthode | Problème | Correction | Statut |
+|---|---------|----------|------------|--------|
+| B3 | `PropertyValuesDialog` : boutons "Delete Selected" et modificateurs | Boutons persistants dans un dialog ouvert, confirmation mais pas de désactivation après | `_set_action_buttons_enabled(False)` pendant l'opération, `finally: setEnabled(True)` | **Corrigé** |
+| B4 | `VideoPropertiesDialog` : bouton OK | Double-clic rapide avant fermeture → double appel `set_video_properties` | Bouton OK désactivé dans `_on_accept()` avant l'appel backend | **Corrigé** |
+| B5 | `databases_page._on_db_open()` | Signal `database_opening` émis sans protection ; `mouseDoubleClickEvent` émet aussi le signal | Guard `if self._process_page is not None: return` dans `_run_process()` | **Corrigé** |
+| B6 | `properties_page._on_convert()` | Après confirmation, double-clic toggle deux fois → retour état initial | Même remarque que B2 : via menu contextuel, risque faible en pratique | Non-problème |
+| B7 | `_on_confirm_unique_moves()` | Bouton persistant en sidebar, après confirmation pas de désactivation | `btn_confirm_unique_moves.setEnabled(False)` pendant l'exécution, `finally: setEnabled(True)` | **Corrigé** |
 
 ### Pas de risque significatif
 
@@ -200,11 +200,11 @@ def _run_process(self, title, operation, on_end):
     # ...
 ```
 
-### Priorités
+### État des corrections
 
-1. **B1** (`_on_create`) : correction simple, risque réel (bouton persistant, erreur visible)
-2. **B5** (`_on_db_open`) : correction simple, risque réel (double-clic naturel sur un item de liste)
-3. **B4** (`VideoPropertiesDialog` OK) : correction simple
-4. **B3** (`PropertyValuesDialog` boutons internes) : correction simple
-5. **B7** (`_on_confirm_unique_moves`) : correction simple
-6. **B2, B6** : risque théorique faible (menu contextuel se ferme), correction optionnelle
+- **B1** (`_on_create`) : **Corrigé** — bouton désactivé pendant l'exécution
+- **B5** (`_on_db_open`) : **Corrigé** — guard dans `_run_process()` empêche les double-exécutions
+- **B4** (`VideoPropertiesDialog` OK) : **Corrigé** — bouton OK désactivé dans `_on_accept()`
+- **B3** (`PropertyValuesDialog` boutons internes) : **Corrigé** — tous les boutons d'action désactivés pendant l'opération
+- **B7** (`_on_confirm_unique_moves`) : **Corrigé** — bouton désactivé pendant l'exécution
+- **B2, B6** : Non-problèmes — risque théorique faible (menu contextuel se ferme après le premier clic)

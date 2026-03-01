@@ -266,16 +266,16 @@ class VideoPropertiesDialog(QDialog):
         tabs.addTab(props_tab, "Properties")
 
         # Dialog buttons
-        button_box = QDialogButtonBox(
+        self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         # Disable auto-default to prevent ENTER from submitting the form
-        for button in button_box.buttons():
+        for button in self.button_box.buttons():
             button.setAutoDefault(False)
             button.setDefault(False)
-        button_box.accepted.connect(self._on_accept)
-        button_box.rejected.connect(self.reject)
-        layout.addWidget(button_box)
+        self.button_box.accepted.connect(self._on_accept)
+        self.button_box.rejected.connect(self.reject)
+        layout.addWidget(self.button_box)
 
     def _create_info_tab(self) -> QWidget:
         """Create the info tab with video metadata."""
@@ -519,6 +519,9 @@ class VideoPropertiesDialog(QDialog):
         if not self.ctx.has_database():
             self.accept()
             return
+
+        ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
+        ok_button.setEnabled(False)
 
         changes = {}
 

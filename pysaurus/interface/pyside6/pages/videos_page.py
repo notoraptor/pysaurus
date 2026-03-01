@@ -1491,8 +1491,14 @@ class VideosPage(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            count = self.ctx.confirm_unique_moves()
-            self.status_message_requested.emit(f"Confirmed {count} video move(s)", 3000)
+            self.btn_confirm_unique_moves.setEnabled(False)
+            try:
+                count = self.ctx.confirm_unique_moves()
+                self.status_message_requested.emit(
+                    f"Confirmed {count} video move(s)", 3000
+                )
+            finally:
+                self.btn_confirm_unique_moves.setEnabled(True)
 
     def _toggle_watched(self, video_id: int):
         """Toggle the watched status of a video."""

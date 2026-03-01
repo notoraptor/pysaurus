@@ -95,12 +95,14 @@ class PropertyValuesDialog(QDialog):
         # Get available modifiers from PropertyValueModifier
         from pysaurus.database.property_value_modifier import PropertyValueModifier
 
+        self._modifier_buttons: list[QPushButton] = []
         modifiers = PropertyValueModifier.get_modifiers()
         for mod_name in modifiers:
             btn = QPushButton(mod_name.replace("_", " ").title())
             btn.setToolTip(f"Apply '{mod_name}' to all values")
             btn.clicked.connect(lambda _, m=mod_name: self._on_apply_modifier(m))
             actions_layout.addWidget(btn)
+            self._modifier_buttons.append(btn)
 
         actions_layout.addStretch()
 
@@ -183,6 +185,13 @@ class PropertyValuesDialog(QDialog):
 
         self._delete_values(values)
 
+    def _set_action_buttons_enabled(self, enabled: bool):
+        """Enable or disable all action buttons."""
+        self.btn_delete.setEnabled(enabled)
+        self.btn_rename.setEnabled(enabled)
+        for btn in self._modifier_buttons:
+            btn.setEnabled(enabled)
+
     def _delete_values(self, values: list):
         """Delete the given values from all videos."""
         count = len(values)
@@ -195,12 +204,15 @@ class PropertyValuesDialog(QDialog):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
+            self._set_action_buttons_enabled(False)
             try:
                 self.ctx.delete_property_values(self.prop_name, values)
                 self._modified = True
                 self._load_values()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to delete values: {e}")
+            finally:
+                self._set_action_buttons_enabled(True)
 
     def _on_rename(self):
         """Rename a selected value."""
@@ -255,12 +267,15 @@ class PropertyValuesDialog(QDialog):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
+            self._set_action_buttons_enabled(False)
             try:
                 self.ctx.apply_on_prop_value(self.prop_name, modifier)
                 self._modified = True
                 self._load_values()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to apply modifier: {e}")
+            finally:
+                self._set_action_buttons_enabled(True)
 
     def _copy_value(self, value):
         """Copy value to clipboard."""

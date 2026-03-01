@@ -398,6 +398,7 @@ class PropertiesPage(QWidget):
                 if enum_values:
                     definition = enum_values
 
+        self.btn_create.setEnabled(False)
         try:
             self.ctx.create_prop_type(name, prop_type, definition, multiple)
             self._reset_form()
@@ -406,6 +407,8 @@ class PropertiesPage(QWidget):
             )
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Failed to create property: {e}")
+        finally:
+            self.btn_create.setEnabled(True)
 
     def _on_rename(self, name: str):
         """Rename a property."""
