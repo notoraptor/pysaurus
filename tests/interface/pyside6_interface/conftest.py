@@ -91,6 +91,11 @@ class MockAppContext:
         if self._database:
             self._database.video_entry_del(video_id)
 
+    def delete_video_entries(self, video_ids) -> None:
+        if self._database:
+            for video_id in video_ids:
+                self._database.video_entry_del(video_id)
+
     def get_video_by_id(self, video_id):
         if not self._database:
             return None
@@ -118,6 +123,13 @@ class MockAppContext:
     def mark_as_read(self, video_id) -> None:
         if self._database and self._database.ops:
             self._database.ops.mark_as_read(video_id)
+
+    def toggle_watched(self, video_id) -> None:
+        if self._database and self._database.ops:
+            self._database.ops.mark_as_read(video_id)
+            provider = self._database.provider if self._database else None
+            if provider:
+                provider.manage_attributes_modified(["watched"], is_property=False)
 
     def trash_video(self, video_id) -> None:
         if self._database and self._database.ops:
@@ -154,7 +166,9 @@ class MockAppContext:
         if provider:
             provider.set_sources(sources)
 
-    def set_groups(self, *, field, is_property, sorting, reverse, allow_singletons) -> None:
+    def set_groups(
+        self, *, field, is_property, sorting, reverse, allow_singletons
+    ) -> None:
         provider = self._database.provider if self._database else None
         if provider:
             provider.set_groups(
@@ -190,10 +204,16 @@ class MockAppContext:
         provider = self._database.provider if self._database else None
         if provider:
             provider.reset_parameters(
-                provider.LAYER_GROUPING,
-                provider.LAYER_CLASSIFIER,
-                provider.LAYER_GROUP,
+                provider.LAYER_GROUPING, provider.LAYER_CLASSIFIER, provider.LAYER_GROUP
             )
+
+    def set_random_video_search(self, video_id) -> None:
+        provider = self._database.provider if self._database else None
+        if provider:
+            provider.reset_parameters(
+                provider.LAYER_GROUPING, provider.LAYER_CLASSIFIER, provider.LAYER_GROUP
+            )
+            provider.set_search(str(video_id), "id")
 
     # API
 
@@ -274,6 +294,12 @@ class MockAppContext:
         provider = self._database.provider if self._database else None
         if provider:
             provider.classifier_focus_prop_val(prop_name, field_value)
+
+    def query_on_view(self, selector_dict: dict, operation: str, *args):
+        provider = self._database.provider if self._database else None
+        if provider:
+            return provider.apply_on_view(selector_dict, operation, *args)
+        return None
 
     def apply_on_view(self, selector_dict: dict, operation: str, *args):
         provider = self._database.provider if self._database else None

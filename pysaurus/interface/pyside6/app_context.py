@@ -49,6 +49,7 @@ class AppContext(QObject):
     job_progress = Signal(
         str, str, int, int, str
     )  # JobStep: (name, channel, step, total, title)
+    state_changed = Signal()  # Emitted after any state-mutating facade method
 
     def __init__(self):
         super().__init__()
@@ -246,6 +247,7 @@ class AppContext(QObject):
             if old_path in self._application.databases:
                 del self._application.databases[old_path]
                 self._application.databases[new_path] = self._database
+            self.state_changed.emit()
 
     def get_database_folders(self) -> list[str]:
         """Get the database source folders."""
@@ -257,16 +259,20 @@ class AppContext(QObject):
         """Set the database source folders."""
         if self._ops:
             self._ops.set_folders(folders)
+            self.state_changed.emit()
 
     def confirm_move(self, src_video_id: int, dst_video_id: int) -> None:
         """Confirm a video move (transfer metadata from src to dst, delete src)."""
         if self._ops:
             self._ops.move_video_entry(src_video_id, dst_video_id)
+            self.state_changed.emit()
 
     def confirm_unique_moves(self) -> int:
         """Confirm all unique video moves (1-to-1 mappings). Returns count."""
         if self._algos:
-            return self._algos.confirm_unique_moves()
+            result = self._algos.confirm_unique_moves()
+            self.state_changed.emit()
+            return result
         return 0
 
     # =========================================================================
@@ -277,16 +283,20 @@ class AppContext(QObject):
         """Add a group value to the classifier path."""
         if self._provider:
             self._provider.classifier_select_group(group_id)
+            self.state_changed.emit()
 
     def classifier_back(self) -> None:
         """Remove the last value from the classifier path."""
         if self._provider:
             self._provider.classifier_back()
+            self.state_changed.emit()
 
     def classifier_reverse(self) -> list:
         """Reverse the classifier path order. Returns the new path."""
         if self._provider:
-            return self._provider.classifier_reverse()
+            result = self._provider.classifier_reverse()
+            self.state_changed.emit()
+            return result
         return []
 
     def classifier_concatenate_path(self, to_property: str) -> None:
@@ -304,15 +314,23 @@ class AppContext(QObject):
             self._algos.move_property_values(
                 path, from_property, to_property, concatenate=True
             )
+            self.state_changed.emit()
 
     def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
         """Focus on a specific property value (resets classifier and jumps to value)."""
         if self._provider:
             self._provider.classifier_focus_prop_val(prop_name, field_value)
+            self.state_changed.emit()
 
     # =========================================================================
     # View operations with selector
     # =========================================================================
+
+    def query_on_view(self, selector_dict: dict, operation: str, *args):
+        """Query the current view without modifying state (no state_changed)."""
+        if self._provider:
+            return self._provider.apply_on_view(selector_dict, operation, *args)
+        return None
 
     def apply_on_view(self, selector_dict: dict, operation: str, *args):
         """
@@ -327,7 +345,9 @@ class AppContext(QObject):
             Result from the operation (e.g., list of [value, count] pairs)
         """
         if self._provider:
-            return self._provider.apply_on_view(selector_dict, operation, *args)
+            result = self._provider.apply_on_view(selector_dict, operation, *args)
+            self.state_changed.emit()
+            return result
         return None
 
     def close_app(self) -> None:
@@ -357,6 +377,7 @@ class AppContext(QObject):
     def delete_database_by_name(self, name: str) -> None:
         """Delete a database by name from the application registry."""
         self._application.delete_database_from_name(name)
+        self.state_changed.emit()
 
     # =========================================================================
     # Facade methods — Property types
@@ -371,18 +392,22 @@ class AppContext(QObject):
     def create_prop_type(self, name, prop_type, definition, multiple) -> None:
         """Create a new property type."""
         self._database.prop_type_add(name, prop_type, definition, multiple)
+        self.state_changed.emit()
 
     def rename_prop_type(self, name, new_name) -> None:
         """Rename a property type."""
         self._database.prop_type_set_name(name, new_name)
+        self.state_changed.emit()
 
     def delete_prop_type(self, name) -> None:
         """Delete a property type."""
         self._database.prop_type_del(name)
+        self.state_changed.emit()
 
     def set_prop_type_multiple(self, name, multiple) -> None:
         """Set whether a property type allows multiple values."""
         self._database.prop_type_set_multiple(name, multiple)
+        self.state_changed.emit()
 
     # =========================================================================
     # Facade methods — Video entries
@@ -392,6 +417,14 @@ class AppContext(QObject):
         """Delete a video entry from the database."""
         if self._database:
             self._database.video_entry_del(video_id)
+            self.state_changed.emit()
+
+    def delete_video_entries(self, video_ids) -> None:
+        """Delete multiple video entries from the database."""
+        if self._database:
+            for video_id in video_ids:
+                self._database.video_entry_del(video_id)
+            self.state_changed.emit()
 
     def get_video_by_id(self, video_id) -> VideoPattern | None:
         """Return a single video by ID, or None."""
@@ -413,31 +446,47 @@ class AppContext(QObject):
         """Rename a video file title."""
         if self._ops:
             self._ops.change_video_file_title(video_id, new_title)
+            self.state_changed.emit()
 
     def dismiss_similarity(self, video_id) -> None:
         """Dismiss similarity for a video (mark as no match)."""
         if self._ops:
             self._ops.set_similarities_from_list([video_id], [-1])
+            self.state_changed.emit()
 
     def reset_similarity(self, video_id) -> None:
         """Reset similarity status for a video."""
         if self._ops:
             self._ops.set_similarities_from_list([video_id], [None])
+            self.state_changed.emit()
 
     def mark_as_read(self, video_id) -> None:
         """Toggle the watched/read status of a video."""
         if self._ops:
             self._ops.mark_as_read(video_id)
+            self.state_changed.emit()
+
+    def toggle_watched(self, video_id) -> None:
+        """Toggle watched status and notify the provider."""
+        if self._ops:
+            self._ops.mark_as_read(video_id)
+            if self._provider:
+                self._provider.manage_attributes_modified(
+                    ["watched"], is_property=False
+                )
+            self.state_changed.emit()
 
     def trash_video(self, video_id) -> None:
         """Move a video file to system trash."""
         if self._ops:
             self._ops.trash_video(video_id)
+            self.state_changed.emit()
 
     def delete_video_file(self, video_id) -> None:
         """Permanently delete a video file."""
         if self._ops:
             self._ops.delete_video(video_id)
+            self.state_changed.emit()
 
     # =========================================================================
     # Facade methods — Provider / view
@@ -447,11 +496,13 @@ class AppContext(QObject):
         """Select a group by index."""
         if self._provider:
             self._provider.set_group(group_id)
+            self.state_changed.emit()
 
     def notify_attributes_modified(self, fields, is_property) -> None:
         """Notify the provider that video attributes have been modified."""
         if self._provider:
             self._provider.manage_attributes_modified(fields, is_property=is_property)
+            self.state_changed.emit()
 
     def get_provider_state(self) -> "VideoSearchContext | None":
         """Return the current provider state (minimal, for reading parameters)."""
@@ -463,8 +514,11 @@ class AppContext(QObject):
         """Set the video sources filter."""
         if self._provider:
             self._provider.set_sources(sources)
+            self.state_changed.emit()
 
-    def set_groups(self, *, field, is_property, sorting, reverse, allow_singletons) -> None:
+    def set_groups(
+        self, *, field, is_property, sorting, reverse, allow_singletons
+    ) -> None:
         """Set the grouping parameters."""
         if self._provider:
             self._provider.set_groups(
@@ -474,21 +528,25 @@ class AppContext(QObject):
                 reverse=reverse,
                 allow_singletons=allow_singletons,
             )
+            self.state_changed.emit()
 
     def clear_groups(self) -> None:
         """Clear (remove) the current grouping."""
         if self._provider:
             self._provider.set_groups(None)
+            self.state_changed.emit()
 
     def set_search(self, text, cond) -> None:
         """Set the search filter."""
         if self._provider:
             self._provider.set_search(text, cond)
+            self.state_changed.emit()
 
     def set_sorting(self, sorting) -> None:
         """Set the sorting order."""
         if self._provider:
             self._provider.set_sort(sorting)
+            self.state_changed.emit()
 
     def get_random_video_id(self) -> int | None:
         """Return a random found video ID."""
@@ -504,6 +562,18 @@ class AppContext(QObject):
                 self._provider.LAYER_CLASSIFIER,
                 self._provider.LAYER_GROUP,
             )
+            self.state_changed.emit()
+
+    def set_random_video_search(self, video_id) -> None:
+        """Reset grouping/classifier and search for a specific video ID."""
+        if self._provider:
+            self._provider.reset_parameters(
+                self._provider.LAYER_GROUPING,
+                self._provider.LAYER_CLASSIFIER,
+                self._provider.LAYER_GROUP,
+            )
+            self._provider.set_search(str(video_id), "id")
+            self.state_changed.emit()
 
     # =========================================================================
     # Facade methods — API
@@ -535,22 +605,29 @@ class AppContext(QObject):
         """Delete specific property values from all videos."""
         if self._algos:
             self._algos.delete_property_values(prop_name, values)
+            self.state_changed.emit()
 
     def replace_property_values(self, prop_name, old_values, new_value) -> bool:
         """Replace property values across all videos. Returns success."""
         if self._algos:
-            return self._algos.replace_property_values(prop_name, old_values, new_value)
+            result = self._algos.replace_property_values(
+                prop_name, old_values, new_value
+            )
+            self.state_changed.emit()
+            return result
         return False
 
     def apply_on_prop_value(self, prop_name, modifier) -> None:
         """Apply a modifier to all values of a property."""
         if self._ops:
             self._ops.apply_on_prop_value(prop_name, modifier)
+            self.state_changed.emit()
 
     def set_video_properties(self, video_id, properties) -> None:
         """Set properties for a single video."""
         if self._database:
             self._database.video_entry_set_tags(video_id, properties)
+            self.state_changed.emit()
 
     # =========================================================================
     # Facade methods — Algorithms
@@ -559,12 +636,15 @@ class AppContext(QObject):
     def move_property_values(self, values, from_name, to_name, *, concatenate) -> int:
         """Move property values between properties. Returns affected video count."""
         if self._algos:
-            return self._algos.move_property_values(
+            result = self._algos.move_property_values(
                 values, from_name, to_name, concatenate=concatenate
             )
+            self.state_changed.emit()
+            return result
         return 0
 
     def fill_property_with_terms(self, prop_name, *, only_empty) -> None:
         """Fill a property with terms extracted from video filenames."""
         if self._algos:
             self._algos.fill_property_with_terms(prop_name, only_empty=only_empty)
+            self.state_changed.emit()

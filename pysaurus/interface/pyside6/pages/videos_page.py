@@ -313,13 +313,11 @@ class VideosPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             if self.ctx.has_database():
-                for video_id in video_ids:
-                    self.ctx.delete_video_entry(video_id)
+                self.ctx.delete_video_entries(video_ids)
                 self.status_message_requested.emit(
                     f"{count} video(s) removed from database", 5000
                 )
                 self._clear_selection()
-                self.refresh()
 
     def _on_playlist(self):
         """Generate and open a playlist of the current view."""
@@ -1011,7 +1009,11 @@ class VideosPage(QWidget):
 
         # Check if grouping is on a multiple property (classifier is only for multiple props)
         is_multiple_property = False
-        if context.grouping and context.grouping.is_property and self.ctx.has_database():
+        if (
+            context.grouping
+            and context.grouping.is_property
+            and self.ctx.has_database()
+        ):
             prop_types = self.ctx.get_prop_types(
                 name=context.grouping.field, multiple=True
             )
@@ -1297,7 +1299,6 @@ class VideosPage(QWidget):
         """Handle property value click - focus on this property value."""
         self.ctx.classifier_focus_prop_val(prop_name, value)
         self.page_number = 0
-        self.refresh()
 
     def _on_video_double_clicked(self, video_id: int):
         """Handle video card double-click (open video)."""
@@ -1420,7 +1421,6 @@ class VideosPage(QWidget):
         if ok and new_title and new_title != current_title:
             try:
                 self.ctx.rename_video(video_id, new_title)
-                self.refresh()
             except Exception as e:
                 QMessageBox.warning(self, "Rename Failed", str(e))
 
@@ -1436,7 +1436,6 @@ class VideosPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.ctx.dismiss_similarity(video_id)
-            self.refresh()
 
     def _reset_similarity(self, video_id: int):
         """Reset similarity for a video (mark as not compared)."""
@@ -1450,7 +1449,6 @@ class VideosPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.ctx.reset_similarity(video_id)
-            self.refresh()
 
     def _confirm_move(self, src_video_id: int, dst_video_id: int):
         """Confirm a video move (transfer metadata from source to destination)."""
@@ -1477,7 +1475,6 @@ class VideosPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             self.ctx.confirm_move(src_video_id, dst_video_id)
             self.status_message_requested.emit("Video move confirmed", 3000)
-            self.refresh()
 
     def _on_confirm_unique_moves(self):
         """Confirm all unique video moves (videos with only one possible destination)."""
@@ -1496,14 +1493,10 @@ class VideosPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             count = self.ctx.confirm_unique_moves()
             self.status_message_requested.emit(f"Confirmed {count} video move(s)", 3000)
-            self.refresh()
 
     def _toggle_watched(self, video_id: int):
         """Toggle the watched status of a video."""
-        self.ctx.mark_as_read(video_id)
-        # Update grouping if grouped by watched
-        self.ctx.notify_attributes_modified(["watched"], is_property=False)
-        self.refresh()
+        self.ctx.toggle_watched(video_id)
 
     def _move_video(self, video_id: int):
         """Move a video file to a different folder."""
@@ -1549,9 +1542,7 @@ class VideosPage(QWidget):
 
         prop_types = self.ctx.get_prop_types()
         dialog = VideoPropertiesDialog(video, prop_types, self.ctx, self)
-        if dialog.exec():
-            # Refresh to show any property changes
-            self.refresh()
+        dialog.exec()
 
     def _delete_video(self, video_id: int):
         """Delete a single video from the database (with confirmation)."""
@@ -1577,7 +1568,6 @@ class VideosPage(QWidget):
             self.status_message_requested.emit(
                 f"'{video_title}' removed from database", 3000
             )
-            self.refresh()
             return
 
         reply = QMessageBox.question(
@@ -1593,7 +1583,6 @@ class VideosPage(QWidget):
             self.status_message_requested.emit(
                 f"'{video_title}' removed from database", 5000
             )
-            self.refresh()
 
     def _trash_video(self, video_id: int):
         """Move a video file to system trash (with confirmation)."""
@@ -1615,7 +1604,6 @@ class VideosPage(QWidget):
                 self.status_message_requested.emit(
                     f"'{video.title}' moved to trash", 5000
                 )
-                self.refresh()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to move to trash: {e}")
 
@@ -1641,7 +1629,6 @@ class VideosPage(QWidget):
                 self.status_message_requested.emit(
                     f"'{video.title}' permanently deleted", 5000
                 )
-                self.refresh()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to delete: {e}")
 
@@ -1686,7 +1673,7 @@ class VideosPage(QWidget):
 
         # Get current values and counts using apply_on_view
         selector_dict = self._selector.to_dict()
-        values_and_counts = self.ctx.apply_on_view(
+        values_and_counts = self.ctx.query_on_view(
             selector_dict, "count_property_values", prop_name
         )
 
@@ -1713,7 +1700,6 @@ class VideosPage(QWidget):
                     to_add,
                     to_remove,
                 )
-                self.refresh()
 
     def _on_view_changed(self, index: int):
         """Handle view mode change."""
@@ -1742,7 +1728,6 @@ class VideosPage(QWidget):
             sources = dialog.get_sources()
             self.ctx.set_sources(sources)
             self.page_number = 0
-            self.refresh()
 
     def _on_set_grouping(self):
         """Handle set grouping button."""
@@ -1776,7 +1761,6 @@ class VideosPage(QWidget):
                     allow_singletons=grouping["allow_singletons"],
                 )
             self.page_number = 0
-            self.refresh()
 
     def _on_search(self):
         """Handle search on Enter key."""
@@ -1788,32 +1772,27 @@ class VideosPage(QWidget):
         if query:
             self.ctx.set_search(query, mode)
             self.page_number = 0
-            self.refresh()
 
     def _clear_search(self):
         """Clear the search."""
         self.search_input.clear()
         self.ctx.set_search("", "and")
         self.page_number = 0
-        self.refresh()
 
     def _clear_sources(self):
         """Reset sources to default."""
         self.ctx.set_sources(None)
         self.page_number = 0
-        self.refresh()
 
     def _clear_grouping(self):
         """Remove grouping."""
         self.ctx.clear_groups()
         self.page_number = 0
-        self.refresh()
 
     def _clear_sorting(self):
         """Reset sorting to default."""
         self.ctx.set_sorting(None)
         self.page_number = 0
-        self.refresh()
 
     def _on_set_sorting(self):
         """Handle set sorting button."""
@@ -1834,22 +1813,15 @@ class VideosPage(QWidget):
             ]
             self.ctx.set_sorting(sorting_strings)
             self.page_number = 0
-            self.refresh()
 
     def _on_random_video(self):
         """Open a random video and configure search to show it."""
         video_id = self.ctx.get_random_video_id()
         if video_id:
-            # Reset grouping and configure search with video ID
-            self.ctx.reset_grouping_and_classifier()
-            self.ctx.set_search(str(video_id), "id")
-            # Update search input to show the video ID
+            self.ctx.set_random_video_search(video_id)
             self.search_input.setText(str(video_id))
-            # Open the video
             self.ctx.open_video(video_id)
-            # Refresh display
             self.page_number = 0
-            self.refresh()
 
     def _on_update_database(self):
         """Update/rescan the database."""
@@ -1884,20 +1856,17 @@ class VideosPage(QWidget):
         if self._current_group_index >= 0:
             self.ctx.classifier_select_group(self._current_group_index)
             self.page_number = 0
-            self.refresh()
 
     def _on_classifier_unstack(self):
         """Remove the last value from the classifier path."""
         if self._classifier_path:
             self.ctx.classifier_back()
             self.page_number = 0
-            self.refresh()
 
     def _on_classifier_reverse(self):
         """Reverse the classifier path order."""
         if self._classifier_path:
             self.ctx.classifier_reverse()
-            self.refresh()
 
     def _on_classifier_concatenate(self):
         """Show dialog to concatenate path values into a string property."""
@@ -1931,7 +1900,6 @@ class VideosPage(QWidget):
         if ok and name:
             self.ctx.classifier_concatenate_path(name)
             self.page_number = 0
-            self.refresh()
 
     def _go_prev_group(self):
         """Go to the previous group."""
@@ -1972,7 +1940,6 @@ class VideosPage(QWidget):
 
         self.ctx.set_group(index)
         self.page_number = 0
-        self.refresh()
         self._reset_scroll_to_top()
 
     def _on_go_to_page(self):

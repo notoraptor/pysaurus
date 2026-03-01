@@ -232,6 +232,7 @@ class MainWindow(QMainWindow):
 
         # Context signals
         self.ctx.notification_received.connect(self._on_notification)
+        self.ctx.state_changed.connect(self._on_state_changed)
 
     def _on_database_opening(self, name: str, update: bool):
         """Handle database opening request."""
@@ -287,6 +288,16 @@ class MainWindow(QMainWindow):
     def _on_notification(self, notification):
         """Handle generic notifications (logged separately, not displayed in status bar)."""
         pass
+
+    def _on_state_changed(self):
+        """Refresh the active page when backend state changes."""
+        current = self.stack.currentIndex()
+        if current == self.PAGE_VIDEOS:
+            self.videos_page.refresh()
+        elif current == self.PAGE_PROPERTIES:
+            self.properties_page.refresh()
+        elif current == self.PAGE_DATABASES:
+            self.databases_page.refresh()
 
     def _on_status_message(self, message: str, timeout: int = 0):
         """Handle status message requests from pages (timeout=0 means persistent)."""

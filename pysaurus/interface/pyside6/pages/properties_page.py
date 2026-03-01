@@ -401,7 +401,6 @@ class PropertiesPage(QWidget):
         try:
             self.ctx.create_prop_type(name, prop_type, definition, multiple)
             self._reset_form()
-            self.refresh()
             QMessageBox.information(
                 self, "Success", f"Property '{name}' created successfully."
             )
@@ -425,7 +424,6 @@ class PropertiesPage(QWidget):
 
         try:
             self.ctx.rename_prop_type(name, new_name)
-            self.refresh()
             QMessageBox.information(
                 self, "Success", f"Property renamed to '{new_name}'."
             )
@@ -445,7 +443,6 @@ class PropertiesPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             try:
                 self.ctx.delete_prop_type(name)
-                self.refresh()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Failed to delete property: {e}")
 
@@ -463,7 +460,6 @@ class PropertiesPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             try:
                 self.ctx.set_prop_type_multiple(name, not currently_multiple)
-                self.refresh()
                 QMessageBox.information(
                     self, "Success", f"Property '{name}' converted to {target}."
                 )
@@ -485,9 +481,6 @@ class PropertiesPage(QWidget):
 
         dialog = PropertyValuesDialog(name, prop_type, self.ctx, self)
         dialog.exec()
-
-        if dialog.was_modified():
-            self.refresh()
 
     def _on_move_values(self, name: str):
         """Open the move values dialog."""
@@ -515,7 +508,6 @@ class PropertiesPage(QWidget):
                         "Success",
                         f"Moved values for {count} videos from '{name}' to '{target_prop['name']}'.",
                     )
-                    self.refresh()
                 except Exception as e:
                     QMessageBox.warning(self, "Error", f"Failed to move values: {e}")
 
@@ -547,7 +539,6 @@ class PropertiesPage(QWidget):
                             "Success",
                             f"Property '{prop_type['name']}' filled with terms.",
                         )
-                        self.refresh()
                     except Exception as e:
                         QMessageBox.warning(
                             self, "Error", f"Failed to fill property: {e}"
