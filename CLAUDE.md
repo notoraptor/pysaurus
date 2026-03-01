@@ -35,6 +35,20 @@ uv run ruff check .
 uv run ruff format .
 ```
 
+### Web Frontend (React/Babel)
+
+The web frontend lives in `pysaurus/interface/web/`. It uses React 18 + Babel + SystemJS (no bundler like Webpack/Vite).
+
+```bash
+# Watch and auto-compile JSX (from pysaurus/interface/web/)
+npx babel --watch src --out-dir build --presets @babel/preset-react --plugins @babel/plugin-transform-modules-systemjs
+
+# Format frontend code
+npm run format
+```
+
+Edit files in `src/` — the `build/` directory is auto-generated.
+
 ## Architecture
 
 ### High-level Flow
@@ -48,6 +62,11 @@ __main__.py (GUI selector)
                 ├─ .algos → DatabaseAlgorithms (batch processing)
                 └─ .provider → AbstractVideoProvider (filtering pipeline)
 ```
+
+### Two Top-level Python Packages
+
+- **`pysaurus/`** — core application code
+- **`saurus/`** — SQL-specific layer (separate top-level package, not inside `pysaurus/`)
 
 ### Entry Point
 
@@ -72,6 +91,11 @@ Two backend implementations, selected by `USE_SQL` flag in `database/database.py
 - **`video_mega_group.py` / `video_mega_search.py`** — SQL query builders for grouping and search
 - **`migration/`** — tools for JSON → SQL migration and verification
 
+Key schema notes (`saurus/sql/database.sql`):
+- `video` table uses **virtual generated columns** (e.g., `readable`, `found`, `length_seconds`, `bit_rate`, `day`, `year`)
+- `video_text` is an **FTS5 virtual table** for full-text search with triggers to stay in sync
+- Property value triggers are managed manually in Python (not SQL triggers) for batch performance
+
 ### Video Provider
 
 `video_provider/abstract_video_provider.py` — layered filtering/grouping pipeline:
@@ -79,33 +103,61 @@ LAYER_SOURCE → LAYER_GROUPING → LAYER_CLASSIFIER → LAYER_GROUP → LAYER_S
 
 Two implementations: `JsonDatabaseVideoProvider` (Python-based) and `SaurusProvider` (SQL-based).
 
-### API Layer (`interface/api/`)
+### API Layer — Proxy Pattern (`interface/api/`)
 
-- **`FeatureAPI`** — base API class exposing 50+ features via proxy pattern. Proxies delegate to `db`, `db.ops`, `db.algos`, `db.provider`, or external tools (clipboard, file dialogs).
-- **`GuiAPI`** — extends `FeatureAPI` with Flask video server, thread management, and VLC integration.
+All frontends call `api.__run_feature__(name, *args)`, which looks up a proxy dict, then falls back to calling `self.<name>(*args)` directly.
 
-All GUI frontends call the same API, ensuring consistent behavior.
+**`ProxyFeature`** (`api_utils/proxy_feature.py`) wraps `(getter_fn, method, returns_value)`:
+1. Calls `getter()` to get the live target (db, provider, etc.)
+2. Calls `getattr(target, method.__name__)(*args)`
+3. Returns the result only if `returns=True`; otherwise returns `None` (side-effect only)
+
+Proxy subclasses and their targets:
+
+| Class | Target | Use case |
+|---|---|---|
+| `FromDb` | `api.database` | Direct `AbstractDatabase` methods |
+| `FromView` | `api.database.provider` | `AbstractVideoProvider` methods |
+| `FromApp` | `api.application` | `Application` methods |
+| `FromOps` | `DatabaseOperations(api.database)` | CRUD via `db.ops` |
+| `FromAlgo` | `DatabaseAlgorithms(api.database)` | Batch processing via `db.algos` |
+| `FromTk` | `filedial` module | File dialog calls |
+| `FromPyperclip` | `pyperclip` module | Clipboard operations |
+
+- **`FeatureAPI`** — base API class exposing 50+ features via these proxies.
+- **`GuiAPI`** — extends `FeatureAPI` with Flask video server (`ServerLauncher`), thread management, VLC integration, and an abstract `_notify()` method each frontend implements.
+
+### Notification System
+
+Python backend sends typed `Notification` objects (`pysaurus/core/notifications.py`) — e.g., `DatabaseReady`, `Done`, `JobToDo`, `JobStep`. These are serialized to dicts and forwarded to the frontend via `window.NOTIFICATION_MANAGER.call(notification)`.
+
+### GUI Frontends
+
+| Name | Module | Mechanism | Default on |
+|---|---|---|---|
+| `pywebview` | `using_pywebview/` | Flask HTTP server + `webview` JS bridge | Windows |
+| `qtwebview` | `qtwebview/` | `PySide6.QtWebEngineWidgets` + `QWebChannel` | Linux |
+| `pyside6` | `pyside6/` | Native Qt widgets (no web) | — |
+
+### Web Frontend (`interface/web/`)
+
+- **Stack**: React 18, SystemJS, Babel (JSX transpilation), PropTypes
+- **`BaseComponent`** (`src/BaseComponent.js`): base React component that auto-binds all methods and adds `setStateAsync()`
+- **`Backend`** static class (`src/utils/backend.js`): all Python API calls go through `python_call(name, ...args)` → `window.backend_call(name, args)`. `backend_call` is injected by the runtime (CEF = `window.python.call`, Qt = QWebChannel `backend.call`)
+- **Pages**: `DatabasesPage`, `HomePage`, `VideosPage`, `PropertiesPage`
 
 ### Properties System
 
 `properties/properties.py` — typed property definitions (bool, int, float, str) with support for multiple values and enumeration.
 
-### GUI Frontends
-
-Multiple implementations in `interface/`:
-- `using_pywebview/` — PyWebView (primary on Windows)
-- `qtwebview/` — Qt WebView
-- `pyside6/` — PySide6
-
 ### Image Similarity Search
 
-`imgsimsearch/` — uses NumPy for feature extraction and cosine similarity. Annoy was removed because it requires system dependencies (Visual C++ on Windows).
+`imgsimsearch/` — uses NumPy for feature extraction and cosine similarity.
 
 ### External Editable Dependencies
 
 - `videre` (at `../videre`) — video extraction
-- `skullite` (at `../skullite`) — SQLite wrapper library
-- `saurus/sql/` — SQL collection layer (local)
+- `skullite` (at `../skullite`) — SQLite wrapper (`PysaurusConnection(None)` = in-memory DB; `copy_from()` = bulk copy)
 
 ## Code Style
 
@@ -117,7 +169,10 @@ Multiple implementations in `interface/`:
 
 - pytest with `asyncio_mode = "auto"`
 - Test fixtures provide three tiers:
-  - **Fast mock**: `mock_database` / `mock_database_readonly` — pure in-memory, no I/O
+  - **Fast mock**: `mock_database` / `mock_database_readonly` — pure in-memory, no I/O (data from `tests/mocks/test_data.json`)
   - **Writable copies**: `mem_old_database`, `mem_saurus_database`, `example_*_memory` — `shutil.copytree` to `tmp_path`
   - **Read-only on-disk**: `fake_old_database`, `fake_saurus_database`, `example_json_database`, `example_saurus_database`
+- SQL fixtures use `PysaurusConnection(None)` + `copy_from()` to create writable in-memory copies without `tmp_path`
+- Two test databases in `tests/home_dir_test/.Pysaurus/databases/`: `test_database` (small) and `example_db_in_pysaurus` (90 videos with properties)
+- Qt tests use `QT_QPA_PLATFORM=offscreen` (set in `tests/interface/pyside6_interface/conftest.py`)
 - `pyfakefs` for filesystem mocking, `pytest-qt` for Qt tests, `pytest-xdist` for parallel runs
