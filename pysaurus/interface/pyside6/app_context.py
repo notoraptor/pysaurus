@@ -422,8 +422,9 @@ class AppContext(QObject):
     def delete_video_entries(self, video_ids) -> None:
         """Delete multiple video entries from the database."""
         if self._database:
-            for video_id in video_ids:
-                self._database.video_entry_del(video_id)
+            with self._database.to_save():
+                for video_id in video_ids:
+                    self._database.video_entry_del(video_id)
             self.state_changed.emit()
 
     def get_video_by_id(self, video_id) -> VideoPattern | None:
@@ -441,6 +442,7 @@ class AppContext(QObject):
         """Open a video with the default player."""
         if self._ops:
             self._ops.open_video(video_id)
+            self.state_changed.emit()
 
     def rename_video(self, video_id, new_title) -> None:
         """Rename a video file title."""
@@ -582,6 +584,7 @@ class AppContext(QObject):
     def open_from_server(self, video_id) -> None:
         """Open a video in VLC via server."""
         self._api.open_from_server(video_id)
+        self.state_changed.emit()
 
     def open_containing_folder(self, video_id) -> None:
         """Open the folder containing a video."""

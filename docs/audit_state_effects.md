@@ -29,7 +29,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:attr (`watched=True`, `date_entry_opened=now`) + FILE (ouverture) |
 | **Ce qui change** | Le champ `watched` et `date_entry_opened` de la vidéo |
 | **UI requise** | Mettre à jour l'indicateur "watched" de la vidéo dans la liste/grille |
-| **PySide6** | Appelle `ctx.open_video()` puis `refresh()`. **Problème potentiel** : `open_video` appelle `mark_as_watched` qui appelle `videos_set_field` mais ne notifie PAS le provider via `manage_attributes_modified`. Si on est groupé par `watched`, le groupement ne se met pas à jour automatiquement. PySide6 ne corrige pas ce problème car il fait un `refresh()` complet qui re-fetch l'état. Mais l'interface web pourrait ne pas refléter le changement. |
+| **PySide6** | `ctx.open_video()` appelle `mark_as_watched` qui notifie le provider via `_notify_fields_modified(["date_entry_opened", "watched"])`. `state_changed` est émis pour rafraîchir l'UI. OK. |
 
 ### `mark_as_read` (Ops)
 | Aspect | Détail |
@@ -37,7 +37,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:attr (`watched` toggle) |
 | **Ce qui change** | Le champ `watched` de la vidéo |
 | **UI requise** | Mettre à jour l'indicateur "watched", recalculer le groupement si groupé par `watched` |
-| **PySide6** | `ctx.mark_as_read()` puis **manuellement** `ctx.notify_attributes_modified(["watched"])` puis `refresh()`. C'est correct mais la notification manuelle est fragile — `mark_as_read` devrait le faire en interne. |
+| **PySide6** | `ctx.mark_as_read()` émet `state_changed`. `mark_as_read` (Ops) notifie le provider en interne via `_notify_fields_modified(["watched"])`. OK. |
 
 ### `delete_video` (Ops)
 | Aspect | Détail |
@@ -61,7 +61,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:entry (supprimé, fichier conservé) |
 | **Ce qui change** | La vidéo n'existe plus en BDD |
 | **UI requise** | Retirer la vidéo de la vue, mettre à jour les compteurs |
-| **PySide6** | `ctx.delete_video_entry()` puis `refresh()`. **Problème** : `video_entry_del` ne notifie pas le provider (pas d'appel à `provider.delete()` ou `manage_attributes_modified`). Le `refresh()` complet de PySide6 compense, mais c'est un contournement. |
+| **PySide6** | `ctx.delete_video_entry()` émet `state_changed`. `video_entry_del` appelle `provider.delete()` + `_notify_fields_modified(["move_id"])`. OK. `delete_video_entries` (batch) utilise `to_save()` pour regrouper les sauvegardes. |
 
 ### `rename_video` (Ops → `change_video_file_title`)
 | Aspect | Détail |
@@ -69,7 +69,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:attr (`filename` changé) + FILE (renommé) |
 | **Ce qui change** | Le chemin et le titre du fichier |
 | **UI requise** | Mettre à jour le titre affiché de la vidéo |
-| **PySide6** | `ctx.rename_video()` puis `refresh()`. **Note** : `change_video_file_title` appelle `video_entry_set_filename` qui ne notifie pas le provider. Le refresh compense. |
+| **PySide6** | `ctx.rename_video()` émet `state_changed`. `video_entry_set_filename` notifie le provider via `_notify_fields_modified`. OK. |
 
 ### `open_from_server` (GuiAPI)
 | Aspect | Détail |
@@ -77,7 +77,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:attr (`watched=True`, `date_entry_opened=now`) + subprocess VLC |
 | **Ce qui change** | Idem `open_video` mais via VLC/serveur |
 | **UI requise** | Idem `open_video` |
-| **PySide6** | `ctx.open_from_server()`. **Problème** : pas de `refresh()` après. L'indicateur "watched" n'est pas mis à jour dans la UI. |
+| **PySide6** | `ctx.open_from_server()` émet `state_changed`. `open_from_server` (GuiAPI) appelle `mark_as_watched` qui notifie le provider. OK. |
 
 ---
 
@@ -89,7 +89,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:prop (propriétés d'une vidéo modifiées) |
 | **Ce qui change** | Les valeurs de propriétés d'une vidéo spécifique |
 | **UI requise** | Mettre à jour l'affichage des propriétés de la vidéo, recalculer le groupement si groupé par cette propriété |
-| **PySide6** | Via `VideoPropertiesDialog`. Appelle `ctx.set_video_properties()` puis le dialogue retourne un "modified" et `refresh()` est appelé. **Problème** : `video_entry_set_tags` ne notifie PAS le provider. Le `refresh()` compense, mais si on est groupé par la propriété modifiée, les groupes ne sont pas recalculés. |
+| **PySide6** | `ctx.set_video_properties()` émet `state_changed`. `video_entry_set_tags` notifie le provider via `_notify_fields_modified(properties.keys(), is_property=True)`. OK. |
 
 ### `apply_on_view` → `count_property_values` / `edit_property_for_videos`
 | Aspect | Détail |
@@ -125,7 +125,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:proptype (type supprimé) + DB:prop (toutes les valeurs de cette propriété supprimées) |
 | **Ce qui change** | La liste des types et toutes les valeurs associées |
 | **UI requise** | Rafraîchir la liste des propriétés, si groupé par cette propriété → réinitialiser le groupement |
-| **PySide6** | `ctx.delete_prop_type()` puis `refresh()` de PropertiesPage. **Problème potentiel** : si on est groupé par la propriété supprimée, le retour à VideosPage pourrait planter ou montrer un état incohérent. Pas de réinitialisation du groupement du provider. |
+| **PySide6** | `ctx.delete_prop_type()` émet `state_changed`. `prop_type_del` notifie le provider via `_notify_fields_modified([name], is_property=True)`, ce qui réinitialise le groupement si groupé par la propriété supprimée. OK. |
 
 ### `rename_prop_type` (Db → `prop_type_set_name`)
 | Aspect | Détail |
@@ -153,7 +153,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:prop (valeurs supprimées pour toutes les vidéos) |
 | **Ce qui change** | Les valeurs de la propriété pour potentiellement beaucoup de vidéos |
 | **UI requise** | Rafraîchir la vue vidéo, recalculer le groupement |
-| **PySide6** | Via `PropertyValuesDialog` → `ctx.delete_property_values(...)`. **Problème** : `delete_property_values` appelle `videos_tag_set(action=REMOVE)` mais ne notifie PAS le provider via `_notify_fields_modified`. Le dialogue set `was_modified` et la page fait `refresh()` au retour, mais le provider n'a pas recalculé ses groupes. |
+| **PySide6** | `ctx.delete_property_values(...)` émet `state_changed`. `delete_property_values` notifie le provider via `_notify_fields_modified([name], is_property=True)`. OK. |
 
 ### `replace_property_values` (Algo)
 | Aspect | Détail |
@@ -304,16 +304,16 @@ Pour chaque feature, ce document identifie :
 
 ### Problèmes UI PySide6
 
-| # | Feature | Problème | Sévérité | Correction suggérée |
-|---|---------|----------|----------|---------------------|
-| U1 | `open_from_server` (VLC) | Pas de `refresh()` après ouverture VLC → indicateur "watched" non mis à jour | Moyenne | Ajouter `self.refresh()` ou notifier le changement |
+| # | Feature | Problème | Statut |
+|---|---------|----------|--------|
+| U1 | `open_video` / `open_from_server` | Pas de `state_changed` après ouverture → indicateur "watched" non mis à jour | **Corrigé** — `state_changed.emit()` ajouté dans `app_context.py` |
 | U2 | `mark_as_read` / `toggle_watched` | Appel redondant à `manage_attributes_modified` dans `toggle_watched` | **Corrigé** — notification déplacée dans `mark_as_read` (Ops), appel redondant retiré de `app_context.py` |
-| U3 | `video_entry_del` (batch Delete) | Appelle `video_entry_del` dans une boucle sans `to_save()` → N sauvegardes | Basse (perf) | Utiliser `db.to_save()` pour regrouper les sauvegardes |
-| U4 | `apply_on_prop_value` | Feature non implémentée dans PySide6 | Basse | Ajouter dans PropertiesPage ou PropertyValuesDialog |
+| U3 | `delete_video_entries` (batch) | Appelle `video_entry_del` dans une boucle sans `to_save()` → N sauvegardes | **Corrigé** — `to_save()` ajouté dans `app_context.py` |
+| U4 | `apply_on_prop_value` | Feature non implémentée dans PySide6 | Ouvert (basse priorité) |
 
 ### Features manquantes
 
-| # | Feature | Impact |
-|---|---------|--------|
-| M1 | `apply_on_prop_value` | Pas de normalisation de valeurs (strip, lower...) depuis PySide6 |
-| M2 | `set_language` / `get_language_names` | Pas d'i18n dans PySide6 (tout en anglais) |
+| # | Feature | Impact | Note |
+|---|---------|--------|------|
+| M1 | `apply_on_prop_value` | Pas de normalisation de valeurs (strip, lower...) depuis PySide6 | Ouvert (basse priorité) |
+| M2 | `set_language` / `get_language_names` | Pas d'i18n dans PySide6 (tout en anglais) | Ignoré — le système des langages doit être entièrement repensé |
