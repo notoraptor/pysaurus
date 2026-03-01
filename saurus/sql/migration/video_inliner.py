@@ -115,18 +115,3 @@ def flatten_video(video: Video):
     ]
 
 
-def get_video_text(video: Video, prop_names: list[str]):
-    properties = video._get("properties")
-    return (
-        f"{video._get('filename')};{video._get('meta_title')};"
-        f"{';'.join(v for name in prop_names for v in properties.get(name, ()))}"
-    )
-
-
-def get_video_text_triple(video: Video, prop_names: list[str]) -> tuple[str, str, str]:
-    properties = video._get("properties")
-    return (
-        video._get("filename"),
-        video._get("meta_title"),
-        f"{';'.join(v for name in prop_names for v in properties.get(name, ()))}",
-    )

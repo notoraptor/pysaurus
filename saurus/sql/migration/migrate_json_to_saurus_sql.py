@@ -16,7 +16,6 @@ from saurus.sql.migration.db_comparison import format_prop_val
 from saurus.sql.migration.video_inliner import (
     get_all_fields,
     get_all_getters,
-    get_video_text_triple,
 )
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.pysaurus_program import PysaurusProgram
@@ -115,7 +114,6 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
         )
         pt_name_to_pid = {pt.name: i for i, pt in enumerate(prop_types)}
         pt_name_to_type = {pt.name: pt.type for pt in prop_types}
-        string_props = [pt.name for pt in prop_types if pt.type is str]
         prop_lines = [
             (i, pt.name, pt.type.__name__, pt.multiple)
             for i, pt in enumerate(prop_types)
@@ -133,10 +131,8 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
             )
             for property_value in format_prop_val(values, pt_name_to_type[name])
         ]
-        video_texts = [
-            (video.video_id, *get_video_text_triple(video, string_props))
-            for video in videos
-        ]
+    def _count(table):
+        return new_db.query_one(f"SELECT COUNT(*) FROM {table}")[0]
 
     # Save data into SQL table
     with Profiler(f"[{db_name}] Insert into SQL database", notifier):
@@ -149,13 +145,15 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
             "VALUES(?,?,?,?)",
             [0, db_name, version, date],
         )
+        assert _count("collection") == 1
+
         new_db.modify(
             "INSERT INTO collection_source (source) VALUES(?)",
             [(path.path,) for path in sources],
             many=True,
         )
-        # Drop insert trigger so we can bulk-insert video_text ourselves
-        new_db.modify("DROP TRIGGER IF EXISTS on_video_insert")
+        assert _count("collection_source") == len(sources)
+
         new_db.modify(
             f"INSERT INTO video "
             f"({','.join(video_fields)}) "
@@ -163,49 +161,57 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
             video_lines,
             many=True,
         )
+        assert _count("video") == len(videos)
+        assert _count("video_text") == len(videos)
+
         new_db.modify(
             "INSERT INTO video_error (video_id, error) VALUES (?, ?)",
             video_errors,
             many=True,
         )
+        assert _count("video_error") == len(video_errors)
+
         new_db.modify(
             "INSERT INTO video_language (video_id, stream, lang_code, rank) "
             "VALUES (?, ?, ?, ?)",
             video_audio_languages + video_subtitle_languages,
             many=True,
         )
+        assert _count("video_language") == len(
+            video_audio_languages + video_subtitle_languages
+        )
+
         new_db.modify(
             "INSERT INTO property (property_id, name, type, multiple) "
             "VALUES (?, ?, ?, ?)",
             prop_lines,
             many=True,
         )
+        assert _count("property") == len(prop_types)
+
         new_db.modify(
             "INSERT INTO property_enumeration (property_id, enum_value, rank) "
             "VALUES (?, ?, ?)",
             prop_enums,
             many=True,
         )
+        assert _count("property_enumeration") == len(prop_enums)
+
         new_db.modify(
             "INSERT INTO video_property_value (video_id, property_id, property_value) "
             "VALUES (?, ?, ?)",
             video_property_values,
             many=True,
         )
+        assert _count("video_property_value") == len(video_property_values)
+
+        # Update FTS properties column (filename/meta_title handled by INSERT trigger)
         new_db.modify(
-            "INSERT INTO video_text "
-            "(video_id, filename, meta_title, properties) VALUES(?, ?, ?, ?)",
-            video_texts,
-            many=True,
+            "UPDATE video_text SET properties = pysaurus_text_to_fts(t.property_text) "
+            "FROM video_property_text AS t "
+            "WHERE t.video_id = video_text.rowid"
         )
-        # Recreate trigger
-        new_db.modify(
-            "CREATE TRIGGER IF NOT EXISTS on_video_insert INSERT ON video "
-            "BEGIN "
-            "INSERT INTO video_text(video_id, filename, meta_title) "
-            "VALUES (NEW.video_id, NEW.filename, NEW.meta_title); "
-            "END"
-        )
+        assert _count("video_text") == len(videos)
 
     # Move thumbnails into new SQL database
     with Profiler(f"[{db_name}] Move thumbnails", notifier):

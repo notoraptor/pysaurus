@@ -59,7 +59,7 @@ def _get_json_writable_database(
 
 def _ignore_sqlite_wal_files(directory, files):
     """Ignore SQLite WAL files that may appear/disappear during copy."""
-    return [f for f in files if f.endswith(("-wal", "-shm"))]
+    return [f for f in files if f.endswith(("-wal", "-shm", "-journal"))]
 
 
 @pytest.fixture

@@ -123,38 +123,36 @@ WHERE p.type = 'str'
 GROUP BY v.video_id;
 
 CREATE VIRTUAL TABLE IF NOT EXISTS video_text
-USING fts5(video_id UNINDEXED, filename, meta_title, properties);
--- Virtual table can use INSERT, UPDATE, DELETE.
--- SELECT video_id FROM video_text WHERE video_text MATCH 'the_text';
+USING fts5(filename, meta_title, properties);
+-- Uses rowid = video.video_id to link rows.
+-- SELECT rowid FROM video_text WHERE video_text MATCH 'the_text';
 
 ----------------------------------------------------------------------------------------
 -- Triggers for video_text.
--- Only for video table.
--- Updates related to property and video_property_value tables must be done manually.
--- [details] Updates related to property and video_property_value tables are handled
--- manually in PysaurusCollection.videos_tag_set() for optimal batch performance
--- and complex validation logic. DO NOT add triggers here.
+-- INSERT/UPDATE triggers call pysaurus_text_to_fts() (registered Python function)
+-- to apply camelCase splitting for FTS5 search.
+-- Property updates are handled manually in Python for batch performance.
 ----------------------------------------------------------------------------------------
 
-CREATE TRIGGER IF NOT EXISTS on_video_insert INSERT ON video
+CREATE TRIGGER IF NOT EXISTS on_video_insert AFTER INSERT ON video
 BEGIN
-    INSERT INTO video_text(video_id, filename, meta_title) VALUES
-    (NEW.video_id, NEW.filename, NEW.meta_title);
+    INSERT INTO video_text (rowid, filename, meta_title)
+    VALUES (NEW.video_id, pysaurus_text_to_fts(NEW.filename), pysaurus_text_to_fts(NEW.meta_title));
 END;
 
-CREATE TRIGGER IF NOT EXISTS on_video_update_filename UPDATE OF filename ON video
+CREATE TRIGGER IF NOT EXISTS on_video_update_filename AFTER UPDATE OF filename ON video
 BEGIN
-    UPDATE video_text SET filename = NEW.filename WHERE video_id = OLD.video_id;
+    UPDATE video_text SET filename = pysaurus_text_to_fts(NEW.filename) WHERE rowid = OLD.video_id;
 END;
 
-CREATE TRIGGER IF NOT EXISTS on_video_update_meta_title UPDATE OF meta_title ON video
+CREATE TRIGGER IF NOT EXISTS on_video_update_meta_title AFTER UPDATE OF meta_title ON video
 BEGIN
-    UPDATE video_text SET meta_title = NEW.meta_title WHERE video_id = OLD.video_id;
+    UPDATE video_text SET meta_title = pysaurus_text_to_fts(NEW.meta_title) WHERE rowid = OLD.video_id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS on_video_delete DELETE ON video
 BEGIN
-    DELETE FROM video_text WHERE video_id = OLD.video_id;
+    DELETE FROM video_text WHERE rowid = OLD.video_id;
 END;
 
 ----------------------------------------------------------------------------------------

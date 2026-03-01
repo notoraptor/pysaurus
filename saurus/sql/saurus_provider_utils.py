@@ -34,24 +34,28 @@ def search_to_sql(search: SearchDef) -> tuple[str, list[str]]:
             piece = f'"{piece}"'
         terms.append(piece)
     if search.cond == "exact":
-        # FTS5 + operator matches adjacent tokens, but doesn't distinguish
-        # between "then natural" and "then.natural" (both tokenize the same).
-        # Use additional LIKE filter to ensure exact phrase match.
-        # Use original search text (not tokenized) for LIKE comparison.
+        # FTS5 pre-filter with adjacency (+), then LIKE on raw data for
+        # precision.  Last term gets prefix * so partial-word matches work
+        # (e.g. "Some.Val" finds "Some.Value").  LIKE eliminates false
+        # positives (e.g. "Some Valentine").
         exact_phrase = search.text.lower()
+        terms[-1] = terms[-1] + "*"
         query = (
-            "SELECT video_id FROM video_text WHERE video_text MATCH ? "
-            "AND LOWER(filename || ' ' || meta_title || ' ' || COALESCE(properties, '')) LIKE ?"
+            "SELECT vt.rowid FROM video_text AS vt "
+            "JOIN video AS v ON v.video_id = vt.rowid "
+            "LEFT JOIN video_property_text AS pt ON pt.video_id = v.video_id "
+            "WHERE vt.video_text MATCH ? "
+            "AND LOWER(v.filename || ' ' || v.meta_title || ' ' || COALESCE(pt.property_text, '')) LIKE ?"
         )
         where = [" + ".join(terms), f"%{exact_phrase}%"]
     else:
         terms = [f"{piece}*" for piece in terms]
         if search.cond == "and":
-            query = "SELECT video_id FROM video_text WHERE video_text MATCH ?"
+            query = "SELECT rowid FROM video_text WHERE video_text MATCH ?"
             where = [" ".join(terms)]
         else:
             # search.cond == "or"
-            query = "SELECT video_id FROM video_text WHERE video_text MATCH ?"
+            query = "SELECT rowid FROM video_text WHERE video_text MATCH ?"
             where = [" OR ".join(terms)]
     return query, where
 

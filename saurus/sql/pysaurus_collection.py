@@ -178,33 +178,10 @@ class PysaurusCollection(AbstractDatabase):
                     ),
                 )
 
-        # 3. Update FTS5 table if property is string type
+        # 3. Update FTS5 properties column if property is string type
         if pt.type is str:
-            if placeholders_string is None:
-                # Update for all videos
-                new_texts = self.db.query_all(
-                    "SELECT v.video_id, v.filename, v.meta_title, t.property_text "
-                    "FROM video AS v LEFT JOIN video_property_text AS t "
-                    "ON v.video_id = t.video_id"
-                )
-                self.db.modify("DELETE FROM video_text")
-            else:
-                # Update only for videos in `updates`
-                new_texts = self.db.query_all(
-                    f"SELECT v.video_id, v.filename, v.meta_title, t.property_text "
-                    f"FROM video AS v LEFT JOIN video_property_text AS t "
-                    f"ON v.video_id = t.video_id "
-                    f"WHERE v.video_id IN ({placeholders_string})",
-                    video_ids,
-                )
-                self.db.modify(
-                    f"DELETE FROM video_text WHERE video_id IN ({placeholders_string})",
-                    video_ids,
-                )
-            self.db.modify_many(
-                "INSERT INTO video_text "
-                "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
-                new_texts,
+            self._update_fts_properties(
+                None if placeholders_string is None else video_ids
             )
 
     def video_entry_set_tags(
@@ -246,19 +223,7 @@ class PysaurusCollection(AbstractDatabase):
             ),
         )
         if string_properties:
-            new_texts = self.db.query_one(
-                "SELECT v.video_id, v.filename, v.meta_title, t.property_text "
-                "FROM video AS v LEFT JOIN video_property_text AS t "
-                "ON v.video_id = t.video_id "
-                "WHERE v.video_id = ?",
-                [video_id],
-            )
-            self.db.modify("DELETE FROM video_text WHERE video_id = ?", [video_id])
-            self.db.modify(
-                "INSERT INTO video_text "
-                "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
-                new_texts,
-            )
+            self._update_fts_properties([video_id])
         self._notify_fields_modified(list(properties.keys()), is_property=True)
 
     def get_prop_types(
@@ -317,14 +282,7 @@ class PysaurusCollection(AbstractDatabase):
         self.db.modify("DELETE FROM property WHERE name = ?", [name])
 
         if video_ids:
-            updates = self.db.query_all(
-                f"SELECT property_text, video_id FROM video_property_text "
-                f"WHERE video_id IN ({','.join(['?'] * len(video_ids))})",
-                video_ids,
-            )
-            self.db.modify_many(
-                "UPDATE video_text SET properties = ? WHERE video_id = ?", updates
-            )
+            self._update_fts_properties(video_ids)
         self._notify_fields_modified([name], is_property=True)
 
     def prop_type_set_name(self, old_name, new_name):
@@ -443,7 +401,6 @@ class PysaurusCollection(AbstractDatabase):
         video_entries: list[VideoEntry],
         runtime_info: dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
-        entry_with_new_meta_titles: list[VideoEntry] = []
         entry_map: dict[str, VideoEntry] = {
             entry.filename: entry for entry in video_entries
         }
@@ -452,19 +409,16 @@ class PysaurusCollection(AbstractDatabase):
         filenames = list(entry_map.keys())
         with self.db:
             for row in self.db.query(
-                f"SELECT video_id, filename, meta_title FROM video "
+                f"SELECT video_id, filename FROM video "
                 f"WHERE filename IN ({','.join(['?'] * len(filenames))})",
                 filenames,
             ):
                 entry = entry_map[row[1]]
                 entry.video_id = row[0]
-                if entry.meta_title != row[2]:
-                    entry_with_new_meta_titles.append(entry)
         old_entries = [entry for entry in video_entries if entry.video_id is not None]
         new_entries = [entry for entry in video_entries if entry.video_id is None]
         self._update_video_entries(old_entries, runtime_info)
         self._add_pure_new_entries(new_entries, runtime_info)
-        self._update_video_texts(entry_with_new_meta_titles + new_entries)
         unreadable = {
             entry.filename: entry.errors for entry in video_entries if entry.unreadable
         }
@@ -576,31 +530,79 @@ class PysaurusCollection(AbstractDatabase):
             audio_languages + subtitle_languages,
         )
 
-    def _update_video_texts(self, entries: list[VideoEntry]):
-        entry_map = {entry.video_id: entry for entry in entries}
-        if len(entry_map) != len(entries):
-            raise ValueError("Duplicate video_ids in entries")
-        texts = []
-        with self.db:
-            for row in self.db.query(
-                f"SELECT video_id, property_text FROM video_property_text "
-                f"WHERE video_id IN ({','.join(['?'] * len(entries))})",
-                [entry.video_id for entry in entries],
-            ):
-                entry = entry_map[row[0]]
-                texts.append((entry.video_id, entry.filename, entry.meta_title, row[1]))
-        if texts:
-            video_ids = [t[0] for t in texts]
+    def _update_fts_properties(self, video_ids: list[int] | None = None):
+        """Update the `properties` column in FTS5 video_text table.
+
+        Updates the properties column from video_property_text view.
+        Filename and meta_title are handled by triggers.
+        """
+        if video_ids is None:
+            self.db.modify("UPDATE video_text SET properties = NULL")
+            self.db.modify(
+                "UPDATE video_text "
+                "SET properties = pysaurus_text_to_fts(t.property_text) "
+                "FROM video_property_text AS t "
+                "WHERE t.video_id = video_text.rowid"
+            )
+        else:
             placeholders = ",".join(["?"] * len(video_ids))
             self.db.modify(
-                f"DELETE FROM video_text WHERE video_id IN ({placeholders})",
+                f"UPDATE video_text SET properties = NULL "
+                f"WHERE rowid IN ({placeholders})",
                 video_ids,
             )
-            self.db.modify_many(
-                "INSERT INTO video_text "
-                "(video_id, filename, meta_title, properties) VALUES (?, ?, ?, ?)",
-                texts,
+            self.db.modify(
+                f"UPDATE video_text "
+                f"SET properties = pysaurus_text_to_fts(t.property_text) "
+                f"FROM video_property_text AS t "
+                f"WHERE t.video_id = video_text.rowid "
+                f"AND video_text.rowid IN ({placeholders})",
+                video_ids,
             )
+
+    def repair_fts(self):
+        """Rebuild FTS5 video_text table and triggers from scratch."""
+        # Drop all triggers and table
+        self.db.modify("DROP TRIGGER IF EXISTS on_video_insert")
+        self.db.modify("DROP TRIGGER IF EXISTS on_video_update_filename")
+        self.db.modify("DROP TRIGGER IF EXISTS on_video_update_meta_title")
+        self.db.modify("DROP TRIGGER IF EXISTS on_video_delete")
+        self.db.modify("DROP TABLE IF EXISTS video_text")
+        # Recreate table and triggers
+        self.db.modify(
+            "CREATE VIRTUAL TABLE video_text "
+            "USING fts5(filename, meta_title, properties)"
+        )
+        self.db.modify(
+            "CREATE TRIGGER on_video_insert AFTER INSERT ON video BEGIN "
+            "INSERT INTO video_text (rowid, filename, meta_title) "
+            "VALUES (NEW.video_id, pysaurus_text_to_fts(NEW.filename), "
+            "pysaurus_text_to_fts(NEW.meta_title)); END"
+        )
+        self.db.modify(
+            "CREATE TRIGGER on_video_update_filename "
+            "AFTER UPDATE OF filename ON video BEGIN "
+            "UPDATE video_text SET filename = pysaurus_text_to_fts(NEW.filename) "
+            "WHERE rowid = OLD.video_id; END"
+        )
+        self.db.modify(
+            "CREATE TRIGGER on_video_update_meta_title "
+            "AFTER UPDATE OF meta_title ON video BEGIN "
+            "UPDATE video_text SET meta_title = pysaurus_text_to_fts(NEW.meta_title) "
+            "WHERE rowid = OLD.video_id; END"
+        )
+        self.db.modify(
+            "CREATE TRIGGER on_video_delete DELETE ON video BEGIN "
+            "DELETE FROM video_text WHERE rowid = OLD.video_id; END"
+        )
+        # Populate FTS from video data
+        self.db.modify(
+            "INSERT INTO video_text (rowid, filename, meta_title, properties) "
+            "SELECT v.video_id, pysaurus_text_to_fts(v.filename), "
+            "pysaurus_text_to_fts(v.meta_title), pysaurus_text_to_fts(t.property_text) "
+            "FROM video AS v LEFT JOIN video_property_text AS t "
+            "ON v.video_id = t.video_id"
+        )
 
     def _thumbnails_add(self, filename_to_thumb_name: dict[str, str]) -> None:
         with self.db:
