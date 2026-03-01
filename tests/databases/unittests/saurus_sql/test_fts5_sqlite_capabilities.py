@@ -81,9 +81,7 @@ class TestSqlFunction:
         conn.execute(
             "UPDATE video_text SET filename = text_to_fts('NewName') WHERE rowid = 1"
         )
-        row = conn.execute(
-            "SELECT filename FROM video_text WHERE rowid = 1"
-        ).fetchone()
+        row = conn.execute("SELECT filename FROM video_text WHERE rowid = 1").fetchone()
         assert row["filename"] == "new name"
 
     def test_function_with_none(self, conn):
@@ -125,8 +123,7 @@ class TestInsertTrigger:
 
         # Check FTS row was created with correct rowid
         fts = conn.execute(
-            "SELECT rowid, filename, meta_title FROM video_text WHERE rowid = ?",
-            [vid],
+            "SELECT rowid, filename, meta_title FROM video_text WHERE rowid = ?", [vid]
         ).fetchone()
         assert fts is not None
         assert fts["rowid"] == vid
@@ -224,9 +221,7 @@ class TestInsertTrigger:
             END
         """)
         data = [(f"File{i}Name.mp4", f"Title{i}") for i in range(10)]
-        conn.executemany(
-            "INSERT INTO video (filename, meta_title) VALUES (?, ?)", data
-        )
+        conn.executemany("INSERT INTO video (filename, meta_title) VALUES (?, ?)", data)
 
         video_count = conn.execute("SELECT COUNT(*) FROM video").fetchone()[0]
         fts_count = conn.execute("SELECT COUNT(*) FROM video_text").fetchone()[0]
@@ -250,9 +245,7 @@ class TestInsertTrigger:
                 "INSERT INTO video (filename, meta_title) VALUES ('f.mp4', 'T')"
             )
             # If it didn't raise, check what rowid was assigned
-            fts = conn.execute(
-                "SELECT rowid FROM video_text"
-            ).fetchone()
+            fts = conn.execute("SELECT rowid FROM video_text").fetchone()
             # Document the actual behavior
             pytest.skip(
                 f"BEFORE INSERT didn't fail; FTS rowid = {fts[0] if fts else 'none'}"
@@ -339,9 +332,6 @@ class TestUpdateTrigger:
             "UPDATE video SET filename = 'CompletelyDifferent.mp4' WHERE video_id = ?",
             [self.vid],
         )
-        matches = self.conn.execute(
-            "SELECT rowid FROM video_text WHERE video_text MATCH 'original*'"
-        ).fetchall()
         # "original" should only be in meta_title now, not filename
         # Actually "OriginalTitle" is still in meta_title, so we check filename column
         fts = self.conn.execute(
@@ -370,9 +360,7 @@ class TestUpdateTrigger:
         # Update a column that has no trigger (meta_title trigger is for meta_title only)
         # Add a dummy column first
         self.conn.execute("ALTER TABLE video ADD COLUMN watched INTEGER DEFAULT 0")
-        self.conn.execute(
-            "UPDATE video SET watched = 1 WHERE video_id = ?", [self.vid]
-        )
+        self.conn.execute("UPDATE video SET watched = 1 WHERE video_id = ?", [self.vid])
 
         fts_after = self.conn.execute(
             "SELECT filename, meta_title FROM video_text WHERE rowid = ?", [self.vid]
@@ -401,9 +389,7 @@ class TestUpdateTrigger:
                 "INSERT INTO video (filename, meta_title) VALUES (?, ?)",
                 [f"Batch{i}File.mp4", f"Batch{i}Title"],
             )
-        ids = [
-            r[0] for r in self.conn.execute("SELECT video_id FROM video").fetchall()
-        ]
+        ids = [r[0] for r in self.conn.execute("SELECT video_id FROM video").fetchall()]
 
         # Batch update
         self.conn.executemany(
@@ -443,15 +429,21 @@ class TestDeleteTrigger:
         """)
         conn.execute("INSERT INTO video (filename) VALUES ('test.mp4')")
         vid = conn.execute("SELECT video_id FROM video").fetchone()[0]
-        assert conn.execute(
-            "SELECT COUNT(*) FROM video_text WHERE rowid = ?", [vid]
-        ).fetchone()[0] == 1
+        assert (
+            conn.execute(
+                "SELECT COUNT(*) FROM video_text WHERE rowid = ?", [vid]
+            ).fetchone()[0]
+            == 1
+        )
 
         conn.execute("DELETE FROM video WHERE video_id = ?", [vid])
 
-        assert conn.execute(
-            "SELECT COUNT(*) FROM video_text WHERE rowid = ?", [vid]
-        ).fetchone()[0] == 0
+        assert (
+            conn.execute(
+                "SELECT COUNT(*) FROM video_text WHERE rowid = ?", [vid]
+            ).fetchone()[0]
+            == 0
+        )
 
 
 # =============================================================================
@@ -525,8 +517,7 @@ class TestFullIntegration:
 
         # UPDATE meta_title
         self.conn.execute(
-            "UPDATE video SET meta_title = 'NewMetaTitle' WHERE video_id = ?",
-            [vid],
+            "UPDATE video SET meta_title = 'NewMetaTitle' WHERE video_id = ?", [vid]
         )
         fts = self.conn.execute(
             "SELECT meta_title FROM video_text WHERE rowid = ?", [vid]
@@ -580,8 +571,7 @@ class TestFullIntegration:
             "SELECT video_id FROM video WHERE filename = 'AlphaFile.mp4'"
         ).fetchone()[0]
         self.conn.execute(
-            "UPDATE video SET filename = 'EpsilonFile.mp4' WHERE video_id = ?",
-            [vid1],
+            "UPDATE video SET filename = 'EpsilonFile.mp4' WHERE video_id = ?", [vid1]
         )
 
         # Alpha gone, epsilon found
@@ -745,8 +735,7 @@ class TestEdgeCases:
             for i in range(5)
         ]
         conn.executemany(
-            "INSERT INTO video (filename, meta_title) "
-            "VALUES (:filename, :meta_title)",
+            "INSERT INTO video (filename, meta_title) VALUES (:filename, :meta_title)",
             data,
         )
         assert conn.execute("SELECT COUNT(*) FROM video_text").fetchone()[0] == 5

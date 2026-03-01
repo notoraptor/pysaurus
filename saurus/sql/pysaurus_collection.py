@@ -530,34 +530,35 @@ class PysaurusCollection(AbstractDatabase):
             audio_languages + subtitle_languages,
         )
 
-    def _update_fts_properties(self, video_ids: list[int] | None = None):
+    def _update_fts_properties(self, video_ids=None):
         """Update the `properties` column in FTS5 video_text table.
 
-        Updates the properties column from video_property_text view.
+        Rebuilds properties from video_property_text view.
         Filename and meta_title are handled by triggers.
+
+        For small sets, uses modify_many with per-row subquery.
+        For large sets (>half the table), falls back to full table UPDATE...FROM
+        which is faster due to single-pass optimization.
+        Avoids WHERE rowid IN(...) which is extremely slow on FTS5.
         """
+        if video_ids is not None:
+            total = self.db.query_one("SELECT COUNT(*) FROM video_text")[0]
+            if len(video_ids) > total // 2:
+                video_ids = None
         if video_ids is None:
-            self.db.modify("UPDATE video_text SET properties = NULL")
             self.db.modify(
-                "UPDATE video_text "
-                "SET properties = pysaurus_text_to_fts(t.property_text) "
-                "FROM video_property_text AS t "
-                "WHERE t.video_id = video_text.rowid"
+                "UPDATE video_text SET properties = ("
+                "SELECT pysaurus_text_to_fts(property_text) "
+                "FROM video_property_text WHERE video_id = video_text.rowid"
+                ")"
             )
         else:
-            placeholders = ",".join(["?"] * len(video_ids))
-            self.db.modify(
-                f"UPDATE video_text SET properties = NULL "
-                f"WHERE rowid IN ({placeholders})",
-                video_ids,
-            )
-            self.db.modify(
-                f"UPDATE video_text "
-                f"SET properties = pysaurus_text_to_fts(t.property_text) "
-                f"FROM video_property_text AS t "
-                f"WHERE t.video_id = video_text.rowid "
-                f"AND video_text.rowid IN ({placeholders})",
-                video_ids,
+            self.db.modify_many(
+                "UPDATE video_text SET properties = ("
+                "SELECT pysaurus_text_to_fts(property_text) "
+                "FROM video_property_text WHERE video_id = ?"
+                ") WHERE rowid = ?",
+                [(vid, vid) for vid in video_ids],
             )
 
     def repair_fts(self):

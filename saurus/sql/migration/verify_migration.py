@@ -21,10 +21,7 @@ from saurus.sql.migration.db_comparison import (
     verify_videos,
 )
 from saurus.sql.migration.migrate_json_to_saurus_sql import DB_THUMB_FOLDER
-from saurus.sql.migration.video_inliner import (
-    get_all_fields,
-    get_all_getters,
-)
+from saurus.sql.migration.video_inliner import get_all_fields, get_all_getters
 from saurus.sql.sql_functions import pysaurus_text_to_fts
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.pysaurus_program import PysaurusProgram
@@ -117,16 +114,17 @@ def verify_video_text(new_db, videos, string_props):
         props_text = ";".join(
             v for name in string_props for v in properties.get(name, ())
         )
-        expected.append((
-            video.video_id,
-            pysaurus_text_to_fts(video._get("filename")),
-            pysaurus_text_to_fts(video._get("meta_title")),
-            pysaurus_text_to_fts(props_text) if props_text else None,
-        ))
+        expected.append(
+            (
+                video.video_id,
+                pysaurus_text_to_fts(video._get("filename")),
+                pysaurus_text_to_fts(video._get("meta_title")),
+                pysaurus_text_to_fts(props_text) if props_text else None,
+            )
+        )
     expected.sort()
     rows = new_db.query_all(
-        "SELECT rowid, filename, meta_title, properties "
-        "FROM video_text ORDER BY rowid"
+        "SELECT rowid, filename, meta_title, properties FROM video_text ORDER BY rowid"
     )
     actual = [
         (row["rowid"], row["filename"], row["meta_title"], row["properties"])

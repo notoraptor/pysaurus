@@ -13,10 +13,7 @@ from pysaurus.database.jsdb.jsdb_prop_type import PropType
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_manager import ThumbnailManager
 from saurus.sql.migration.db_comparison import format_prop_val
-from saurus.sql.migration.video_inliner import (
-    get_all_fields,
-    get_all_getters,
-)
+from saurus.sql.migration.video_inliner import get_all_fields, get_all_getters
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.pysaurus_program import PysaurusProgram
 
@@ -131,6 +128,7 @@ def export_db_to_saurus_sql(db_path: AbsolutePath, notifier):
             )
             for property_value in format_prop_val(values, pt_name_to_type[name])
         ]
+
     def _count(table):
         return new_db.query_one(f"SELECT COUNT(*) FROM {table}")[0]
 

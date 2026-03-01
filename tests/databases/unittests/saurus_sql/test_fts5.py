@@ -58,8 +58,7 @@ def _fts_match(db: PysaurusCollection, match_expr: str) -> list[int]:
     return [
         row[0]
         for row in db.db.query_all(
-            "SELECT rowid FROM video_text WHERE video_text MATCH ?",
-            [match_expr],
+            "SELECT rowid FROM video_text WHERE video_text MATCH ?", [match_expr]
         )
     ]
 
@@ -104,8 +103,7 @@ class TestFtsRowLifecycle:
             ["/test/NewVideo.mp4", "New Title"],
         )
         new_id = db.db.query_one(
-            "SELECT video_id FROM video WHERE filename = ?",
-            ["/test/NewVideo.mp4"],
+            "SELECT video_id FROM video WHERE filename = ?", ["/test/NewVideo.mp4"]
         )[0]
         row = _fts_row(db, new_id)
         assert row is not None
@@ -167,8 +165,7 @@ class TestFtsColumnUpdates:
         new_filename = "/renamed/UniqueRenamed.mp4"
 
         db.db.modify(
-            "UPDATE video SET filename = ? WHERE video_id = ?",
-            [new_filename, video_id],
+            "UPDATE video SET filename = ? WHERE video_id = ?", [new_filename, video_id]
         )
         row = _fts_row(db, video_id)
         assert row["filename"] == pysaurus_text_to_fts(new_filename)
@@ -179,8 +176,7 @@ class TestFtsColumnUpdates:
         new_title = "Updated Meta Title"
 
         db.db.modify(
-            "UPDATE video SET meta_title = ? WHERE video_id = ?",
-            [new_title, video_id],
+            "UPDATE video SET meta_title = ? WHERE video_id = ?", [new_title, video_id]
         )
         row = _fts_row(db, video_id)
         assert row["meta_title"] == pysaurus_text_to_fts(new_title)
@@ -191,8 +187,7 @@ class TestFtsColumnUpdates:
         unique_name = "/renamed/xyzuniquetestname.mp4"
 
         db.db.modify(
-            "UPDATE video SET filename = ? WHERE video_id = ?",
-            [unique_name, video_id],
+            "UPDATE video SET filename = ? WHERE video_id = ?", [unique_name, video_id]
         )
 
         assert video_id in _fts_match(db, "xyzuniquetestname*")
@@ -213,8 +208,7 @@ class TestFtsColumnUpdates:
         video_id = db.db.query_one("SELECT video_id FROM video LIMIT 1")[0]
         unique_old = "/test/xyzolduniquefilename.mp4"
         db.db.modify(
-            "UPDATE video SET filename = ? WHERE video_id = ?",
-            [unique_old, video_id],
+            "UPDATE video SET filename = ? WHERE video_id = ?", [unique_old, video_id]
         )
         assert video_id in _fts_match(db, "xyzolduniquefilename*")
 
@@ -406,12 +400,8 @@ class TestFtsSearch:
         """Set up videos with known property values for search testing."""
         self.db = db
         # Use all-lowercase terms to avoid camelCase splitting complexity
-        db.videos_tag_set(
-            "category", {196: ["xyzalphaterm", "xyzbetaword"]}
-        )
-        db.videos_tag_set(
-            "category", {114: ["xyzbetaword", "xyzgammaword"]}
-        )
+        db.videos_tag_set("category", {196: ["xyzalphaterm", "xyzbetaword"]})
+        db.videos_tag_set("category", {114: ["xyzbetaword", "xyzgammaword"]})
 
     def test_search_and_both_terms(self):
         """AND: both terms must be present."""
@@ -440,12 +430,8 @@ class TestFtsSearch:
 
     def test_search_case_insensitive_or(self):
         """OR search must be case-insensitive."""
-        results_lower = _search_via_provider(
-            self.db, "xyzalphaterm xyzgammaword", "or"
-        )
-        results_upper = _search_via_provider(
-            self.db, "XYZALPHATERM XYZGAMMAWORD", "or"
-        )
+        results_lower = _search_via_provider(self.db, "xyzalphaterm xyzgammaword", "or")
+        results_upper = _search_via_provider(self.db, "XYZALPHATERM XYZGAMMAWORD", "or")
         assert 196 in results_lower
         assert 114 in results_lower
         assert set(results_lower) == set(results_upper)
@@ -492,8 +478,7 @@ class TestFtsSearch:
         assert 196 not in _search_via_provider(self.db, "xyzdeltaword", "and")
 
         self.db.videos_tag_set(
-            "category",
-            {196: ["xyzalphaterm", "xyzbetaword", "xyzdeltaword"]},
+            "category", {196: ["xyzalphaterm", "xyzbetaword", "xyzdeltaword"]}
         )
         self.db.provider.refresh()
 
@@ -585,12 +570,8 @@ class TestFtsExactSearch:
 
     def test_or_broader_than_exact(self):
         """OR must return at least as many results as EXACT."""
-        or_results = set(
-            _search_via_provider(self.db, "xyzfoo xyzbar", "or")
-        )
-        exact_results = set(
-            _search_via_provider(self.db, "xyzfoo xyzbar", "exact")
-        )
+        or_results = set(_search_via_provider(self.db, "xyzfoo xyzbar", "or"))
+        exact_results = set(_search_via_provider(self.db, "xyzfoo xyzbar", "exact"))
         assert exact_results <= or_results
 
     def test_exact_partial_last_word(self):
@@ -686,9 +667,7 @@ class TestFtsIntegrity:
         """Setting tags then deleting the video must clean up FTS."""
         video_id = 196
         db.video_entry_set_tags(video_id, {"category": ["xyzwillbedeleted"]})
-        assert _fts_contains(
-            _fts_row(db, video_id)["properties"], "xyzwillbedeleted"
-        )
+        assert _fts_contains(_fts_row(db, video_id)["properties"], "xyzwillbedeleted")
 
         db.provider.get_view_indices()
         db.video_entry_del(video_id)
