@@ -17,7 +17,7 @@ PySide6 ne passe **pas** par `FeatureAPI.__run_feature__`. Il fait des appels au
 | # | Feature API | Couvert PySide6 ? | Appel PySide6 | Emplacement |
 |---|-------------|---------------------|---------------|-------------|
 | 1 | `apply_on_view` | **Oui** | `ctx.apply_on_view(...)` | videos_page |
-| 2 | `apply_on_prop_value` | **Manquant** | — | Aucun appel à `apply_on_prop_value` dans PySide6 |
+| 2 | `apply_on_prop_value` | **Oui** | `ctx.apply_on_prop_value(...)` | property_values_dialog (boutons modifiers) |
 | 3 | `classifier_back` | **Oui** | `ctx.classifier_back()` | videos_page |
 | 4 | `classifier_focus_prop_val` | **Oui** | `ctx.classifier_focus_prop_val(...)` | videos_page |
 | 5 | `classifier_reverse` | **Oui** | `ctx.classifier_reverse()` | videos_page |
@@ -98,27 +98,21 @@ PySide6 ne passe **pas** par `FeatureAPI.__run_feature__`. Il fait des appels au
 
 | Catégorie | Total | Couvert | Manquant | N/A |
 |-----------|-------|---------|----------|-----|
-| FeatureAPI proxies | 36 | 34 | 2 | 0 |
+| FeatureAPI proxies | 36 | 35 | 1 | 0 |
 | FeatureAPI méthodes | 7 | 4 | 1 | 2 |
 | GuiAPI proxies | 3 | 3 | 0 | 0 |
 | GuiAPI méthodes | 10 | 10 | 0 | 0 |
-| **Total** | **56** | **51** | **3** | **2** |
+| **Total** | **56** | **52** | **2** | **2** |
 
-**Couverture : 51/54 features pertinentes = 94%**
+**Couverture : 52/54 features pertinentes = 96%**
 
 ---
 
 ## 4. Features manquantes dans PySide6
 
-### 4.1. `apply_on_prop_value` (modifier les valeurs d'une propriété)
+### ~~4.1. `apply_on_prop_value`~~ → Couvert (non-problème)
 
-**Ce que ça fait** : Applique une fonction de transformation (ex : `strip`, `lower`, `capitalize`) sur les valeurs d'une propriété string pour toutes les vidéos.
-
-**Backend** : `Ops.apply_on_prop_value(prop_name, mod_name)` → itère sur `videos_tag_get`, applique le modifier, puis `set_property_for_videos`.
-
-**Impact** : Feature utile pour normaliser les valeurs (ex : supprimer les espaces, uniformiser la casse). Pourrait être ajoutée dans `PropertyValuesDialog` ou `PropertiesPage` comme action "Normalize values" avec un menu de transformations.
-
-**Façade** : la méthode `ctx.apply_on_prop_value(prop_name, modifier)` existe déjà dans AppContext.
+Initialement identifié comme manquant, mais déjà implémenté dans `PropertyValuesDialog` via 5 boutons modifiers (capitalize, lowercase, uppercase, titlecase, strip) qui appellent `ctx.apply_on_prop_value(prop_name, modifier)`. Le dialog est accessible depuis `PropertiesPage` → Actions → "Manage Values..." pour les propriétés string. Confirmé par 18 tests unitaires dans `test_property_values_dialog.py`.
 
 ### 4.2. `get_language_names` / `set_language`
 

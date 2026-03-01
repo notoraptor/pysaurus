@@ -20,41 +20,43 @@ Lire les documents dans cet ordre :
 
 ## Résumé des problèmes identifiés
 
+Tous les problèmes identifiés ont été résolus (corrigés ou classés non-problèmes).
+
 ### Problèmes backend (notifications manquantes)
 
-| ID | Feature concernée | Description |
-|----|------------------|-------------|
-| P1 | `mark_as_watched` | Ne notifie pas le provider (champs `watched`, `date_entry_opened`) |
-| P2 | `video_entry_del` | Ne notifie pas le provider |
-| P3 | `video_entry_set_tags` | Ne notifie pas le provider pour les propriétés modifiées |
-| P4 | `delete_property_values` | Pas de notification provider après suppression |
-| P5 | `prop_type_del` | Groupement incohérent si groupé par la propriété supprimée |
-| P6 | `change_video_file_title` | `video_entry_set_filename` ne notifie pas le provider |
+| ID | Feature concernée | Description | Statut |
+|----|------------------|-------------|--------|
+| P1 | `mark_as_watched` / `mark_as_read` | Ne notifiaient pas le provider | **Corrigé** |
+| P2 | `video_entry_del` | Appelle déjà `provider.delete()` + `_notify_fields_modified` | Non-problème |
+| P3 | `video_entry_set_tags` (SQL) | Ne notifiait pas le provider | **Corrigé** |
+| P4 | `delete_property_values` | Pas de notification provider après suppression | **Corrigé** |
+| P5 | `prop_type_del` | Groupement incohérent si groupé par la propriété supprimée | **Corrigé** |
+| P6 | `change_video_file_title` | `video_entry_set_filename` appelle déjà `_notify_fields_modified` | Non-problème |
 
 ### Problèmes UI PySide6
 
-| ID | Description |
-|----|-------------|
-| U1 | `open_from_server` (VLC) : pas de refresh après ouverture |
-| U2 | `mark_as_read` : notification provider manuelle (fragile) |
-| U3 | Suppression batch : pas de `to_save()` pour grouper les sauvegardes |
-| U4 | `apply_on_prop_value` non implémenté |
+| ID | Description | Statut |
+|----|-------------|--------|
+| U1 | `open_video` / `open_from_server` : pas de `state_changed` après ouverture | **Corrigé** |
+| U2 | `toggle_watched` : appel redondant à `manage_attributes_modified` | **Corrigé** |
+| U3 | Suppression batch : pas de `to_save()` pour grouper les sauvegardes | **Corrigé** |
+| U4 | `apply_on_prop_value` supposé non implémenté | Non-problème (déjà dans `PropertyValuesDialog`) |
 
 ### Problèmes de blocage / double-exécution
 
-| ID | Méthode | Risque | Description |
-|----|---------|--------|-------------|
-| B1 | `properties_page._on_create()` | Haut | Bouton persistant, double-clic crée deux propriétés |
-| B2 | `videos_page._toggle_watched()` | Haut (théorique) | Aucune protection, toggle double = retour état initial |
-| B3 | `PropertyValuesDialog` boutons internes | Moyen | Delete/modifiers sans désactivation après confirmation |
-| B4 | `VideoPropertiesDialog` bouton OK | Moyen | Double-clic rapide avant fermeture du dialog |
-| B5 | `databases_page._on_db_open()` | Moyen | Signal émis sans protection, double-clic naturel |
-| B6 | `properties_page._on_convert()` | Moyen (théorique) | Toggle double après confirmation |
-| B7 | `_on_confirm_unique_moves()` | Moyen | Bouton persistant sans désactivation |
+| ID | Méthode | Risque | Statut |
+|----|---------|--------|--------|
+| B1 | `properties_page._on_create()` | Haut | **Corrigé** — bouton désactivé pendant l'exécution |
+| B2 | `videos_page._toggle_watched()` | Théorique | Non-problème — menu contextuel se ferme au premier clic |
+| B3 | `PropertyValuesDialog` boutons internes | Moyen | **Corrigé** — boutons désactivés pendant l'opération |
+| B4 | `VideoPropertiesDialog` bouton OK | Moyen | **Corrigé** — bouton OK désactivé dans `_on_accept()` |
+| B5 | `databases_page._on_db_open()` | Moyen | **Corrigé** — guard dans `_run_process()` |
+| B6 | `properties_page._on_convert()` | Théorique | Non-problème — via menu contextuel, risque faible |
+| B7 | `_on_confirm_unique_moves()` | Moyen | **Corrigé** — bouton désactivé pendant l'exécution |
 
 ### Features manquantes
 
-| ID | Feature |
-|----|---------|
-| M1 | `apply_on_prop_value` (normalisation de valeurs) |
-| M2 | i18n / sélection de langue |
+| ID | Feature | Statut |
+|----|---------|--------|
+| M1 | `apply_on_prop_value` (normalisation de valeurs) | Non-problème — déjà accessible via `PropertyValuesDialog` |
+| M2 | i18n / sélection de langue | Ignoré — le système des langages doit être entièrement repensé |
