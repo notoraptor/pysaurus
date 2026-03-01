@@ -184,7 +184,7 @@ class PysaurusCollection(AbstractDatabase):
                 # Update for all videos
                 new_texts = self.db.query_all(
                     "SELECT v.video_id, v.filename, v.meta_title, t.property_text "
-                    "FROM video AS v JOIN video_property_text AS t "
+                    "FROM video AS v LEFT JOIN video_property_text AS t "
                     "ON v.video_id = t.video_id"
                 )
                 self.db.modify("DELETE FROM video_text")
@@ -192,7 +192,7 @@ class PysaurusCollection(AbstractDatabase):
                 # Update only for videos in `updates`
                 new_texts = self.db.query_all(
                     f"SELECT v.video_id, v.filename, v.meta_title, t.property_text "
-                    f"FROM video AS v JOIN video_property_text AS t "
+                    f"FROM video AS v LEFT JOIN video_property_text AS t "
                     f"ON v.video_id = t.video_id "
                     f"WHERE v.video_id IN ({placeholders_string})",
                     video_ids,
@@ -248,18 +248,17 @@ class PysaurusCollection(AbstractDatabase):
         if string_properties:
             new_texts = self.db.query_one(
                 "SELECT v.video_id, v.filename, v.meta_title, t.property_text "
-                "FROM video AS v JOIN video_property_text AS t "
+                "FROM video AS v LEFT JOIN video_property_text AS t "
                 "ON v.video_id = t.video_id "
                 "WHERE v.video_id = ?",
                 [video_id],
             )
-            if new_texts:
-                self.db.modify("DELETE FROM video_text WHERE video_id = ?", [video_id])
-                self.db.modify(
-                    "INSERT INTO video_text "
-                    "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
-                    new_texts,
-                )
+            self.db.modify("DELETE FROM video_text WHERE video_id = ?", [video_id])
+            self.db.modify(
+                "INSERT INTO video_text "
+                "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
+                new_texts,
+            )
         self._notify_fields_modified(list(properties.keys()), is_property=True)
 
     def get_prop_types(
@@ -590,11 +589,18 @@ class PysaurusCollection(AbstractDatabase):
             ):
                 entry = entry_map[row[0]]
                 texts.append((entry.video_id, entry.filename, entry.meta_title, row[1]))
-        self.db.modify_many(
-            "INSERT OR REPLACE INTO video_text "
-            "(video_id, filename, meta_title, properties) VALUES (?, ?, ?, ?)",
-            texts,
-        )
+        if texts:
+            video_ids = [t[0] for t in texts]
+            placeholders = ",".join(["?"] * len(video_ids))
+            self.db.modify(
+                f"DELETE FROM video_text WHERE video_id IN ({placeholders})",
+                video_ids,
+            )
+            self.db.modify_many(
+                "INSERT INTO video_text "
+                "(video_id, filename, meta_title, properties) VALUES (?, ?, ?, ?)",
+                texts,
+            )
 
     def _thumbnails_add(self, filename_to_thumb_name: dict[str, str]) -> None:
         with self.db:

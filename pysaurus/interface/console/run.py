@@ -318,6 +318,24 @@ class BenchmarkAPI:
         print(f"({t.microseconds / 1000:.3f} ms)")
         return "Similar videos computed."
 
+    def repair_fts(self):
+        """Rebuild FTS5 video_text table (SQL backend only)."""
+        if not isinstance(self._db, PysaurusCollection):
+            return "Only available for SQL backend."
+        before = self._db.db.query_one("SELECT COUNT(*) FROM video_text")[0]
+        with PerfCounter() as t:
+            self._db.db.modify("DELETE FROM video_text")
+            self._db.db.modify(
+                "INSERT INTO video_text (video_id, filename, meta_title, properties) "
+                "SELECT v.video_id, v.filename, v.meta_title, t.property_text "
+                "FROM video AS v LEFT JOIN video_property_text AS t "
+                "ON v.video_id = t.video_id"
+            )
+        after = self._db.db.query_one("SELECT COUNT(*) FROM video_text")[0]
+        total_videos = self._db.db.query_one("SELECT COUNT(*) FROM video")[0]
+        print(f"({t.microseconds / 1000:.3f} ms)")
+        return f"video_text: {before} -> {after} rows (video table: {total_videos})"
+
     def repeat(self, command: str = "", n: int = 1):
         """Repeat a command N times and report timing."""
         command = str(command)
