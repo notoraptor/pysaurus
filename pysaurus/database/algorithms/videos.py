@@ -21,6 +21,7 @@ class Videos:
     def get_runtime_info_from_paths(
         cls, folders: Iterable[AbsolutePath]
     ) -> dict[AbsolutePath, VideoRuntimeInfo]:
+        # Process
         sources = list(folders)
         notifier = Information.notifier()
         paths: dict[AbsolutePath, VideoRuntimeInfo] = {}

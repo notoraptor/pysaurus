@@ -77,6 +77,7 @@ class FileCopier:
             self.terminated = True
 
     def copy_file(self):
+        # Process
         self.notifier.task(
             self.copy_file, self.total, "bytes", expectation=FileSize(self.total)
         )
