@@ -257,13 +257,13 @@ class VideoPropertiesDialog(QDialog):
         tabs = QTabWidget()
         layout.addWidget(tabs)
 
-        # Info tab
-        info_tab = self._create_info_tab()
-        tabs.addTab(info_tab, "Info")
-
         # Properties tab
         props_tab = self._create_properties_tab()
         tabs.addTab(props_tab, "Properties")
+
+        # Info tab
+        info_tab = self._create_info_tab()
+        tabs.addTab(info_tab, "Info")
 
         # Dialog buttons
         self.button_box = QDialogButtonBox(
