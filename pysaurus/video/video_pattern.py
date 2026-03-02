@@ -212,7 +212,9 @@ class VideoPattern(ABC):
     def move_id(self):
         raise NotImplementedError()
 
-    def get_property(self, name: str, default: PropUnitType = None) -> list[PropUnitType]:
+    def get_property(
+        self, name: str, default: PropUnitType = None
+    ) -> list[PropUnitType]:
         return self.properties.get(name, [] if default is None else [default])
 
     @property

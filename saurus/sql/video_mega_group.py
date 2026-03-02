@@ -205,8 +205,7 @@ def _compute_results_and_stats(
 
             query_maker_page.where.clear()
             query_maker_page.where.append_query(
-                f"{field_video_id} IN ({','.join(['?'] * len(page_view))})",
-                *page_view,
+                f"{field_video_id} IN ({','.join(['?'] * len(page_view))})", *page_view
             )
 
     thumb_table = query_maker_page.find_table("video_thumbnail")
