@@ -2,70 +2,56 @@ from pysaurus.core import dict_file_format as dff
 from pysaurus.core.absolute_path import AbsolutePath, PathType
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.modules import FNV64
+from dataclasses import dataclass, field
+from filelock import SoftFileLock
 
 
+@dataclass
 class Language:
-    __slots__ = ("dictionary",)
-    K_DEFAULT = "default"
-    K_CURRENT = "current"
-    K_FOLDER = "folder"
-    K_DATA = "data"
-
-    def __init__(self, *, folder=None, dictionary=None):
-        if dictionary is None:
-            dictionary = {}
-        self.dictionary = dictionary
-        self.dictionary[self.K_DEFAULT] = "english"
-        self.dictionary[self.K_CURRENT] = "english"
-        self.dictionary[self.K_FOLDER] = None
-        self.dictionary[self.K_DATA] = {}
-        if folder is not None:
-            self.set_folder(folder)
-
-    default = property(lambda self: self.dictionary[self.K_DEFAULT])
+    default: str = "english"
+    current: str = "english"
+    folder: PathType | None = None
+    data: dict[str, str] = field(default_factory=dict)
 
     def __str__(self):
-        return dff.dff_dumps(self.dictionary[self.K_DATA])
+        return dff.dff_dumps(self.data)
 
     def __len__(self):
-        return len(self.dictionary[self.K_DATA])
+        return len(self.data)
 
     def __call__(self, text: str, **placeholders) -> str:
         """Translate."""
         # Update language
         key = self.key_of(text)
-        if key not in self.dictionary[self.K_DATA]:
-            tmp_d = self.dictionary[self.K_DATA]
-            tmp_d[key] = text
-            self.dictionary[self.K_DATA] = tmp_d
+        if key not in self.data:
+            self.data[key] = text
             self._save_data()
         # return translation
-        translation = self.dictionary[self.K_DATA][key]
+        translation = self.data[key]
         if placeholders:
             translation = translation.format(**placeholders)
         return translation
 
     def set_internal(self, dictionary: dict):
-        assert dictionary is not None
-        dictionary.update(self.dictionary)
-        self.dictionary = dictionary
+        dictionary = dictionary or {}
+        self.default = dictionary.get("default", self.default)
+        self.current = dictionary.get("current", self.current)
+        self.folder = dictionary.get("folder", self.folder)
+        self.data = dictionary.get("data", self.data)
 
     def set_folder(self, folder: PathType):
         if folder is None:
-            self.dictionary[self.K_FOLDER] = None
+            self.folder = None
             self._update_data()
         else:
             folder = str(AbsolutePath.ensure(folder).assert_dir())
-            if (
-                self.dictionary[self.K_FOLDER] is None
-                or self.dictionary[self.K_FOLDER] != folder
-            ):
-                self.dictionary[self.K_FOLDER] = folder
+            if self.folder is None or self.folder != folder:
+                self.folder = folder
                 self._update_data()
 
     def set_language(self, language: str):
-        if self.dictionary[self.K_CURRENT] != language:
-            self.dictionary[self.K_CURRENT] = language
+        if self.current != language:
+            self.current = language
             self._update_data()
 
     @classmethod
@@ -76,24 +62,25 @@ class Language:
         hl_key = "".join(piece.title() for piece in pieces)
         return f"{hl_key}_{FNV64.hash(text)}"
 
-    @property
-    def current_path(self):
-        return AbsolutePath.join(
-            self.dictionary[self.K_FOLDER], f"{self.dictionary[self.K_CURRENT]}.txt"
-        )
-
     def _update_data(self):
-        self.dictionary[self.K_DATA].clear()
-        if self.dictionary[self.K_FOLDER] is not None:
-            path = self.current_path
-            if path.isfile():
-                self.dictionary[self.K_DATA] = dff.dff_load(path)
+        self.data.clear()
+        path = self._get_current_path()
+        if path and path.isfile():
+            with SoftFileLock(f"{path}.lock"):
+                self.data = dff.dff_load(path)
 
     def _save_data(self):
-        if self.dictionary[self.K_FOLDER] is not None:
-            path = self.current_path
-            if path.isfile():
-                dff.dff_dump(self.dictionary[self.K_DATA], path)
+        path = self._get_current_path()
+        if path and path.isfile():
+            with SoftFileLock(f"{path}.lock"):
+                dff.dff_dump(self.data, path)
+
+    def _get_current_path(self) -> AbsolutePath | None:
+        return (
+            None
+            if self.folder is None
+            else AbsolutePath.join(self.folder, f"{self.current}.txt")
+        )
 
 
 say = Language()
