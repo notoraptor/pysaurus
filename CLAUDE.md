@@ -159,6 +159,37 @@ Python backend sends typed `Notification` objects (`pysaurus/core/notifications.
 - `videre` (at `../videre`) — video extraction
 - `skullite` (at `../skullite`) — SQLite wrapper (`PysaurusConnection(None)` = in-memory DB; `copy_from()` = bulk copy)
 
+### PySide6 Conventions (`interface/pyside6/`)
+
+PySide6 is the primary GUI frontend. Unlike web frontends, it does **not** go through `FeatureAPI`. Instead, all calls go through the **`AppContext` facade** — pages and dialogs must never access internal attributes (`_database`, `_ops`, `_algos`, `_provider`) directly.
+
+#### Auto-refresh via `state_changed` signal
+
+- Every **state-mutating** facade method in `AppContext` must emit `self.state_changed.emit()` after the backend call. `MainWindow._on_state_changed()` then refreshes the active page automatically.
+- Manual `self.refresh()` calls in pages are reserved for **UI-only changes** (pagination, toggle view). Never use manual `refresh()` after a backend state change — rely on the signal.
+
+#### Backend notification
+
+- Every backend write operation (in `AbstractDatabase`, `DatabaseOperations`, `DatabaseAlgorithms`) must call `_notify_fields_modified(fields, is_property)` so the `VideoProvider` stays synchronized. Without this, grouping/filtering can become stale.
+
+#### Double-execution protection
+
+- Persistent buttons (toolbar, sidebar, dialogs) that trigger **non-idempotent** operations must be disabled during execution:
+  ```python
+  def _on_action(self):
+      self.btn.setEnabled(False)
+      try:
+          # ... backend operation ...
+      finally:
+          self.btn.setEnabled(True)
+  ```
+- Context menu actions don't need this — the menu closes on first click.
+- Long operations use `_run_process()` which shows a `ProcessPage` blocking all interaction. A guard (`if self._process_page is not None: return`) prevents concurrent processes.
+
+#### Batch operations
+
+- When performing multiple write operations in a loop (e.g., deleting N videos), wrap them in `with db.to_save():` to batch saves into a single operation, and emit `state_changed` once after the loop.
+
 ## Code Style
 
 - **Formatter/Linter**: Ruff (`skip-magic-trailing-comma = true`)

@@ -642,6 +642,7 @@ class AppContext(QObject):
             self._ops.set_property_for_videos(
                 prop_name, updates, merge=prop_desc["multiple"]
             )
+            self.state_changed.emit()
 
     # =========================================================================
     # Facade methods — Algorithms

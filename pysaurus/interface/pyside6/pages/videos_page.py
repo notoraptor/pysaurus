@@ -1534,7 +1534,6 @@ class VideosPage(QWidget):
         # Add property value for all other videos in the group (merges with existing)
         other_ids = [v.video_id for v in self._videos if v.video_id != video_id]
         self.ctx.add_property_value_for_videos(other_ids, prop_name, [title_value])
-        self.refresh()
         self.status_message_requested.emit(
             f"Property \"{prop_name}\" set to \"{title_value}\" "
             f"for {len(other_ids)} video(s)",
