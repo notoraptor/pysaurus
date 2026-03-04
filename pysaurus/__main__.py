@@ -17,13 +17,11 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 2:
         gui = sys.argv[1].strip().lower()
-        if System.is_windows():
-            if gui not in GUIS:
-                fatal(UnknownGUI(GUIS, gui))
-        elif gui not in (QTWEBVIEW, PYSIDE6):
-            fatal(UnknownGUI((QTWEBVIEW, PYSIDE6), gui))
+        if gui not in GUIS:
+            fatal(UnknownGUI(GUIS, gui))
     else:
-        gui = PYWEBVIEW if System.is_windows() else QTWEBVIEW
+        gui = PYSIDE6
+
     if gui == PYWEBVIEW:
         from pysaurus.interface.using_pywebview.webview_app import main
     elif gui == PYSIDE6:
