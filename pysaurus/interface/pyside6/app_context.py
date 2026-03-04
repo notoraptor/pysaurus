@@ -628,6 +628,21 @@ class AppContext(QObject):
             self._database.video_entry_set_tags(video_id, properties)
             self.state_changed.emit()
 
+    def add_property_value_for_videos(
+        self, video_ids: list[int], prop_name: str, values: list
+    ) -> None:
+        """Add property values for multiple videos.
+
+        For multiple properties, merges with existing values.
+        For non-multiple properties, replaces the existing value.
+        """
+        if self._ops:
+            (prop_desc,) = self._database.get_prop_types(name=prop_name)
+            updates = {vid: values for vid in video_ids}
+            self._ops.set_property_for_videos(
+                prop_name, updates, merge=prop_desc["multiple"]
+            )
+
     # =========================================================================
     # Facade methods — Algorithms
     # =========================================================================

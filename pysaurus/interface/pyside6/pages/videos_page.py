@@ -7,6 +7,7 @@ from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
+    QDialog,
     QFileDialog,
     QFrame,
     QHBoxLayout,
@@ -80,6 +81,7 @@ class VideosPage(QWidget):
         self._diff_fields: set[str] = set()  # Fields that differ in similarity group
         self._file_title_diffs: dict[int, list[tuple[int, int]]] = {}  # Character diffs
         self._grouped_by_moves: bool = False  # True when grouped by move_id
+        self._grouped_by_similarity: bool = False  # True when grouped by similarity_id
         self._total_pages: int = 1  # Total number of pages (for go to page dialog)
         self.confirm_not_found_deletion: bool = (
             True  # Confirm before deleting "not found" entries
@@ -939,6 +941,7 @@ class VideosPage(QWidget):
             self._group_stats = []
             self._current_group_index = -1
             self._grouped_by_moves = False
+            self._grouped_by_similarity = False
             self.btn_confirm_unique_moves.setVisible(False)
             # Hide classifier when no grouping
             self._classifier_path = []
@@ -1191,6 +1194,7 @@ class VideosPage(QWidget):
 
         # Update grouped_by_moves flag and show/hide the confirm button
         self._grouped_by_moves = grouping.field == "move_id"
+        self._grouped_by_similarity = grouping.field == "similarity_id"
         self.btn_confirm_unique_moves.setVisible(self._grouped_by_moves)
 
     def _display_videos(self, videos: list[VideoPattern]):
@@ -1335,6 +1339,22 @@ class VideosPage(QWidget):
                     "Dismiss Similarity", lambda: self._dismiss_similarity(video_id)
                 )
             menu.addAction("Reset Similarity", lambda: self._reset_similarity(video_id))
+            # Generalize title actions (only when grouped by similarity)
+            if self._grouped_by_similarity and len(self._videos) > 1:
+                menu.addSeparator()
+                if video.meta_title:
+                    menu.addAction(
+                        "Generalize meta title into property...",
+                        lambda: self._generalize_title_to_property(
+                            video_id, "meta_title"
+                        ),
+                    )
+                menu.addAction(
+                    "Generalize file title into property...",
+                    lambda: self._generalize_title_to_property(
+                        video_id, "file_title"
+                    ),
+                )
             menu.addSeparator()
 
         # Move confirmation actions (only when video has moves)
@@ -1449,6 +1469,77 @@ class VideosPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.ctx.reset_similarity(video_id)
+
+    def _generalize_title_to_property(self, video_id: int, title_field: str):
+        """Copy a video's title into a property for all other videos in the group."""
+        video = self._get_video_by_id(video_id)
+        if not video:
+            return
+
+        title_value = str(getattr(video, title_field, "") or "")
+        if not title_value:
+            QMessageBox.information(self, "Generalize Title", "Title is empty.")
+            return
+
+        # Get str non-enum properties
+        prop_types = self.ctx.get_prop_types()
+        str_props = [
+            p["name"]
+            for p in prop_types
+            if p["type"] == "str" and not p["enumeration"]
+        ]
+        if not str_props:
+            QMessageBox.information(
+                self,
+                "Generalize Title",
+                "No string (non-enum) property available.",
+            )
+            return
+
+        # Ask user to pick a property via a custom dialog with wrapping text
+        nb_others = len(self._videos) - 1
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Generalize Title")
+        layout = QVBoxLayout(dialog)
+
+        from html import escape
+
+        label = QLabel(
+            f"Copy <b>{escape(title_value)}</b> "
+            f"into property for {nb_others} other video(s):"
+        )
+        label.setWordWrap(True)
+        label.setTextFormat(Qt.TextFormat.RichText)
+        layout.addWidget(label)
+
+        combo = QComboBox()
+        combo.addItems(str_props)
+        layout.addWidget(combo)
+
+        buttons = QHBoxLayout()
+        btn_ok = QPushButton("OK")
+        btn_cancel = QPushButton("Cancel")
+        btn_ok.clicked.connect(dialog.accept)
+        btn_cancel.clicked.connect(dialog.reject)
+        buttons.addStretch()
+        buttons.addWidget(btn_ok)
+        buttons.addWidget(btn_cancel)
+        layout.addLayout(buttons)
+
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        prop_name = combo.currentText()
+
+        # Add property value for all other videos in the group (merges with existing)
+        other_ids = [v.video_id for v in self._videos if v.video_id != video_id]
+        self.ctx.add_property_value_for_videos(other_ids, prop_name, [title_value])
+        self.refresh()
+        self.status_message_requested.emit(
+            f"Property \"{prop_name}\" set to \"{title_value}\" "
+            f"for {len(other_ids)} video(s)",
+            5000,
+        )
 
     def _confirm_move(self, src_video_id: int, dst_video_id: int):
         """Confirm a video move (transfer metadata from source to destination)."""
