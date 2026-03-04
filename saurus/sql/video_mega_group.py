@@ -225,6 +225,17 @@ def _compute_results_and_stats(
         db, *query_maker_page.to_sql(), include=include, with_moves=context.with_moves
     )
 
+    # Compute similarity diff fields now that result is populated.
+    # (VideoSearchContext.__post_init__ can't do it because result is set after init)
+    if context.result and context.grouping and context.grouping.field == "similarity_id":
+        from pysaurus.video.video_constants import COMMON_FIELDS
+        from pysaurus.video.video_features import VideoFeatures
+
+        context.common_fields = VideoFeatures.get_common_fields(
+            context.result, fields=COMMON_FIELDS
+        )
+        context.file_title_diffs = VideoFeatures.get_file_title_diffs(context.result)
+
 
 def _thumbnail_join_if_needed(source_query: str) -> str:
     """Return LEFT JOIN video_thumbnail clause if source_query references vt."""
