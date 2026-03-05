@@ -1351,9 +1351,7 @@ class VideosPage(QWidget):
                     )
                 menu.addAction(
                     "Generalize file title into property...",
-                    lambda: self._generalize_title_to_property(
-                        video_id, "file_title"
-                    ),
+                    lambda: self._generalize_title_to_property(video_id, "file_title"),
                 )
             menu.addSeparator()
 
@@ -1484,15 +1482,11 @@ class VideosPage(QWidget):
         # Get str non-enum properties
         prop_types = self.ctx.get_prop_types()
         str_props = [
-            p["name"]
-            for p in prop_types
-            if p["type"] == "str" and not p["enumeration"]
+            p["name"] for p in prop_types if p["type"] == "str" and not p["enumeration"]
         ]
         if not str_props:
             QMessageBox.information(
-                self,
-                "Generalize Title",
-                "No string (non-enum) property available.",
+                self, "Generalize Title", "No string (non-enum) property available."
             )
             return
 
@@ -1535,7 +1529,7 @@ class VideosPage(QWidget):
         other_ids = [v.video_id for v in self._videos if v.video_id != video_id]
         self.ctx.add_property_value_for_videos(other_ids, prop_name, [title_value])
         self.status_message_requested.emit(
-            f"Property \"{prop_name}\" set to \"{title_value}\" "
+            f'Property "{prop_name}" set to "{title_value}" '
             f"for {len(other_ids)} video(s)",
             5000,
         )

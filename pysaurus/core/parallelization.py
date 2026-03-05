@@ -86,38 +86,6 @@ class _NotifiedFunction:
         return ret
 
 
-class _StepNotifiedFunction(_NotifiedFunction):
-    __slots__ = ("_progress_step", "_nb_tasks")
-
-    def __init__(
-        self,
-        function: Callable,
-        notifier: AbstractNotifier,
-        progress_step=1,
-        nb_tasks=0,
-    ):
-        super().__init__(function, notifier)
-        self._progress_step = progress_step
-        self._nb_tasks = nb_tasks
-
-    def __call__(self, enumerated_task: tuple[int, Any]):
-        task_id, task = enumerated_task
-        ret = self.function(task)
-        if (task_id + 1) % self._progress_step == 0 or task_id + 1 == self._nb_tasks:
-            self.notifier.progress(self.function, task_id + 1, 0)
-        return ret
-
-
-def _generate_notified_function(
-    function, notifier, progress_step=1, nb_tasks=0
-) -> _NotifiedFunction:
-    return (
-        _NotifiedFunction(function, notifier)
-        if progress_step < 2
-        else _StepNotifiedFunction(function, notifier, progress_step, nb_tasks)
-    )
-
-
 class IterableWithLength(Iterable):
     __slots__ = ("_itr", "_len")
 
@@ -162,9 +130,14 @@ def parallelize(
             nb_tasks = len(tasks)
         if progress_step > 1:
             assert ordered
-        wrapped_run = _generate_notified_function(
-            run, notifier, progress_step, nb_tasks
-        )
+            notifier.task(run, nb_tasks, kind or "task(s)")
+            with Pool(cpu_count) as p:
+                for i, result in enumerate(p.imap(run, tasks, chunksize=chunksize)):
+                    yield result
+                    if (i + 1) % progress_step == 0 or i + 1 == nb_tasks:
+                        notifier.progress(run, i + 1, nb_tasks)
+            return
+        wrapped_run = _NotifiedFunction(run, notifier)
         wrapped_tasks = enumerate(tasks)
         notifier.task(wrapped_run, nb_tasks, kind or "task(s)")
     else:

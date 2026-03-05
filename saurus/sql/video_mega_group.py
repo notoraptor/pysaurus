@@ -227,7 +227,11 @@ def _compute_results_and_stats(
 
     # Compute similarity diff fields now that result is populated.
     # (VideoSearchContext.__post_init__ can't do it because result is set after init)
-    if context.result and context.grouping and context.grouping.field == "similarity_id":
+    if (
+        context.result
+        and context.grouping
+        and context.grouping.field == "similarity_id"
+    ):
         from pysaurus.video.video_constants import COMMON_FIELDS
         from pysaurus.video.video_features import VideoFeatures
 
