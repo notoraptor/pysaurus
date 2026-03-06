@@ -550,32 +550,21 @@ class AppContext(QObject):
             self._provider.set_sort(sorting)
             self.state_changed.emit()
 
-    def get_random_video_id(self) -> int | None:
-        """Return a random found video ID."""
+    def open_random_video(self) -> str | None:
+        """Choose a random video, open it, and update the search to show it.
+
+        Delegates to provider.choose_random_video() which resets
+        grouping/classifier, sets search by ID, and opens the video.
+        Returns the search text (video ID as string), or None.
+        """
         if self._provider:
-            return self._provider.get_random_found_video_id()
+            try:
+                self._provider.choose_random_video(open_video=True)
+            except Exception:
+                return None
+            self.state_changed.emit()
+            return self._provider.get_search().text
         return None
-
-    def reset_grouping_and_classifier(self) -> None:
-        """Reset grouping, classifier, and group layers to defaults."""
-        if self._provider:
-            self._provider.reset_parameters(
-                self._provider.LAYER_GROUPING,
-                self._provider.LAYER_CLASSIFIER,
-                self._provider.LAYER_GROUP,
-            )
-            self.state_changed.emit()
-
-    def set_random_video_search(self, video_id) -> None:
-        """Reset grouping/classifier and search for a specific video ID."""
-        if self._provider:
-            self._provider.reset_parameters(
-                self._provider.LAYER_GROUPING,
-                self._provider.LAYER_CLASSIFIER,
-                self._provider.LAYER_GROUP,
-            )
-            self._provider.set_search(str(video_id), "id")
-            self.state_changed.emit()
 
     # =========================================================================
     # Facade methods — API

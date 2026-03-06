@@ -7,18 +7,22 @@ Central window with QStackedWidget for page navigation.
 from datetime import datetime
 from typing import Callable
 
-from PySide6.QtCore import QEvent
+from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QAction, QActionGroup, QTextCursor
 from PySide6.QtWidgets import (
+    QButtonGroup,
     QDialog,
+    QHBoxLayout,
     QMainWindow,
     QMenu,
     QMenuBar,
     QMessageBox,
     QPlainTextEdit,
+    QRadioButton,
     QStackedWidget,
     QStatusBar,
     QVBoxLayout,
+    QWidget,
 )
 
 from pysaurus.core.notifications import End
@@ -123,6 +127,17 @@ class MainWindow(QMainWindow):
             "&Edit Folders...", self._on_edit_folders
         )
         self.database_menu.addSeparator()
+        self._action_update_db = self.database_menu.addAction(
+            "&Update Database", self.videos_page._on_update_database
+        )
+        self.database_menu.addSeparator()
+        self._action_find_similar = self.database_menu.addAction(
+            "Find &Similar Videos", self.videos_page._on_find_similar
+        )
+        self._action_find_reencoded = self.database_menu.addAction(
+            "Find Re-&encoded Videos", self.videos_page._on_find_reencoded
+        )
+        self.database_menu.addSeparator()
         self._action_close_db = self.database_menu.addAction(
             "&Close Database", self._on_close_database
         )
@@ -131,16 +146,31 @@ class MainWindow(QMainWindow):
         self.view_menu = QMenu("&View", self)
         menu_bar.addMenu(self.view_menu)
 
-        self._action_view_videos = self.view_menu.addAction(
-            "&Videos", self.show_videos_page
+        self._action_random_video = self.view_menu.addAction(
+            "&Random Video (Ctrl+O)", self.videos_page._on_random_video
         )
-        self._action_view_properties = self.view_menu.addAction(
-            "&Properties (Ctrl+P)", self.show_properties_page
-        )
-        self.view_menu.addSeparator()
         self._action_generate_playlist = self.view_menu.addAction(
             "&Generate Playlist (Ctrl+L)", self.videos_page._on_playlist
         )
+        self.view_menu.addSeparator()
+        self._action_refresh_view = self.view_menu.addAction(
+            "Re&fresh View (Ctrl+R)", self.videos_page.refresh
+        )
+
+        # Page navigation radio buttons (right side of menu bar)
+        self._page_selector = QWidget()
+        page_layout = QHBoxLayout(self._page_selector)
+        page_layout.setContentsMargins(0, 0, 4, 0)
+        page_layout.setSpacing(8)
+        self._radio_videos = QRadioButton("Videos")
+        self._radio_properties = QRadioButton("Properties")
+        self._page_button_group = QButtonGroup(self)
+        self._page_button_group.addButton(self._radio_videos, self.PAGE_VIDEOS)
+        self._page_button_group.addButton(self._radio_properties, self.PAGE_PROPERTIES)
+        page_layout.addWidget(self._radio_videos)
+        page_layout.addWidget(self._radio_properties)
+        self._page_button_group.idClicked.connect(self._on_page_radio_clicked)
+        menu_bar.setCornerWidget(self._page_selector, Qt.Corner.TopRightCorner)
 
         # Selection menu (only relevant on videos page)
         self.selection_menu = QMenu("&Selection", self)
@@ -328,7 +358,7 @@ class MainWindow(QMainWindow):
 
     def _log_message(self, message: str):
         """Log a message with timestamp."""
-        timestamp = datetime.now().strftime("%H:%M:%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         entry = f"[{timestamp}] {message}"
         self._session_log.append(entry)
         self._save_log_to_file(entry)
@@ -431,21 +461,27 @@ class MainWindow(QMainWindow):
     def _update_menu_state(self):
         """Enable/disable menus based on application state."""
         has_db = self.ctx.has_database()
-        on_videos_page = self.stack.currentIndex() == self.PAGE_VIDEOS
+        current_page = self.stack.currentIndex()
+        on_videos_page = current_page == self.PAGE_VIDEOS
 
         # Database menu: enabled when a database is open
         self.database_menu.setEnabled(has_db)
 
-        # View menu items: Videos/Properties need a database, Playlist needs videos page
-        self._action_view_videos.setEnabled(has_db)
-        self._action_view_properties.setEnabled(has_db)
-        self._action_generate_playlist.setEnabled(has_db and on_videos_page)
+        # View menu: enabled when on videos page
+        self.view_menu.setEnabled(has_db and on_videos_page)
 
         # Selection menu: only relevant on videos page with a database
         self.selection_menu.setEnabled(has_db and on_videos_page)
 
         # Options menu: Page Size only relevant on videos page
         self.page_size_menu.setEnabled(on_videos_page)
+
+        # Page selector radio buttons: visible when a database is open
+        self._page_selector.setVisible(has_db)
+        if has_db and current_page in (self.PAGE_VIDEOS, self.PAGE_PROPERTIES):
+            self._page_button_group.blockSignals(True)
+            self._page_button_group.button(current_page).setChecked(True)
+            self._page_button_group.blockSignals(False)
 
     def _update_database_menu_state(self):
         """Enable/disable database menu based on whether a database is open.
@@ -539,6 +575,13 @@ class MainWindow(QMainWindow):
     # =========================================================================
     # Page navigation
     # =========================================================================
+
+    def _on_page_radio_clicked(self, page_id: int):
+        """Handle page selector radio button click."""
+        if page_id == self.PAGE_VIDEOS:
+            self.show_videos_page()
+        elif page_id == self.PAGE_PROPERTIES:
+            self.show_properties_page()
 
     def show_databases_page(self):
         """Navigate to databases page."""

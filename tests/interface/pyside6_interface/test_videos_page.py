@@ -19,14 +19,14 @@ class TestVideosPageCreation:
         assert page.page_size == 20
         assert page.page_number == 0
 
-    def test_page_has_refresh_button(self, qtbot, mock_context):
-        """Test that VideosPage has a refresh button."""
+    def test_page_has_view_combo(self, qtbot, mock_context):
+        """Test that VideosPage has a view toggle combo box."""
         from pysaurus.interface.pyside6.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
 
-        assert page.btn_refresh is not None
+        assert page.view_combo is not None
 
     def test_page_has_search_input(self, qtbot, mock_context):
         """Test that VideosPage has a search input."""

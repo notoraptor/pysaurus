@@ -99,6 +99,7 @@ class VideosPage(QWidget):
             False  # Toggle for showing only selected videos
         )
         self._view_count: int = 0  # Total videos in current view (for selector size)
+        self._search_mode: str = "and"  # Current search mode
         self._setup_ui()
         self._setup_shortcuts()
 
@@ -294,12 +295,11 @@ class VideosPage(QWidget):
         if self.search_input.hasFocus():
             self._on_search()
             return
-        if self._selected_video_id and self.ctx.has_database():
-            self.ctx.open_video(self._selected_video_id)
-        elif self._selected_video_ids and self.ctx.has_database():
-            # Open the first selected video
+        video_id = self._selected_video_id
+        if not video_id and self._selected_video_ids:
             video_id = next(iter(self._selected_video_ids))
-            self.ctx.open_video(video_id)
+        if video_id and self.ctx.has_database():
+            self._open_video(video_id)
 
     def _delete_selected(self):
         """Delete the selected video(s) from the database."""
@@ -345,48 +345,6 @@ class VideosPage(QWidget):
     def _create_toolbar(self) -> QToolBar:
         """Create the toolbar."""
         toolbar = QToolBar()
-
-        # Update database button
-        self.btn_update_db = QPushButton("Update Database")
-        self.btn_update_db.setToolTip("Rescan folders and update database")
-        self.btn_update_db.clicked.connect(self._on_update_database)
-        toolbar.addWidget(self.btn_update_db)
-        toolbar.addSeparator()
-
-        # Find similar button
-        self.btn_similar = QPushButton("Find Similar")
-        self.btn_similar.setToolTip("Find visually similar videos")
-        self.btn_similar.clicked.connect(self._on_find_similar)
-        toolbar.addWidget(self.btn_similar)
-
-        # Find re-encoded button
-        self.btn_reencoded = QPushButton("Find Re-encoded")
-        self.btn_reencoded.setToolTip(
-            "Find potentially re-encoded videos (by filename and duration)"
-        )
-        self.btn_reencoded.clicked.connect(self._on_find_reencoded)
-        toolbar.addWidget(self.btn_reencoded)
-        toolbar.addSeparator()
-
-        # Random video button
-        self.btn_random = QPushButton("Random")
-        self.btn_random.setToolTip("Open a random video (Ctrl+O)")
-        self.btn_random.clicked.connect(self._on_random_video)
-        toolbar.addWidget(self.btn_random)
-
-        # Playlist button
-        self.btn_playlist = QPushButton("Playlist")
-        self.btn_playlist.setToolTip("Generate playlist (Ctrl+L)")
-        self.btn_playlist.clicked.connect(self._on_playlist)
-        toolbar.addWidget(self.btn_playlist)
-        toolbar.addSeparator()
-
-        # Refresh view button
-        self.btn_refresh = QPushButton("Refresh View")
-        self.btn_refresh.setToolTip("Refresh video list (Ctrl+R)")
-        self.btn_refresh.clicked.connect(self.refresh)
-        toolbar.addWidget(self.btn_refresh)
-        toolbar.addSeparator()
 
         # View toggle
         toolbar.addWidget(QLabel("View:"))
@@ -1163,6 +1121,7 @@ class VideosPage(QWidget):
         }
         mode_label = mode_labels.get(search.cond, search.cond)
         self.search_mode_label.setText(f"Mode: {mode_label}")
+        self._search_mode = search.cond
 
         # Update search input if it doesn't match
         if self.search_input.text() != search.text:
@@ -1322,7 +1281,7 @@ class VideosPage(QWidget):
 
     def _on_video_double_clicked(self, video_id: int):
         """Handle video card double-click (open video)."""
-        self.ctx.open_video(video_id)
+        self._open_video(video_id)
 
     def _on_video_context_menu(self, video_id: int, pos):
         """Show context menu for a video."""
@@ -1408,15 +1367,27 @@ class VideosPage(QWidget):
 
     def _open_video(self, video_id: int):
         """Open a video with default player."""
-        self.ctx.open_video(video_id)
+        self.window().setEnabled(False)
+        try:
+            self.ctx.open_video(video_id)
+        finally:
+            self.window().setEnabled(True)
 
     def _open_in_vlc(self, video_id: int):
         """Open a video in VLC via server."""
-        self.ctx.open_from_server(video_id)
+        self.window().setEnabled(False)
+        try:
+            self.ctx.open_from_server(video_id)
+        finally:
+            self.window().setEnabled(True)
 
     def _open_folder(self, video_id: int):
         """Open the folder containing a video."""
-        self.ctx.open_containing_folder(video_id)
+        self.window().setEnabled(False)
+        try:
+            self.ctx.open_containing_folder(video_id)
+        finally:
+            self.window().setEnabled(True)
 
     def _get_video_by_id(self, video_id: int):
         """Get video object by ID from current page."""
@@ -1884,8 +1855,8 @@ class VideosPage(QWidget):
             self.page_number = 0
 
     def _on_search(self):
-        """Handle search on Enter key."""
-        self._do_search("and")
+        """Handle search on Enter key, reusing the current search mode."""
+        self._do_search(self._search_mode)
 
     def _do_search(self, mode: str):
         """Perform search with given mode."""
@@ -1897,6 +1868,7 @@ class VideosPage(QWidget):
     def _clear_search(self):
         """Clear the search."""
         self.search_input.clear()
+        self._search_mode = "and"
         self.ctx.set_search("", "and")
         self.page_number = 0
 
@@ -1937,12 +1909,14 @@ class VideosPage(QWidget):
 
     def _on_random_video(self):
         """Open a random video and configure search to show it."""
-        video_id = self.ctx.get_random_video_id()
-        if video_id:
-            self.ctx.set_random_video_search(video_id)
-            self.search_input.setText(str(video_id))
-            self.ctx.open_video(video_id)
+        self.window().setEnabled(False)
+        try:
             self.page_number = 0
+            search_text = self.ctx.open_random_video()
+            if search_text:
+                self.search_input.setText(search_text)
+        finally:
+            self.window().setEnabled(True)
 
     def _on_update_database(self):
         """Update/rescan the database."""

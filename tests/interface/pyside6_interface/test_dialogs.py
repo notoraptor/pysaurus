@@ -5,6 +5,7 @@ Tests BatchEditPropertyDialog and VideoPropertiesDialog.
 """
 
 import pytest
+from PySide6.QtCore import Qt
 
 from tests.mocks.mock_database import MockVideoPattern
 
@@ -58,8 +59,8 @@ class TestBatchEditPropertyDialog:
         # Current list should have all values
         assert dialog.current_list.count() == 3
 
-    def test_move_to_remove(self, qtbot, prop_type_string_multiple, values_and_counts):
-        """Test moving values to remove list."""
+    def test_remove_one(self, qtbot, prop_type_string_multiple, values_and_counts):
+        """Test moving a value to remove list via inline button."""
         from pysaurus.interface.pyside6.dialogs.batch_edit_property_dialog import (
             BatchEditPropertyDialog,
         )
@@ -69,18 +70,13 @@ class TestBatchEditPropertyDialog:
         )
         qtbot.addWidget(dialog)
 
-        # Select first item in current list
-        dialog.current_list.setCurrentRow(0)
+        dialog._remove_one("action")
 
-        # Move to remove
-        dialog._move_to_remove()
-
-        # Check lists
         assert dialog.current_list.count() == 2
         assert dialog.remove_list.count() == 1
 
-    def test_move_to_add(self, qtbot, prop_type_string_multiple, values_and_counts):
-        """Test moving values to add list."""
+    def test_add_one(self, qtbot, prop_type_string_multiple, values_and_counts):
+        """Test moving a value to add list via inline button."""
         from pysaurus.interface.pyside6.dialogs.batch_edit_property_dialog import (
             BatchEditPropertyDialog,
         )
@@ -90,20 +86,13 @@ class TestBatchEditPropertyDialog:
         )
         qtbot.addWidget(dialog)
 
-        # Select first item in current list
-        dialog.current_list.setCurrentRow(0)
+        dialog._add_one("action")
 
-        # Move to add
-        dialog._move_to_add()
-
-        # Check lists
         assert dialog.current_list.count() == 2
         assert dialog.add_list.count() == 1
 
-    def test_restore_from_remove(
-        self, qtbot, prop_type_string_multiple, values_and_counts
-    ):
-        """Test restoring values from remove list."""
+    def test_restore_one(self, qtbot, prop_type_string_multiple, values_and_counts):
+        """Test restoring a value from remove list via inline button."""
         from pysaurus.interface.pyside6.dialogs.batch_edit_property_dialog import (
             BatchEditPropertyDialog,
         )
@@ -113,14 +102,10 @@ class TestBatchEditPropertyDialog:
         )
         qtbot.addWidget(dialog)
 
-        # Move to remove first
-        dialog.current_list.setCurrentRow(0)
-        dialog._move_to_remove()
+        dialog._remove_one("action")
         assert dialog.remove_list.count() == 1
 
-        # Restore
-        dialog.remove_list.setCurrentRow(0)
-        dialog._restore_from_remove()
+        dialog._restore_one("action")
 
         assert dialog.current_list.count() == 3
         assert dialog.remove_list.count() == 0
@@ -155,8 +140,7 @@ class TestBatchEditPropertyDialog:
         qtbot.addWidget(dialog)
 
         # Move action to remove
-        dialog.current_list.setCurrentRow(0)
-        dialog._move_to_remove()
+        dialog._remove_one("action")
 
         # Add new value
         dialog.value_input.setText("horror")
@@ -185,6 +169,139 @@ class TestBatchEditPropertyDialog:
 
         assert dialog.current_list.count() == 0
         assert dialog.remove_list.count() == 3
+
+
+class TestBatchEditPropertyDialogButtons:
+    """Tests that inline buttons are clickable."""
+
+    @pytest.fixture
+    def prop_type_string_multiple(self):
+        return {
+            "name": "genre",
+            "type": "str",
+            "multiple": True,
+            "enumeration": None,
+            "defaultValues": [],
+        }
+
+    @pytest.fixture
+    def values_and_counts(self):
+        return [["action", 3], ["comedy", 2], ["drama", 1]]
+
+    def _find_button(self, entry_list, entry_index, button_text):
+        """Find a QPushButton in an entry widget by index and button text."""
+        from PySide6.QtWidgets import QPushButton
+
+        # Get the entry widget at the given index
+        item = entry_list._layout.itemAt(entry_index)
+        assert item is not None, f"No item at index {entry_index}"
+        widget = item.widget()
+        assert widget is not None, f"No widget at index {entry_index}"
+        # Find button by text
+        for btn in widget.findChildren(QPushButton):
+            if btn.text() == button_text:
+                return btn
+        raise AssertionError(
+            f"No button with text '{button_text}' in entry {entry_index}"
+        )
+
+    def test_click_remove_button(
+        self, qtbot, prop_type_string_multiple, values_and_counts
+    ):
+        """Test that clicking the remove button on a current entry works."""
+        from pysaurus.interface.pyside6.dialogs.batch_edit_property_dialog import (
+            BatchEditPropertyDialog,
+        )
+
+        dialog = BatchEditPropertyDialog(
+            "genre", prop_type_string_multiple, 5, values_and_counts
+        )
+        qtbot.addWidget(dialog)
+        dialog.show()
+        qtbot.waitExposed(dialog)
+
+        assert dialog.current_list.count() == 3
+
+        # Click the "←" (remove) button on the first current entry
+        btn = self._find_button(dialog.current_list, 0, "←")
+        qtbot.mouseClick(btn, Qt.MouseButton.LeftButton)
+
+        assert dialog.current_list.count() == 2
+        assert dialog.remove_list.count() == 1
+
+    def test_click_restore_button(
+        self, qtbot, prop_type_string_multiple, values_and_counts
+    ):
+        """Test that clicking the restore button on a removed entry works."""
+        from pysaurus.interface.pyside6.dialogs.batch_edit_property_dialog import (
+            BatchEditPropertyDialog,
+        )
+
+        dialog = BatchEditPropertyDialog(
+            "genre", prop_type_string_multiple, 5, values_and_counts
+        )
+        qtbot.addWidget(dialog)
+        dialog.show()
+        qtbot.waitExposed(dialog)
+
+        # First remove one
+        dialog._remove_one("action")
+        assert dialog.remove_list.count() == 1
+
+        # Click the "→" (restore) button on the first remove entry
+        btn = self._find_button(dialog.remove_list, 0, "→")
+        qtbot.mouseClick(btn, Qt.MouseButton.LeftButton)
+
+        assert dialog.remove_list.count() == 0
+        assert dialog.current_list.count() == 3
+
+    def test_click_add_button(
+        self, qtbot, prop_type_string_multiple, values_and_counts
+    ):
+        """Test that clicking the add button on a current entry works."""
+        from pysaurus.interface.pyside6.dialogs.batch_edit_property_dialog import (
+            BatchEditPropertyDialog,
+        )
+
+        dialog = BatchEditPropertyDialog(
+            "genre", prop_type_string_multiple, 5, values_and_counts
+        )
+        qtbot.addWidget(dialog)
+        dialog.show()
+        qtbot.waitExposed(dialog)
+
+        # Click the "→" (add) button on the first current entry
+        btn = self._find_button(dialog.current_list, 0, "→")
+        qtbot.mouseClick(btn, Qt.MouseButton.LeftButton)
+
+        assert dialog.current_list.count() == 2
+        assert dialog.add_list.count() == 1
+
+    def test_click_cancel_button(
+        self, qtbot, prop_type_string_multiple, values_and_counts
+    ):
+        """Test that clicking the cancel button on an added entry works."""
+        from pysaurus.interface.pyside6.dialogs.batch_edit_property_dialog import (
+            BatchEditPropertyDialog,
+        )
+
+        dialog = BatchEditPropertyDialog(
+            "genre", prop_type_string_multiple, 5, values_and_counts
+        )
+        qtbot.addWidget(dialog)
+        dialog.show()
+        qtbot.waitExposed(dialog)
+
+        # First add one
+        dialog._add_one("action")
+        assert dialog.add_list.count() == 1
+
+        # Click the "←" (cancel) button on the first add entry
+        btn = self._find_button(dialog.add_list, 0, "←")
+        qtbot.mouseClick(btn, Qt.MouseButton.LeftButton)
+
+        assert dialog.add_list.count() == 0
+        assert dialog.current_list.count() == 3
 
 
 class TestVideoPropertiesDialog:
