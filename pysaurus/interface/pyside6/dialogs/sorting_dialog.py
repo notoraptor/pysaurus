@@ -82,12 +82,12 @@ class SortingDialog(QDialog):
 
         self.btn_add_asc = QPushButton("Add ↑")
         self.btn_add_asc.setToolTip("Add ascending")
-        self.btn_add_asc.clicked.connect(lambda: self._add_field(False))
+        self.btn_add_asc.clicked.connect(self._on_add_asc)
         add_layout.addWidget(self.btn_add_asc)
 
         self.btn_add_desc = QPushButton("Add ↓")
         self.btn_add_desc.setToolTip("Add descending")
-        self.btn_add_desc.clicked.connect(lambda: self._add_field(True))
+        self.btn_add_desc.clicked.connect(self._on_add_desc)
         add_layout.addWidget(self.btn_add_desc)
 
         layout.addLayout(add_layout)
@@ -123,6 +123,12 @@ class SortingDialog(QDialog):
         item = QListWidgetItem(text)
         item.setData(Qt.ItemDataRole.UserRole, (field, reverse))
         self.sort_list.addItem(item)
+
+    def _on_add_asc(self):
+        self._add_field(False)
+
+    def _on_add_desc(self):
+        self._add_field(True)
 
     def _add_field(self, reverse: bool):
         """Add a new field to the sort list."""

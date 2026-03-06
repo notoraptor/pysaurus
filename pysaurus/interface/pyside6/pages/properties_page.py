@@ -318,11 +318,13 @@ class PropertiesPage(QWidget):
         # Values action (only for string properties)
         if is_string:
             action_values = menu.addAction("Manage Values...")
-            action_values.triggered.connect(lambda _, n=name: self._on_manage_values(n))
+            action_values.setProperty("prop_name", name)
+            action_values.triggered.connect(self._on_action_manage_values)
 
         # Rename action (always)
         action_rename = menu.addAction("Rename...")
-        action_rename.triggered.connect(lambda _, n=name: self._on_rename(n))
+        action_rename.setProperty("prop_name", name)
+        action_rename.triggered.connect(self._on_action_rename)
 
         # Convert action (only for string properties)
         if is_string:
@@ -330,26 +332,46 @@ class PropertiesPage(QWidget):
                 "Convert to Single Value" if multiple else "Convert to Multiple Values"
             )
             action_convert = menu.addAction(convert_text)
-            action_convert.triggered.connect(
-                lambda _, n=name, m=multiple: self._on_convert(n, m)
-            )
+            action_convert.setProperty("prop_name", name)
+            action_convert.setProperty("currently_multiple", multiple)
+            action_convert.triggered.connect(self._on_action_convert)
 
         # Move values action (only for string-multiple)
         if is_string and multiple:
             action_move = menu.addAction("Move Values...")
-            action_move.triggered.connect(lambda _, n=name: self._on_move_values(n))
+            action_move.setProperty("prop_name", name)
+            action_move.triggered.connect(self._on_action_move_values)
 
         # Separator before delete
         menu.addSeparator()
 
         # Delete action (always)
         action_delete = menu.addAction("Delete")
-        action_delete.triggered.connect(lambda _, n=name: self._on_delete(n))
+        action_delete.setProperty("prop_name", name)
+        action_delete.triggered.connect(self._on_action_delete)
 
         btn_actions.setMenu(menu)
         layout.addWidget(btn_actions)
 
         return widget
+
+    def _on_action_manage_values(self):
+        self._on_manage_values(self.sender().property("prop_name"))
+
+    def _on_action_rename(self):
+        self._on_rename(self.sender().property("prop_name"))
+
+    def _on_action_convert(self):
+        sender = self.sender()
+        self._on_convert(
+            sender.property("prop_name"), sender.property("currently_multiple")
+        )
+
+    def _on_action_move_values(self):
+        self._on_move_values(self.sender().property("prop_name"))
+
+    def _on_action_delete(self):
+        self._on_delete(self.sender().property("prop_name"))
 
     def _on_back(self):
         """Navigate back to videos page."""

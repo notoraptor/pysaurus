@@ -207,7 +207,7 @@ class ProcessPage(QWidget):
         self.jobs_scroll.setMaximumHeight(200)
         # Auto-scroll when content changes
         self.jobs_scroll.verticalScrollBar().rangeChanged.connect(
-            lambda _, max_val: self.jobs_scroll.verticalScrollBar().setValue(max_val)
+            self._on_jobs_range_changed
         )
         layout.addWidget(self.jobs_scroll)
 
@@ -235,7 +235,7 @@ class ProcessPage(QWidget):
         self.log_scroll.setWidgetResizable(True)
         # Auto-scroll when content changes
         self.log_scroll.verticalScrollBar().rangeChanged.connect(
-            lambda _, max_val: self.log_scroll.verticalScrollBar().setValue(max_val)
+            self._on_log_range_changed
         )
         layout.addWidget(self.log_scroll, stretch=1)
 
@@ -253,6 +253,12 @@ class ProcessPage(QWidget):
         btn_layout.addWidget(self.btn_continue)
 
         layout.addLayout(btn_layout)
+
+    def _on_jobs_range_changed(self, _minimum, maximum):
+        self.jobs_scroll.verticalScrollBar().setValue(maximum)
+
+    def _on_log_range_changed(self, _minimum, maximum):
+        self.log_scroll.verticalScrollBar().setValue(maximum)
 
     def on_notification(self, notification: Notification):
         """

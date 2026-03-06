@@ -185,11 +185,7 @@ class VideosPage(QWidget):
 
         # Ctrl+Shift+D - Toggle show only selected
         shortcut_show_selected = QShortcut(QKeySequence("Ctrl+Shift+D"), self)
-        shortcut_show_selected.activated.connect(
-            lambda: self.btn_show_only_selected.setChecked(
-                not self.btn_show_only_selected.isChecked()
-            )
-        )
+        shortcut_show_selected.activated.connect(self._toggle_show_only_selected)
 
         # Enter - Open selected video
         shortcut_enter = QShortcut(QKeySequence(Qt.Key.Key_Return), self)
@@ -583,12 +579,12 @@ class VideosPage(QWidget):
         search_btn_layout1.setSpacing(2)
         self.btn_search_and = QPushButton("AND")
         self.btn_search_and.setToolTip("Search for all terms")
-        self.btn_search_and.clicked.connect(lambda: self._do_search("and"))
+        self.btn_search_and.clicked.connect(self._on_search_and)
         search_btn_layout1.addWidget(self.btn_search_and)
 
         self.btn_search_or = QPushButton("OR")
         self.btn_search_or.setToolTip("Search for any term")
-        self.btn_search_or.clicked.connect(lambda: self._do_search("or"))
+        self.btn_search_or.clicked.connect(self._on_search_or)
         search_btn_layout1.addWidget(self.btn_search_or)
         search_layout.addLayout(search_btn_layout1)
 
@@ -597,12 +593,12 @@ class VideosPage(QWidget):
         search_btn_layout2.setSpacing(2)
         self.btn_search_exact = QPushButton("Exact")
         self.btn_search_exact.setToolTip("Search for exact sentence")
-        self.btn_search_exact.clicked.connect(lambda: self._do_search("exact"))
+        self.btn_search_exact.clicked.connect(self._on_search_exact)
         search_btn_layout2.addWidget(self.btn_search_exact)
 
         self.btn_search_id = QPushButton("ID")
         self.btn_search_id.setToolTip("Search by video ID")
-        self.btn_search_id.clicked.connect(lambda: self._do_search("id"))
+        self.btn_search_id.clicked.connect(self._on_search_id)
         search_btn_layout2.addWidget(self.btn_search_id)
 
         self.btn_search_clear = QPushButton("✕")
@@ -1853,6 +1849,23 @@ class VideosPage(QWidget):
                     allow_singletons=grouping["allow_singletons"],
                 )
             self.page_number = 0
+
+    def _toggle_show_only_selected(self):
+        self.btn_show_only_selected.setChecked(
+            not self.btn_show_only_selected.isChecked()
+        )
+
+    def _on_search_and(self):
+        self._do_search("and")
+
+    def _on_search_or(self):
+        self._do_search("or")
+
+    def _on_search_exact(self):
+        self._do_search("exact")
+
+    def _on_search_id(self):
+        self._do_search("id")
 
     def _on_search(self):
         """Handle search on Enter key, reusing the current search mode."""

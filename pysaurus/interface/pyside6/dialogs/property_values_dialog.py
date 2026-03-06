@@ -100,7 +100,8 @@ class PropertyValuesDialog(QDialog):
         for mod_name in modifiers:
             btn = QPushButton(mod_name.replace("_", " ").title())
             btn.setToolTip(f"Apply '{mod_name}' to all values")
-            btn.clicked.connect(lambda _, m=mod_name: self._on_apply_modifier(m))
+            btn.setProperty("mod_name", mod_name)
+            btn.clicked.connect(self._on_modifier_clicked)
             actions_layout.addWidget(btn)
             self._modifier_buttons.append(btn)
 
@@ -173,6 +174,9 @@ class PropertyValuesDialog(QDialog):
         menu.addAction("Copy Value", lambda: self._copy_value(value))
 
         menu.exec(self.values_list.mapToGlobal(pos))
+
+    def _on_modifier_clicked(self):
+        self._on_apply_modifier(self.sender().property("mod_name"))
 
     def _on_delete(self):
         """Delete selected values."""

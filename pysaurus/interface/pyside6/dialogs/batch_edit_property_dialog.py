@@ -34,7 +34,9 @@ _BTN_STYLE = (
 )
 
 
-def _make_entry_widget(label_text: str, value, buttons: list[tuple[str, str, callable]]):
+def _make_entry_widget(
+    label_text: str, value, buttons: list[tuple[str, str, callable]]
+):
     """Create a row widget with action buttons on the left and a label.
 
     Args:
@@ -285,9 +287,7 @@ class BatchEditPropertyDialog(QDialog):
             count = self._value_counts.get(value, 0)
             label = f"{value} ({count})" if count > 0 else f"{value} (new)"
             widget = _make_entry_widget(
-                label,
-                value,
-                [("←", "Cancel", self._on_cancel_clicked)],
+                label, value, [("←", "Cancel", self._on_cancel_clicked)]
             )
             self.add_list.add_entry(widget)
 

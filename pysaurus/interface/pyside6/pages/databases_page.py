@@ -62,12 +62,12 @@ class DatabaseItemWidget(QFrame):
 
         self.btn_open = QPushButton("Open")
         self.btn_open.setToolTip("Open database")
-        self.btn_open.clicked.connect(lambda: self.open_clicked.emit(self.name, False))
+        self.btn_open.clicked.connect(self._on_open)
         buttons_layout.addWidget(self.btn_open)
 
         self.btn_update = QPushButton("Update")
         self.btn_update.setToolTip("Open and update database")
-        self.btn_update.clicked.connect(lambda: self.open_clicked.emit(self.name, True))
+        self.btn_update.clicked.connect(self._on_update)
         buttons_layout.addWidget(self.btn_update)
 
         self.btn_delete = QPushButton("Delete")
@@ -76,7 +76,7 @@ class DatabaseItemWidget(QFrame):
             "QPushButton { background-color: #cc3333; color: white; font-weight: bold; }"
             "QPushButton:hover { background-color: #dd4444; }"
         )
-        self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.name))
+        self.btn_delete.clicked.connect(self._on_delete)
         buttons_layout.addWidget(self.btn_delete)
 
         buttons_layout.addStretch()
@@ -107,6 +107,15 @@ class DatabaseItemWidget(QFrame):
                     border-color: #bbb;
                 }
             """)
+
+    def _on_open(self):
+        self.open_clicked.emit(self.name, False)
+
+    def _on_update(self):
+        self.open_clicked.emit(self.name, True)
+
+    def _on_delete(self):
+        self.delete_clicked.emit(self.name)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
