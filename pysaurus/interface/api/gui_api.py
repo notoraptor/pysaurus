@@ -24,6 +24,7 @@ from pysaurus.core.notifications import (
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_video_server import ServerLauncher
+from pysaurus.database.features.db_similar_reencoded import DbSimilarReencoded
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
 from pysaurus.interface.api.api_utils.proxy_feature import FromPyperclip, FromTk
 from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC, VLC_PATH
@@ -175,6 +176,17 @@ class GuiAPI(FeatureAPI):
         DbSimilarVideos.find_similar_videos(self.database)
         self.database.provider.set_groups(
             field="similarity_id",
+            is_property=False,
+            sorting="field",
+            reverse=False,
+            allow_singletons=False,
+        )
+
+    @process()
+    def find_similar_videos_reencoded(self) -> None:
+        DbSimilarReencoded.find_similar_reencoded(self.database)
+        self.database.provider.set_groups(
+            field="similarity_id_reencoded",
             is_property=False,
             sorting="field",
             reverse=False,

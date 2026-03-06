@@ -538,6 +538,9 @@ class JsonDatabase(AbstractDatabase):
                     old_video = self._videos[file_path]
                     video_state.properties = old_video.properties
                     video_state.similarity_id = old_video.similarity_id
+                    video_state.similarity_id_reencoded = (
+                        old_video.similarity_id_reencoded
+                    )
                     video_state.video_id = old_video.video_id
                     video_state.date_entry_opened = old_video.date_entry_opened.time
             video_state.runtime = runtime_info[file_path]

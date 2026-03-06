@@ -247,6 +247,7 @@ class DatabaseAlgorithms:
                     include=(
                         "video_id",
                         "similarity_id",
+                        "similarity_id_reencoded",
                         "date_entry_modified",
                         "date_entry_opened",
                         "properties",
@@ -273,6 +274,13 @@ class DatabaseAlgorithms:
             self.db.videos_set_field(
                 "similarity_id",
                 {to_id: from_map[from_id].similarity_id for from_id, to_id in moves},
+            )
+            self.db.videos_set_field(
+                "similarity_id_reencoded",
+                {
+                    to_id: from_map[from_id].similarity_id_reencoded
+                    for from_id, to_id in moves
+                },
             )
             self.db.videos_set_field(
                 "date_entry_modified",

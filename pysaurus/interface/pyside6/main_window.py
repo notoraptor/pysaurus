@@ -222,6 +222,9 @@ class MainWindow(QMainWindow):
         # Videos page signals
         self.videos_page.update_database_requested.connect(self._on_update_database)
         self.videos_page.find_similar_requested.connect(self._on_find_similar)
+        self.videos_page.find_similar_reencoded_requested.connect(
+            self._on_find_similar_reencoded
+        )
         self.videos_page.move_video_requested.connect(self._on_move_video)
         self.videos_page.status_message_requested.connect(self._on_status_message)
 
@@ -269,6 +272,14 @@ class MainWindow(QMainWindow):
         self._run_process(
             title="Finding Similar Videos",
             operation=lambda: self.ctx.find_similar_videos(),
+            on_end=self._on_videos_operation_end,
+        )
+
+    def _on_find_similar_reencoded(self):
+        """Handle find re-encoded videos request."""
+        self._run_process(
+            title="Finding Re-encoded Videos",
+            operation=lambda: self.ctx.find_similar_videos_reencoded(),
             on_end=self._on_videos_operation_end,
         )
 

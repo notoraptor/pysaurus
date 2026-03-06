@@ -125,6 +125,10 @@ class JavascriptVideo:
         return self.data["similarity_id"]
 
     @property
+    def similarity_id_reencoded(self) -> int:
+        return self.data["similarity_id_reencoded"]
+
+    @property
     def size(self) -> str:
         return self.data["size"]
 

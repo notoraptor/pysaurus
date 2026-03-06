@@ -134,6 +134,12 @@ FIELD_MAP = FieldMap(
         FieldInfo(
             "similarity_id", "similarity", GroupPerm.ONLY_MANY, FieldType.UNSORTABLE
         ),
+        FieldInfo(
+            "similarity_id_reencoded",
+            "similarity (re-encoded)",
+            GroupPerm.ONLY_MANY,
+            FieldType.UNSORTABLE,
+        ),
         FieldInfo("size", "size", GroupPerm.ONLY_MANY, FieldType.SORTABLE),
         FieldInfo(
             "size_length", "(size and length)", GroupPerm.ONLY_MANY, FieldType.SORTABLE

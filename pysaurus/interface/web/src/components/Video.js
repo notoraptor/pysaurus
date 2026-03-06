@@ -38,7 +38,8 @@ export class Video extends BaseComponent {
 		const htmlID = `video-${data.video_id}`;
 		const alreadyOpened = data.watched;
 		const common = (this.props.groupDef && this.props.groupDef.common) || {};
-		const groupedBySimilarityID = this.props.groupDef && this.props.groupDef.field === "similarity_id";
+		const _similarityFields = new Set(["similarity_id", "similarity_id_reencoded"]);
+		const groupedBySimilarityID = this.props.groupDef && _similarityFields.has(this.props.groupDef.field);
 		const errors = data.errors.slice();
 		errors.sort();
 		return (
@@ -131,6 +132,16 @@ export class Video extends BaseComponent {
 									)}
 									{data.similarity_id !== null ? (
 										<MenuItem action={this.resetSimilarity}>{tr("Reset similarity")}</MenuItem>
+									) : (
+										""
+									)}
+									{data.similarity_id_reencoded !== null && data.similarity_id_reencoded >= 0 ? (
+										<MenuItem action={this.dismissSimilarityReencoded}>{tr("Dismiss similarity (re-encoded)")}</MenuItem>
+									) : (
+										""
+									)}
+									{data.similarity_id_reencoded !== null ? (
+										<MenuItem action={this.resetSimilarityReencoded}>{tr("Reset similarity (re-encoded)")}</MenuItem>
 									) : (
 										""
 									)}
@@ -275,6 +286,15 @@ export class Video extends BaseComponent {
 										: data.similarity_id === -1
 											? tr("(no similarities)")
 											: data.similarity_id}
+								</code>
+								{" | "}
+								<strong>{tr("Re-encoded ID")}:</strong>{" "}
+								<code>
+									{data.similarity_id_reencoded === null
+										? tr("(not yet compared)")
+										: data.similarity_id_reencoded === -1
+											? tr("(no similarities)")
+											: data.similarity_id_reencoded}
 								</code>
 							</div>
 						) : (
@@ -677,6 +697,58 @@ export class Video extends BaseComponent {
 			.then(() =>
 				this.props.onInfo(
 					tr("Current similarity reset: {path}", {
+						path: this.props.data.filename,
+					}),
+					true,
+				),
+			)
+			.catch(backend_error);
+	}
+
+	dismissSimilarityReencoded() {
+		Fancybox.load(
+			<Dialog title={tr("Dismiss similarity (re-encoded)")} yes={tr("dismiss")} action={this.reallyDismissSimilarityReencoded}>
+				<div className="form-delete-video text-center">
+					<h2>{tr("Dismiss re-encoded similarity for this video?")}</h2>
+					<div className="details overflow-auto px-2 py-1">
+						<code id="filename">{this.props.data.filename}</code>
+					</div>
+				</div>
+			</Dialog>,
+		);
+	}
+
+	reallyDismissSimilarityReencoded() {
+		Backend.set_similarities_reencoded([this.props.data.video_id], [-1])
+			.then(() =>
+				this.props.onInfo(
+					tr("Re-encoded similarity cancelled: {path}", {
+						path: this.props.data.filename,
+					}),
+					true,
+				),
+			)
+			.catch(backend_error);
+	}
+
+	resetSimilarityReencoded() {
+		Fancybox.load(
+			<Dialog title={tr("Reset similarity (re-encoded)")} yes={tr("reset")} action={this.reallyResetSimilarityReencoded}>
+				<div className="form-delete-video text-center">
+					<h2>{tr("Reset re-encoded similarity for this video?")}</h2>
+					<div className="details overflow-auto px-2 py-1">
+						<code id="filename">{this.props.data.filename}</code>
+					</div>
+				</div>
+			</Dialog>,
+		);
+	}
+
+	reallyResetSimilarityReencoded() {
+		Backend.set_similarities_reencoded([this.props.data.video_id], [null])
+			.then(() =>
+				this.props.onInfo(
+					tr("Re-encoded similarity reset: {path}", {
 						path: this.props.data.filename,
 					}),
 					true,

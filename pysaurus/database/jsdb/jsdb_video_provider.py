@@ -7,6 +7,7 @@ from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.classes import Selector
 from pysaurus.core.constants import VIDEO_DEFAULT_SORTING
+from pysaurus.video.video_constants import SIMILARITY_FIELDS as _SIMILARITY_FIELDS
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages
@@ -214,7 +215,7 @@ class LayerGrouping(_AbstractLayerGrouping):
                     for value in self._get_grouping_values(video_id):
                         grouped_videos.setdefault(value, set()).add(video_id)
             # hack
-            if not group_def.is_property and group_def.field == "similarity_id":
+            if not group_def.is_property and group_def.field in _SIMILARITY_FIELDS:
                 # Remove None (not checked) and -1 (not similar) videos.
                 grouped_videos.pop(None, None)
                 grouped_videos.pop(-1, None)

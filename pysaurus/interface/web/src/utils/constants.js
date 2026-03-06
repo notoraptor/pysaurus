@@ -112,6 +112,7 @@ export const FIELD_MAP = new FieldMap([
 	new FieldInfo("properties", tr("properties"), GroupPermission.FORBIDDEN, FieldType.unsortable),
 	new FieldInfo("sample_rate", tr("sample rate"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("similarity_id", tr("similarity"), GroupPermission.ONLY_MANY, FieldType.unsortable),
+	new FieldInfo("similarity_id_reencoded", tr("similarity (re-encoded)"), GroupPermission.ONLY_MANY, FieldType.unsortable),
 	new FieldInfo("size", tr("size"), GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("size_length", "(size and length)", GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("thumbnail_path", tr("thumbnail path"), GroupPermission.FORBIDDEN, FieldType.unsortable),

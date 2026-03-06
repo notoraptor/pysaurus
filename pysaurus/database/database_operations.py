@@ -115,20 +115,26 @@ class DatabaseOperations:
         alg = database_algorithms.DatabaseAlgorithms(self.db)
         alg.move_video_entries([(from_id, to_id)])
 
-    def set_similarities(self, similarities: dict[int, int | None]):
+    def set_similarities(
+        self, similarities: dict[int, int | None], field: str = "similarity_id"
+    ):
         """Set similarity IDs for videos."""
-        self.db.videos_set_field("similarity_id", similarities)
-        self._notify_fields_modified(["similarity_id"], is_property=False)
+        self.db.videos_set_field(field, similarities)
+        self._notify_fields_modified([field], is_property=False)
 
     def set_similarities_from_list(
-        self, video_indices: list[int], similarities: list[int | None]
+        self,
+        video_indices: list[int],
+        similarities: list[int | None],
+        field: str = "similarity_id",
     ):
         """Set similarities from parallel lists."""
         return self.set_similarities(
             {
                 video_id: similarity_id
                 for video_id, similarity_id in zip(video_indices, similarities)
-            }
+            },
+            field=field,
         )
 
     def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:

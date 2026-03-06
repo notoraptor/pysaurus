@@ -120,6 +120,9 @@ export class VideosPage extends BaseComponent {
 								<MenuItem action={this.findSimilarVideos}>
 									<strong>{tr("Find similar videos")}</strong>
 								</MenuItem>
+								<MenuItem action={this.findSimilarVideosReencoded}>
+									<strong>{tr("Find re-encoded videos")}</strong>
+								</MenuItem>
 							</Menu>
 						) : (
 							""
@@ -1017,6 +1020,10 @@ not found video entry will be deleted.
 
 	findSimilarVideos() {
 		this.props.app.dbUpdate("find_similar_videos");
+	}
+
+	findSimilarVideosReencoded() {
+		this.props.app.dbUpdate("find_similar_videos_reencoded");
 	}
 
 	manageProperties() {

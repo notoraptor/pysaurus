@@ -30,6 +30,7 @@ VIDEO_SCHEMA = Schema(
         Type("properties", "p", {}),
         Type("sample_rate", "u", 0),
         Type("similarity_id", ("S", int), None),
+        Type("similarity_id_reencoded", ("E", int), None),
         Type("subtitle_languages", "L", []),
         Type("video_codec", "v", ""),
         Type("video_codec_description", "V", ""),

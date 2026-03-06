@@ -364,6 +364,15 @@ class VideoListItem(QFrame):
                 status_parts.append(
                     f'<span style="color: #0066cc;">Similarity ID: {self.video.similarity_id}</span>'
                 )
+        if self.video.similarity_id_reencoded is not None:
+            if self.video.similarity_id_reencoded == -1:
+                status_parts.append(
+                    '<span style="color: #666666;">Re-encoded: (no match)</span>'
+                )
+            else:
+                status_parts.append(
+                    f'<span style="color: #9900cc;">Re-encoded ID: {self.video.similarity_id_reencoded}</span>'
+                )
 
         if status_parts:
             status_label = WrappingLabel(" | ".join(status_parts))

@@ -144,6 +144,11 @@ class VideoPattern(ABC):
 
     @property
     @abstractmethod
+    def similarity_id_reencoded(self) -> int | None:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
     def video_codec(self) -> str:
         raise NotImplementedError()
 
@@ -293,6 +298,18 @@ class VideoPattern(ABC):
         )
 
     @property
+    def similarity_reencoded(self) -> str:
+        return (
+            "not compared"
+            if self.similarity_id_reencoded is None
+            else (
+                "none"
+                if self.similarity_id_reencoded < 0
+                else str(self.similarity_id_reencoded)
+            )
+        )
+
+    @property
     def meta_title_numeric(self) -> SemanticText:
         return SemanticText(self.meta_title)
 
@@ -375,6 +392,7 @@ class VideoPattern(ABC):
             "readable": not self.unreadable,
             "sample_rate": self.sample_rate,
             "similarity_id": self.similarity_id,
+            "similarity_id_reencoded": self.similarity_id_reencoded,
             "size": str(self.size),
             # "size_length": str(self.size_length),
             "subtitle_languages": self.subtitle_languages,

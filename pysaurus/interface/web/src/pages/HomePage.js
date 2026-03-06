@@ -301,6 +301,7 @@ const ACTIONS = {
 	update_database: "Update database",
 	find_similar_videos: "Find similarities",
 	find_similar_videos_ignore_cache: "Find similarities (ignore cache)",
+	find_similar_videos_reencoded: "Find re-encoded videos",
 	create_database: "Create database",
 	open_database: "Open database",
 	move_video_file: "Move video file",

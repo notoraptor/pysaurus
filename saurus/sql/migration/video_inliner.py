@@ -60,6 +60,7 @@ VIDEO_FIELDS = [
     "date_entry_modified",
     "date_entry_opened",
     "similarity_id",
+    "similarity_id_reencoded",
     "watched",
 ]
 VIDEO_FIELDS_NO_VIDEO_ID = VIDEO_FIELDS[1:]
@@ -93,6 +94,7 @@ VIDEO_FIELD_GETTER = {
     "date_entry_modified": get_default,
     "date_entry_opened": get_default,
     "similarity_id": get_default,
+    "similarity_id_reencoded": get_default,
     "watched": get_default,
 }
 

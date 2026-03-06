@@ -6,6 +6,7 @@ from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.core.lookup_array import LookupArray
+from pysaurus.video.video_constants import SIMILARITY_FIELDS as _SIMILARITY_FIELDS
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.video_provider.view_tools import GroupDef, SearchDef
@@ -230,7 +231,7 @@ def _compute_results_and_stats(
     if (
         context.result
         and context.grouping
-        and context.grouping.field == "similarity_id"
+        and context.grouping.field in _SIMILARITY_FIELDS
     ):
         from pysaurus.video.video_constants import COMMON_FIELDS
         from pysaurus.video.video_features import VideoFeatures
@@ -371,9 +372,9 @@ def _query_field_groups(
         without_singletons = "HAVING size > 1"
 
     where_similarity_id = ""
-    if grouping.field == "similarity_id":
+    if grouping.field in _SIMILARITY_FIELDS:
         where_similarity_id = (
-            " AND v.similarity_id IS NOT NULL AND v.similarity_id != -1"
+            f" AND v.{grouping.field} IS NOT NULL AND v.{grouping.field} != -1"
         )
 
     if grouping.field == "move_id":

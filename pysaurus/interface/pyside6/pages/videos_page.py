@@ -58,6 +58,7 @@ class VideosPage(QWidget):
     # Signals for long operations that require a ProcessPage
     update_database_requested = Signal()
     find_similar_requested = Signal()
+    find_similar_reencoded_requested = Signal()
     move_video_requested = Signal(int, str)  # video_id, directory
     status_message_requested = Signal(str, int)  # message, timeout
 
@@ -81,7 +82,10 @@ class VideosPage(QWidget):
         self._diff_fields: set[str] = set()  # Fields that differ in similarity group
         self._file_title_diffs: dict[int, list[tuple[int, int]]] = {}  # Character diffs
         self._grouped_by_moves: bool = False  # True when grouped by move_id
-        self._grouped_by_similarity: bool = False  # True when grouped by similarity_id
+        self._grouped_by_similarity: bool = (
+            False  # True when grouped by similarity field
+        )
+        self._similarity_field: str | None = None  # Current similarity field name
         self._total_pages: int = 1  # Total number of pages (for go to page dialog)
         self.confirm_not_found_deletion: bool = (
             True  # Confirm before deleting "not found" entries
@@ -354,6 +358,14 @@ class VideosPage(QWidget):
         self.btn_similar.setToolTip("Find visually similar videos")
         self.btn_similar.clicked.connect(self._on_find_similar)
         toolbar.addWidget(self.btn_similar)
+
+        # Find re-encoded button
+        self.btn_reencoded = QPushButton("Find Re-encoded")
+        self.btn_reencoded.setToolTip(
+            "Find potentially re-encoded videos (by filename and duration)"
+        )
+        self.btn_reencoded.clicked.connect(self._on_find_reencoded)
+        toolbar.addWidget(self.btn_reencoded)
         toolbar.addSeparator()
 
         # Random video button
@@ -942,6 +954,7 @@ class VideosPage(QWidget):
             self._current_group_index = -1
             self._grouped_by_moves = False
             self._grouped_by_similarity = False
+            self._similarity_field = None
             self.btn_confirm_unique_moves.setVisible(False)
             # Hide classifier when no grouping
             self._classifier_path = []
@@ -1194,7 +1207,10 @@ class VideosPage(QWidget):
 
         # Update grouped_by_moves flag and show/hide the confirm button
         self._grouped_by_moves = grouping.field == "move_id"
-        self._grouped_by_similarity = grouping.field == "similarity_id"
+        from pysaurus.video.video_constants import SIMILARITY_FIELDS
+
+        self._grouped_by_similarity = grouping.field in SIMILARITY_FIELDS
+        self._similarity_field = grouping.field if self._grouped_by_similarity else None
         self.btn_confirm_unique_moves.setVisible(self._grouped_by_moves)
 
     def _display_videos(self, videos: list[VideoPattern]):
@@ -1331,15 +1347,29 @@ class VideosPage(QWidget):
         menu.addAction("Move to...", lambda: self._move_video(video_id))
         menu.addSeparator()
 
-        # Similarity actions (only show when video has similarity)
+        # Similarity actions (for both similarity_id and similarity_id_reencoded)
         video = self._get_video_by_id(video_id)
-        if video and video.similarity_id is not None:
-            if video.similarity_id >= 0:
-                menu.addAction(
-                    "Dismiss Similarity", lambda: self._dismiss_similarity(video_id)
-                )
-            menu.addAction("Reset Similarity", lambda: self._reset_similarity(video_id))
-            # Generalize title actions (only when grouped by similarity)
+        has_sim_actions = False
+        if video:
+            for sim_field, sim_label in (
+                ("similarity_id", "Similarity"),
+                ("similarity_id_reencoded", "Similarity (re-encoded)"),
+            ):
+                sim_val = getattr(video, sim_field, None)
+                if sim_val is not None:
+                    has_sim_actions = True
+                    if sim_val >= 0:
+                        menu.addAction(
+                            f"Dismiss {sim_label}",
+                            lambda f=sim_field: self._dismiss_similarity(
+                                video_id, field=f
+                            ),
+                        )
+                    menu.addAction(
+                        f"Reset {sim_label}",
+                        lambda f=sim_field: self._reset_similarity(video_id, field=f),
+                    )
+            # Generalize title actions (only when grouped by a similarity field)
             if self._grouped_by_similarity and len(self._videos) > 1:
                 menu.addSeparator()
                 if video.meta_title:
@@ -1353,7 +1383,8 @@ class VideosPage(QWidget):
                     "Generalize file title into property...",
                     lambda: self._generalize_title_to_property(video_id, "file_title"),
                 )
-            menu.addSeparator()
+            if has_sim_actions:
+                menu.addSeparator()
 
         # Move confirmation actions (only when video has moves)
         if video and video.moves:
@@ -1442,7 +1473,7 @@ class VideosPage(QWidget):
             except Exception as e:
                 QMessageBox.warning(self, "Rename Failed", str(e))
 
-    def _dismiss_similarity(self, video_id: int):
+    def _dismiss_similarity(self, video_id: int, field: str = "similarity_id"):
         """Dismiss similarity for a video (mark as no match)."""
         reply = QMessageBox.question(
             self,
@@ -1453,9 +1484,9 @@ class VideosPage(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.ctx.dismiss_similarity(video_id)
+            self.ctx.dismiss_similarity(video_id, field=field)
 
-    def _reset_similarity(self, video_id: int):
+    def _reset_similarity(self, video_id: int, field: str = "similarity_id"):
         """Reset similarity for a video (mark as not compared)."""
         reply = QMessageBox.question(
             self,
@@ -1466,7 +1497,7 @@ class VideosPage(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            self.ctx.reset_similarity(video_id)
+            self.ctx.reset_similarity(video_id, field=field)
 
     def _generalize_title_to_property(self, video_id: int, title_field: str):
         """Copy a video's title into a property for all other videos in the group."""
@@ -1936,6 +1967,19 @@ class VideosPage(QWidget):
         )
         if reply == QMessageBox.StandardButton.Yes:
             self.find_similar_requested.emit()
+
+    def _on_find_reencoded(self):
+        """Find potentially re-encoded videos."""
+        reply = QMessageBox.question(
+            self,
+            "Find Re-encoded Videos",
+            "Search for potentially re-encoded videos?\n\n"
+            "Compares filenames and durations to find videos\n"
+            "that may be re-encodings of the same source.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.find_similar_reencoded_requested.emit()
 
     # =========================================================================
     # Classifier operations

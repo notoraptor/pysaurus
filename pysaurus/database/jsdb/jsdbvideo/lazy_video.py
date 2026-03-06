@@ -162,6 +162,15 @@ class LazyVideo(WithSchema, VideoPattern):
             self._save_date_entry_modified()
 
     @property
+    def similarity_id_reencoded(self):
+        return self._get("similarity_id_reencoded")
+
+    @similarity_id_reencoded.setter
+    def similarity_id_reencoded(self, data):
+        if self._set("similarity_id_reencoded", data):
+            self._save_date_entry_modified()
+
+    @property
     def watched(self) -> bool:
         return self._get("watched")
 

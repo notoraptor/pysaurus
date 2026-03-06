@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS video (
 	date_entry_modified DOUBLE,
 	date_entry_opened DOUBLE,
 	similarity_id INTEGER,
+	similarity_id_reencoded INTEGER,
 	watched INTEGER NOT NULL DEFAULT 0,
 	-- virtual columns
 	readable INTEGER GENERATED ALWAYS AS (1 - unreadable) VIRTUAL,
@@ -182,6 +183,7 @@ CREATE INDEX IF NOT EXISTS idx_video_meta_title ON video(meta_title);
 CREATE INDEX IF NOT EXISTS idx_video_mtime ON video(mtime);
 CREATE INDEX IF NOT EXISTS idx_video_sample_rate ON video(sample_rate);
 CREATE INDEX IF NOT EXISTS idx_video_similarity_id ON video(similarity_id);
+CREATE INDEX IF NOT EXISTS idx_video_similarity_id_reencoded ON video(similarity_id_reencoded);
 CREATE INDEX IF NOT EXISTS idx_video_unreadable ON video(unreadable);
 CREATE INDEX IF NOT EXISTS idx_video_video_codec ON video(video_codec);
 CREATE INDEX IF NOT EXISTS idx_video_video_codec_description ON video(video_codec_description);

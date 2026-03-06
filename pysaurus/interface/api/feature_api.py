@@ -148,6 +148,14 @@ class FeatureAPI:
             ).open()
         )
 
+    def set_similarities_reencoded(
+        self, video_indices: list[int], similarities: list[int | None]
+    ) -> None:
+        ops = Ops(self.database)
+        ops.set_similarities_from_list(
+            video_indices, similarities, field="similarity_id_reencoded"
+        )
+
     def open_containing_folder(self, video_id: int) -> str:
         ops = Ops(self.database)
         return str(ops.get_video_filename(video_id).locate_file())

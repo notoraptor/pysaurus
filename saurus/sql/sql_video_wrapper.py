@@ -33,15 +33,16 @@ class F:
     mtime = 21
     sample_rate = 22
     similarity_id = 23
-    unreadable = 24
-    video_codec = 25
-    video_codec_description = 26
-    video_id = 27
-    width = 28
-    watched = 29
+    similarity_id_reencoded = 24
+    unreadable = 25
+    video_codec = 26
+    video_codec_description = 27
+    video_id = 28
+    width = 29
+    watched = 30
     # Special fields, not from "video" table
-    thumbnail = 30
-    with_thumbnails = 31
+    thumbnail = 31
+    with_thumbnails = 32
 
 
 def get_video_table_fields() -> Iterable[str]:
@@ -231,6 +232,10 @@ class SQLVideoWrapper(VideoPattern):
     @property
     def similarity_id(self):
         return self.data[F.similarity_id]
+
+    @property
+    def similarity_id_reencoded(self):
+        return self.data[F.similarity_id_reencoded]
 
     @property
     def watched(self) -> bool:

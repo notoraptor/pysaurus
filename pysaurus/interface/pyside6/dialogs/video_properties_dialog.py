@@ -378,6 +378,10 @@ class VideoPropertiesDialog(QDialog):
             status_layout.addRow(
                 "Similarity Group:", QLabel(str(self.video.similarity_id))
             )
+        if self.video.similarity_id_reencoded is not None:
+            status_layout.addRow(
+                "Re-encoded Group:", QLabel(str(self.video.similarity_id_reencoded))
+            )
 
         layout.addWidget(status_group)
 

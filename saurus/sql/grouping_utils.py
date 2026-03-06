@@ -96,6 +96,7 @@ class SqlFieldFactory:
                 SqlField.auto("height"),
                 SqlField.auto("sample_rate"),
                 SqlField.auto("similarity_id"),
+                SqlField.auto("similarity_id_reencoded"),
                 SqlField.auto("video_codec"),
                 SqlField.auto("video_codec_description"),
                 SqlField.auto("video_id"),

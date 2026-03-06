@@ -5,7 +5,7 @@ from typing import Any
 from pysaurus.core.classes import Selector
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
-from pysaurus.video.video_constants import COMMON_FIELDS
+from pysaurus.video.video_constants import COMMON_FIELDS, SIMILARITY_FIELDS
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_sorting import VideoSorting
@@ -41,7 +41,7 @@ class VideoSearchContext:
     source_count: int = 0
 
     def __post_init__(self):
-        if self.result and self.grouping and self.grouping.field == "similarity_id":
+        if self.result and self.grouping and self.grouping.field in SIMILARITY_FIELDS:
             self.common_fields = VideoFeatures.get_common_fields(
                 self.result, fields=COMMON_FIELDS
             )

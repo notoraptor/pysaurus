@@ -49,6 +49,8 @@
   sample_rate: 0
   similarity: not compared
   similarity_id: None
+  similarity_id_reencoded: None
+  similarity_reencoded: not compared
   size: 716.05 KiB
   size_length: (716.05 KiB, 12s 040000µs)
   subtitle_languages: []
@@ -147,6 +149,8 @@
   sample_rate: 0
   similarity: not compared
   similarity_id: None
+  similarity_id_reencoded: None
+  similarity_reencoded: not compared
   size: 700.42 KiB
   size_length: (700.42 KiB, 14s 833333µs)
   subtitle_languages: []

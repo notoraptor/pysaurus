@@ -42,6 +42,7 @@ class VideoEntry:
     date_entry_modified: float = None  # as Date(this or mtime if None)
     date_entry_opened: float = None  # as Date(this or mtime if None)
     similarity_id: int = None
+    similarity_id_reencoded: int = None
 
     # Missing: `properties`: dict[str, list[PropUnitType]]
     # Missing: `moves`: list of dicts {video_id => int, filename => str}
@@ -62,6 +63,7 @@ class VideoEntry:
         del output["subtitle_languages"]
         del output["date_entry_opened"]
         del output["similarity_id"]
+        del output["similarity_id_reencoded"]
         if not for_update:
             del output["video_id"]
         if runtime_info:

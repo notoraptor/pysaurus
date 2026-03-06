@@ -208,6 +208,10 @@ class AppContext(QObject):
         """Find similar videos (threaded). Emits database_ready when done."""
         self._api.find_similar_videos()
 
+    def find_similar_videos_reencoded(self) -> None:
+        """Find re-encoded videos (threaded). Emits database_ready when done."""
+        self._api.find_similar_videos_reencoded()
+
     def move_video_file(self, video_id: int, directory: str) -> None:
         """Move a video file (threaded). Emits done/cancelled/ended."""
         self._api.move_video_file(video_id, directory)
@@ -450,16 +454,16 @@ class AppContext(QObject):
             self._ops.change_video_file_title(video_id, new_title)
             self.state_changed.emit()
 
-    def dismiss_similarity(self, video_id) -> None:
+    def dismiss_similarity(self, video_id, field="similarity_id") -> None:
         """Dismiss similarity for a video (mark as no match)."""
         if self._ops:
-            self._ops.set_similarities_from_list([video_id], [-1])
+            self._ops.set_similarities_from_list([video_id], [-1], field=field)
             self.state_changed.emit()
 
-    def reset_similarity(self, video_id) -> None:
+    def reset_similarity(self, video_id, field="similarity_id") -> None:
         """Reset similarity status for a video."""
         if self._ops:
-            self._ops.set_similarities_from_list([video_id], [None])
+            self._ops.set_similarities_from_list([video_id], [None], field=field)
             self.state_changed.emit()
 
     def mark_as_read(self, video_id) -> None:

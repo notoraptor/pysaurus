@@ -46,6 +46,7 @@ class JsonVideoFeatures(VideoFeatures):
             "readable": video.readable,
             "sample_rate": video.sample_rate,
             "similarity_id": video.similarity_id,
+            "similarity_id_reencoded": video.similarity_id_reencoded,
             "size": str(video.size),
             # "size_length": str(video.size_length),
             "subtitle_languages": video.subtitle_languages,

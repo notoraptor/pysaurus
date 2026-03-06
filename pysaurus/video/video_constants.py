@@ -7,6 +7,7 @@ VIDEO_FLAGS = {
     "without_thumbnails",
     "discarded",
 }
+SIMILARITY_FIELDS = {"similarity_id", "similarity_id_reencoded"}
 COMMON_FIELDS = (
     "audio_bit_rate",
     "audio_bits",
@@ -27,6 +28,7 @@ COMMON_FIELDS = (
     "length",
     "sample_rate",
     "similarity_id",
+    "similarity_id_reencoded",
     "subtitle_languages",
     "video_codec",
     "video_codec_description",
