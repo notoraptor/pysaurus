@@ -1362,28 +1362,47 @@ class VideosPage(QWidget):
         menu.exec(pos)
 
     def _open_video(self, video_id: int):
-        """Open a video with default player."""
-        self.window().setEnabled(False)
-        try:
-            self.ctx.open_video(video_id)
-        finally:
-            self.window().setEnabled(True)
+        """
+        Open a video with default player.
+
+        NB: Old code would protect this call with:
+            self.window().setEnabled(False)
+            try:
+                self.ctx.open_video(video_id)
+            finally:
+                self.window().setEnabled(True)
+
+        However, open_video() does 2 things:
+        - open video (OS operation)
+        - notify GUI about state changed
+
+        It should not be a real problem if interface is still active
+        while these operations occur, since the outcome should be
+        to update just "watched" indicator in video display. Action
+        indicators or inputs are normally not impacted.
+
+        So, we don't really need to protect this call in a
+        window disabled/enabled block.
+        """
+        self.ctx.open_video(video_id)
 
     def _open_in_vlc(self, video_id: int):
-        """Open a video in VLC via server."""
-        self.window().setEnabled(False)
-        try:
-            self.ctx.open_from_server(video_id)
-        finally:
-            self.window().setEnabled(True)
+        """
+        Open a video in VLC via server.
+
+        NB: See _open_video about why we don't protect
+        this call in a window disabled/enabled block.
+        """
+        self.ctx.open_from_server(video_id)
 
     def _open_folder(self, video_id: int):
-        """Open the folder containing a video."""
-        self.window().setEnabled(False)
-        try:
-            self.ctx.open_containing_folder(video_id)
-        finally:
-            self.window().setEnabled(True)
+        """
+        Open the folder containing a video.
+
+        NB: See _open_video about why we don't protect
+        this call in a window disabled/enabled block.
+        """
+        self.ctx.open_containing_folder(video_id)
 
     def _get_video_by_id(self, video_id: int):
         """Get video object by ID from current page."""
@@ -1922,6 +1941,9 @@ class VideosPage(QWidget):
 
     def _on_random_video(self):
         """Open a random video and configure search to show it."""
+        # We need window disabled/enabled protection here
+        # because this action will modify many displays,
+        # including action inputs (e.g. grouping, searching).
         self.window().setEnabled(False)
         try:
             self.page_number = 0
