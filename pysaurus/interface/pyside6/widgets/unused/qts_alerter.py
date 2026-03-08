@@ -1,3 +1,5 @@
+"""Currently unused, but may be useful in the future."""
+
 from PySide6.QtWidgets import QMessageBox
 
 from pysaurus.application.exceptions import PysaurusError

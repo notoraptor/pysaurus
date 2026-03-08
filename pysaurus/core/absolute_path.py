@@ -38,7 +38,7 @@ class AbsolutePath:
     @property
     def best_path(self) -> str:
         if System.is_windows():
-            from pysaurus.core.native.windows import get_short_path_name
+            from pysaurus.core.windows import get_short_path_name
 
             return get_short_path_name(self.standard_path)
         return self.__path

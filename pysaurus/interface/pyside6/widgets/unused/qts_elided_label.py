@@ -1,3 +1,5 @@
+"""Currently unused, but may be useful in the future."""
+
 from PySide6 import QtCore, QtGui
 from PySide6.QtWidgets import QLabel
 
