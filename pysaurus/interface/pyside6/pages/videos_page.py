@@ -43,6 +43,7 @@ from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video_provider.field_stat import FieldStat
+from saurus.sql.saurus_provider_utils import format_group_value
 
 
 class VideosPage(QWidget):
@@ -945,9 +946,10 @@ class VideosPage(QWidget):
         # Populate combo box (block signals during update)
         self.group_combo.blockSignals(True)
         self.group_combo.clear()
+        group_field = context.grouping.field if context.grouping else ""
         for stat in self._group_stats:
             # Format: "value (count)"
-            value_str = str(stat.value) if stat.value is not None else "(No value)"
+            value_str = format_group_value(group_field, stat.value)
             self.group_combo.addItem(f"{value_str} ({stat.count})", stat.value)
         if self._current_group_index >= 0:
             self.group_combo.setCurrentIndex(self._current_group_index)

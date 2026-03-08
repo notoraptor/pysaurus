@@ -1,6 +1,6 @@
 from typing import Callable, Iterable, Sequence
 
-from pysaurus.core.classes import Selector
+from pysaurus.core.classes import Selector, StringedTuple
 from pysaurus.core.datestring import Date
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
@@ -455,7 +455,7 @@ def _convert_grouping_rows(
         # Composite fields: (file_size, length) or None for videos without moves
         return (
             GroupCount(
-                (FileSize(row[0]), Duration(row[1] * 1_000_000))
+                StringedTuple((FileSize(row[0]), Duration(row[1] * 1_000_000)))
                 if row[0] is not None
                 else None,
                 row[2],

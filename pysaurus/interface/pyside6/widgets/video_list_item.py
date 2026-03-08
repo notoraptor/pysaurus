@@ -208,7 +208,9 @@ class VideoListItem(QFrame):
         size = str(self.video.size) if hasattr(self.video, "size") else ""
         container = self.video.container_format or ""
         video_codec = self.video.video_codec or ""
+        video_codec_desc = self.video.video_codec_description or video_codec
         audio_codec = self.video.audio_codec or ""
+        audio_codec_desc = self.video.audio_codec_description or audio_codec
         bit_rate = str(self.video.bit_rate) if hasattr(self.video, "bit_rate") else ""
 
         # Badge style: white text on dark background (using &nbsp; for padding since Qt ignores CSS padding)
@@ -237,6 +239,9 @@ class VideoListItem(QFrame):
         format_label = WrappingLabel(format_line)
         format_label.setTextFormat(Qt.TextFormat.RichText)
         format_label.setStyleSheet("color: #333333;")
+        codec_tips = [t for t in (video_codec_desc, audio_codec_desc) if t]
+        if codec_tips:
+            format_label.setToolTip(" ⬤ ".join(codec_tips))
         details_layout.addWidget(format_label)
 
         # Row 5: Duration | Resolution @ fps, bits | Audio specs
@@ -246,7 +251,7 @@ class VideoListItem(QFrame):
         frame_rate = round(self.video.frame_rate) if self.video.frame_rate else 0
         bit_depth = self.video.bit_depth or 8
         sample_rate = self.video.sample_rate or 0
-        audio_bits = getattr(self.video, "audio_bits", None) or 32
+        audio_bits = self.video.audio_bits or 32
         channels = self.video.channels or 0
         audio_bit_rate_kbps = (
             round(self.video.audio_bit_rate / 1000) if self.video.audio_bit_rate else 0

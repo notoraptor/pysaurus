@@ -90,6 +90,52 @@ class GroupCount:
         return group_count.get_value()
 
 
+_GROUP_DISPLAY_FORMATTERS: dict[str, str] = {
+    "audio_bit_rate": "{} Kb/s",
+    "audio_bits": "{} bits",
+    "bit_depth": "{} bits",
+    "channels": "{} ch",
+    "frame_rate": "{} fps",
+    "sample_rate": "{} Hz",
+}
+
+
+class GroupDisplayFormatter:
+    @classmethod
+    def audio_bit_rate(cls, value: int) -> str:
+        return f"{value / 1000 if value else 0} Kb/s"
+
+    @classmethod
+    def audio_bits(cls, value: int) -> str:
+        return f"{value or '(0, assumed 32)'} bits"
+
+    @classmethod
+    def bit_depth(cls, value: int) -> str:
+        return f"{value} bits"
+
+    @classmethod
+    def channels(cls, value: int) -> str:
+        return f"{value} ch"
+
+    @classmethod
+    def frame_rate(cls, value: float) -> str:
+        return f"{value or 0} fps"
+
+    @classmethod
+    def sample_rate(cls, value: int) -> str:
+        return f"{value} Hz"
+
+
+def format_group_value(field: str, value) -> str:
+    """Format a group value for display, matching the video list view style."""
+    if value is None:
+        return "(No value)"
+    formatter = getattr(GroupDisplayFormatter, field, None)
+    if formatter is not None:
+        return formatter(value)
+    return str(value)
+
+
 class ProviderVideoParser(VideoFieldQueryParser):
     def without_thumbnails(self, value) -> FieldQuery:
         return FieldQuery("IIF(LENGTH(vt.thumbnail), 1, 0)", [int(not value)])
