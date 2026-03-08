@@ -71,3 +71,15 @@ sudo apt install libxcb-cursor-dev
 
 It would be good to have a GUI framework who works out of the box with just Python packages,
 without having to install any system dependencies.
+
+
+# Other remarks:
+
+## Conditional search
+
+Could use `simpleeval`. May be not relevant in a SQL database.
+
+```python
+from simpleeval import simple_eval
+simple_eval("audio_bits > 8", names={"audio_bits": 16})  # True
+```
