@@ -1,3 +1,5 @@
+"""Currently unused."""
+
 from typing import Any
 
 import math
