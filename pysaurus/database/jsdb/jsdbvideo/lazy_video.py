@@ -5,7 +5,6 @@ from typing import Any
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import StringPrinter, Text
 from pysaurus.core.compare import to_comparable
-from pysaurus.core.constants import UNDEFINED
 from pysaurus.core.datestring import Date
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
@@ -283,10 +282,6 @@ class LazyVideo(WithSchema, VideoPattern):
 
     def has_property(self, name):
         return name in self._get("properties")
-
-    def get_property(self, name, default_unit=UNDEFINED) -> list[Any]:
-        props = self.properties
-        return props.get(name, [] if default_unit is UNDEFINED else [default_unit])
 
     def remove_property(self, name) -> list:
         self._save_date_entry_modified()

@@ -278,7 +278,7 @@ class VideoPattern(ABC):
         return self.filename.extension
 
     @property
-    def file_title(self):
+    def file_title(self) -> str:
         return self.filename.file_title
 
     @property
