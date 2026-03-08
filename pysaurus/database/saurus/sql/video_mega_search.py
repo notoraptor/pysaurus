@@ -1,11 +1,11 @@
 from typing import Literal, Sequence, overload
 
 from pysaurus.video.video_pattern import VideoPattern
-from saurus.sql.pysaurus_connection import PysaurusConnection
-from saurus.sql.sql_utils import SQLWhereBuilder
-from saurus.sql.sql_video_wrapper import FORMATTED_VIDEO_TABLE_FIELDS
-from saurus.sql.video_mega_utils import _get_videos
-from saurus.sql.video_parser import VideoFieldQueryParser
+from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.sql.sql_utils import SQLWhereBuilder
+from pysaurus.database.saurus.sql.sql_video_wrapper import FORMATTED_VIDEO_TABLE_FIELDS
+from pysaurus.database.saurus.sql.video_mega_utils import _get_videos
+from pysaurus.database.saurus.sql.video_parser import VideoFieldQueryParser
 
 # Fields that require joining video_thumbnail table
 _THUMBNAIL_FIELDS = frozenset({"thumbnail", "with_thumbnails"})

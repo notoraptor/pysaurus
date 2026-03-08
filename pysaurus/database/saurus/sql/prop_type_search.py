@@ -1,6 +1,6 @@
 from pysaurus.properties.properties import PROP_UNIT_CONVERTER
-from saurus.sql.pysaurus_connection import PysaurusConnection
-from saurus.sql.sql_utils import SQLWhereBuilder
+from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.sql.sql_utils import SQLWhereBuilder
 
 
 def prop_type_search(

@@ -15,12 +15,12 @@ from pysaurus.video.lazy_video_runtime_info import (
 )
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
-from saurus.sql.prop_type_search import prop_type_search
-from saurus.sql.pysaurus_connection import PysaurusConnection
-from saurus.sql.saurus_provider import SaurusProvider
-from saurus.sql.sql_useful_constants import WRITABLE_FIELDS
-from saurus.sql.video_mega_search import video_mega_search
-from saurus.sql.video_mega_utils import _get_video_moves
+from pysaurus.database.saurus.sql.prop_type_search import prop_type_search
+from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.sql.saurus_provider import SaurusProvider
+from pysaurus.database.saurus.sql.sql_useful_constants import WRITABLE_FIELDS
+from pysaurus.database.saurus.sql.video_mega_search import video_mega_search
+from pysaurus.database.saurus.sql.video_mega_utils import _get_video_moves
 
 logger = logging.getLogger(__name__)
 

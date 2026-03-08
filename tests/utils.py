@@ -1,8 +1,8 @@
 import os
 
 from pysaurus.application.application import Application
-from saurus.sql.pysaurus_collection import PysaurusCollection
-from saurus.sql.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
+from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
 
 TEST_HOME_DIR = os.path.join(os.path.dirname(__file__), "home_dir_test")
 TEST_DB_FOLDER = os.path.join(TEST_HOME_DIR, ".Pysaurus", "databases", "test_database")

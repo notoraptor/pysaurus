@@ -6,8 +6,8 @@ from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvide
 from pysaurus.video_provider.field_stat import FieldStat
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
 from pysaurus.video_provider.view_tools import GroupDef, LookupArray, SearchDef
-from saurus.sql.saurus_provider_utils import GroupCount
-from saurus.sql.video_mega_group import video_mega_group
+from pysaurus.database.saurus.sql.saurus_provider_utils import GroupCount
+from pysaurus.database.saurus.sql.video_mega_group import video_mega_group
 
 
 class SaurusProvider(AbstractVideoProvider):

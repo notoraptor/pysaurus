@@ -12,10 +12,13 @@ from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.jsdb.jsdb_prop_type import PropType
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_manager import ThumbnailManager
-from saurus.sql.migration.db_comparison import format_prop_val
-from saurus.sql.migration.video_inliner import get_all_fields, get_all_getters
-from saurus.sql.pysaurus_connection import PysaurusConnection
-from saurus.sql.pysaurus_program import PysaurusProgram
+from pysaurus.database.saurus.sql.migration.db_comparison import format_prop_val
+from pysaurus.database.saurus.sql.migration.video_inliner import (
+    get_all_fields,
+    get_all_getters,
+)
+from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.sql.pysaurus_program import PysaurusProgram
 
 DB_THUMB_FOLDER = ("thumb_folder", "thumbnails")
 

@@ -4,8 +4,8 @@ from pysaurus.application.application import Config
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.modules import FileSystem
-from saurus.language import say
-from saurus.sql.pysaurus_collection import PysaurusCollection
+from pysaurus.database.saurus.language import say
+from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
 
 
 class PysaurusProgram:

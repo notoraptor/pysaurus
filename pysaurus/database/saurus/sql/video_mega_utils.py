@@ -4,9 +4,9 @@ from typing import Iterable, Sequence
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.properties.properties import PropTypeValidator
 from pysaurus.video.video_pattern import VideoPattern
-from saurus.sql.prop_type_search import prop_type_search
-from saurus.sql.pysaurus_connection import PysaurusConnection
-from saurus.sql.sql_video_wrapper import SQLVideoWrapper
+from pysaurus.database.saurus.sql.prop_type_search import prop_type_search
+from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.sql.sql_video_wrapper import SQLVideoWrapper
 
 
 def _get_videos(

@@ -11,7 +11,7 @@ internal jsondb_* methods, making them implementation-independent.
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
-from saurus.sql.pysaurus_collection import PysaurusCollection
+from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
 
 
 # =============================================================================

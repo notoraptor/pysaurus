@@ -23,7 +23,7 @@ from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
 from pysaurus.video import VideoRuntimeInfo
 from pysaurus.video.video_entry import VideoEntry
-from saurus.language import say
+from pysaurus.database.saurus.language import say
 
 logger = logging.getLogger(__name__)
 

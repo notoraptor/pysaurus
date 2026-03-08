@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import Iterable, Self
 
-from saurus.sql.video_parser import FieldQuery
+from pysaurus.database.saurus.sql.video_parser import FieldQuery
 
 
 class SQLWhereBuilder:

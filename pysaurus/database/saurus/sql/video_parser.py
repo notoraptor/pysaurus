@@ -1,7 +1,7 @@
 from typing import Sequence
 
 from pysaurus.core.absolute_path import AbsolutePath
-from saurus.sql.sql_video_wrapper import F
+from pysaurus.database.saurus.sql.sql_video_wrapper import F
 
 
 class FieldQuery:

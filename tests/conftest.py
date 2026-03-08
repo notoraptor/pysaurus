@@ -5,7 +5,7 @@ import shutil
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
-from saurus.sql.pysaurus_collection import PysaurusCollection
+from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
 from tests.mocks.mock_database import MockDatabase
 from tests.utils import TEST_HOME_DIR, get_old_app, get_saurus_sql_database
 

@@ -12,8 +12,8 @@ Verifies:
 import pytest
 
 from pysaurus.core.functions import string_to_pieces
-from saurus.sql.pysaurus_collection import PysaurusCollection
-from saurus.sql.sql_functions import pysaurus_text_to_fts
+from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
+from pysaurus.database.saurus.sql.sql_functions import pysaurus_text_to_fts
 from tests.utils import get_saurus_sql_database
 
 

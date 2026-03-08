@@ -470,7 +470,7 @@ def run_write_benchmarks(get_json_db, get_saurus_db, all_video_ids):
 
 
 def main():
-    from saurus.sql.pysaurus_collection import PysaurusCollection
+    from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
     from tests.utils import TEST_DB_FOLDER, TEST_HOME_DIR
 
     print("=" * 100)
