@@ -11,6 +11,7 @@ import yaml
 from pysaurus.core.informer import Information
 from pysaurus.core.perf_counter import PerfCounter
 from pysaurus.database.abstract_database import AbstractDatabase
+from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
 from pysaurus.database.jsdb.json_database import JsonDatabase
@@ -329,6 +330,75 @@ class BenchmarkAPI:
         total_videos = self._db.db.query_one("SELECT COUNT(*) FROM video")[0]
         print(f"({t.microseconds / 1000:.3f} ms)")
         return f"video_text: {before} -> {after} rows (video table: {total_videos})"
+
+    def should_update(self, limit: int = 20):
+        """Dry run: show what an update would add or re-process, without modifying the DB.
+
+        Args:
+            limit: Max number of files to display per category.
+        """
+        with PerfCounter() as t:
+            all_files = Videos.get_runtime_info_from_paths(self._db.get_folders())
+
+        print(
+            f"Scan: {len(all_files)} video(s) on disk ({t.microseconds / 1000:.3f} ms)"
+        )
+
+        # Files not in DB at all
+        db_videos: dict[str, tuple] = {}
+        for v in self._db.get_videos(
+            include=["filename", "file_size", "mtime", "driver_id"]
+        ):
+            db_videos[str(v.filename)] = (v.file_size, v.mtime, v.driver_id)
+
+        new_files = []
+        modified_files = []
+        for file_name, file_info in sorted(all_files.items()):
+            key = str(file_name)
+            if key not in db_videos:
+                new_files.append(key)
+            else:
+                db_size, db_mtime, db_driver_id = db_videos[key]
+                changed = {}
+                if db_size != file_info.size:
+                    changed["size"] = (db_size, file_info.size)
+                if db_mtime != file_info.mtime:
+                    changed["mtime"] = (db_mtime, file_info.mtime)
+                if db_driver_id != str(file_info.driver_id):
+                    changed["driver_id"] = (db_driver_id, str(file_info.driver_id))
+                if changed:
+                    modified_files.append((key, changed))
+
+        # In DB but not on disk
+        disk_set = set(str(f) for f in all_files)
+        not_on_disk = [fn for fn in db_videos if fn not in disk_set]
+
+        print(f"In DB: {len(db_videos)} video(s)")
+        print()
+        print(f"New files (not in DB):      {len(new_files)}")
+        print(f"Modified (mtime/size/drv):  {len(modified_files)}")
+        print(f"In DB but not on disk:      {len(not_on_disk)}")
+        print(f"Total update would process: {len(new_files) + len(modified_files)}")
+
+        if new_files:
+            print(f"\n--- New files (max {limit}) ---")
+            for f in new_files[:limit]:
+                print(f"  {f}")
+            if len(new_files) > limit:
+                print(f"  ... ({len(new_files) - limit} more)")
+
+        if modified_files:
+            print(f"\n--- Modified files (max {limit}) ---")
+            for f, diffs in modified_files[:limit]:
+                parts = ", ".join(
+                    f"{k}: {old!r} -> {new!r}" for k, (old, new) in diffs.items()
+                )
+                print(f"  {f}")
+                print(f"    {parts}")
+            if len(modified_files) > limit:
+                print(f"  ... ({len(modified_files) - limit} more)")
+
+        return f"{len(new_files)} new, {len(modified_files)} modified"
 
     def repeat(self, command: str = "", n: int = 1):
         """Repeat a command N times and report timing."""

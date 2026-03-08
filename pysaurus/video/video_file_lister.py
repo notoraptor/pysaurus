@@ -2,6 +2,7 @@ import os
 
 from pysaurus.core import constants
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.fs_utils import correct_mtime
 from pysaurus.core.modules import FileSystem
 from pysaurus.video import VideoRuntimeInfo
 
@@ -25,7 +26,7 @@ def _scan_folder_for_videos(folder: str, files: dict[AbsolutePath, VideoRuntimeI
                 stat = os.stat(entry_path.path)
                 files[entry_path] = VideoRuntimeInfo.from_keys(
                     size=stat.st_size,
-                    mtime=stat.st_mtime,
+                    mtime=correct_mtime(stat.st_mtime, entry_path.path),
                     driver_id=stat.st_dev,
                     is_file=True,
                 )
@@ -39,5 +40,8 @@ def scan_path_for_videos(
     elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:
         stat = FileSystem.stat(path.path)
         files[path] = VideoRuntimeInfo.from_keys(
-            size=stat.st_size, mtime=stat.st_mtime, driver_id=stat.st_dev, is_file=True
+            size=stat.st_size,
+            mtime=correct_mtime(stat.st_mtime, path.path),
+            driver_id=stat.st_dev,
+            is_file=True,
         )
