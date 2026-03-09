@@ -188,10 +188,10 @@ class WithSchema:
     def __str__(self):
         return f"{type(self).__name__}({self._d})"
 
-    def _get(self, name):
+    def _get(self, name: str) -> Any:
         return self.SCHEMA.get_from_short_dict(self._d, name)
 
-    def _set(self, name, value) -> bool:
+    def _set(self, name: str, value) -> bool:
         return self.SCHEMA.set_into_short_dict(self._d, name, value)
 
     def _has(self, name):
