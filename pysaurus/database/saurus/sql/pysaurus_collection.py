@@ -18,6 +18,7 @@ from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.database.saurus.sql.prop_type_search import prop_type_search
 from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.sql.saurus_provider import SaurusProvider
+from pysaurus.database.saurus.sql.sql_utils import sql_placeholders
 from pysaurus.database.saurus.sql.sql_useful_constants import WRITABLE_FIELDS
 from pysaurus.database.saurus.sql.video_mega_search import video_mega_search
 from pysaurus.database.saurus.sql.video_mega_utils import _get_video_moves
@@ -29,6 +30,27 @@ PREFIX = {"thumbnail": "", "with_thumbnails": ""}
 
 def get_sql_prefix(field: str) -> str:
     return PREFIX.get(field, "v.")
+
+
+def _map_filenames_to_video_ids(
+    db: PysaurusConnection, entries: list[VideoEntry], *, strict: bool = False
+) -> dict[str, VideoEntry]:
+    entry_map = {entry.filename: entry for entry in entries}
+    if len(entry_map) != len(entries):
+        raise ValueError("Duplicate filenames in entries")
+    filenames = list(entry_map.keys())
+    nb_matched = 0
+    with db:
+        for row in db.query(
+            f"SELECT filename, video_id FROM video "
+            f"WHERE filename IN ({sql_placeholders(len(filenames))})",
+            filenames,
+        ):
+            entry_map[row[0]].video_id = row[1]
+            nb_matched += 1
+    if strict and nb_matched != len(entries):
+        raise RuntimeError(f"Expected {len(entries)} video IDs, got {nb_matched}")
+    return entry_map
 
 
 class PysaurusCollection(AbstractDatabase):
@@ -85,7 +107,7 @@ class PysaurusCollection(AbstractDatabase):
                 "ON pv.property_id = p.property_id "
                 "WHERE p.name = ?"
                 + (
-                    f" AND pv.video_id IN ({','.join(['?'] * len(indices))})"
+                    f" AND pv.video_id IN ({sql_placeholders(len(indices))})"
                     if indices
                     else ""
                 ),
@@ -111,7 +133,7 @@ class PysaurusCollection(AbstractDatabase):
         else:
             if not all(isinstance(video_id, int) for video_id in video_ids):
                 raise TypeError("All video_ids must be integers")
-            placeholders_string = ",".join(["?"] * len(video_ids))
+            placeholders_string = sql_placeholders(len(video_ids))
         for video_id in video_ids:
             updates[video_id] = pt.instantiate(updates[video_id])
 
@@ -204,13 +226,13 @@ class PysaurusCollection(AbstractDatabase):
         if not merge:
             self.db.modify(
                 f"DELETE FROM video_property_value WHERE video_id = ? "
-                f"AND property_id IN ({','.join(['?'] * len(properties))})",
+                f"AND property_id IN ({sql_placeholders(len(properties))})",
                 [video_id] + [props[name].property_id for name in properties],
             )
         elif unique_prop_indices:
             self.db.modify(
                 f"DELETE FROM video_property_value WHERE video_id = ? "
-                f"AND property_id IN ({','.join(['?'] * len(unique_prop_indices))})",
+                f"AND property_id IN ({sql_placeholders(len(unique_prop_indices))})",
                 [video_id] + unique_prop_indices,
             )
         self.db.modify_many(
@@ -401,20 +423,7 @@ class PysaurusCollection(AbstractDatabase):
         video_entries: list[VideoEntry],
         runtime_info: dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
-        entry_map: dict[str, VideoEntry] = {
-            entry.filename: entry for entry in video_entries
-        }
-        if len(entry_map) != len(video_entries):
-            raise ValueError("Duplicate filenames in video_entries")
-        filenames = list(entry_map.keys())
-        with self.db:
-            for row in self.db.query(
-                f"SELECT video_id, filename FROM video "
-                f"WHERE filename IN ({','.join(['?'] * len(filenames))})",
-                filenames,
-            ):
-                entry = entry_map[row[1]]
-                entry.video_id = row[0]
+        _map_filenames_to_video_ids(self.db, video_entries)
         old_entries = [entry for entry in video_entries if entry.video_id is not None]
         new_entries = [entry for entry in video_entries if entry.video_id is None]
         self._update_video_entries(old_entries, runtime_info)
@@ -460,7 +469,7 @@ class PysaurusCollection(AbstractDatabase):
         # Consolidate DELETEs with IN clause for better performance
         video_ids = [entry.video_id for entry in entries]
         if video_ids:
-            placeholders = ",".join(["?"] * len(video_ids))
+            placeholders = sql_placeholders(len(video_ids))
             self.db.modify(
                 f"DELETE FROM video_error WHERE video_id IN ({placeholders})", video_ids
             )
@@ -494,20 +503,7 @@ class PysaurusCollection(AbstractDatabase):
             f"VALUES ({','.join(f':{field}' for field in fields)})",
             dicts,
         )
-        entry_map = {entry.filename: entry for entry in entries}
-        if len(entry_map) != len(entries):
-            raise ValueError("Duplicate filenames in entries")
-        nb_indices = 0
-        with self.db:
-            for row in self.db.query(
-                f"SELECT filename, video_id FROM video "
-                f"WHERE filename IN ({','.join(['?'] * len(entries))})",
-                [entry.filename for entry in entries],
-            ):
-                entry_map[row[0]].video_id = row[1]
-                nb_indices += 1
-        if nb_indices != len(entries):
-            raise RuntimeError(f"Expected {len(entries)} video IDs, got {nb_indices}")
+        _map_filenames_to_video_ids(self.db, entries, strict=True)
         errors = [
             (entry.video_id, error) for entry in entries for error in entry.errors
         ]
@@ -611,7 +607,7 @@ class PysaurusCollection(AbstractDatabase):
                 row[0]: row[1]
                 for row in self.db.query(
                     f"SELECT filename, video_id FROM video "
-                    f"WHERE filename IN ({','.join(['?'] * len(filename_to_thumb_name))})",
+                    f"WHERE filename IN ({sql_placeholders(len(filename_to_thumb_name))})",
                     list(filename_to_thumb_name.keys()),
                 )
             }

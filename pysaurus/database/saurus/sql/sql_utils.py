@@ -1,7 +1,33 @@
 from copy import deepcopy
-from typing import Iterable, Self
+from typing import Iterable, Self, Sequence
 
-from pysaurus.database.saurus.sql.video_parser import FieldQuery
+
+def sql_placeholders(count: int) -> str:
+    return ",".join(["?"] * count)
+
+
+class FieldQuery:
+    __slots__ = ("table", "field", "values")
+
+    def __init__(self, field: str, values: Sequence, prefix=""):
+        if not values:
+            raise ValueError(
+                f"FieldQuery requires at least one value for field {field}"
+            )
+        self.field = field
+        self.values = values
+        self.table = prefix
+
+    def __str__(self):
+        return (
+            f"{self.table}{'.' if self.table else ''}{self.field} "
+            f"{'=' if len(self.values) == 1 else 'IN'} "
+            f"{'' if len(self.values) == 1 else '('}"
+            f"{sql_placeholders(len(self.values))}"
+            f"{'' if len(self.values) == 1 else ')'}"
+        )
+
+    __repr__ = __str__
 
 
 class SQLWhereBuilder:

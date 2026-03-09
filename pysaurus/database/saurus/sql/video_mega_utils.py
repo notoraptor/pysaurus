@@ -6,6 +6,7 @@ from pysaurus.properties.properties import PropTypeValidator
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.database.saurus.sql.prop_type_search import prop_type_search
 from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.sql.sql_utils import sql_placeholders
 from pysaurus.database.saurus.sql.sql_video_wrapper import SQLVideoWrapper
 
 
@@ -43,7 +44,7 @@ def _get_videos(
         return videos
 
     video_ids = [video.video_id for video in videos]
-    placeholders = ", ".join(["?"] * len(video_ids))
+    placeholders = sql_placeholders(len(video_ids))
 
     errors = defaultdict(list)
     languages = {"a": defaultdict(list), "s": defaultdict(list)}

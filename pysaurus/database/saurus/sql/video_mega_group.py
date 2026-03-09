@@ -18,7 +18,12 @@ from pysaurus.database.saurus.sql.saurus_provider_utils import (
     convert_dict_to_sql,
     search_to_sql,
 )
-from pysaurus.database.saurus.sql.sql_utils import QueryMaker, SQLWhereBuilder, TableDef
+from pysaurus.database.saurus.sql.sql_utils import (
+    QueryMaker,
+    SQLWhereBuilder,
+    TableDef,
+    sql_placeholders,
+)
 from pysaurus.database.saurus.sql.sql_video_wrapper import VIDEO_TABLE_FIELD_NAMES
 from pysaurus.database.saurus.sql.video_mega_utils import _get_videos
 
@@ -87,6 +92,7 @@ def video_mega_group(
         if grouping.is_property:
             order_field = _get_property_order_field(grouping, order_direction)
             prop_value_converter = _get_property_value_converter(sql_db, grouping.field)
+            prop_meta = _get_property_metadata(sql_db, grouping.field)
             if classifier:
                 grouping_rows = _query_property_groups_with_classifier(
                     sql_db,
@@ -96,6 +102,7 @@ def video_mega_group(
                     classifier,
                     order_field,
                     without_singletons,
+                    prop_meta,
                 )
             else:
                 grouping_rows = _query_property_groups_without_classifier(
@@ -105,6 +112,7 @@ def video_mega_group(
                     grouping,
                     order_field,
                     without_singletons,
+                    prop_meta,
                 )
         else:
             grouping_rows = _query_field_groups(
@@ -127,7 +135,7 @@ def video_mega_group(
         if grouping.is_property:
             (field_value,) = group.value
             where_group_query, where_group_params = _filter_by_selected_property_group(
-                sql_db, grouping, classifier, field_value
+                grouping, classifier, field_value, prop_meta
             )
         else:
             where_group_query, where_group_params = _filter_by_selected_field_group(
@@ -206,7 +214,7 @@ def _compute_results_and_stats(
 
             query_maker_page.where.clear()
             query_maker_page.where.append_query(
-                f"{field_video_id} IN ({','.join(['?'] * len(page_view))})", *page_view
+                f"{field_video_id} IN ({sql_placeholders(len(page_view))})", *page_view
             )
 
     thumb_table = query_maker_page.find_table("video_thumbnail")
@@ -270,8 +278,9 @@ def _query_property_groups_with_classifier(
     classifier: Sequence[str],
     order_field: str,
     without_singletons: str,
+    prop_meta: tuple[int, bool, str | None],
 ) -> list[tuple]:
-    prop_id, _, _ = _get_property_metadata(sql_db, grouping.field)
+    prop_id, _, _ = prop_meta
     placeholders = ["?"] * len(classifier)
     vt_join = _thumbnail_join_if_needed(source_query)
     query = f"""
@@ -317,8 +326,9 @@ def _query_property_groups_without_classifier(
     grouping: GroupDef,
     order_field: str,
     without_singletons: str,
+    prop_meta: tuple[int, bool, str | None],
 ) -> list[Sequence]:
-    prop_id, is_multiple, default_value = _get_property_metadata(sql_db, grouping.field)
+    prop_id, is_multiple, default_value = prop_meta
     vt_join = _thumbnail_join_if_needed(source_query)
 
     if is_multiple:
@@ -476,12 +486,12 @@ def _convert_grouping_rows(
 
 
 def _filter_by_selected_property_group(
-    sql_db: PysaurusConnection,
     grouping: GroupDef,
     classifier: Sequence[str],
     field_value,
+    prop_meta: tuple[int, bool, str | None],
 ) -> tuple[str, list]:
-    prop_id, is_multiple, default_value = _get_property_metadata(sql_db, grouping.field)
+    prop_id, is_multiple, default_value = prop_meta
 
     if classifier:
         expected = list(classifier)
@@ -591,7 +601,7 @@ def _get_property_metadata(
            LIMIT 1""",
         [property_name],
     )
-    property_id = prop_info[0] if prop_info else 0
-    is_multiple = prop_info[1] if prop_info else 0
-    default_value = prop_info[2] if (prop_info and len(prop_info) > 2) else None
-    return property_id, is_multiple, default_value
+    if not prop_info:
+        return 0, False, None
+    default_value = prop_info[2] if len(prop_info) > 2 else None
+    return prop_info[0], prop_info[1], default_value
