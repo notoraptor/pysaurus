@@ -22,7 +22,7 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.core.schematizer.schematizable import WithSchema
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.database import Database
-from pysaurus.database.saurus.language import say
+from pysaurus.core.language import say
 
 logger = logging.getLogger(__name__)
 

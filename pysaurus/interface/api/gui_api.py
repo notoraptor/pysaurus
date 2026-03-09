@@ -29,7 +29,7 @@ from pysaurus.database.features.db_similar_videos import DbSimilarVideos
 from pysaurus.interface.api.api_utils.proxy_feature import FromPyperclip, FromTk
 from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC, VLC_PATH
 from pysaurus.interface.api.feature_api import FeatureAPI
-from pysaurus.database.saurus.language import say
+from pysaurus.core.language import say
 
 logger = logging.getLogger(__name__)
 
