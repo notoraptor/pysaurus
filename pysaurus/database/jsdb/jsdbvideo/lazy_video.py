@@ -7,7 +7,7 @@ from pysaurus.core.classes import StringPrinter, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.datestring import Date
 from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
-from pysaurus.core.schematizable import Short, WithSchema
+from pysaurus.core.schematizer.schematizable import Short, WithSchema
 from pysaurus.core.semantic_text import SemanticText
 from pysaurus.video.lazy_video_runtime_info import LazyVideoRuntimeInfo
 from pysaurus.video.video_pattern import VideoPattern

@@ -5,8 +5,8 @@ Tests for pysaurus.core.json_type.Type and pysaurus.core.schematizable
 
 import pytest
 
-from pysaurus.core.json_type import Type
-from pysaurus.core.schematizable import (
+from pysaurus.core.schematizer.json_type import Type
+from pysaurus.core.schematizer.schematizable import (
     Schema,
     SchemaType,
     Short,
@@ -760,7 +760,7 @@ class TestShort:
         assert ann.default == "hello"
 
     def test_with_none_default(self):
-        from pysaurus.core.schematizable import _MISSING
+        from pysaurus.core.schematizer.schematizable import _MISSING
 
         ann = Short["n", int, None]
         assert ann.default is None

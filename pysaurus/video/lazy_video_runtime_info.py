@@ -1,4 +1,4 @@
-from pysaurus.core.schematizable import Short, WithSchema
+from pysaurus.core.schematizer.schematizable import Short, WithSchema
 
 
 class LazyVideoRuntimeInfo(WithSchema):

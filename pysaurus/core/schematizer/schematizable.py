@@ -1,6 +1,6 @@
 from typing import Any, Iterable
 
-from pysaurus.core.json_type import Type
+from pysaurus.core.schematizer.json_type import Type
 
 _MISSING = object()
 

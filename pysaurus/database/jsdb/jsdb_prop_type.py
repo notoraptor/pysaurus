@@ -1,5 +1,5 @@
 from pysaurus.application import exceptions
-from pysaurus.core.schematizable import Short, WithSchema
+from pysaurus.core.schematizer.schematizable import Short, WithSchema
 from pysaurus.properties.properties import PropValueType
 
 
