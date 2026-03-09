@@ -42,7 +42,7 @@ def _get_videos(
     ):
         return videos
 
-    video_ids = [video.data["video_id"] for video in videos]
+    video_ids = [video.video_id for video in videos]
     placeholders = ", ".join(["?"] * len(video_ids))
 
     errors = defaultdict(list)
