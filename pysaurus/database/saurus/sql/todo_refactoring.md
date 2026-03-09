@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-08
 **Objectif:** Réduire, simplifier et rendre plus lisible le code Saurus/SQL (~3 839 lignes)
-**Gain estimé:** ~485-620 lignes (17-21%)
+**Gain estimé:** ~455-590 lignes (15-20%)
 
 ---
 
@@ -57,13 +57,9 @@
 
 ## Priorité moyenne
 
-### 5. Supprimer `GroupDisplayFormatter` (code mort)
+### ~~5. Supprimer `GroupDisplayFormatter`~~ ✅ Fait
 
-- **Fichier:** `saurus_provider_utils.py`
-- **Problème:** Classe `GroupDisplayFormatter` et fonction `format_group_value()` jamais appelées
-- **Action:** Supprimer
-- **Gain estimé:** ~30 lignes
-- **Effort:** Faible
+- Déplacé dans `pysaurus/interface/common/common.py` (commit 6d7ad534)
 
 ### 6. Optimiser `QueryMaker`
 
@@ -121,10 +117,10 @@
 | 2 | video_mega_group consolidation | ~80-120 | Élevé |
 | 3 | Unifier property update methods | ~35-45 | Moyen |
 | 4 | Helper `sql_placeholders()` | ~15-20 | Faible |
-| 5 | Supprimer GroupDisplayFormatter | ~30 | Faible |
+| 5 | ~~Supprimer GroupDisplayFormatter~~ ✅ Déplacé | — | — |
 | 6 | Optimiser QueryMaker | ~30-40 | Moyen |
 | 7 | Extraire _map_filenames_to_video_ids | ~15-20 | Faible |
 | 8 | Cache _get_property_metadata | 0 (perf) | Faible |
 | 9 | Standardiser error handling propriétés | ~10-15 | Faible |
 | 10 | Fusionner boucles _get_videos | ~10 | Faible |
-| **Total** | | **~485-620** | |
+| **Total** | | **~455-590** | |
