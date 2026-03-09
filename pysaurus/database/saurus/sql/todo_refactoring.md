@@ -2,19 +2,16 @@
 
 **Date:** 2026-03-08
 **Objectif:** Réduire, simplifier et rendre plus lisible le code Saurus/SQL (~3 839 lignes)
-**Gain estimé:** ~455-590 lignes (15-20%)
+**Gain estimé:** ~305-410 lignes (10-14%)
 
 ---
 
 ## Priorité haute
 
-### 1. `SQLVideoWrapper` : remplacer les properties répétitives par `__getattr__`
+### ~~1. `SQLVideoWrapper` : remplacer les properties répétitives~~ — Abandonné
 
-- **Fichier:** `sql_video_wrapper.py`
-- **Problème:** 45 `@property` quasi identiques pour de simples lookups `self.data[F.xxx]`
-- **Action:** Utiliser `__getattr__` dynamique. Garder explicites uniquement les propriétés avec logique spéciale (`duration`, `frame_rate`, `move_id`, `found`, etc.)
-- **Gain estimé:** ~150-180 lignes
-- **Effort:** Moyen
+- Les properties explicites sont préférées pour le support IDE (autocomplétion, navigation, refactoring).
+- `__getattr__` et la génération dynamique via `setattr` ont été évalués et rejetés.
 
 ### 2. `video_mega_group.py` : consolider les query builders
 
@@ -113,7 +110,7 @@
 
 | # | Refactoring | Gain lignes | Effort |
 |---|-------------|-------------|--------|
-| 1 | SQLVideoWrapper `__getattr__` | ~150-180 | Moyen |
+| 1 | ~~SQLVideoWrapper~~ Abandonné | — | — |
 | 2 | video_mega_group consolidation | ~80-120 | Élevé |
 | 3 | Unifier property update methods | ~35-45 | Moyen |
 | 4 | Helper `sql_placeholders()` | ~15-20 | Faible |
@@ -123,4 +120,4 @@
 | 8 | Cache _get_property_metadata | 0 (perf) | Faible |
 | 9 | Standardiser error handling propriétés | ~10-15 | Faible |
 | 10 | Fusionner boucles _get_videos | ~10 | Faible |
-| **Total** | | **~455-590** | |
+| **Total** | | **~305-410** | |
