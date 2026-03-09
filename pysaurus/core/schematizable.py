@@ -2,6 +2,43 @@ from typing import Any, Iterable
 
 from pysaurus.core.json_type import Type
 
+_MISSING = object()
+
+
+class _ShortAnnotation:
+    __slots__ = ("short", "type", "default")
+
+    def __init__(self, short: str, tp, default=_MISSING):
+        self.short = short
+        self.type = tp
+        self.default = default
+
+
+class Short:
+    """Annotation helper for schema fields with short names.
+
+    Usage in WithSchema subclasses:
+        name: Short["n", str] = ""          # default from class attribute
+        name: Short["n", str]               # required (no default)
+        name: Short["n", int] = None        # nullable
+        name: Short["n", str, ""]           # default in annotation (for fields
+                                            # with custom @property)
+        name: str = ""                      # no short name (short = field name)
+    """
+
+    def __class_getitem__(cls, params):
+        if not isinstance(params, tuple) or len(params) not in (2, 3):
+            raise TypeError(
+                "Short requires 2 or 3 parameters: "
+                "Short[short, type] or Short[short, type, default]"
+            )
+        short_name = params[0]
+        if not isinstance(short_name, str):
+            raise TypeError(f"Short name must be a string, got {type(short_name)}")
+        if len(params) == 3:
+            return _ShortAnnotation(short_name, params[1], params[2])
+        return _ShortAnnotation(short_name, params[1])
+
 
 class SchemaType(Type):
     def __init__(self, name, typedef, *default):
@@ -105,6 +142,45 @@ class Schema:
 class WithSchema:
     __slots__ = ("_d",)
     SCHEMA = Schema(())
+    __schema_readonly__ = False
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        own_annotations = cls.__dict__.get("__annotations__", {})
+        if not own_annotations or "SCHEMA" in cls.__dict__:
+            return
+        types = []
+        for name, ann in own_annotations.items():
+            if name.startswith("_"):
+                continue
+            existing = cls.__dict__.get(name, _MISSING)
+            has_descriptor = isinstance(existing, (property, classmethod, staticmethod))
+            if isinstance(ann, _ShortAnnotation):
+                short, tp = ann.short, ann.type
+                typedef = (short, tp)
+                if ann.default is not _MISSING:
+                    default = ann.default
+                elif has_descriptor:
+                    default = _MISSING
+                else:
+                    default = existing
+            else:
+                tp = ann
+                typedef = tp
+                default = _MISSING if has_descriptor else existing
+            is_schema_type = isinstance(tp, type) and issubclass(tp, WithSchema)
+            type_cls = SchemaType if is_schema_type else Type
+            if default is _MISSING:
+                types.append(type_cls(name, typedef))
+            else:
+                types.append(type_cls(name, typedef, default))
+            if not has_descriptor:
+                make_prop = (
+                    schema_prop_readonly if cls.__schema_readonly__ else schema_prop
+                )
+                setattr(cls, name, make_prop(name))
+        if types:
+            cls.SCHEMA = Schema(types)
 
     def __init__(self, short_dict: dict = None, **kwargs):
         self._d = short_dict or {}
@@ -157,3 +233,7 @@ class WithSchema:
 
 def schema_prop(name) -> property:
     return property(lambda self: self._get(name), lambda self, v: self._set(name, v))
+
+
+def schema_prop_readonly(name) -> property:
+    return property(lambda self: self._get(name))

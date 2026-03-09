@@ -1,22 +1,13 @@
 from pysaurus.application import exceptions
-from pysaurus.core.json_type import Type
-from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
+from pysaurus.core.schematizable import Short, WithSchema
 from pysaurus.properties.properties import PropValueType
 
 
 class PropType(WithSchema):
     __slots__ = ()
-    SCHEMA = Schema(
-        (
-            Type("name", (str, "n")),
-            Type("definition", (object, "d")),
-            Type("multiple", "m", False),
-        )
-    )
-
-    name = schema_prop("name")
-    definition = schema_prop("definition")
-    multiple = schema_prop("multiple")
+    name: Short["n", str]
+    definition: Short["d", object]
+    multiple: Short["m", bool] = False
 
     default = property(
         lambda self: self.definition[0] if self.is_enum() else self.definition

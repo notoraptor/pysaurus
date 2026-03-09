@@ -6,19 +6,54 @@ from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import StringPrinter, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.datestring import Date
-from pysaurus.core.duration import Duration
-from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
-from pysaurus.core.schematizable import WithSchema
+from pysaurus.core.schematizable import Short, WithSchema
 from pysaurus.core.semantic_text import SemanticText
+from pysaurus.video.lazy_video_runtime_info import LazyVideoRuntimeInfo
 from pysaurus.video.video_pattern import VideoPattern
-from pysaurus.video.video_schema import VIDEO_SCHEMA
 from pysaurus.video.video_sorting import VideoSorting
 
 
 class LazyVideo(WithSchema, VideoPattern):
     __slots__ = ("__discarded", "database")
-    SCHEMA = VIDEO_SCHEMA
+    __schema_readonly__ = True
+
+    # Fields with custom properties (default in annotation)
+    filename: Short["f", str, None]
+    errors: Short["e", list, []]
+    video_id: Short["j", int, None]
+    runtime: Short["R", LazyVideoRuntimeInfo, {}]
+    date_entry_modified: Short["m", float, None]
+    date_entry_opened: Short["o", float, None]
+    audio_codec: Short["a", str, ""]
+    audio_codec_description: Short["A", str, ""]
+    container_format: Short["c", str, ""]
+    device_name: Short["b", str, ""]
+    duration: Short["d", float, 0.0]
+    duration_time_base: Short["t", int, 0]
+    frame_rate_den: Short["y", int, 0]
+    meta_title: Short["n", str, ""]
+    properties: Short["p", dict, {}]
+    similarity_id: Short["S", int, None]
+    similarity_id_reencoded: Short["E", int, None]
+    watched: Short["O", bool, False]
+    video_codec: Short["v", str, ""]
+    video_codec_description: Short["V", str, ""]
+
+    # Fields with auto-generated readonly properties
+    file_size: Short["s", int] = 0
+    unreadable: Short["U", bool] = False
+    audio_bit_rate: Short["r", int] = 0
+    audio_bits: Short["B", int] = 0
+    audio_languages: Short["l", list] = []
+    bit_depth: Short["D", int] = 0
+    channels: Short["C", int] = 0
+    frame_rate_num: Short["x", int] = 0
+    height: Short["h", int] = 0
+    sample_rate: Short["u", int] = 0
+    subtitle_languages: Short["L", list] = []
+    width: Short["w", int] = 0
+
     __protected__ = (
         "database",
         "runtime",
@@ -82,7 +117,6 @@ class LazyVideo(WithSchema, VideoPattern):
         video._save_date_entry_modified()
         return video
 
-    file_size = property(lambda self: self._get("file_size"))
     errors = property(lambda self: sorted(set(self._get("errors"))))
 
     @property
@@ -121,21 +155,15 @@ class LazyVideo(WithSchema, VideoPattern):
     def date_entry_opened(self, data):
         self._set("date_entry_opened", data)
 
-    unreadable = property(lambda self: self._get("unreadable"))
-    audio_bit_rate = property(lambda self: self._get("audio_bit_rate"))
     audio_codec = property(lambda self: Text(self._get("audio_codec")))
     audio_codec_description = property(
         lambda self: Text(self._get("audio_codec_description"))
     )
-    bit_depth = property(lambda self: self._get("bit_depth"))
-    channels = property(lambda self: self._get("channels"))
     container_format = property(lambda self: Text(self._get("container_format")))
     device_name = property(lambda self: Text(self._get("device_name")))
     duration = property(lambda self: abs(self._get("duration")))
     duration_time_base = property(lambda self: self._get("duration_time_base") or 1)
     frame_rate_den = property(lambda self: self._get("frame_rate_den") or 1)
-    frame_rate_num = property(lambda self: self._get("frame_rate_num"))
-    height = property(lambda self: self._get("height"))
 
     @property
     def meta_title(self) -> Text:
@@ -148,8 +176,6 @@ class LazyVideo(WithSchema, VideoPattern):
     @properties.setter
     def properties(self, properties: dict[str, list[Any]]):
         self._set("properties", properties)
-
-    sample_rate = property(lambda self: self._get("sample_rate"))
 
     @property
     def similarity_id(self):
@@ -182,22 +208,11 @@ class LazyVideo(WithSchema, VideoPattern):
     video_codec_description = property(
         lambda self: Text(self._get("video_codec_description"))
     )
-    width = property(lambda self: self._get("width"))
-    audio_languages = property(lambda self: self._get("audio_languages"))
-    subtitle_languages = property(lambda self: self._get("subtitle_languages"))
-    audio_bits = property(lambda self: self._get("audio_bits"))
 
     # Derived attributes
 
-    extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: Text(self.filename.file_title))
-    file_title_numeric = property(lambda self: SemanticText(self.filename.file_title))
-    size = property(lambda self: FileSize(self.file_size))
     # runtime attributes
-    disk = property(
-        lambda self: self.filename.get_drive_name() or self.runtime.driver_id
-    )
-
     mtime = property(lambda self: self.runtime.mtime)
     driver_id = property(lambda self: self.runtime.driver_id)
 
@@ -215,21 +230,6 @@ class LazyVideo(WithSchema, VideoPattern):
         lambda self: self.database.jsondb_has_thumbnail(self.filename)
     )
 
-    frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
-    length = property(
-        lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base))
-    )
-    title = property(
-        lambda self: (
-            self.meta_title if self.meta_title else Text(self.filename.file_title)
-        )
-    )
-    title_numeric = property(
-        lambda self: (
-            self.meta_title_numeric if self.meta_title else self.file_title_numeric
-        )
-    )
-    filename_numeric = property(lambda self: SemanticText(self.filename.standard_path))
     meta_title_numeric = property(lambda self: SemanticText(self.meta_title.value))
     thumbnail_base64 = property(
         lambda self: self.database.jsondb_get_thumbnail_base64(self.filename)

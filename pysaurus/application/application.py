@@ -16,11 +16,10 @@ from pysaurus.core import functions
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.dict_file_format import dff_dump, dff_load
-from pysaurus.core.json_type import Type
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.schematizable import Schema, WithSchema
+from pysaurus.core.schematizable import WithSchema
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.database import Database
 from pysaurus.database.saurus.language import say
@@ -30,15 +29,7 @@ logger = logging.getLogger(__name__)
 
 class Config(WithSchema):
     __slots__ = ()
-    SCHEMA = Schema([Type("language", None, "english")])
-
-    @property
-    def language(self):
-        return self._get("language")
-
-    @language.setter
-    def language(self, v):
-        self._set("language", v)
+    language: str = "english"
 
 
 class Application:

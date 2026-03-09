@@ -1,12 +1,9 @@
-from pysaurus.core.schematizable import WithSchema, schema_prop
-from pysaurus.video.video_runtime_info_schema import VIDEO_RUNTIME_INFO_SCHEMA
+from pysaurus.core.schematizable import Short, WithSchema
 
 
 class LazyVideoRuntimeInfo(WithSchema):
     __slots__ = ()
-    SCHEMA = VIDEO_RUNTIME_INFO_SCHEMA
-
-    size = schema_prop("size")
-    mtime = schema_prop("mtime")
-    driver_id = schema_prop("driver_id")
-    is_file = schema_prop("is_file")
+    size: Short["s", int] = 0
+    mtime: Short["m", float] = 0.0
+    driver_id: Short["d", int] = None
+    is_file: Short["f", bool] = False
