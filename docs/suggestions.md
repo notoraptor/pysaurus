@@ -7,6 +7,8 @@ Ideas and improvements extracted from the old `todo.md`.
 - **Recherche conditionnelle**: supporter des opérateurs de comparaison dans
   la recherche, par exemple `bit_rate > 5000000` ou `length_seconds < 60`.
   Actuellement `VideoFieldQueryParser` ne génère que des clauses d'égalité (`=` / `IN`).
+  Piste : la bibliothèque `simpleeval` permettrait d'évaluer des expressions
+  comme `simple_eval("audio_bits > 8", names={"audio_bits": 16})`.
 
 - **Propriété `date_added`**: enregistrer la date à laquelle une vidéo a été
   ajoutée à la base de données (distincte de `mtime`, `date_entry_modified`
@@ -25,3 +27,13 @@ Ideas and improvements extracted from the old `todo.md`.
 - **Déplacement de fichiers en lot**: `database_algorithms.py:move_video_entries()`
   est lent pour de gros lots. Les suppressions individuelles en boucle
   pourraient être regroupées.
+
+- **Fusionner les boucles d'enrichissement dans `_get_videos()`**:
+  dans `saurus/sql/video_mega_utils.py`, 5 boucles séparées itèrent sur
+  `videos` (errors, audio_languages, subtitle_languages, properties, moves).
+  Les fusionner en une seule boucle (~10 lignes gagnées + légère amélioration perf).
+
+## Nettoyage
+
+- **Supprimer jsdb**: supprimer `JsonDatabase`, `JsonDatabaseVideoProvider`
+  et le package `pysaurus/database/jsdb/`. Seul le backend SQL reste.

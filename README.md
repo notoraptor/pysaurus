@@ -1,85 +1,44 @@
-# NB
+# Pysaurus
 
-This projet use `uv`, based on `pyproject.toml`
+Video collection manager written in Python 3.13.
 
-Any call to any script must use `uv run ...`
+Handles video metadata extraction, custom properties, advanced search/filtering,
+video similarity detection, and supports multiple GUI frontends.
 
-# Notes diverses
+## Requirements
 
-## 2024/09/07
+- Python 3.13
+- [uv](https://docs.astral.sh/uv/) (package manager)
+- FFmpeg / ffprobe (for video metadata extraction)
 
-### Small tutorial to find similar images
+## Usage
 
-https://mathspp.com/blog/finding-similar-photos
+All commands must be run with `uv run`:
 
-Looks like what I am currently doing.
+```bash
+# Run the application
+uv run -m pysaurus
 
-### Annoy may not produce same result when running many times
+# Run tests
+uv run pytest
 
-When trying to find similar images, twos runs may produce
-slightly different results (+- 2 similarities).
-
-Reported here:
-https://github.com/spotify/annoy/issues/188
-
-# Remarks for Linux
-
-Tested on Linux (Ubuntu 20.04.6 LTS)
-
-## Qt / QWebEnginePage
-
-Code:
-
-```python
-from PyQt6.QtWebEngineCore import QWebEnginePage
-from pysaurus.core.absolute_path import AbsolutePath
-```
-Error:
-```
-ImportError: /home/stevenbocco/anaconda3/envs/pysaurus/lib/python3.12/lib-dynload/pyexpat.cpython-312-x86_64-linux-gnu.so: undefined symbol: XML_SetReparseDeferralEnabled
-```
-Fix:
-
-Import QWebEnginePage after Pysaurus symbols
-
-```python
-from pysaurus.core.absolute_path import AbsolutePath
-from PyQt6.QtWebEngineCore import QWebEnginePage
+# Lint and format
+uv run ruff check .
+uv run ruff format .
 ```
 
-## Qt
+## GUI Frontends
 
-Error:
-```
-Using fallback backend for videos info and thumbnails.
-Using fallback backend for video similarities search.
-qt.qpa.plugin: From 6.5.0, xcb-cursor0 or libxcb-cursor0 is needed to load the Qt xcb platform plugin.
-qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
-This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+| Name | Command | Description |
+|---|---|---|
+| PySide6 | `uv run -m pysaurus pyside6` | Native Qt widgets (primary) |
+| PyWebView | `uv run -m pysaurus pywebview` | Web-based (legacy) |
+| QtWebView | `uv run -m pysaurus qtwebview` | Qt + web (legacy) |
 
-Available platform plugins are: linuxfb, wayland, wayland-egl, eglfs, vnc, minimal, xcb, vkkhrdisplay, offscreen, minimalegl.
+## Linux Notes
 
+On Linux, the Qt platform plugin may require additional system packages:
 
-Process finished with exit code 134 (interrupted by signal 6:SIGABRT)
-```
-Fix:
-```
+```bash
 sudo apt install libxcb-cursor-dev
-```
-
-## Conclusion
-
-It would be good to have a GUI framework who works out of the box with just Python packages,
-without having to install any system dependencies.
-
-
-# Other remarks:
-
-## Conditional search
-
-Could use `simpleeval`. May be not relevant in a SQL database.
-
-```python
-from simpleeval import simple_eval
-simple_eval("audio_bits > 8", names={"audio_bits": 16})  # True
 ```
