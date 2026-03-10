@@ -7,16 +7,14 @@ Loads test data from JSON, all operations happen in memory.
 
 import copy
 import json
-import random
 from pathlib import Path
 from typing import Any
 
 from pysaurus.application import exceptions
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.classes import Selector
 from pysaurus.video.video_search_context import VideoSearchContext
-from pysaurus.video_provider.field_stat import FieldStat
-from pysaurus.video_provider.view_tools import GroupDef, SearchDef
+from pysaurus.dbview.field_stat import FieldStat
+from pysaurus.dbview.view_tools import GroupDef
 
 
 # Load test data
@@ -180,336 +178,6 @@ class MockVideoPattern:
         }
 
 
-class MockProvider:
-    """Mock implementation of video provider."""
-
-    def __init__(self, database: "MockDatabase"):
-        self._db = database
-        self._sources: list[list[str]] = []
-        self._grouping: GroupDef = GroupDef()
-        self._search: SearchDef | None = None
-        self._sorting: list[str] = []
-        self._classifier_path: list[str] = []
-        self._group_id: int = 0
-
-    def _filter_videos(self) -> list[dict]:
-        """Apply filters and return matching videos."""
-        videos = self._db._videos
-
-        # Apply search filter
-        if self._search and self._search.text:
-            text = self._search.text.lower()
-            videos = [
-                v
-                for v in videos
-                if text in v.get("meta_title", "").lower()
-                or text in v.get("filename", "").lower()
-            ]
-
-        # Apply source filter
-        if self._sources:
-            filtered = []
-            for v in videos:
-                for source_path in self._sources:
-                    if self._video_matches_source(v, source_path):
-                        filtered.append(v)
-                        break
-            videos = filtered
-
-        return videos
-
-    def _video_matches_source(self, video: dict, source_path: list[str]) -> bool:
-        """Check if video matches a source filter path."""
-        for part in source_path:
-            if part == "readable" and video.get("unreadable", False):
-                return False
-            if part == "unreadable" and not video.get("unreadable", False):
-                return False
-            if part == "found" and not video.get("found", True):
-                return False
-            if part == "not_found" and video.get("found", True):
-                return False
-        return True
-
-    def _sort_videos(self, videos: list[dict]) -> list[dict]:
-        """Sort videos by current sorting configuration."""
-        if not self._sorting:
-            return videos
-
-        result = videos.copy()
-        for sort_key in reversed(self._sorting):
-            reverse = sort_key.startswith("-")
-            field = sort_key.lstrip("-")
-            result.sort(key=lambda v: v.get(field, ""), reverse=reverse)
-        return result
-
-    def get_current_state(
-        self, page_size: int, page_number: int, selector: Selector | None = None
-    ) -> VideoSearchContext:
-        """Get current view state."""
-        from pysaurus.core.duration import Duration
-        from pysaurus.core.file_size import FileSize
-
-        # Filter and sort
-        videos = self._filter_videos()
-        videos = self._sort_videos(videos)
-
-        # Compute stats
-        total_count = len(videos)
-        total_size = sum(v.get("file_size", 0) for v in videos)
-        total_duration = sum(
-            v.get("duration", 0) / (v.get("duration_time_base", 1) or 1) for v in videos
-        )
-
-        # Pagination
-        if page_size and page_number is not None:
-            nb_pages = max(1, (total_count + page_size - 1) // page_size)
-            start = page_number * page_size
-            end = start + page_size
-            page_videos = videos[start:end]
-        else:
-            nb_pages = 1
-            page_videos = videos
-
-        # Convert to MockVideoPattern
-        result = [MockVideoPattern(v) for v in page_videos]
-
-        # Build classifier stats if grouping
-        classifier_stats = []
-        if self._grouping and self._grouping.field:
-            stats = self._compute_group_stats(videos)
-            classifier_stats = [
-                FieldStat(
-                    is_property=self._grouping.is_property, value=value, count=count
-                )
-                for value, count in stats.items()
-            ]
-
-        return VideoSearchContext(
-            sources=self._sources or None,
-            grouping=self._grouping,
-            classifier=self._classifier_path or None,
-            group_id=self._group_id,
-            search=self._search,
-            sorting=self._sorting or None,
-            selector=selector,
-            page_size=page_size,
-            page_number=page_number,
-            with_moves=False,
-            result=result,
-            nb_pages=nb_pages,
-            view_count=total_count,
-            selection_count=total_count,
-            selection_duration=Duration(total_duration * 1000000),
-            selection_file_size=FileSize(total_size),
-            classifier_stats=classifier_stats,
-            source_count=len(self._db._videos),
-        )
-
-    def _compute_group_stats(self, videos: list[dict]) -> dict[Any, int]:
-        """Compute group statistics for current grouping."""
-        stats = {}
-        field = self._grouping.field
-        is_property = self._grouping.is_property
-
-        for v in videos:
-            if is_property:
-                values = v.get("properties", {}).get(field, [])
-            else:
-                values = [v.get(field)]
-
-            for val in values:
-                if val is not None:
-                    stats[val] = stats.get(val, 0) + 1
-
-        return stats
-
-    def set_sources(self, paths: list[list[str]]) -> None:
-        """Set source filter."""
-        self._sources = paths
-
-    def set_groups(
-        self,
-        field: str,
-        is_property: bool = False,
-        sorting: str = "field",
-        reverse: bool = False,
-        allow_singletons: bool = True,
-    ) -> None:
-        """Set grouping configuration."""
-        self._grouping = GroupDef(
-            field=field,
-            is_property=is_property,
-            sorting=sorting,
-            reverse=reverse,
-            allow_singletons=allow_singletons,
-        )
-
-    def set_search(self, text: str, cond: str = "and") -> None:
-        """Set search filter."""
-        self._search = SearchDef(text=text, cond=cond) if text else None
-
-    def set_sort(self, sorting: list[str]) -> None:
-        """Set sorting configuration."""
-        self._sorting = sorting or []
-
-    def classifier_select_group(self, group_id: int) -> None:
-        """Select a group in classifier mode."""
-        self._group_id = group_id
-
-    def classifier_back(self) -> None:
-        """Go back in classifier path."""
-        if self._classifier_path:
-            self._classifier_path.pop()
-
-    def classifier_reverse(self) -> None:
-        """Reverse classifier path."""
-        self._classifier_path.reverse()
-
-    def choose_random_video(self) -> int:
-        """Choose a random video ID."""
-        videos = self._filter_videos()
-        if videos:
-            return random.choice(videos)["video_id"]
-        return 0
-
-    def apply_on_view(self, selector: dict, fn_name: str, *fn_args):
-        """Apply a function on selected videos."""
-        # Get selected video IDs based on selector
-        video_ids = self._get_selected_video_ids(selector)
-
-        if fn_name == "count_property_values":
-            # Count property values for selected videos
-            prop_name = fn_args[0] if fn_args else None
-            return self._count_property_values(video_ids, prop_name)
-
-        elif fn_name == "edit_property_for_videos":
-            # Edit property values for selected videos
-            prop_name = fn_args[0] if len(fn_args) > 0 else None
-            to_add = fn_args[1] if len(fn_args) > 1 else []
-            to_remove = fn_args[2] if len(fn_args) > 2 else []
-            return self._edit_property_for_videos(
-                video_ids, prop_name, to_add, to_remove
-            )
-
-        # Default: return success
-        return {"applied": True, "fn_name": fn_name}
-
-    def _get_selected_video_ids(self, selector: dict) -> list[int]:
-        """Get video IDs matching the selector.
-
-        Selector format from Selector.to_dict():
-        - {'all': True, 'include': [], 'exclude': []} - all selected
-        - {'all': False, 'include': [1, 2, 3], 'exclude': []} - specific IDs included
-        - {'all': True, 'include': [], 'exclude': [4, 5]} - all except 4, 5
-        """
-        all_ids = [v["video_id"] for v in self._filter_videos()]
-
-        if not selector:
-            return all_ids
-
-        # Handle Selector.to_dict() format
-        if "all" in selector:
-            is_all = selector.get("all", False)
-            include = set(selector.get("include", []))
-            exclude = set(selector.get("exclude", []))
-
-            if is_all:
-                # All selected, minus excludes
-                return [vid for vid in all_ids if vid not in exclude]
-            else:
-                # Only includes
-                return [vid for vid in all_ids if vid in include]
-
-        # Fallback: legacy format
-        mode = selector.get("mode", "include")
-        selection = set(selector.get("selection", []))
-
-        if mode == "include":
-            return [vid for vid in all_ids if vid in selection]
-        else:  # exclude mode
-            return [vid for vid in all_ids if vid not in selection]
-
-    def _count_property_values(
-        self, video_ids: list[int], prop_name: str
-    ) -> list[list]:
-        """Count property values for selected videos."""
-        value_counts: dict[Any, int] = {}
-        for video in self._db._videos:
-            if video["video_id"] in video_ids:
-                props = video.get("properties", {})
-                values = props.get(prop_name, [])
-                for val in values:
-                    value_counts[val] = value_counts.get(val, 0) + 1
-        return [[val, count] for val, count in value_counts.items()]
-
-    def _edit_property_for_videos(
-        self, video_ids: list[int], prop_name: str, to_add: list, to_remove: list
-    ) -> int:
-        """Edit property values for selected videos. Returns number of modified videos."""
-        modified = 0
-        for video in self._db._videos:
-            if video["video_id"] in video_ids:
-                props = video.setdefault("properties", {})
-                values = list(props.get(prop_name, []))
-                original = list(values)
-
-                # Remove values
-                for val in to_remove:
-                    if val in values:
-                        values.remove(val)
-
-                # Add values
-                for val in to_add:
-                    if val not in values:
-                        values.append(val)
-
-                if values != original:
-                    props[prop_name] = values
-                    modified += 1
-
-        return modified
-
-    def get_classifier_path(self) -> list[str]:
-        """Get current classifier path."""
-        return self._classifier_path
-
-    def get_grouping(self) -> GroupDef:
-        """Get current grouping definition."""
-        return self._grouping
-
-    def set_classifier_path(self, path: list[str]) -> None:
-        """Set classifier path."""
-        self._classifier_path = path
-
-    def set_group(self, group_id: int) -> None:
-        """Set current group ID."""
-        self._group_id = group_id
-
-    def get_view_indices(self) -> list[int]:
-        """Get video IDs in current view."""
-        videos = self._filter_videos()
-        return [v["video_id"] for v in videos]
-
-    def refresh(self) -> None:
-        """Refresh the provider state."""
-        pass
-
-    def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
-        """Focus on a specific property value (resets classifier and jumps to value)."""
-        # Set grouping to the property
-        self._grouping = GroupDef(
-            field=prop_name,
-            is_property=True,
-            sorting="field",
-            reverse=False,
-            allow_singletons=True,
-        )
-        # Reset classifier path
-        self._classifier_path = []
-        self._group_id = 0
-
-
 class MockOps:
     """Mock implementation of database operations."""
 
@@ -610,31 +278,179 @@ class MockDatabase:
         self._prop_types = copy.deepcopy(data["prop_types"])
         self._videos = copy.deepcopy(data["videos"])
 
-        self.provider = MockProvider(self)
         self.ops = MockOps(self)
         self.algos = self  # Self-reference for algos.refresh()
         self.notifier = None
         self.in_save_context = False
 
     def query_videos(self, view, page_size, page_number, selector=None):
-        """Query videos using the internal MockProvider."""
-        p = self.provider
-        p.set_sources(view.sources)
-        p.set_groups(
-            view.grouping.field if view.grouping else None,
-            view.grouping.is_property if view.grouping else None,
-            view.grouping.sorting if view.grouping else None,
-            view.grouping.reverse if view.grouping else None,
-            view.grouping.allow_singletons if view.grouping else None,
+        """Query videos with filtering, sorting and pagination."""
+        from pysaurus.core.duration import Duration
+        from pysaurus.core.file_size import FileSize
+
+        videos = self._filter_videos(view.sources, view.search)
+        videos = self._sort_videos(videos, view.sorting)
+
+        total_count = len(videos)
+        total_size = sum(v.get("file_size", 0) for v in videos)
+        total_duration = sum(
+            v.get("duration", 0) / (v.get("duration_time_base", 1) or 1) for v in videos
         )
-        p.set_classifier_path(view.classifier)
-        p.set_group(view.group)
-        p.set_search(
-            view.search.text if view.search else None,
-            view.search.cond if view.search else "and",
+
+        if page_size and page_number is not None:
+            nb_pages = max(1, (total_count + page_size - 1) // page_size)
+            start = page_number * page_size
+            page_videos = videos[start : start + page_size]
+        else:
+            nb_pages = 1
+            page_videos = videos
+
+        result = [MockVideoPattern(v) for v in page_videos]
+
+        classifier_stats = []
+        grouping = view.grouping
+        if grouping and grouping.field:
+            stats = self._compute_group_stats(videos, grouping)
+            classifier_stats = [
+                FieldStat(is_property=grouping.is_property, value=value, count=count)
+                for value, count in stats.items()
+            ]
+
+        return VideoSearchContext(
+            sources=view.sources or None,
+            grouping=grouping,
+            classifier=view.classifier or None,
+            group_id=view.group,
+            search=view.search,
+            sorting=view.sorting or None,
+            selector=selector,
+            page_size=page_size,
+            page_number=page_number,
+            with_moves=False,
+            result=result,
+            nb_pages=nb_pages,
+            view_count=total_count,
+            selection_count=total_count,
+            selection_duration=Duration(total_duration * 1000000),
+            selection_file_size=FileSize(total_size),
+            classifier_stats=classifier_stats,
+            source_count=len(self._videos),
         )
-        p.set_sort(view.sorting)
-        return p.get_current_state(page_size, page_number, selector)
+
+    def _filter_videos(self, sources, search) -> list[dict]:
+        """Filter videos by sources and search."""
+        videos = self._videos
+
+        if search and search.text:
+            text = search.text.lower()
+            videos = [
+                v
+                for v in videos
+                if text in v.get("meta_title", "").lower()
+                or text in v.get("filename", "").lower()
+            ]
+
+        if sources:
+            filtered = []
+            for v in videos:
+                for source_path in sources:
+                    if self._video_matches_source(v, source_path):
+                        filtered.append(v)
+                        break
+            videos = filtered
+
+        return videos
+
+    @staticmethod
+    def _video_matches_source(video: dict, source_path: list[str]) -> bool:
+        for part in source_path:
+            if part == "readable" and video.get("unreadable", False):
+                return False
+            if part == "unreadable" and not video.get("unreadable", False):
+                return False
+            if part == "found" and not video.get("found", True):
+                return False
+            if part == "not_found" and video.get("found", True):
+                return False
+        return True
+
+    @staticmethod
+    def _sort_videos(videos: list[dict], sorting: list[str]) -> list[dict]:
+        if not sorting:
+            return videos
+        result = videos.copy()
+        for sort_key in reversed(sorting):
+            reverse = sort_key.startswith("-")
+            field = sort_key.lstrip("-")
+            result.sort(key=lambda v: v.get(field, ""), reverse=reverse)
+        return result
+
+    @staticmethod
+    def _compute_group_stats(videos: list[dict], grouping: GroupDef) -> dict[Any, int]:
+        stats = {}
+        for v in videos:
+            if grouping.is_property:
+                values = v.get("properties", {}).get(grouping.field, [])
+            else:
+                values = [v.get(grouping.field)]
+            for val in values:
+                if val is not None:
+                    stats[val] = stats.get(val, 0) + 1
+        return stats
+
+    def apply_on_view(self, selector: dict, fn_name: str, *fn_args):
+        """Apply a function on selected videos."""
+        all_ids = [v["video_id"] for v in self._videos]
+
+        if not selector:
+            video_ids = all_ids
+        elif "all" in selector:
+            is_all = selector.get("all", False)
+            include = set(selector.get("include", []))
+            exclude = set(selector.get("exclude", []))
+            if is_all:
+                video_ids = [vid for vid in all_ids if vid not in exclude]
+            else:
+                video_ids = [vid for vid in all_ids if vid in include]
+        else:
+            mode = selector.get("mode", "include")
+            selection = set(selector.get("selection", []))
+            if mode == "include":
+                video_ids = [vid for vid in all_ids if vid in selection]
+            else:
+                video_ids = [vid for vid in all_ids if vid not in selection]
+
+        if fn_name == "count_property_values":
+            prop_name = fn_args[0] if fn_args else None
+            value_counts: dict[Any, int] = {}
+            for video in self._videos:
+                if video["video_id"] in video_ids:
+                    for val in video.get("properties", {}).get(prop_name, []):
+                        value_counts[val] = value_counts.get(val, 0) + 1
+            return [[val, count] for val, count in value_counts.items()]
+
+        elif fn_name == "edit_property_for_videos":
+            prop_name = fn_args[0] if len(fn_args) > 0 else None
+            to_add = fn_args[1] if len(fn_args) > 1 else []
+            to_remove = fn_args[2] if len(fn_args) > 2 else []
+            modified = 0
+            for video in self._videos:
+                if video["video_id"] in video_ids:
+                    props = video.setdefault("properties", {})
+                    values = list(props.get(prop_name, []))
+                    original = list(values)
+                    for val in to_remove:
+                        if val in values:
+                            values.remove(val)
+                    for val in to_add:
+                        if val not in values:
+                            values.append(val)
+                    if values != original:
+                        props[prop_name] = values
+                        modified += 1
+            return modified
+
+        return {"applied": True, "fn_name": fn_name}
 
     def _get_video(self, video_id: int) -> dict | None:
         """Get video by ID."""

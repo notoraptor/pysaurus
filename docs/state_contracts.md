@@ -1,8 +1,8 @@
 # Audit : Effets d'état et mises à jour UI (Point 5)
 
 Pour chaque feature, ce document identifie :
-1. **Quel état backend change** (database, provider, fichiers)
-2. **Quoi exactement change** (attribut vidéo, propriété, état provider, prop type...)
+1. **Quel état backend change** (database, vue, fichiers)
+2. **Quoi exactement change** (attribut vidéo, propriété, état de la vue, prop type...)
 3. **Quoi doit se mettre à jour côté UI**
 4. **Problèmes éventuels** dans PySide6
 
@@ -16,7 +16,7 @@ Pour chaque feature, ce document identifie :
 - **DB:entry** = ajout/suppression d'entrée vidéo
 - **DB:folders** = dossiers sources de la base
 - **DB:name** = nom de la base
-- **PROV:X** = état du provider (sources, grouping, classifier, group, search, sort)
+- **VIEW:X** = état de la vue / ViewContext (sources, grouping, classifier, group, search, sort)
 - **FILE** = fichier sur disque (ouverture, déplacement, suppression, renommage)
 
 ---
@@ -29,7 +29,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:attr (`watched=True`, `date_entry_opened=now`) + FILE (ouverture) |
 | **Ce qui change** | Le champ `watched` et `date_entry_opened` de la vidéo |
 | **UI requise** | Mettre à jour l'indicateur "watched" de la vidéo dans la liste/grille |
-| **PySide6** | `ctx.open_video()` appelle `mark_as_watched` qui notifie le provider via `_notify_fields_modified(["date_entry_opened", "watched"])`. `state_changed` est émis pour rafraîchir l'UI. OK. |
+| **PySide6** | `ctx.open_video()` appelle `mark_as_watched` qui sauvegarde la base via `_notify_fields_modified(["date_entry_opened", "watched"])`. `state_changed` est émis pour rafraîchir l'UI. OK. |
 
 ### `mark_as_read` (Ops)
 | Aspect | Détail |
@@ -37,7 +37,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:attr (`watched` toggle) |
 | **Ce qui change** | Le champ `watched` de la vidéo |
 | **UI requise** | Mettre à jour l'indicateur "watched", recalculer le groupement si groupé par `watched` |
-| **PySide6** | `ctx.mark_as_read()` émet `state_changed`. `mark_as_read` (Ops) notifie le provider en interne via `_notify_fields_modified(["watched"])`. OK. |
+| **PySide6** | `ctx.mark_as_read()` émet `state_changed`. `mark_as_read` (Ops) sauvegarde la base via `_notify_fields_modified(["watched"])`. OK. |
 
 ### `delete_video` (Ops)
 | Aspect | Détail |
@@ -61,7 +61,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:entry (supprimé, fichier conservé) |
 | **Ce qui change** | La vidéo n'existe plus en BDD |
 | **UI requise** | Retirer la vidéo de la vue, mettre à jour les compteurs |
-| **PySide6** | `ctx.delete_video_entry()` émet `state_changed`. `video_entry_del` appelle `provider.delete()` + `_notify_fields_modified(["move_id"])`. OK. `delete_video_entries` (batch) utilise `to_save()` pour regrouper les sauvegardes. |
+| **PySide6** | `ctx.delete_video_entry()` émet `state_changed`. `video_entry_del` sauvegarde la base via `_notify_fields_modified(["move_id"])`. OK. `delete_video_entries` (batch) utilise `to_save()` pour regrouper les sauvegardes. |
 
 ### `rename_video` (Ops → `change_video_file_title`)
 | Aspect | Détail |
@@ -69,7 +69,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:attr (`filename` changé) + FILE (renommé) |
 | **Ce qui change** | Le chemin et le titre du fichier |
 | **UI requise** | Mettre à jour le titre affiché de la vidéo |
-| **PySide6** | `ctx.rename_video()` émet `state_changed`. `video_entry_set_filename` notifie le provider via `_notify_fields_modified`. OK. |
+| **PySide6** | `ctx.rename_video()` émet `state_changed`. `video_entry_set_filename` sauvegarde la base via `_notify_fields_modified`. OK. |
 
 ### `open_from_server` (GuiAPI)
 | Aspect | Détail |
@@ -77,7 +77,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:attr (`watched=True`, `date_entry_opened=now`) + subprocess VLC |
 | **Ce qui change** | Idem `open_video` mais via VLC/serveur |
 | **UI requise** | Idem `open_video` |
-| **PySide6** | `ctx.open_from_server()` émet `state_changed`. `open_from_server` (GuiAPI) appelle `mark_as_watched` qui notifie le provider. OK. |
+| **PySide6** | `ctx.open_from_server()` émet `state_changed`. `open_from_server` (GuiAPI) appelle `mark_as_watched` qui sauvegarde la base. OK. |
 
 ---
 
@@ -89,7 +89,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:prop (propriétés d'une vidéo modifiées) |
 | **Ce qui change** | Les valeurs de propriétés d'une vidéo spécifique |
 | **UI requise** | Mettre à jour l'affichage des propriétés de la vidéo, recalculer le groupement si groupé par cette propriété |
-| **PySide6** | `ctx.set_video_properties()` émet `state_changed`. `video_entry_set_tags` notifie le provider via `_notify_fields_modified(properties.keys(), is_property=True)`. OK. |
+| **PySide6** | `ctx.set_video_properties()` émet `state_changed`. `video_entry_set_tags` sauvegarde la base via `_notify_fields_modified(properties.keys(), is_property=True)`. OK. |
 
 ### `apply_on_view` → `count_property_values` / `edit_property_for_videos`
 | Aspect | Détail |
@@ -97,7 +97,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:prop (valeurs ajoutées/retirées pour les vidéos sélectionnées) |
 | **Ce qui change** | Les valeurs de propriétés pour un ensemble de vidéos |
 | **UI requise** | Mettre à jour l'affichage des propriétés, recalculer le groupement |
-| **PySide6** | `ctx.apply_on_view(...)` puis `refresh()`. L'opération `edit_property_for_videos` appelle `update_property_for_videos` qui appelle `set_property_for_videos` qui notifie le provider via `_notify_fields_modified`. OK. |
+| **PySide6** | `ctx.apply_on_view(...)` puis `refresh()`. L'opération `edit_property_for_videos` appelle `update_property_for_videos` qui appelle `set_property_for_videos` qui sauvegarde la base via `_notify_fields_modified`. OK. |
 
 ### `set_similarities` (Ops)
 | Aspect | Détail |
@@ -105,7 +105,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:attr (`similarity_id` modifié) |
 | **Ce qui change** | L'identifiant de similarité d'une ou plusieurs vidéos |
 | **UI requise** | Mettre à jour le groupement si groupé par `similarity_id` |
-| **PySide6** | `ctx.dismiss_similarity()` / `ctx.reset_similarity()` puis `refresh()`. `set_similarities` appelle `_notify_fields_modified(["similarity_id"])` ce qui met à jour le provider. OK. |
+| **PySide6** | `ctx.dismiss_similarity()` / `ctx.reset_similarity()` puis `refresh()`. `set_similarities` sauvegarde la base via `_notify_fields_modified(["similarity_id"])`. OK. |
 
 ---
 
@@ -125,7 +125,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:proptype (type supprimé) + DB:prop (toutes les valeurs de cette propriété supprimées) |
 | **Ce qui change** | La liste des types et toutes les valeurs associées |
 | **UI requise** | Rafraîchir la liste des propriétés, si groupé par cette propriété → réinitialiser le groupement |
-| **PySide6** | `ctx.delete_prop_type()` émet `state_changed`. `prop_type_del` notifie le provider via `_notify_fields_modified([name], is_property=True)`, ce qui réinitialise le groupement si groupé par la propriété supprimée. OK. |
+| **PySide6** | `ctx.delete_prop_type()` émet `state_changed`. `prop_type_del` sauvegarde la base via `_notify_fields_modified([name], is_property=True)`, ce qui réinitialise le groupement si groupé par la propriété supprimée. OK. |
 
 ### `rename_prop_type` (Db → `prop_type_set_name`)
 | Aspect | Détail |
@@ -153,7 +153,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:prop (valeurs supprimées pour toutes les vidéos) |
 | **Ce qui change** | Les valeurs de la propriété pour potentiellement beaucoup de vidéos |
 | **UI requise** | Rafraîchir la vue vidéo, recalculer le groupement |
-| **PySide6** | `ctx.delete_property_values(...)` émet `state_changed`. `delete_property_values` notifie le provider via `_notify_fields_modified([name], is_property=True)`. OK. |
+| **PySide6** | `ctx.delete_property_values(...)` émet `state_changed`. `delete_property_values` sauvegarde la base via `_notify_fields_modified([name], is_property=True)`. OK. |
 
 ### `replace_property_values` (Algo)
 | Aspect | Détail |
@@ -161,7 +161,7 @@ Pour chaque feature, ce document identifie :
 | **État** | DB:prop (valeurs remplacées) |
 | **Ce qui change** | Des valeurs de propriété sont renommées/fusionnées |
 | **UI requise** | Rafraîchir la vue vidéo, recalculer le groupement |
-| **PySide6** | Via `PropertyValuesDialog` → `ctx.replace_property_values(...)`. `replace_property_values` appelle `set_property_for_videos` qui notifie le provider. OK. |
+| **PySide6** | Via `PropertyValuesDialog` → `ctx.replace_property_values(...)`. `replace_property_values` appelle `set_property_for_videos` qui sauvegarde la base. OK. |
 
 ### `move_property_values` (Algo)
 | Aspect | Détail |
@@ -181,12 +181,12 @@ Pour chaque feature, ce document identifie :
 
 ---
 
-## 5. Opérations Provider (filtrage/tri/groupement)
+## 5. Opérations de vue (filtrage/tri/groupement via ViewContext)
 
 ### `set_sources`, `set_search`, `set_sort`
 | Aspect | Détail |
 |--------|--------|
-| **État** | PROV:sources / PROV:search / PROV:sort |
+| **État** | VIEW:sources / VIEW:search / VIEW:sort |
 | **Ce qui change** | Le filtre/tri actif |
 | **UI requise** | Recalculer et réafficher la liste de vidéos, mettre à jour les indicateurs de filtre dans la sidebar |
 | **PySide6** | Appel via façade AppContext (`ctx.set_sources()`, `ctx.set_search()`, `ctx.set_sorting()`) puis `refresh()`. OK. |
@@ -194,7 +194,7 @@ Pour chaque feature, ce document identifie :
 ### `set_groups`
 | Aspect | Détail |
 |--------|--------|
-| **État** | PROV:grouping (+ réinitialise PROV:classifier, PROV:group, PROV:search, PROV:sort) |
+| **État** | VIEW:grouping (+ réinitialise VIEW:classifier, VIEW:group, VIEW:search, VIEW:sort) |
 | **Ce qui change** | Le groupement actif ; les layers en aval (classifieur, groupe sélectionné, recherche, tri) sont réinitialisés |
 | **UI requise** | Afficher la barre de groupes avec la liste des groupes et leurs compteurs, sélectionner le premier groupe par défaut, recalculer et réafficher la liste de vidéos du groupe sélectionné, mettre à jour les indicateurs de filtre dans la sidebar |
 | **PySide6** | `ctx.set_groups(...)` puis `refresh()`. OK. |
@@ -202,7 +202,7 @@ Pour chaque feature, ce document identifie :
 ### `set_group`
 | Aspect | Détail |
 |--------|--------|
-| **État** | PROV:group |
+| **État** | VIEW:group |
 | **Ce qui change** | Le groupe sélectionné dans le groupement actif |
 | **UI requise** | Mettre à jour la sélection dans la barre de groupes, recalculer et réafficher la liste de vidéos du nouveau groupe sélectionné |
 | **PySide6** | `ctx.set_group(...)` puis `refresh()`. OK. |
@@ -210,7 +210,7 @@ Pour chaque feature, ce document identifie :
 ### `classifier_select_group`, `classifier_back`, `classifier_reverse`, `classifier_focus_prop_val`
 | Aspect | Détail |
 |--------|--------|
-| **État** | PROV:classifier + PROV:group |
+| **État** | VIEW:classifier + VIEW:group |
 | **Ce qui change** | Le chemin du classifieur et le groupe sélectionné |
 | **UI requise** | Mettre à jour l'affichage du chemin classifieur, la barre de groupes, et la liste de vidéos |
 | **PySide6** | Appel via façade `ctx.classifier_select_group()`, `ctx.classifier_back()`, `ctx.classifier_reverse()`, `ctx.classifier_focus_prop_val()` puis `refresh()`. OK. |
@@ -218,7 +218,7 @@ Pour chaque feature, ce document identifie :
 ### `classifier_concatenate_path`
 | Aspect | Détail |
 |--------|--------|
-| **État** | DB:prop (valeurs déplacées) + PROV:classifier (réinitialisé) + PROV:group (réinitialisé) |
+| **État** | DB:prop (valeurs déplacées) + VIEW:classifier (réinitialisé) + VIEW:group (réinitialisé) |
 | **Ce qui change** | Les valeurs de propriétés + l'état du classifieur |
 | **UI requise** | Rafraîchir tout |
 | **PySide6** | Via façade `ctx.classifier_concatenate_path()` puis `refresh()`. OK. |
@@ -238,7 +238,7 @@ Pour chaque feature, ce document identifie :
 ### `update_database`
 | Aspect | Détail |
 |--------|--------|
-| **État** | DB:entry (ajouts/suppressions), DB:attr (found, thumbnails...), PROV (refresh) |
+| **État** | DB:entry (ajouts/suppressions), DB:attr (found, thumbnails...) |
 | **Ce qui change** | Potentiellement tout : nouvelles vidéos, vidéos non trouvées, thumbnails |
 | **UI requise** | Rafraîchir complètement la vue |
 | **PySide6** | Via ProcessPage → `show_videos_page()` qui fait `refresh()`. OK. |
@@ -246,7 +246,7 @@ Pour chaque feature, ce document identifie :
 ### `find_similar_videos`
 | Aspect | Détail |
 |--------|--------|
-| **État** | DB:attr (similarity_id pour toutes les vidéos) + PROV:grouping (passé à similarity_id) |
+| **État** | DB:attr (similarity_id pour toutes les vidéos) + VIEW:grouping (passé à similarity_id) |
 | **Ce qui change** | Les IDs de similarité + le groupement actif |
 | **UI requise** | Afficher les groupes de vidéos similaires |
 | **PySide6** | Via ProcessPage → `show_videos_page()` qui fait `refresh()`. OK. |
@@ -254,7 +254,7 @@ Pour chaque feature, ce document identifie :
 ### `move_video_file`
 | Aspect | Détail |
 |--------|--------|
-| **État** | DB:attr (filename) + FILE (déplacé) + PROV (refresh) |
+| **État** | DB:attr (filename) + FILE (déplacé) |
 | **Ce qui change** | Le chemin du fichier vidéo |
 | **UI requise** | Mettre à jour le chemin affiché |
 | **PySide6** | Via ProcessPage → `show_videos_page()`. OK. |
@@ -291,14 +291,14 @@ Pour chaque feature, ce document identifie :
 
 ## 8. Synthèse des problèmes identifiés
 
-### Problèmes de notification provider
+### Problèmes de sauvegarde (anciennement « notification provider »)
 
 | # | Feature | Problème | Statut |
 |---|---------|----------|--------|
-| P1 | `mark_as_watched` / `mark_as_read` | Ne notifiaient pas le provider | **Corrigé** — `_notify_fields_modified` ajouté dans `database_operations.py` |
-| P2 | `video_entry_del` | Les deux implémentations appellent déjà `provider.delete()` + `_notify_fields_modified(["move_id"])` | Non-problème |
-| P3 | `video_entry_set_tags` (SQL) | Ne notifiait pas le provider | **Corrigé** — `_notify_fields_modified` ajouté dans `pysaurus_collection.py` |
-| P4 | `delete_property_values` | `videos_tag_set(action=REMOVE)` sans notification provider | **Corrigé** — `_notify_fields_modified` ajouté dans `database_algorithms.py` |
+| P1 | `mark_as_watched` / `mark_as_read` | Ne sauvegardaient pas après modification | **Corrigé** — `_notify_fields_modified` ajouté dans `database_operations.py` |
+| P2 | `video_entry_del` | Les deux implémentations appellent déjà `_notify_fields_modified(["move_id"])` | Non-problème |
+| P3 | `video_entry_set_tags` (SQL) | Ne sauvegardait pas après modification | **Corrigé** — `_notify_fields_modified` ajouté dans `pysaurus_collection.py` |
+| P4 | `delete_property_values` | `videos_tag_set(action=REMOVE)` sans sauvegarde | **Corrigé** — `_notify_fields_modified` ajouté dans `database_algorithms.py` |
 | P5 | `prop_type_del` | Si groupé par la propriété supprimée, état incohérent | **Corrigé** — `_notify_fields_modified` ajouté dans `json_database.py` et `pysaurus_collection.py` |
 | P6 | `change_video_file_title` | Les deux implémentations de `video_entry_set_filename` appellent déjà `_notify_fields_modified` | Non-problème |
 

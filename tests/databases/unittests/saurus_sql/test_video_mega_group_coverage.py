@@ -11,7 +11,7 @@ focusing on edge cases like:
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.video_provider.view_context import ViewContext
+from pysaurus.dbview.view_context import ViewContext
 
 
 @pytest.fixture(params=["saurus_sql"])

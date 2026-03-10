@@ -14,7 +14,7 @@ import pytest
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
 from pysaurus.database.saurus.sql.sql_functions import pysaurus_text_to_fts
-from pysaurus.video_provider.view_context import ViewContext
+from pysaurus.dbview.view_context import ViewContext
 from tests.utils import get_saurus_sql_database
 
 

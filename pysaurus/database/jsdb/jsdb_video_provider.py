@@ -15,11 +15,10 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.database_operations import DatabaseOperations
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
-from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
-from pysaurus.video_provider.field_stat import FieldStat
-from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
-from pysaurus.video_provider.source_def import SourceDef
-from pysaurus.video_provider.view_tools import Group, GroupArray, GroupDef, SearchDef
+from pysaurus.dbview.field_stat import FieldStat
+from pysaurus.dbview.view_utils import parse_sorting, parse_sources
+from pysaurus.dbview.source_def import SourceDef
+from pysaurus.dbview.view_tools import Group, GroupArray, GroupDef, SearchDef
 
 logger = logging.getLogger(__name__)
 EMPTY_SET = set()
@@ -370,8 +369,10 @@ class LayerSort(Layer):
         functions.remove_from_list(self.output, video_id)
 
 
-class JsonDatabaseVideoProvider(AbstractVideoProvider):
-    __slots__ = ("pipeline", "layers")
+class JsonDatabaseVideoProvider:
+    __slots__ = ("_database", "pipeline", "layers")
+
+    LAYER_SOURCE = "source"
 
     _LAYER_NAMES_ = {
         "source": LayerSource,
@@ -383,7 +384,7 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
     }
 
     def __init__(self, database):
-        super().__init__(database)
+        self._database = database
         layer_grouping = LayerGrouping(self._database)
         self.pipeline: list[Layer] = [
             LayerSource(self._database),
@@ -424,7 +425,7 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
         nb_videos = len(view_indices)
         nb_pages = compute_nb_pages(nb_videos, page_size)
         videos = []
-        group_def = database.provider.get_group_def()
+        group_def = self.get_group_def()
         grouped_by_moves = group_def and group_def["field"] == "move_id"
         if nb_videos:
             page_number = min(max(0, page_number), nb_pages - 1)
@@ -492,7 +493,8 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
             ),
         )
         self.set_layer_params(LayerGroup, group_id=0)
-        self.reset_parameters(self.LAYER_CLASSIFIER, self.LAYER_SEARCH)
+        self.set_classifier_path([])
+        self.set_search("")
 
     def set_classifier_path(self, path):
         self.set_layer_params(LayerClassifier, path=path)
@@ -564,6 +566,16 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
     def count_source_videos(self):
         layer: LayerSource = self.layers[LayerSource]
         return len(layer.output)
+
+    def get_group_def(self):
+        group_def = self.get_grouping()
+        return (
+            group_def.to_dict(
+                group_id=self.get_group(), groups=self._get_classifier_stats()
+            )
+            if group_def
+            else None
+        )
 
     def get_random_found_video_id(self) -> int:
         layer: LayerSource = self.layers[LayerSource]

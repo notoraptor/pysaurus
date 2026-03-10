@@ -17,8 +17,7 @@ from pysaurus.video import VideoRuntimeInfo
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
-from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
-from pysaurus.video_provider.view_context import ViewContext
+from pysaurus.dbview.view_context import ViewContext
 
 logger = logging.getLogger(__name__)
 
@@ -54,20 +53,14 @@ class AbstractDatabase(ABC):
     - Subclass optimizations still work via delegation
     """
 
-    __slots__ = ("ways", "notifier", "in_save_context", "provider")
+    __slots__ = ("ways", "notifier", "in_save_context")
     action = Change
 
-    def __init__(
-        self,
-        db_folder: PathType,
-        provider: AbstractVideoProvider,
-        notifier=DEFAULT_NOTIFIER,
-    ):
+    def __init__(self, db_folder: PathType, notifier=DEFAULT_NOTIFIER):
         db_folder = AbsolutePath.ensure(db_folder).assert_dir()
         self.ways = DbWays(db_folder)
         self.notifier = notifier
         self.in_save_context = False
-        self.provider = provider
 
     @abstractmethod
     def _set_date(self, date: Date):

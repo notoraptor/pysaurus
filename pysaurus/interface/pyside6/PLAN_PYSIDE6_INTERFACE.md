@@ -424,46 +424,47 @@ class VideoCard(QFrame):
 ```python
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
-from pysaurus.video_provider.view_tools import GroupDef
+from pysaurus.dbview.view_tools import GroupDef
+
 
 class VideosPage(QWidget):
-    def __init__(self, ctx: AppContext, parent=None):
-        super().__init__(parent)
-        self.ctx = ctx
-        self.page_size = 20
-        self.page_number = 0
+   def __init__(self, ctx: AppContext, parent=None):
+      super().__init__(parent)
+      self.ctx = ctx
+      self.page_size = 20
+      self.page_number = 0
 
-    def load_videos(self):
-        """Charge les vidéos via le provider."""
-        # Appel direct, retourne VideoSearchContext (pas un dict!)
-        context: VideoSearchContext = self.ctx.get_videos(self.page_size, self.page_number)
+   def load_videos(self):
+      """Charge les vidéos via le provider."""
+      # Appel direct, retourne VideoSearchContext (pas un dict!)
+      context: VideoSearchContext = self.ctx.get_videos(self.page_size, self.page_number)
 
-        # Accès direct aux objets (VideoPattern, pas l'implémentation concrète)
-        videos: list[VideoPattern] = context.result
-        total_count = context.view_count
-        nb_pages = context.nb_pages
-        total_size = context.selection_file_size   # FileSize
-        total_duration = context.selection_duration  # Duration
+      # Accès direct aux objets (VideoPattern, pas l'implémentation concrète)
+      videos: list[VideoPattern] = context.result
+      total_count = context.view_count
+      nb_pages = context.nb_pages
+      total_size = context.selection_file_size  # FileSize
+      total_duration = context.selection_duration  # Duration
 
-        # Groupement actif?
-        if context.grouping:
-            group_def: GroupDef = context.grouping
-            print(f"Groupé par: {group_def.field}")
+      # Groupement actif?
+      if context.grouping:
+         group_def: GroupDef = context.grouping
+         print(f"Groupé par: {group_def.field}")
 
-        # Afficher les vidéos
-        self._display_videos(videos)
-        self._update_stats(total_count, total_size, total_duration)
+      # Afficher les vidéos
+      self._display_videos(videos)
+      self._update_stats(total_count, total_size, total_duration)
 
-    def _display_videos(self, videos: list[VideoPattern]):
-        # Créer un VideoCard pour chaque vidéo (accepte VideoPattern)
-        for video in videos:
-            card = VideoCard(video)
-            card.double_clicked.connect(self._on_open_video)
-            self.grid_layout.addWidget(card)
+   def _display_videos(self, videos: list[VideoPattern]):
+      # Créer un VideoCard pour chaque vidéo (accepte VideoPattern)
+      for video in videos:
+         card = VideoCard(video)
+         card.double_clicked.connect(self._on_open_video)
+         self.grid_layout.addWidget(card)
 
-    def _on_open_video(self, video_id: int):
-        # Appel direct aux opérations
-        self.ctx.ops.open_video(video_id)
+   def _on_open_video(self, video_id: int):
+      # Appel direct aux opérations
+      self.ctx.ops.open_video(video_id)
 ```
 
 ## Phases d'implémentation

@@ -9,8 +9,8 @@ from pysaurus.video.video_constants import COMMON_FIELDS, SIMILARITY_FIELDS
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_sorting import VideoSorting
-from pysaurus.video_provider.field_stat import FieldStat
-from pysaurus.video_provider.view_tools import GroupDef, SearchDef
+from pysaurus.dbview.field_stat import FieldStat
+from pysaurus.dbview.view_tools import GroupDef, SearchDef
 
 
 @dataclass(slots=True)

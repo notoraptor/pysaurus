@@ -21,7 +21,7 @@ from pysaurus.interface.api.api_utils.proxy_feature import (
     ProxyFeature,
 )
 from pysaurus.video.database_context import DatabaseContext
-from pysaurus.video_provider.view_context import ViewContext
+from pysaurus.dbview.view_context import ViewContext
 
 
 class FeatureAPI:

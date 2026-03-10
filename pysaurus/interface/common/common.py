@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import Any
 
-from pysaurus.video_provider.view_tools import GroupDef
+from pysaurus.dbview.view_tools import GroupDef
 
 
 class GroupPerm(IntEnum):

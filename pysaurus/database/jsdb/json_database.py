@@ -43,6 +43,7 @@ class JsonDatabase(AbstractDatabase):
         "_removed",
         "_modified",
         "_thumb_mgr",
+        "provider",
     )
 
     def __init__(
@@ -52,9 +53,8 @@ class JsonDatabase(AbstractDatabase):
         notifier: Notifier = DEFAULT_NOTIFIER,
         indexer: AbstractVideoIndexer = None,
     ):
-        super().__init__(
-            db_folder, notifier=notifier, provider=JsonDatabaseVideoProvider(self)
-        )
+        super().__init__(db_folder, notifier=notifier)
+        self.provider = JsonDatabaseVideoProvider(self)
         # Database content
         self._version = 2
         self._date = Date.now()

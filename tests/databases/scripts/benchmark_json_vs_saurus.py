@@ -169,7 +169,7 @@ def run_read_benchmarks(json_db, saurus_db, all_video_ids, sample_100, sample_10
     # ==========================================================================
     print("  query_videos operations...")
 
-    from pysaurus.video_provider.view_context import ViewContext
+    from pysaurus.dbview.view_context import ViewContext
 
     # query_videos (default view)
     def query_default(db):

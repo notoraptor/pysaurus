@@ -11,8 +11,8 @@ It is serializable (for web interfaces) and testable without a database.
 from typing import Sequence
 
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
-from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
-from pysaurus.video_provider.view_tools import GroupDef, SearchDef
+from pysaurus.dbview.view_utils import parse_sorting, parse_sources
+from pysaurus.dbview.view_tools import GroupDef, SearchDef
 
 
 class ViewContext:

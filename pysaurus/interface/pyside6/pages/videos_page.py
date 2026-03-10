@@ -42,7 +42,7 @@ from pysaurus.interface.pyside6.widgets.video_card import VideoCard
 from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
-from pysaurus.video_provider.field_stat import FieldStat
+from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.interface.common.common import format_group_value
 
 

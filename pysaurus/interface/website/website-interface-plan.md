@@ -41,7 +41,7 @@ WebsiteContext
     .database           → AbstractDatabase
     .ops                → DatabaseOperations (db.ops)
     .algos              → DatabaseAlgorithms (db.algos)
-    .provider           → AbstractVideoProvider (db.provider)
+    .view               → ViewContext (état de la vue)
 ```
 
 Tout est synchrone : la requête HTTP bloque jusqu'à ce que l'opération backend soit terminée.
@@ -65,10 +65,10 @@ Après ouverture → redirection vers `/videos`.
 
 | Route | Méthode | Action | Backend |
 |---|---|---|---|
-| `/videos` | GET | Liste paginée | `provider.get_current_state(page_size, page)` |
-| `/videos/search` | POST → redirect GET | Rechercher | `provider.set_search(text, cond)` |
-| `/videos/sort` | POST → redirect GET | Trier | `provider.set_sort(sorting)` |
-| `/videos/group` | POST → redirect GET | Grouper | `provider.set_groups(field, ...)` |
+| `/videos` | GET | Liste paginée | `db.query_videos(view, page_size, page)` |
+| `/videos/search` | POST → redirect GET | Rechercher | `view.set_search(text, cond)` |
+| `/videos/sort` | POST → redirect GET | Trier | `view.set_sort(sorting)` |
+| `/videos/group` | POST → redirect GET | Grouper | `view.set_grouping(field, ...)` |
 
 Paramètres via query params : `?page=1&page_size=20&q=...&sort=...`
 
@@ -122,6 +122,6 @@ uv run -m pysaurus website   # → Flask + webbrowser.open("http://localhost:POR
 
 - **Pas de dialogue fichier** : chemins de dossiers saisis en texte
 - **Opérations longues** : bloquantes pour le MVP. Améliorable avec SSE ou polling
-- **État du provider** : persiste en mémoire. Alternative : reconstruire depuis query params à chaque requête
+- **État de la vue** : `ViewContext` persiste en mémoire. Alternative : reconstruire depuis query params à chaque requête
 - **Mono-thread** : suffisant (un seul utilisateur local)
 - **Pas de Node.js, pas de build step** : templates HTML modifiables directement

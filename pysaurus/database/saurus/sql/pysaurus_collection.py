@@ -17,13 +17,12 @@ from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.database.saurus.sql.prop_type_search import prop_type_search
 from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
-from pysaurus.database.saurus.sql.saurus_provider import SaurusProvider
 from pysaurus.database.saurus.sql.sql_utils import sql_placeholders
 from pysaurus.database.saurus.sql.sql_useful_constants import WRITABLE_FIELDS
 from pysaurus.database.saurus.sql.video_mega_group import video_mega_group
 from pysaurus.database.saurus.sql.video_mega_search import video_mega_search
 from pysaurus.database.saurus.sql.video_mega_utils import _get_video_moves
-from pysaurus.video_provider.field_stat import FieldStat
+from pysaurus.dbview.field_stat import FieldStat
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +58,7 @@ class PysaurusCollection(AbstractDatabase):
     __slots__ = ("db",)
 
     def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
-        super().__init__(path, SaurusProvider(self), notifier)
+        super().__init__(path, notifier)
         self.db = PysaurusConnection(self.ways.db_sql_path.path)
         if folders:
             self.set_folders(

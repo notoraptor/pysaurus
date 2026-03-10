@@ -4,7 +4,7 @@ Unit tests for ViewContext state management.
 These tests verify ViewContext behavior independently of any database.
 """
 
-from pysaurus.video_provider.view_context import ViewContext
+from pysaurus.dbview.view_context import ViewContext
 
 
 class TestViewContextState:

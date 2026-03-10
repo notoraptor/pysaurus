@@ -9,7 +9,7 @@ from pysaurus.core.lookup_array import LookupArray
 from pysaurus.video.video_constants import SIMILARITY_FIELDS as _SIMILARITY_FIELDS
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
-from pysaurus.video_provider.view_tools import GroupDef, SearchDef
+from pysaurus.dbview.view_tools import GroupDef, SearchDef
 from pysaurus.database.saurus.sql.grouping_utils import SqlFieldFactory
 from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.sql.saurus_provider_utils import (

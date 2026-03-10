@@ -11,7 +11,7 @@ Séparer le provider actuel (qui mélange état et calcul) en deux composants :
 
 ### Fait
 
-- [x] Créer `ViewContext` (`pysaurus/video_provider/view_context.py`, 72 lignes)
+- [x] Créer `ViewContext` (`pysaurus/dbview/view_context.py`, 72 lignes)
 - [x] Ajouter `AbstractDatabase.query_videos()` (méthode abstraite)
 - [x] Implémenter `PysaurusCollection.query_videos()` (SQL, stateless via `video_mega_group()`)
 - [x] Implémenter `JsonDatabase.query_videos()` (JSON, orchestre le provider interne)
@@ -26,13 +26,16 @@ Séparer le provider actuel (qui mélange état et calcul) en deux composants :
 - [x] Ajouter tests ViewContext, AppContext, database CRUD
 - [x] Migrer `MockDatabase.query_videos()` pour accepter ViewContext
 
+- [x] Supprimer `AbstractVideoProvider` et `SaurusProvider`
+- [x] Supprimer l'attribut `provider` de `AbstractDatabase`
+- [x] Supprimer `MockProvider` des tests (logique inlinée dans `MockDatabase`)
+- [x] Rendre `JsonDatabaseVideoProvider` standalone (plus d'héritage d'`AbstractVideoProvider`)
+- [x] Nettoyer les imports résiduels du provider
+- [x] Renommer le package `video_provider` → `dbview` (`provider_utils` → `view_utils`)
+
 ### Reste à faire
 
 - [ ] Supprimer jsdb (`JsonDatabase`, `JsonDatabaseVideoProvider`)
-- [ ] Supprimer `AbstractVideoProvider` et `SaurusProvider`
-- [ ] Supprimer l'attribut `provider` de `AbstractDatabase`
-- [ ] Supprimer `MockProvider` des tests
-- [ ] Nettoyer les imports résiduels du provider
 
 ## ViewContext
 
@@ -108,8 +111,4 @@ Interface (AppContext / FeatureAPI / BenchmarkAPI / Flask)
 
 ## Ce qui reste à supprimer
 
-- `AbstractVideoProvider` (~263 lignes)
-- `SaurusProvider` (~180 lignes)
 - `JsonDatabaseVideoProvider` (~570 lignes) — quand jsdb sera supprimé
-- Attribut `provider` sur `AbstractDatabase`
-- `MockProvider` dans les tests

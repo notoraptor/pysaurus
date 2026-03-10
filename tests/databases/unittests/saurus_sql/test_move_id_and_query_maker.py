@@ -13,7 +13,7 @@ These tests cover:
 import pytest
 
 from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
-from pysaurus.video_provider.view_context import ViewContext
+from pysaurus.dbview.view_context import ViewContext
 from tests.conftest import EXAMPLE_DB_FOLDER
 from tests.utils import get_saurus_sql_database
 

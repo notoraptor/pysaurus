@@ -44,7 +44,7 @@ class MockAppContext:
     """
 
     def __init__(self, mock_database: MockDatabase):
-        from pysaurus.video_provider.view_context import ViewContext
+        from pysaurus.dbview.view_context import ViewContext
 
         self._database = mock_database
         self._application = MockApplication()
@@ -307,8 +307,7 @@ class MockAppContext:
     def _apply_on_view_impl(self, selector_dict, operation, *args):
         if not self._database:
             return None
-        # Delegate to mock provider which handles both old and new selector formats
-        return self._database.provider.apply_on_view(selector_dict, operation, *args)
+        return self._database.apply_on_view(selector_dict, operation, *args)
 
     def confirm_unique_moves(self) -> int:
         return 0
