@@ -227,10 +227,7 @@ class TestFeatureAPIDatabase:
         video = db.get_videos(include=["video_id", "properties"])[0]
         video_id = video.video_id
 
-        # Make sure provider is updated
-        db.provider.get_view_indices()
-
-        # Delete entry (might fail if video provider doesn't find it, that's OK)
+        # Delete entry (might fail if video is not found, that's OK)
         try:
             api.__run_feature__("delete_video_entry", video_id)
 
@@ -430,7 +427,6 @@ class TestFeatureAPIDatabase:
         db = api.database
         v1, v2 = db.get_videos(include=["video_id"])[:2]
         db.videos_set_field("found", {v1.video_id: False})
-        db.provider.get_view_indices()
 
         # This requires specific setup (not found video + found video)
         # For interface test, we just verify the call signature works
@@ -573,7 +569,6 @@ class TestFeatureAPIProvider:
     def test_open_random_video(self, feature_api_with_db):
         """Test opening random video."""
         api = feature_api_with_db
-        api.database.provider.get_view_indices()
         filename = api.__run_feature__("open_random_video", False)
         assert isinstance(filename, str)
         assert (
@@ -585,9 +580,9 @@ class TestFeatureAPIProvider:
 class TestFeatureAPIFeatureList:
     """Test that FeatureAPI exposes all expected features."""
 
-    def test_all_proxies_exist(self, feature_api):
-        """Test that all documented proxy features exist."""
-        expected_proxies = [
+    def test_all_features_exist(self, feature_api):
+        """Test that all documented features exist (as proxies or methods)."""
+        expected_features = [
             "apply_on_view",
             "apply_on_prop_value",
             "classifier_back",
@@ -624,10 +619,10 @@ class TestFeatureAPIFeatureList:
             "set_video_properties",
         ]
 
-        for feature_name in expected_proxies:
-            assert feature_name in feature_api._proxies, (
-                f"Missing proxy: {feature_name}"
-            )
+        for feature_name in expected_features:
+            is_proxy = feature_name in feature_api._proxies
+            is_method = hasattr(feature_api, feature_name)
+            assert is_proxy or is_method, f"Missing feature: {feature_name}"
 
     def test_feature_api_string_representation(self, feature_api):
         """Test that FeatureAPI can be converted to string (for debugging)."""

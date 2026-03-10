@@ -1,8 +1,8 @@
 """
 Tests for database providers using example_db_in_pysaurus (90 videos).
 
-These tests verify that AbstractVideoProvider methods work correctly
-on both JSON and Saurus SQL database implementations.
+These tests verify that video querying and write operations work correctly
+on the Saurus SQL database implementation.
 """
 
 import pprint
@@ -11,63 +11,59 @@ import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.interface.common.common import FIELD_MAP
+from pysaurus.video_provider.view_context import ViewContext
 
 
-@pytest.fixture(params=["json", "saurus_sql"])
-def disk_database(
-    request, example_json_database, example_saurus_database
-) -> AbstractDatabase:
-    """Parametrized fixture for read-only database access."""
-    if request.param == "json":
-        return example_json_database
-    else:
-        return example_saurus_database
+@pytest.fixture
+def disk_database(example_saurus_database) -> AbstractDatabase:
+    """Read-only Saurus SQL database."""
+    return example_saurus_database
 
 
-@pytest.fixture(params=["json", "saurus_sql"])
-def memory_database(
-    request, example_json_database_memory, example_saurus_database_memory
-) -> AbstractDatabase:
-    """Parametrized fixture for in-memory database access (for write tests)."""
-    if request.param == "json":
-        return example_json_database_memory
-    else:
-        return example_saurus_database_memory
+@pytest.fixture
+def memory_database(example_saurus_database_memory) -> AbstractDatabase:
+    """In-memory Saurus SQL database for write tests."""
+    return example_saurus_database_memory
 
 
 class TestDatabaseProvider:
-    """Tests for AbstractVideoProvider methods (read-only)."""
+    """Tests for video querying methods (read-only)."""
 
-    @pytest.fixture
-    def provider(self, disk_database):
-        return disk_database.provider
+    def _query_ids(self, db, view) -> list[int]:
+        return [v.video_id for v in db.query_videos(view, None, None).result]
 
-    def test_provider(self, provider):
-        indices = provider.get_view_indices()
+    def _query_stats(self, db, view):
+        return db.query_videos(view, 1, 0).classifier_stats
+
+    def test_provider(self, disk_database):
+        view = ViewContext()
+        indices = self._query_ids(disk_database, view)
         assert len(indices) == 90
 
-    def test_provider_sources(self, provider):
-        assert len(provider.get_view_indices()) == 90
+    def test_provider_sources(self, disk_database):
+        view = ViewContext()
+        assert len(self._query_ids(disk_database, view)) == 90
 
-        provider.set_sources([["not_found"]])
-        assert len(provider.get_view_indices()) == 3
+        view.set_sources([["not_found"]])
+        assert len(self._query_ids(disk_database, view)) == 3
 
-        provider.set_sources([["found"]])
-        assert len(provider.get_view_indices()) == 90
+        view.set_sources([["found"]])
+        assert len(self._query_ids(disk_database, view)) == 90
 
-        provider.set_sources([["unreadable"]])
-        assert len(provider.get_view_indices()) == 3
+        view.set_sources([["unreadable"]])
+        assert len(self._query_ids(disk_database, view)) == 3
 
-        provider.set_sources([["readable", "without_thumbnails"]])
-        assert len(provider.get_view_indices()) == 0
+        view.set_sources([["readable", "without_thumbnails"]])
+        assert len(self._query_ids(disk_database, view)) == 0
 
-        provider.set_sources([["readable", "with_thumbnails"]])
-        assert len(provider.get_view_indices()) == 90
+        view.set_sources([["readable", "with_thumbnails"]])
+        assert len(self._query_ids(disk_database, view)) == 90
 
-        provider.set_sources([["unreadable"], ["readable"]])
-        assert len(provider.get_view_indices()) == 93
+        view.set_sources([["unreadable"], ["readable"]])
+        assert len(self._query_ids(disk_database, view)) == 93
 
-    def test_provider_grouping_by_attribute(self, provider):
+    def test_provider_grouping_by_attribute(self, disk_database):
+        db = disk_database
         expected_groups = [
             (0, 61),
             (58815, 1),
@@ -85,66 +81,74 @@ class TestDatabaseProvider:
             (128349, 1),
             (137010, 1),
         ]
-        assert not provider.get_grouping()
-        provider.set_groups("audio_bit_rate")
-        assert len(provider.get_view_indices()) == 61
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 3
+        view = ViewContext()
+        assert not view.grouping.field
+
+        view.set_grouping("audio_bit_rate")
+        assert len(self._query_ids(db, view)) == 61
+        stats = self._query_stats(db, view)
+        assert len(stats) == 3
         for i, (value, count) in enumerate(((0, 61), (125375, 8), (128000, 9))):
-            group = group_def["groups"][i]
-            assert group["value"] == value
-            assert group["count"] == count
+            assert stats[i].value == value
+            assert stats[i].count == count
 
-        provider.set_groups("audio_bit_rate", allow_singletons=True)
-        assert len(provider.get_view_indices()) == 61
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 15
+        view.set_grouping("audio_bit_rate", allow_singletons=True)
+        assert len(self._query_ids(db, view)) == 61
+        stats = self._query_stats(db, view)
+        assert len(stats) == 15
         for i, (value, count) in enumerate(expected_groups):
-            group = group_def["groups"][i]
-            assert group["value"] == value
-            assert group["count"] == count
+            assert stats[i].value == value
+            assert stats[i].count == count
 
-        provider.set_groups("audio_bit_rate", reverse=True, allow_singletons=True)
-        assert len(provider.get_view_indices()) == 1
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 15
+        view.set_grouping("audio_bit_rate", reverse=True, allow_singletons=True)
+        assert len(self._query_ids(db, view)) == 1
+        stats = self._query_stats(db, view)
+        assert len(stats) == 15
         for i, (value, count) in enumerate(reversed(expected_groups)):
-            group = group_def["groups"][i]
-            assert group["value"] == value
-            assert group["count"] == count
+            assert stats[i].value == value
+            assert stats[i].count == count
 
-        provider.set_groups("audio_bit_rate", sorting="count", reverse=True)
-        assert len(provider.get_view_indices()) == 61
-        group_def = provider.get_group_def()
+        view.set_grouping("audio_bit_rate", sorting="count", reverse=True)
+        stats = self._query_stats(db, view)
         for i, (value, count) in enumerate(((0, 61), (128000, 9), (125375, 8))):
-            group = group_def["groups"][i]
-            assert group["value"] == value
-            assert group["count"] == count
-            provider.set_group(i)
-            assert len(provider.get_view_indices()) == count
+            assert stats[i].value == value
+            assert stats[i].count == count
+            view.set_group(i)
+            assert len(self._query_ids(db, view)) == count
 
-        provider.set_sources([["readable", "without_thumbnails"]])
-        provider.set_groups("audio_bit_rate", True, sorting="count", reverse=True)
-        provider.set_group(0)
-        assert len(provider.get_view_indices()) == 0
+        view.set_sources([["readable", "without_thumbnails"]])
+        view.set_grouping(
+            "audio_bit_rate", is_property=True, sorting="count", reverse=True
+        )
+        view.set_group(0)
+        assert len(self._query_ids(db, view)) == 0
 
     @pytest.mark.parametrize("attribute", [field.name for field in FIELD_MAP.allowed])
     def test_provider_grouping_by_attributes(
-        self, provider, attribute, data_regression
+        self, disk_database, attribute, data_regression
     ):
+        db = disk_database
         field = FIELD_MAP.fields[attribute]
-        provider.set_groups(attribute, allow_singletons=not field.is_only_many())
-        nb_videos_first_group = len(provider.get_view_indices())
-        group_def = provider.get_group_def()
+        view = ViewContext()
+        view.set_grouping(attribute, allow_singletons=not field.is_only_many())
+        nb_videos_first_group = len(self._query_ids(db, view))
+        result = db.query_videos(view, 1, 0)
+        group_def = view.grouping.to_dict(
+            group_id=result.group_id,
+            groups=[
+                {"value": _serializable(s.value), "count": s.count}
+                for s in result.classifier_stats
+            ],
+        )
         results = {
             "nb_videos_first_group": nb_videos_first_group,
             "group_def": group_def,
         }
         pprint.pprint(results)
-        # data_regression.check(results, basename=f"provider_grouping_by_{attribute}")
         data_regression.check(results)
 
-    def test_provider_grouping_by_property(self, provider):
+    def test_provider_grouping_by_property(self, disk_database):
+        db = disk_database
         expected_without_singletons = [
             ("9", 2),
             ("a", 3),
@@ -153,46 +157,46 @@ class TestDatabaseProvider:
             ("unknown audio codec", 61),
             ("vertical", 7),
         ]
-        provider.set_groups("category", True)
-        assert len(provider.get_view_indices()) == 2
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 6
-        for i, (value, count) in enumerate(expected_without_singletons):
-            group = group_def["groups"][i]
-            assert group["value"] == value
-            assert group["count"] == count
+        view = ViewContext()
 
-        provider.set_groups("category", True, allow_singletons=True)
-        assert len(provider.get_view_indices()) == 1
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 110
+        view.set_grouping("category", is_property=True)
+        assert len(self._query_ids(db, view)) == 2
+        stats = self._query_stats(db, view)
+        assert len(stats) == 6
+        for i, (value, count) in enumerate(expected_without_singletons):
+            assert stats[i].value == value
+            assert stats[i].count == count
+
+        view.set_grouping("category", is_property=True, allow_singletons=True)
+        assert len(self._query_ids(db, view)) == 1
+        stats = self._query_stats(db, view)
+        assert len(stats) == 110
         ids_no_single = {86: 0, 97: 1, 103: 2, 106: 3, 107: 4, 108: 5}
         nb_found_no_single = 0
-        for i, group in enumerate(group_def["groups"]):
+        for i, s in enumerate(stats):
             if i in ids_no_single:
                 value, count = expected_without_singletons[ids_no_single[i]]
-                assert group["value"] == value
-                assert group["count"] == count
+                assert s.value == value
+                assert s.count == count
                 nb_found_no_single += 1
             else:
-                assert group["count"] == 1
+                assert s.count == 1
         assert nb_found_no_single == len(expected_without_singletons)
 
-        provider.set_groups("category", True, sorting="length")
-        assert len(provider.get_view_indices()) == 2
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 6
+        view.set_grouping("category", is_property=True, sorting="length")
+        assert len(self._query_ids(db, view)) == 2
+        stats = self._query_stats(db, view)
+        assert len(stats) == 6
         for i, (value, count) in enumerate(
             sorted(expected_without_singletons, key=lambda c: (len(c[0]), c[0]))
         ):
-            group = group_def["groups"][i]
-            assert group["value"] == value
-            assert group["count"] == count
+            assert stats[i].value == value
+            assert stats[i].count == count
 
-        provider.set_groups("category", True, sorting="length", reverse=True)
-        assert len(provider.get_view_indices()) == 61
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 6
+        view.set_grouping("category", is_property=True, sorting="length", reverse=True)
+        assert len(self._query_ids(db, view)) == 61
+        stats = self._query_stats(db, view)
+        assert len(stats) == 6
         for i, (value, count) in enumerate(
             sorted(
                 expected_without_singletons,
@@ -200,141 +204,150 @@ class TestDatabaseProvider:
                 reverse=True,
             )
         ):
-            group = group_def["groups"][i]
-            assert group["value"] == value
-            assert group["count"] == count
+            assert stats[i].value == value
+            assert stats[i].count == count
 
-        provider.set_groups("category", True, sorting="count")
-        assert len(provider.get_view_indices()) == 2
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 6
+        view.set_grouping("category", is_property=True, sorting="count")
+        assert len(self._query_ids(db, view)) == 2
+        stats = self._query_stats(db, view)
+        assert len(stats) == 6
         for i, (value, count) in enumerate(
             sorted(expected_without_singletons, key=lambda c: (c[1], c[0]))
         ):
-            group = group_def["groups"][i]
-            assert group["value"] == value
-            assert group["count"] == count
+            assert stats[i].value == value
+            assert stats[i].count == count
 
-        provider.set_groups("category", True, sorting="count", reverse=True)
-        assert len(provider.get_view_indices()) == 61
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 6
+        view.set_grouping("category", is_property=True, sorting="count", reverse=True)
+        assert len(self._query_ids(db, view)) == 61
+        stats = self._query_stats(db, view)
+        assert len(stats) == 6
         for i, (value, count) in enumerate(
             sorted(
                 expected_without_singletons, key=lambda c: (c[1], c[0]), reverse=True
             )
         ):
-            group = group_def["groups"][i]
-            assert group["value"] == value
-            assert group["count"] == count
+            assert stats[i].value == value
+            assert stats[i].count == count
 
-    def test_provider_classifier(self, provider):
-        provider.set_groups(
-            "category", True, sorting="count", reverse=True, allow_singletons=True
+    def test_provider_classifier(self, disk_database):
+        db = disk_database
+        view = ViewContext()
+        view.set_grouping(
+            "category",
+            is_property=True,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
         )
-        provider.set_classifier_path(["vertical"])
-        assert len(provider.get_view_indices()) == 7
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 24
-        group_0 = group_def["groups"][0]
-        group_1 = group_def["groups"][1]
-        group_2 = group_def["groups"][2]
-        assert group_0["value"] is None
-        assert group_0["count"] == 7
-        assert group_1["value"] == "unknown audio codec"
-        assert group_1["count"] == 7
-        assert group_2["value"] == "e"
-        assert group_2["count"] == 3
+        view.classifier = ["vertical"]
+        assert len(self._query_ids(db, view)) == 7
+        stats = self._query_stats(db, view)
+        assert len(stats) == 24
+        assert stats[0].value is None
+        assert stats[0].count == 7
+        assert stats[1].value == "unknown audio codec"
+        assert stats[1].count == 7
+        assert stats[2].value == "e"
+        assert stats[2].count == 3
 
-        provider.set_group(14)
-        assert len(provider.get_view_indices()) == 1
-        group_14 = group_def["groups"][14]
-        assert group_14["value"] == "68233"
-        assert group_14["count"] == 1
+        view.set_group(14)
+        assert len(self._query_ids(db, view)) == 1
+        assert stats[14].value == "68233"
+        assert stats[14].count == 1
 
-        provider.set_classifier_path(["vertical", "e"])
-        provider.set_group(0)
-        assert len(provider.get_view_indices()) == 3
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 10
-        assert group_def["groups"][0]["value"] is None
-        assert group_def["groups"][0]["count"] == 3
+        view.classifier = ["vertical", "e"]
+        view.set_group(0)
+        assert len(self._query_ids(db, view)) == 3
+        stats = self._query_stats(db, view)
+        assert len(stats) == 10
+        assert stats[0].value is None
+        assert stats[0].count == 3
 
-        provider.set_classifier_path(["vertical", "e", "does not exist"])
-        provider.set_group(0)
-        assert len(provider.get_view_indices()) == 0
+        view.classifier = ["vertical", "e", "does not exist"]
+        view.set_group(0)
+        assert len(self._query_ids(db, view)) == 0
 
-    def test_search(self, provider):
-        provider.set_search("196", "id")
-        assert len(provider.get_view_indices()) == 1
+    def test_search(self, disk_database):
+        db = disk_database
+        view = ViewContext()
 
-        provider.set_search("unknown", "and")
-        assert len(provider.get_view_indices()) == 61
-        provider.set_search("unknown", "or")
-        assert len(provider.get_view_indices()) == 61
-        provider.set_search("unknown", "exact")
-        assert len(provider.get_view_indices()) == 61
+        view.set_search("196", "id")
+        assert len(self._query_ids(db, view)) == 1
 
-        provider.set_search("unknown vertical", "and")
-        assert len(provider.get_view_indices()) == 7
-        provider.set_search("unknown vertical", "or")
-        assert len(provider.get_view_indices()) == 61
-        provider.set_search("unknown vertical", "exact")
-        assert len(provider.get_view_indices()) == 0
+        view.set_search("unknown", "and")
+        assert len(self._query_ids(db, view)) == 61
+        view.set_search("unknown", "or")
+        assert len(self._query_ids(db, view)) == 61
+        view.set_search("unknown", "exact")
+        assert len(self._query_ids(db, view)) == 61
 
-        provider.set_search("palm beach", "and")
-        assert len(provider.get_view_indices()) == 2
-        provider.set_search("palm beach", "or")
-        assert len(provider.get_view_indices()) == 3
-        provider.set_search("palm beach", "exact")
-        assert len(provider.get_view_indices()) == 1
+        view.set_search("unknown vertical", "and")
+        assert len(self._query_ids(db, view)) == 7
+        view.set_search("unknown vertical", "or")
+        assert len(self._query_ids(db, view)) == 61
+        view.set_search("unknown vertical", "exact")
+        assert len(self._query_ids(db, view)) == 0
 
-        provider.set_search("then natural", "and")
-        assert len(provider.get_view_indices()) == 3
-        provider.set_search("then natural", "or")
-        assert len(provider.get_view_indices()) == 4
-        provider.set_search("then natural", "exact")
-        assert len(provider.get_view_indices()) == 1
+        view.set_search("palm beach", "and")
+        assert len(self._query_ids(db, view)) == 2
+        view.set_search("palm beach", "or")
+        assert len(self._query_ids(db, view)) == 3
+        view.set_search("palm beach", "exact")
+        assert len(self._query_ids(db, view)) == 1
 
-        provider.set_search("then.natural", "and")
-        assert len(provider.get_view_indices()) == 3
-        provider.set_search("then.natural", "or")
-        assert len(provider.get_view_indices()) == 4
-        provider.set_search("then.natural", "exact")
-        assert len(provider.get_view_indices()) == 1
+        view.set_search("then natural", "and")
+        assert len(self._query_ids(db, view)) == 3
+        view.set_search("then natural", "or")
+        assert len(self._query_ids(db, view)) == 4
+        view.set_search("then natural", "exact")
+        assert len(self._query_ids(db, view)) == 1
 
-        provider.set_groups(
-            "category", True, allow_singletons=1, reverse=True, sorting="count"
+        view.set_search("then.natural", "and")
+        assert len(self._query_ids(db, view)) == 3
+        view.set_search("then.natural", "or")
+        assert len(self._query_ids(db, view)) == 4
+        view.set_search("then.natural", "exact")
+        assert len(self._query_ids(db, view)) == 1
+
+        view.set_grouping(
+            "category",
+            is_property=True,
+            allow_singletons=True,
+            reverse=True,
+            sorting="count",
         )
-        provider.set_search("then.natural", "and")
-        assert len(provider.get_view_indices()) == 2
-        provider.set_search("then.natural", "or")
-        assert len(provider.get_view_indices()) == 3
-        provider.set_search("then.natural", "exact")
-        assert len(provider.get_view_indices()) == 1
+        view.set_search("then.natural", "and")
+        assert len(self._query_ids(db, view)) == 2
+        view.set_search("then.natural", "or")
+        assert len(self._query_ids(db, view)) == 3
+        view.set_search("then.natural", "exact")
+        assert len(self._query_ids(db, view)) == 1
 
-    def test_sorting(self, provider):
-        provider.set_sort(["-file_title"])
-        indices = provider.get_view_indices()
+    def test_sorting(self, disk_database):
+        db = disk_database
+        view = ViewContext()
+
+        view.set_sort(["-file_title"])
+        indices = self._query_ids(db, view)
         assert len(indices) == 90
 
-        provider.set_sort(["file_title"])
-        assert indices == list(reversed(provider.get_view_indices()))
+        view.set_sort(["file_title"])
+        assert indices == list(reversed(self._query_ids(db, view)))
 
-        provider.set_sort(["date", "-file_title"])
-        indices = provider.get_view_indices()
+        view.set_sort(["date", "-file_title"])
+        indices = self._query_ids(db, view)
         assert len(indices) == 90
 
-        provider.set_sort(["-date", "+file_title"])
-        assert indices == list(reversed(provider.get_view_indices()))
+        view.set_sort(["-date", "+file_title"])
+        assert indices == list(reversed(self._query_ids(db, view)))
 
-        provider.set_groups("category", True, sorting="count", reverse=True)
-        provider.set_sort(["file_title"])
-        indices = provider.get_view_indices()
+        view.set_grouping("category", is_property=True, sorting="count", reverse=True)
+        view.set_sort(["file_title"])
+        indices = self._query_ids(db, view)
         assert len(indices) == 61
 
-        provider.set_sort(["-file_title"])
-        assert indices == list(reversed(provider.get_view_indices()))
+        view.set_sort(["-file_title"])
+        assert indices == list(reversed(self._query_ids(db, view)))
 
     def test_get_videos(self, disk_database, data_regression):
         indices = [196, 114]
@@ -345,6 +358,13 @@ class TestDatabaseProvider:
         assert {v.video_id for v in videos} == set(indices)
         videos.sort(key=lambda v: v.video_id)
         data_regression.check([_to_dict(video) for video in videos])
+
+
+def _serializable(value):
+    """Convert a value to a YAML-serializable type."""
+    if isinstance(value, (str, bool, int, float, type(None))):
+        return value
+    return str(value)
 
 
 def _to_dict(v):
@@ -367,36 +387,36 @@ def _to_dict(v):
 class TestDatabaseWriteOperations:
     """Tests for database write operations (using in-memory copies)."""
 
+    def _query_ids(self, db, view) -> list[int]:
+        return [v.video_id for v in db.query_videos(view, None, None).result]
+
     def test_edit_properties(self, memory_database):
-        provider = memory_database.provider
-        provider.set_search("palm beach", "and")
-        assert provider.get_view_indices() == [196, 114]
-        old_values = memory_database.videos_tag_get("category", [196])[196]
+        db = memory_database
+        view = ViewContext()
+        view.set_search("palm beach", "and")
+        assert self._query_ids(db, view) == [196, 114]
+        old_values = db.videos_tag_get("category", [196])[196]
         assert len(old_values) == 1
         new_values = list(old_values) + ["palm beach"]
 
-        provider.set_search("palm beach", "exact")
+        view.set_search("palm beach", "exact")
         # Right now only video 114 is associated to category "palm beach"
-        assert provider.get_view_indices() == [114]
+        assert self._query_ids(db, view) == [114]
 
-        memory_database.videos_tag_set("category", {196: new_values})
-        assert memory_database.videos_tag_get("category", [196])[196] == new_values
-        provider.refresh()
-        search = provider.get_search()
-        assert search.text == "palm beach"
-        assert search.cond == "exact"
+        db.videos_tag_set("category", {196: new_values})
+        assert db.videos_tag_get("category", [196])[196] == new_values
+        assert view.search.text == "palm beach"
+        assert view.search.cond == "exact"
         # With video 196 now associated with the category "palm beach",
         # we should get 2 videos in view
-        assert provider.get_view_indices() == [196, 114]
+        assert self._query_ids(db, view) == [196, 114]
 
-        memory_database.videos_tag_set("category", {196: old_values})
-        assert memory_database.videos_tag_get("category", [196])[196] == old_values
-        provider.refresh()
-        search = provider.get_search()
-        assert search.text == "palm beach"
-        assert search.cond == "exact"
+        db.videos_tag_set("category", {196: old_values})
+        assert db.videos_tag_get("category", [196])[196] == old_values
+        assert view.search.text == "palm beach"
+        assert view.search.cond == "exact"
         # With video 196 back to its old categories, we should get 1 video again.
-        assert provider.get_view_indices() == [114]
+        assert self._query_ids(db, view) == [114]
 
     def test_refresh(self, memory_database):
         memory_database.algos.refresh()

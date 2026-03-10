@@ -174,7 +174,7 @@ class GuiAPI(FeatureAPI):
     @process()
     def find_similar_videos(self) -> None:
         DbSimilarVideos.find_similar_videos(self.database)
-        self.database.provider.set_groups(
+        self.view.set_grouping(
             field="similarity_id",
             is_property=False,
             sorting="field",
@@ -185,7 +185,7 @@ class GuiAPI(FeatureAPI):
     @process()
     def find_similar_videos_reencoded(self) -> None:
         DbSimilarReencoded.find_similar_reencoded(self.database)
-        self.database.provider.set_groups(
+        self.view.set_grouping(
             field="similarity_id_reencoded",
             is_property=False,
             sorting="field",
@@ -215,7 +215,6 @@ class GuiAPI(FeatureAPI):
                 old_path = self.database.video_entry_set_filename(video_id, dst)
                 if old_path:
                     old_path.delete()
-                self.database.provider.refresh()
                 self.notifier.notify(Done())
             else:
                 self.notifier.notify(Cancelled())

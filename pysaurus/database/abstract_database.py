@@ -5,6 +5,7 @@ from typing import Any, Collection, Iterable, Literal, Sequence, overload
 
 from pysaurus.application import exceptions
 from pysaurus.core.absolute_path import AbsolutePath, PathType
+from pysaurus.core.classes import Selector
 from pysaurus.core.datestring import Date
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database_algorithms import DatabaseAlgorithms
@@ -15,7 +16,9 @@ from pysaurus.properties.properties import PropRawType, PropUnitType
 from pysaurus.video import VideoRuntimeInfo
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
+from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
+from pysaurus.video_provider.view_context import ViewContext
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +155,21 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def query_videos(
+        self,
+        view: ViewContext,
+        page_size: int,
+        page_number: int,
+        selector: Selector = None,
+    ) -> VideoSearchContext:
+        """Query videos with full filtering, grouping, and pagination.
+
+        This is the stateless replacement for VideoProvider.get_current_state().
+        All view parameters come from the ViewContext; no internal state is used.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def videos_get_terms(self) -> dict[int, list[str]]:
         raise NotImplementedError()
 
@@ -242,8 +260,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     def _notify_fields_modified(self, fields: Sequence[str], *, is_property=False):
-        """Notify provider that fields were modified and save database."""
-        self.provider.manage_attributes_modified(list(fields), is_property=is_property)
+        """Save database after fields were modified."""
         self.save()
 
     def to_save(self):

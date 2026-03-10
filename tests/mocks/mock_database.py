@@ -262,10 +262,14 @@ class MockProvider:
         )
 
         # Pagination
-        nb_pages = max(1, (total_count + page_size - 1) // page_size)
-        start = page_number * page_size
-        end = start + page_size
-        page_videos = videos[start:end]
+        if page_size and page_number is not None:
+            nb_pages = max(1, (total_count + page_size - 1) // page_size)
+            start = page_number * page_size
+            end = start + page_size
+            page_videos = videos[start:end]
+        else:
+            nb_pages = 1
+            page_videos = videos
 
         # Convert to MockVideoPattern
         result = [MockVideoPattern(v) for v in page_videos]
@@ -610,6 +614,27 @@ class MockDatabase:
         self.ops = MockOps(self)
         self.algos = self  # Self-reference for algos.refresh()
         self.notifier = None
+        self.in_save_context = False
+
+    def query_videos(self, view, page_size, page_number, selector=None):
+        """Query videos using the internal MockProvider."""
+        p = self.provider
+        p.set_sources(view.sources)
+        p.set_groups(
+            view.grouping.field if view.grouping else None,
+            view.grouping.is_property if view.grouping else None,
+            view.grouping.sorting if view.grouping else None,
+            view.grouping.reverse if view.grouping else None,
+            view.grouping.allow_singletons if view.grouping else None,
+        )
+        p.set_classifier_path(view.classifier)
+        p.set_group(view.group)
+        p.set_search(
+            view.search.text if view.search else None,
+            view.search.cond if view.search else "and",
+        )
+        p.set_sort(view.sorting)
+        return p.get_current_state(page_size, page_number, selector)
 
     def _get_video(self, video_id: int) -> dict | None:
         """Get video by ID."""

@@ -20,8 +20,10 @@ from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.sql.saurus_provider import SaurusProvider
 from pysaurus.database.saurus.sql.sql_utils import sql_placeholders
 from pysaurus.database.saurus.sql.sql_useful_constants import WRITABLE_FIELDS
+from pysaurus.database.saurus.sql.video_mega_group import video_mega_group
 from pysaurus.database.saurus.sql.video_mega_search import video_mega_search
 from pysaurus.database.saurus.sql.video_mega_utils import _get_video_moves
+from pysaurus.video_provider.field_stat import FieldStat
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +66,38 @@ class PysaurusCollection(AbstractDatabase):
                 set(self.get_folders())
                 | {AbsolutePath.ensure(folder) for folder in folders}
             )
+
+    def query_videos(self, view, page_size, page_number, selector=None):
+        grouped_by_moves = view.grouping and view.grouping.field == "move_id"
+        output = video_mega_group(
+            self.db,
+            sources=view.sources,
+            grouping=view.grouping,
+            classifier=view.classifier,
+            group=view.group,
+            search=view.search,
+            sorting=view.sorting,
+            selector=selector,
+            page_size=page_size,
+            page_number=page_number,
+            with_moves=grouped_by_moves,
+        )
+        # Compute classifier stats from result groups
+        output.classifier_stats = [
+            FieldStat(value=group.get_value(), count=group.count, is_property=False)
+            for group in output.result_groups
+        ]
+        # Compute source count
+        output.source_count = len(
+            {
+                video.video_id
+                for source in view.sources
+                for video in self.get_videos(
+                    include=(), where={flag: True for flag in source}
+                )
+            }
+        )
+        return output
 
     def _set_date(self, date: Date):
         self.db.modify("UPDATE collection SET date_updated = ?", [date.time])
@@ -409,7 +443,6 @@ class PysaurusCollection(AbstractDatabase):
 
     def video_entry_del(self, video_id: int) -> None:
         self.db.modify("DELETE FROM video WHERE video_id = ?", [video_id])
-        self.provider.delete(video_id)
         self._notify_fields_modified(["move_id"])
 
     def videos_set_field(self, field: str, changes: dict[int, Any]):

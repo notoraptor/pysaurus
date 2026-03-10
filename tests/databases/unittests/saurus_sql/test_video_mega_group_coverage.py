@@ -11,6 +11,7 @@ focusing on edge cases like:
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
+from pysaurus.video_provider.view_context import ViewContext
 
 
 @pytest.fixture(params=["saurus_sql"])
@@ -22,392 +23,274 @@ def saurus_database(request, example_saurus_database) -> AbstractDatabase:
 class TestVideoMegaGroupEdgeCases:
     """Tests for video_mega_group() edge cases and rare code paths."""
 
+    def _query_ids(self, db, view) -> list[int]:
+        return [v.video_id for v in db.query_videos(view, None, None).result]
+
+    def _query_stats(self, db, view):
+        return db.query_videos(view, 1, 0).classifier_stats
+
     def test_grouping_by_attribute_with_length_sorting(self, saurus_database):
-        """Test grouping by attribute (non-property) with LENGTH sorting.
+        """Test grouping by attribute (non-property) with LENGTH sorting."""
+        view = ViewContext()
+        view.set_grouping("video_codec", allow_singletons=True, sorting="length")
+        indices = self._query_ids(saurus_database, view)
+        stats = self._query_stats(saurus_database, view)
 
-        This covers line 537: order_field = field_factory.get_length(grouping.field) + " " + order_direction
-        """
-        provider = saurus_database.provider
-
-        # Group by video_codec (attribute, not property) with LENGTH sorting
-        provider.set_groups("video_codec", allow_singletons=True, sorting="length")
-        # Trigger provider update
-        indices = provider.get_view_indices()
-        group_def = provider.get_group_def()
-
-        # Should have groups and videos
-        assert len(group_def["groups"]) > 0
+        assert len(stats) > 0
         assert len(indices) > 0
 
-        # Verify groups are sorted by length of the codec name
-        groups = group_def["groups"]
-        for i in range(len(groups) - 1):
-            current_val = str(groups[i]["value"] or "")
-            next_val = str(groups[i + 1]["value"] or "")
-            current_len = len(current_val)
-            next_len = len(next_val)
-            # Length should be non-decreasing (or equal with secondary sort by value)
-            assert current_len <= next_len or (
-                current_len == next_len and current_val <= next_val
+        for i in range(len(stats) - 1):
+            current_val = str(stats[i].value or "")
+            next_val = str(stats[i + 1].value or "")
+            assert len(current_val) <= len(next_val) or (
+                len(current_val) == len(next_val) and current_val <= next_val
             )
 
     def test_grouping_by_attribute_with_length_sorting_reverse(self, saurus_database):
         """Test grouping by attribute with reverse LENGTH sorting."""
-        provider = saurus_database.provider
-
-        # Group by audio_codec with reverse LENGTH sorting
-        provider.set_groups(
+        view = ViewContext()
+        view.set_grouping(
             "audio_codec", allow_singletons=True, sorting="length", reverse=True
         )
-        # Trigger provider update
-        indices = provider.get_view_indices()
-        group_def = provider.get_group_def()
+        indices = self._query_ids(saurus_database, view)
+        stats = self._query_stats(saurus_database, view)
 
-        # Should have groups and videos
-        assert len(group_def["groups"]) > 0
+        assert len(stats) > 0
         assert len(indices) > 0
 
-        # Verify groups are sorted by length in descending order
-        groups = group_def["groups"]
-        for i in range(len(groups) - 1):
-            current_val = str(groups[i]["value"] or "")
-            next_val = str(groups[i + 1]["value"] or "")
-            current_len = len(current_val)
-            next_len = len(next_val)
-            # Length should be non-increasing
-            assert current_len >= next_len or (
-                current_len == next_len and current_val >= next_val
+        for i in range(len(stats) - 1):
+            current_val = str(stats[i].value or "")
+            next_val = str(stats[i + 1].value or "")
+            assert len(current_val) >= len(next_val) or (
+                len(current_val) == len(next_val) and current_val >= next_val
             )
 
     def test_classifier_with_null_property_value(self, saurus_database):
-        """Test classifier selecting videos without a property (NULL value).
+        """Test classifier selecting videos without a property (NULL value)."""
+        db = saurus_database
+        view = ViewContext()
+        view.set_grouping("category", is_property=True, allow_singletons=True)
+        stats = self._query_stats(db, view)
 
-        This covers lines 593, 601: handling field_value is None in classifier.
-
-        When selecting the NULL group in a classifier, it should return videos
-        that don't have the property at all.
-        """
-        provider = saurus_database.provider
-
-        # Group by category property with singletons
-        provider.set_groups("category", allow_singletons=True)
-        group_def = provider.get_group_def()
-
-        # Find the NULL group (videos without category property)
         null_group_index = None
-        for i, group in enumerate(group_def["groups"]):
-            if group["value"] is None:
+        null_count = None
+        for i, s in enumerate(stats):
+            if s.value is None:
                 null_group_index = i
+                null_count = s.count
                 break
 
-        # If there's a NULL group, test selecting it
         if null_group_index is not None:
-            # Set classifier to the NULL group
-            provider.set_classifier_path([None])
-            indices = provider.get_view_indices()
+            view.classifier = [None]
+            indices = self._query_ids(db, view)
+            assert len(indices) == null_count
 
-            # Should get the videos without the category property
-            assert len(indices) == group_def["groups"][null_group_index]["count"]
-
-            # Verify these videos indeed don't have the category property
-            videos = saurus_database.get_videos(
-                include=["properties"], where={"video_id": indices}
-            )
+            videos = db.get_videos(include=["properties"], where={"video_id": indices})
             for video in videos:
-                # Should not have category property or it should be empty
                 category = video.properties.get("category")
                 assert category is None or category == [] or category == ""
 
     def test_grouping_with_multiple_sources_and_classifier(self, saurus_database):
         """Test complex grouping with multiple sources and classifier path."""
-        provider = saurus_database.provider
-
-        # Set multiple sources (readable OR unreadable)
-        provider.set_sources([["readable"], ["unreadable"]])
-
-        # Group by category
-        provider.set_groups(
+        db = saurus_database
+        view = ViewContext()
+        view.set_sources([["readable"], ["unreadable"]])
+        view.set_grouping(
             "category",
             is_property=True,
             allow_singletons=True,
             sorting="count",
             reverse=True,
         )
+        stats = self._query_stats(db, view)
+        assert len(stats) > 0
 
-        # Trigger provider update
-        provider.get_view_indices()
-
-        # Get initial groups
-        group_def = provider.get_group_def()
-        initial_group_count = len(group_def["groups"])
-        assert initial_group_count > 0
-
-        # Set classifier to a specific category
-        # Find a category with multiple videos
         target_category = None
-        for group in group_def["groups"]:
-            if group["count"] > 1 and group["value"] is not None:
-                target_category = group["value"]
+        for s in stats:
+            if s.count > 1 and s.value is not None:
+                target_category = s.value
                 break
 
         if target_category:
-            provider.set_classifier_path([target_category])
-            indices = provider.get_view_indices()
-
-            # Should have videos
+            view.classifier = [target_category]
+            indices = self._query_ids(db, view)
             assert len(indices) > 0
 
-            # Can set a second level classifier
-            provider.set_classifier_path([target_category, None])
-            # This should work without error
-            group_def_level2 = provider.get_group_def()
-            # Groups should exist (might be empty or have sub-categories)
-            assert "groups" in group_def_level2
+            view.classifier = [target_category, None]
+            stats_level2 = self._query_stats(db, view)
+            assert isinstance(stats_level2, list)
 
     def test_grouping_with_empty_result_set(self, saurus_database):
         """Test grouping when source filter results in no videos."""
-        provider = saurus_database.provider
+        view = ViewContext()
+        view.set_sources([["readable", "without_thumbnails"]])
+        view.set_grouping("audio_codec")
 
-        # Set impossible source combination
-        provider.set_sources([["readable", "without_thumbnails", "unreadable"]])
-
-        # Try to group by any field
-        provider.set_groups("audio_codec")
-
-        # Should have no videos
-        assert len(provider.get_view_indices()) == 0
-
-        # Group definition should have no groups
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 0
+        assert len(self._query_ids(saurus_database, view)) == 0
+        stats = self._query_stats(saurus_database, view)
+        assert len(stats) == 0
 
     def test_grouping_switching_between_attribute_and_property(self, saurus_database):
         """Test switching between grouping by attribute and property."""
-        provider = saurus_database.provider
+        db = saurus_database
+        view = ViewContext()
 
-        # Group by attribute first
-        provider.set_groups("audio_codec", allow_singletons=True)
-        provider.get_view_indices()  # Trigger update
-        group_def_attr = provider.get_group_def()
-        attr_group_count = len(group_def_attr["groups"])
+        view.set_grouping("audio_codec", allow_singletons=True)
+        attr_group_count = len(self._query_stats(db, view))
 
-        # Switch to grouping by property
-        provider.set_groups("category", is_property=True, allow_singletons=True)
-        provider.get_view_indices()  # Trigger update
-        group_def_prop = provider.get_group_def()
-        prop_group_count = len(group_def_prop["groups"])
+        view.set_grouping("category", is_property=True, allow_singletons=True)
+        prop_group_count = len(self._query_stats(db, view))
 
-        # Both should have groups (counts will differ)
         assert attr_group_count > 0
         assert prop_group_count > 0
 
-        # Switch back to attribute
-        provider.set_groups("video_codec", allow_singletons=True)
-        provider.get_view_indices()  # Trigger update
-        group_def_attr2 = provider.get_group_def()
-        assert len(group_def_attr2["groups"]) > 0
+        view.set_grouping("video_codec", allow_singletons=True)
+        assert len(self._query_stats(db, view)) > 0
 
     def test_grouping_by_attribute_all_sorting_modes(self, saurus_database):
         """Test all sorting modes for attribute grouping."""
-        provider = saurus_database.provider
+        db = saurus_database
+        view = ViewContext()
 
-        # Test FIELD sorting (default)
-        provider.set_groups("audio_codec", allow_singletons=True, sorting="field")
-        provider.get_view_indices()  # Trigger update
-        group_def_field = provider.get_group_def()
-        assert len(group_def_field["groups"]) > 0
+        view.set_grouping("audio_codec", allow_singletons=True, sorting="field")
+        assert len(self._query_stats(db, view)) > 0
 
-        # Test COUNT sorting
-        provider.set_groups("audio_codec", allow_singletons=True, sorting="count")
-        provider.get_view_indices()  # Trigger update
-        group_def_count = provider.get_group_def()
-        assert len(group_def_count["groups"]) > 0
+        view.set_grouping("audio_codec", allow_singletons=True, sorting="count")
+        stats_count = self._query_stats(db, view)
+        assert len(stats_count) > 0
+        for i in range(len(stats_count) - 1):
+            assert stats_count[i].count <= stats_count[i + 1].count
 
-        # Verify COUNT sorting works correctly
-        groups_count = group_def_count["groups"]
-        for i in range(len(groups_count) - 1):
-            # Count should be non-decreasing
-            assert groups_count[i]["count"] <= groups_count[i + 1]["count"]
-
-        # Test LENGTH sorting
-        provider.set_groups("audio_codec", allow_singletons=True, sorting="length")
-        provider.get_view_indices()  # Trigger update
-        group_def_length = provider.get_group_def()
-        assert len(group_def_length["groups"]) > 0
+        view.set_grouping("audio_codec", allow_singletons=True, sorting="length")
+        assert len(self._query_stats(db, view)) > 0
 
     def test_classifier_with_nested_path(self, saurus_database):
         """Test classifier with multiple levels of nesting."""
-        provider = saurus_database.provider
-
-        # Group by category with singletons
-        provider.set_groups(
-            "category", allow_singletons=True, sorting="count", reverse=True
+        db = saurus_database
+        view = ViewContext()
+        view.set_grouping(
+            "category",
+            is_property=True,
+            allow_singletons=True,
+            sorting="count",
+            reverse=True,
         )
+        stats = self._query_stats(db, view)
 
-        # Get groups to find a suitable path
-        group_def = provider.get_group_def()
-
-        # Find the first non-NULL category
         first_category = None
-        for group in group_def["groups"]:
-            if group["value"] is not None and group["count"] > 0:
-                first_category = group["value"]
+        for s in stats:
+            if s.value is not None and s.count > 0:
+                first_category = s.value
                 break
 
         if first_category:
-            # Set first level classifier
-            provider.set_classifier_path([first_category])
-            indices_level1 = provider.get_view_indices()
+            view.classifier = [first_category]
+            indices_level1 = self._query_ids(db, view)
             assert len(indices_level1) > 0
 
-            # Get sub-groups
-            group_def_level1 = provider.get_group_def()
-
-            # Try to go one level deeper if possible
+            stats_level1 = self._query_stats(db, view)
             second_category = None
-            for group in group_def_level1["groups"]:
-                if group["value"] != first_category and group["value"] is not None:
-                    second_category = group["value"]
+            for s in stats_level1:
+                if s.value != first_category and s.value is not None:
+                    second_category = s.value
                     break
 
             if second_category:
-                # Set second level classifier
-                provider.set_classifier_path([first_category, second_category])
-                indices_level2 = provider.get_view_indices()
-
-                # Should have fewer or equal videos than level 1
+                view.classifier = [first_category, second_category]
+                indices_level2 = self._query_ids(db, view)
                 assert len(indices_level2) <= len(indices_level1)
 
     def test_search_by_video_id(self, saurus_database):
-        """Test search by video ID directly (covers lines 61-63)."""
-        provider = saurus_database.provider
-
-        # Search by video ID using the "id" condition
-        provider.set_search("196", "id")
-        indices = provider.get_view_indices()
-
-        # Should get exactly 1 video with ID 196
+        """Test search by video ID directly."""
+        view = ViewContext()
+        view.set_search("196", "id")
+        indices = self._query_ids(saurus_database, view)
         assert len(indices) == 1
         assert indices[0] == 196
 
     def test_grouping_by_property_with_length_sorting(self, saurus_database):
-        """Test grouping by property with LENGTH sorting (covers line 89)."""
-        provider = saurus_database.provider
-
-        # Group by category (property) with LENGTH sorting (without singletons to get groups)
-        provider.set_groups(
+        """Test grouping by property with LENGTH sorting."""
+        view = ViewContext()
+        view.set_grouping(
             "category", is_property=True, allow_singletons=False, sorting="length"
         )
-        group_def = provider.get_group_def()
+        stats = self._query_stats(saurus_database, view)
 
-        # Should have groups sorted by length of category value
-        if len(group_def["groups"]) > 0:
-            # Verify groups are sorted by length
-            groups = group_def["groups"]
-            for i in range(len(groups) - 1):
-                current_val = str(groups[i]["value"] or "")
-                next_val = str(groups[i + 1]["value"] or "")
-                current_len = len(current_val)
-                next_len = len(next_val)
-                # Length should be non-decreasing (or equal with secondary sort by value)
-                assert current_len <= next_len or (
-                    current_len == next_len and current_val <= next_val
+        if len(stats) > 0:
+            for i in range(len(stats) - 1):
+                current_val = str(stats[i].value or "")
+                next_val = str(stats[i + 1].value or "")
+                assert len(current_val) <= len(next_val) or (
+                    len(current_val) == len(next_val) and current_val <= next_val
                 )
 
     def test_grouping_by_similarity_id(self, saurus_database):
-        """Test grouping by similarity_id with special filtering (covers line 185)."""
-        provider = saurus_database.provider
+        """Test grouping by similarity_id with special filtering."""
+        view = ViewContext()
+        view.set_grouping("similarity_id", allow_singletons=True)
+        stats = self._query_stats(saurus_database, view)
 
-        # Group by similarity_id
-        provider.set_groups("similarity_id", allow_singletons=True)
-        group_def = provider.get_group_def()
-
-        # Should filter out NULL and -1 values
-        # All groups should have valid similarity IDs
-        for group in group_def["groups"]:
-            similarity_id = group["value"]
-            assert similarity_id is not None
-            assert similarity_id != -1
+        for s in stats:
+            assert s.value is not None
+            assert s.value != -1
 
     def test_classifier_with_non_null_property_value(self, saurus_database):
-        """Test classifier with non-NULL property value (covers line 217)."""
-        provider = saurus_database.provider
-
-        # Group by category with classifier
-        provider.set_groups(
+        """Test classifier with non-NULL property value."""
+        db = saurus_database
+        view = ViewContext()
+        view.set_grouping(
             "category",
             is_property=True,
             allow_singletons=True,
             sorting="count",
             reverse=True,
         )
-
-        # Find two non-NULL categories to use as classifier
-        group_def = provider.get_group_def()
-        categories = [
-            g["value"]
-            for g in group_def["groups"]
-            if g["value"] is not None and g["count"] > 0
-        ]
+        stats = self._query_stats(db, view)
+        categories = [s.value for s in stats if s.value is not None and s.count > 0]
 
         if len(categories) >= 2:
-            # Set classifier with first category
-            provider.set_classifier_path([categories[0]])
-            indices_level1 = provider.get_view_indices()
+            view.classifier = [categories[0]]
+            indices_level1 = self._query_ids(db, view)
             assert len(indices_level1) > 0
 
-            # Get sub-groups and find second non-NULL category (different from first)
-            group_def_level1 = provider.get_group_def()
+            stats_level1 = self._query_stats(db, view)
             second_category = None
-            for group in group_def_level1["groups"]:
-                if group["value"] is not None and group["value"] != categories[0]:
-                    second_category = group["value"]
+            for s in stats_level1:
+                if s.value is not None and s.value != categories[0]:
+                    second_category = s.value
                     break
 
             if second_category:
-                # Set classifier with both categories (covers line 217)
-                provider.set_classifier_path([categories[0], second_category])
-                indices_level2 = provider.get_view_indices()
+                view.classifier = [categories[0], second_category]
+                indices_level2 = self._query_ids(db, view)
                 assert len(indices_level2) > 0
 
     def test_classifier_with_null_property_value_in_path(self, saurus_database):
-        """Test classifier when NULL is part of the classification path (covers lines 232-240)."""
-        provider = saurus_database.provider
+        """Test classifier when NULL is part of the classification path."""
+        db = saurus_database
+        view = ViewContext()
+        view.set_grouping("category", is_property=True, allow_singletons=True)
+        stats = self._query_stats(db, view)
 
-        # Group by category
-        provider.set_groups("category", is_property=True, allow_singletons=True)
-        group_def = provider.get_group_def()
-
-        # Find a non-NULL category
         first_category = None
-        for group in group_def["groups"]:
-            if group["value"] is not None and group["count"] > 0:
-                first_category = group["value"]
+        for s in stats:
+            if s.value is not None and s.count > 0:
+                first_category = s.value
                 break
 
         if first_category:
-            # Set classifier path with the category
-            provider.set_classifier_path([first_category])
-            indices = provider.get_view_indices()
+            view.classifier = [first_category]
+            indices = self._query_ids(db, view)
             assert len(indices) > 0
 
-            # Now add NULL as second level (videos with first_category but no other categories)
-            provider.set_classifier_path([first_category, None])
-            indices_with_null = provider.get_view_indices()
-            # This covers the elif field_value is None branch (lines 232-240)
-            # Should get videos that have first_category but no additional categories
+            view.classifier = [first_category, None]
+            indices_with_null = self._query_ids(db, view)
             assert len(indices_with_null) >= 0
 
     def test_search_with_text_query(self, saurus_database):
-        """Test search with text query (not by ID) (covers lines 263-264)."""
-        provider = saurus_database.provider
-
-        # Set up grouping first
-        provider.set_groups("category", is_property=True, allow_singletons=True)
-
-        # Now add a text search
-        provider.set_search("unknown", "and")
-        indices = provider.get_view_indices()
-
-        # Should filter videos based on text search
+        """Test search with text query (not by ID)."""
+        view = ViewContext()
+        view.set_grouping("category", is_property=True, allow_singletons=True)
+        view.set_search("unknown", "and")
+        indices = self._query_ids(saurus_database, view)
         assert len(indices) > 0

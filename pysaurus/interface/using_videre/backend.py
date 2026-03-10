@@ -65,7 +65,7 @@ class PysaurusBackend:
         self.__api.database.set_folders(folders)
 
     def open_random_video(self) -> str:
-        return self.__api.database.provider.choose_random_video()
+        return self.__api.open_random_video()
 
 
 def get_backend(widget: Widget) -> PysaurusBackend:

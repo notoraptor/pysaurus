@@ -16,6 +16,7 @@ from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
 from pysaurus.database.jsdb.json_database import JsonDatabase
 from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
+from pysaurus.video_provider.view_context import ViewContext
 
 CONFIG_FILE = ".pysaurus.yaml"
 
@@ -133,16 +134,11 @@ def _repl(api):
 class BenchmarkAPI:
     """Pysaurus CLI benchmark commands."""
 
-    __slots__ = ("_db", "_provider_ready")
+    __slots__ = ("_db", "_view")
 
     def __init__(self, db: AbstractDatabase):
         self._db = db
-        self._provider_ready = False
-
-    def _ensure_provider(self):
-        if not self._provider_ready:
-            self._db.provider.get_view_indices()
-            self._provider_ready = True
+        self._view = ViewContext()
 
     def backend(self):
         """Show database backend class name."""
@@ -168,7 +164,6 @@ class BenchmarkAPI:
 
     def delete_entry(self, video_id: int):
         """Delete a video entry from database (keeps file on disk)."""
-        self._ensure_provider()
         with PerfCounter() as t:
             self._db.video_entry_del(video_id)
         print(f"({t.microseconds / 1000:.3f} ms)")
@@ -236,8 +231,9 @@ class BenchmarkAPI:
         """Search videos by text."""
         text = str(text)
         with PerfCounter() as t:
-            self._db.provider.set_search(text)
-            indices = self._db.provider.get_view_indices()
+            self._view.set_search(text)
+            result = self._db.query_videos(self._view, None, None)
+            indices = [v.video_id for v in result.result]
         print(f"({t.microseconds / 1000:.3f} ms)")
         output = [f"{len(indices)} result(s)"] + [
             str(video_id) for video_id in indices[:10]
@@ -265,25 +261,23 @@ class BenchmarkAPI:
             allow_singletons: Include groups with only 1 video.
             top: Number of top groups to display.
         """
-        provider = self._db.provider
         with PerfCounter() as t:
-            provider.set_groups(
+            self._view.set_grouping(
                 field,
                 is_property=is_property,
                 sorting=sorting,
                 reverse=reverse,
                 allow_singletons=allow_singletons,
             )
-            provider.get_view_indices()
-            group_def = provider.get_group_def()
+            result = self._db.query_videos(self._view, 1, 0)
         elapsed = t.microseconds / 1000
         print(f"({elapsed:.3f} ms)")
-        if not group_def:
+        groups = result.result_groups
+        if not groups:
             return "No grouping."
-        groups = group_def["groups"]
         lines = [f"{len(groups)} group(s)"]
         for g in groups[:top]:
-            lines.append(f"  {g['value']}: {g['count']}")
+            lines.append(f"  {g.get_printable_value()}: {g.count}")
         if len(groups) > top:
             lines.append(f"  ... ({len(groups) - top} more)")
         return "\n".join(lines)
@@ -293,15 +287,16 @@ class BenchmarkAPI:
         fields = str(fields)
         sorting = fields.split(",") if fields else []
         with PerfCounter() as t:
-            self._db.provider.set_sort(sorting)
-            indices = self._db.provider.get_view_indices()
+            self._view.set_sort(sorting)
+            result = self._db.query_videos(self._view, None, None)
+            indices = [v.video_id for v in result.result]
         print(f"({t.microseconds / 1000:.3f} ms)")
         return f"{len(indices)} result(s)"
 
     def state(self, page_size: int = 10, page_number: int = 0):
-        """Get current provider state."""
+        """Get current view state."""
         with PerfCounter() as t:
-            result = self._db.provider.get_current_state(page_size, page_number)
+            result = self._db.query_videos(self._view, page_size, page_number)
         print(f"({t.microseconds / 1000:.3f} ms)")
         return result
 

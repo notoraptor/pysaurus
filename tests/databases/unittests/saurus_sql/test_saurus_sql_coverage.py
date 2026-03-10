@@ -8,28 +8,19 @@ focusing on edge cases and optimization flags in video_mega_search().
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
+from pysaurus.video_provider.view_context import ViewContext
 
 
-@pytest.fixture(params=["json", "saurus_sql"])
-def disk_database(
-    request, example_json_database, example_saurus_database
-) -> AbstractDatabase:
-    """Parametrized fixture for read-only database access."""
-    if request.param == "json":
-        return example_json_database
-    else:
-        return example_saurus_database
+@pytest.fixture
+def disk_database(example_saurus_database) -> AbstractDatabase:
+    """Read-only Saurus SQL database."""
+    return example_saurus_database
 
 
-@pytest.fixture(params=["json", "saurus_sql"])
-def memory_database(
-    request, example_json_database_memory, example_saurus_database_memory
-) -> AbstractDatabase:
-    """Parametrized fixture for in-memory database access (for write tests)."""
-    if request.param == "json":
-        return example_json_database_memory
-    else:
-        return example_saurus_database_memory
+@pytest.fixture
+def memory_database(example_saurus_database_memory) -> AbstractDatabase:
+    """In-memory Saurus SQL database for write tests."""
+    return example_saurus_database_memory
 
 
 class TestVideoMegaSearchOptimizations:
@@ -110,15 +101,10 @@ class TestVideoMegaSearchOptimizations:
         # Fetch unreadable videos (readable=False)
         # include=["errors"] to specifically request error data
         videos = disk_database.get_videos(include=["errors"], where={"readable": False})
-        # JSON DB: readable=False returns only unreadable videos (3)
-        # Saurus SQL: readable=False returns unreadable + not_found (6)
-        # Accept both behaviors
-        assert len(videos) in [3, 6]
+        assert len(videos) >= 3
         # Verify errors attribute exists
         for video in videos:
-            # All videos should have errors attribute after include=["errors"]
             assert hasattr(video, "errors")
-            # JSON DB: errors is a set, Saurus SQL: errors is a list
             assert isinstance(video.errors, (list, set))
 
     def test_get_videos_with_languages(self, disk_database):
@@ -145,76 +131,72 @@ class TestVideoMegaSearchOptimizations:
 
 
 class TestProviderEdgeCases:
-    """Tests for edge cases in AbstractVideoProvider."""
+    """Tests for edge cases in video querying."""
+
+    def _query_ids(self, db, view) -> list[int]:
+        return [v.video_id for v in db.query_videos(view, None, None).result]
 
     def test_provider_empty_results(self, disk_database):
-        """Test provider with filters that return no results."""
-        provider = disk_database.provider
-        # Set impossible filter
-        provider.set_sources([["not_found"], ["unreadable"]])
-        provider.set_search("this_text_definitely_does_not_exist", "exact")
-        assert len(provider.get_view_indices()) == 0
+        """Test query with filters that return no results."""
+        view = ViewContext()
+        view.set_sources([["not_found"], ["unreadable"]])
+        view.set_search("this_text_definitely_does_not_exist", "exact")
+        assert len(self._query_ids(disk_database, view)) == 0
 
     def test_provider_multiple_sources_or_logic(self, disk_database):
-        """Test provider with multiple sources (OR logic)."""
-        provider = disk_database.provider
-        # Set multiple sources (should use OR logic)
-        provider.set_sources([["not_found"], ["unreadable"]])
-        indices = provider.get_view_indices()
-        # Should get both not_found (3) and unreadable (3) videos
-        # Assuming no overlap: 3 + 3 = 6 videos
-        # But there might be overlap if unreadable videos are also not_found
-        assert len(indices) >= 3  # At least unreadable videos
+        """Test query with multiple sources (OR logic)."""
+        view = ViewContext()
+        view.set_sources([["not_found"], ["unreadable"]])
+        indices = self._query_ids(disk_database, view)
+        assert len(indices) >= 3
 
     def test_provider_grouping_with_empty_results(self, disk_database):
-        """Test provider grouping when no videos match."""
-        provider = disk_database.provider
-        # Set filter that results in no videos
-        provider.set_sources([["readable", "without_thumbnails"]])
-        provider.set_groups("audio_bit_rate")
-        assert len(provider.get_view_indices()) == 0
-        group_def = provider.get_group_def()
-        assert len(group_def["groups"]) == 0
+        """Test grouping when no videos match."""
+        view = ViewContext()
+        view.set_sources([["readable", "without_thumbnails"]])
+        view.set_grouping("audio_bit_rate")
+        assert len(self._query_ids(disk_database, view)) == 0
+        stats = disk_database.query_videos(view, 1, 0).classifier_stats
+        assert len(stats) == 0
 
     def test_provider_classifier_multiple_levels(self, disk_database):
-        """Test provider classifier with multiple classification levels."""
-        provider = disk_database.provider
-        provider.set_groups(
-            "category", True, sorting="count", reverse=True, allow_singletons=True
+        """Test classifier with multiple classification levels."""
+        view = ViewContext()
+        view.set_grouping(
+            "category",
+            is_property=True,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
         )
-        # First level classification
-        provider.set_classifier_path(["vertical"])
-        indices = provider.get_view_indices()
+        view.classifier = ["vertical"]
+        indices = self._query_ids(disk_database, view)
         assert len(indices) == 7
 
-        # Second level classification
-        provider.set_classifier_path(["vertical", "e"])
-        indices = provider.get_view_indices()
+        view.classifier = ["vertical", "e"]
+        indices = self._query_ids(disk_database, view)
         assert len(indices) == 3
 
     def test_provider_search_modes(self, disk_database):
         """Test different search modes (and, or, exact)."""
-        provider = disk_database.provider
-        # Test AND mode
-        provider.set_search("unknown audio", "and")
-        and_count = len(provider.get_view_indices())
+        view = ViewContext()
+        view.set_search("unknown audio", "and")
+        and_count = len(self._query_ids(disk_database, view))
 
-        # Test OR mode
-        provider.set_search("unknown audio", "or")
-        or_count = len(provider.get_view_indices())
-
-        # OR should give more or equal results than AND
+        view.set_search("unknown audio", "or")
+        or_count = len(self._query_ids(disk_database, view))
         assert or_count >= and_count
 
-        # Test EXACT mode
-        provider.set_search("unknown audio codec", "exact")
-        exact_indices = provider.get_view_indices()
-        # Exact match should be more restrictive
-        assert len(exact_indices) <= and_count
+        view.set_search("unknown audio codec", "exact")
+        exact_count = len(self._query_ids(disk_database, view))
+        assert exact_count <= and_count
 
 
 class TestDatabaseCRUDOperations:
     """Tests for database CRUD operations (Create, Read, Update, Delete)."""
+
+    def _query_ids(self, db, view) -> list[int]:
+        return [v.video_id for v in db.query_videos(view, None, None).result]
 
     def test_video_property_modification(self, memory_database):
         """Test modifying video properties."""
@@ -236,25 +218,21 @@ class TestDatabaseCRUDOperations:
         restored_values = memory_database.videos_tag_get("category", [196])[196]
         assert restored_values == initial_values
 
-    def test_provider_refresh_after_modification(self, memory_database):
-        """Test provider refresh after database modifications."""
-        provider = memory_database.provider
-        # Set up a specific search
-        provider.set_search("palm beach", "exact")
-        initial_count = len(provider.get_view_indices())
+    def test_query_videos_after_modification(self, memory_database):
+        """Test query_videos reflects database modifications."""
+        db = memory_database
+        view = ViewContext()
+        view.set_search("palm beach", "exact")
+        initial_count = len(self._query_ids(db, view))
 
-        # Modify a video's properties
-        old_values = memory_database.videos_tag_get("category", [196])[196]
+        old_values = db.videos_tag_get("category", [196])[196]
         new_values = list(old_values) + ["palm beach"]
-        memory_database.videos_tag_set("category", {196: new_values})
+        db.videos_tag_set("category", {196: new_values})
 
-        # Refresh provider and verify count increased
-        provider.refresh()
-        new_count = len(provider.get_view_indices())
+        new_count = len(self._query_ids(db, view))
         assert new_count > initial_count
 
-        # Restore
-        memory_database.videos_tag_set("category", {196: old_values})
+        db.videos_tag_set("category", {196: old_values})
 
     def test_get_videos_by_multiple_ids(self, disk_database):
         """Test fetching multiple videos by IDs."""

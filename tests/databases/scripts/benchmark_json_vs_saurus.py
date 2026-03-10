@@ -165,80 +165,70 @@ def run_read_benchmarks(json_db, saurus_db, all_video_ids, sample_100, sample_10
     )
 
     # ==========================================================================
-    # Provider operations
+    # query_videos operations
     # ==========================================================================
-    print("  Provider operations...")
+    print("  query_videos operations...")
 
-    # Provider get_view_indices (default)
-    results.append(
-        run_benchmark(
-            "provider.get_view_indices() - default",
-            json_db,
-            saurus_db,
-            lambda db: db.provider.get_view_indices(),
-            lambda db: db.provider.get_view_indices(),
-        )
-    )
+    from pysaurus.video_provider.view_context import ViewContext
 
-    # Provider with search
-    def json_search(db):
-        db.provider.set_search("test", "and")
-        return db.provider.get_view_indices()
-
-    def saurus_search(db):
-        db.provider.set_search("test", "and")
-        return db.provider.get_view_indices()
+    # query_videos (default view)
+    def query_default(db):
+        view = ViewContext()
+        return db.query_videos(view, None, None)
 
     results.append(
         run_benchmark(
-            "provider.set_search('test', 'and')",
-            json_db,
-            saurus_db,
-            json_search,
-            saurus_search,
+            "query_videos() - default", json_db, saurus_db, query_default, query_default
         )
     )
 
-    # Provider with grouping
-    def json_group(db):
-        db.provider.set_groups("extension")
-        return db.provider.get_view_indices()
-
-    def saurus_group(db):
-        db.provider.set_groups("extension")
-        return db.provider.get_view_indices()
+    # query_videos with search
+    def query_search(db):
+        view = ViewContext()
+        view.set_search("test", "and")
+        return db.query_videos(view, None, None)
 
     results.append(
         run_benchmark(
-            "provider.set_groups('extension')",
+            "query_videos(search='test', 'and')",
             json_db,
             saurus_db,
-            json_group,
-            saurus_group,
+            query_search,
+            query_search,
         )
     )
 
-    # Provider with sorting
-    def json_sort(db):
-        db.provider.set_sort(["-file_size"])
-        return db.provider.get_view_indices()
-
-    def saurus_sort(db):
-        db.provider.set_sort(["-file_size"])
-        return db.provider.get_view_indices()
+    # query_videos with grouping
+    def query_group(db):
+        view = ViewContext()
+        view.set_grouping("extension")
+        return db.query_videos(view, None, None)
 
     results.append(
         run_benchmark(
-            "provider.set_sort(['-file_size'])",
+            "query_videos(grouping='extension')",
             json_db,
             saurus_db,
-            json_sort,
-            saurus_sort,
+            query_group,
+            query_group,
         )
     )
 
-    # Reset JSON provider only (Saurus creates fresh instances each time)
-    json_db.provider.reset()
+    # query_videos with sorting
+    def query_sort(db):
+        view = ViewContext()
+        view.set_sort(["-file_size"])
+        return db.query_videos(view, None, None)
+
+    results.append(
+        run_benchmark(
+            "query_videos(sort=['-file_size'])",
+            json_db,
+            saurus_db,
+            query_sort,
+            query_sort,
+        )
+    )
 
     # ==========================================================================
     # Property operations

@@ -207,8 +207,5 @@ class DatabaseOperations:
         return values
 
     def _notify_fields_modified(self, fields, *, is_property=False):
-        """Notify that fields were modified."""
-        self.db.provider.manage_attributes_modified(
-            list(fields), is_property=is_property
-        )
+        """Save database after fields were modified."""
         self.db.save()

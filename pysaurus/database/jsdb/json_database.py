@@ -577,12 +577,34 @@ class JsonDatabase(AbstractDatabase):
 
         return video.filename
 
+    def query_videos(self, view, page_size, page_number, selector=None):
+        """Query videos using the internal provider with forced refresh."""
+        p = self.provider
+        # Force full recompute to ensure fresh data
+        p._force_update(p.LAYER_SOURCE)
+        # Set all parameters (order matters: set_groups resets downstream)
+        p.set_sources(view.sources)
+        p.set_groups(
+            view.grouping.field if view.grouping else None,
+            view.grouping.is_property if view.grouping else None,
+            view.grouping.sorting if view.grouping else None,
+            view.grouping.reverse if view.grouping else None,
+            view.grouping.allow_singletons if view.grouping else None,
+        )
+        p.set_classifier_path(view.classifier)
+        p.set_group(view.group)
+        p.set_search(
+            view.search.text if view.search else None,
+            view.search.cond if view.search else "and",
+        )
+        p.set_sort(view.sorting)
+        return p.get_current_state(page_size, page_number, selector)
+
     def video_entry_del(self, video_id: int) -> None:
         video = self._id_to_video.pop(video_id)
         self._videos.pop(video.filename, None)
         self._jsondb_register_removed(video)
         self._thumb_mgr.delete(video.filename)
-        self.provider.delete(video_id)
         self._notify_fields_modified(["move_id"])
 
     def videos_get_moves(self) -> Iterable[tuple[int, list[dict]]]:

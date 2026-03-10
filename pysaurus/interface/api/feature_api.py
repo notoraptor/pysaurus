@@ -1,8 +1,11 @@
 import inspect
+import random
 from typing import Any, Optional
 
+from pysaurus.application import exceptions
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
+from pysaurus.core import functions
 from pysaurus.core.classes import Selector, StringPrinter
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
 from pysaurus.core.file_utils import create_xspf_playlist
@@ -15,22 +18,27 @@ from pysaurus.interface.api.api_utils.proxy_feature import (
     FromApp,
     FromDb,
     FromOps,
-    FromView,
     ProxyFeature,
 )
 from pysaurus.video.database_context import DatabaseContext
-from pysaurus.video_provider.abstract_video_provider import (
-    AbstractVideoProvider as View,
-)
+from pysaurus.video_provider.view_context import ViewContext
 
 
 class FeatureAPI:
-    __slots__ = ("notifier", "application", "database", "_proxies", "_constants")
+    __slots__ = (
+        "notifier",
+        "application",
+        "database",
+        "view",
+        "_proxies",
+        "_constants",
+    )
 
     def __init__(self, notifier):
         self.notifier = notifier
         self.application = Application(self.notifier)
         self.database: Db | None = None
+        self.view = ViewContext()
         self._constants = {
             "PYTHON_DEFAULT_SOURCES": PYTHON_DEFAULT_SOURCES,
             "PYTHON_APP_NAME": self.application.app_name,
@@ -40,12 +48,7 @@ class FeatureAPI:
         }
         # We must return value for proxy ending with "!"
         self._proxies: dict[str, str | ProxyFeature] = {
-            "apply_on_view": FromView(self, View.apply_on_view, True),
             "apply_on_prop_value": FromOps(self, Ops.apply_on_prop_value),
-            "classifier_back": FromView(self, View.classifier_back),
-            "classifier_focus_prop_val": FromView(self, View.classifier_focus_prop_val),
-            "classifier_reverse": FromView(self, View.classifier_reverse, True),
-            "classifier_select_group": FromView(self, View.classifier_select_group),
             "confirm_unique_moves": FromAlgo(self, Algo.confirm_unique_moves, True),
             "convert_prop_multiplicity": FromDb(self, Db.prop_type_set_multiple),
             "create_prop_type": FromDb(self, Db.prop_type_add),
@@ -59,19 +62,13 @@ class FeatureAPI:
             "get_database_names": FromApp(self, Application.get_database_names, True),
             "get_language_names": FromApp(self, Application.get_language_names, True),
             "move_property_values": FromAlgo(self, Algo.move_property_values),
-            "open_random_video": FromView(self, View.choose_random_video, True),
             "open_video": FromOps(self, Ops.open_video),
             "mark_as_read": FromOps(self, Ops.mark_as_read, True),
             "remove_prop_type": FromDb(self, Db.prop_type_del),
             "rename_database": FromDb(self, Db.rename),
             "rename_prop_type": FromDb(self, Db.prop_type_set_name),
             "rename_video": FromOps(self, Ops.change_video_file_title),
-            "set_group": FromView(self, View.set_group),
-            "set_groups": FromView(self, View.set_groups),
-            "set_search": FromView(self, View.set_search),
             "set_similarities": FromOps(self, Ops.set_similarities_from_list),
-            "set_sorting": FromView(self, View.set_sort),
-            "set_sources": FromView(self, View.set_sources),
             "set_video_folders": FromOps(self, Ops.set_folders),
             "set_video_moved": FromOps(self, Ops.move_video_entry),
             "confirm_move": FromOps(self, Ops.move_video_entry),
@@ -108,6 +105,82 @@ class FeatureAPI:
     def set_language(self, name) -> dict[str, str]:
         return language_to_dict(self.application.open_language_from_name(name))
 
+    # View methods (previously FromView proxies)
+
+    def set_sources(self, *args) -> None:
+        self.view.set_sources(*args)
+
+    def set_groups(self, *args, **kwargs) -> None:
+        self.view.set_grouping(*args, **kwargs)
+
+    def set_group(self, group_id) -> None:
+        self.view.set_group(group_id)
+
+    def set_search(self, *args) -> None:
+        self.view.set_search(*args)
+
+    def set_sorting(self, sorting) -> None:
+        self.view.set_sort(sorting)
+
+    def classifier_select_group(self, group_id) -> None:
+        result = self.database.query_videos(self.view, 1, 0)
+        value = result.result_groups[group_id].get_value()
+        self.view.classifier_select(value)
+
+    def classifier_back(self) -> None:
+        self.view.classifier_back()
+
+    def classifier_reverse(self) -> list:
+        return self.view.classifier_reverse()
+
+    def classifier_focus_prop_val(self, prop_name, field_value) -> None:
+        self.view.set_grouping(
+            field=prop_name,
+            is_property=True,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
+        )
+        result = self.database.query_videos(self.view, 1, 0)
+        group_id = result.result_groups.lookup_index(field_value)
+        value = result.result_groups[group_id].get_value()
+        self.view.classifier_select(value)
+
+    def apply_on_view(self, selector, db_fn_name, *db_fn_args):
+        result = self.database.query_videos(self.view, None, None)
+        view_indices = [v.video_id for v in result.result]
+        ops = Ops(self.database)
+        callable_methods = {
+            "count_property_values": ops.count_property_for_videos,
+            "edit_property_for_videos": ops.update_property_for_videos,
+        }
+        return callable_methods[db_fn_name](
+            functions.apply_selector_to_data(selector, view_indices), *db_fn_args
+        )
+
+    def open_random_video(self, open_video=True) -> str:
+        video_indices = []
+        for path in self.view.sources:
+            where = {flag: True for flag in path}
+            if "not_found" in where or "unreadable" in where:
+                continue
+            where["found"] = True
+            where["readable"] = True
+            where["watched"] = False
+            video_indices.extend(
+                video.video_id
+                for video in self.database.get_videos(include=["video_id"], where=where)
+            )
+        if not video_indices:
+            raise exceptions.NoVideos()
+        video_id = video_indices[random.randrange(len(video_indices))]
+        self.view.set_grouping(None)
+        self.view.set_search(str(video_id), "id")
+        ops = Ops(self.database)
+        if open_video:
+            ops.open_video(video_id)
+        return ops.get_video_filename(video_id).path
+
     # cannot make proxy ?
     def backend(self, page_size, page_number, selector=None) -> dict[str, Any]:
         """Return backend state."""
@@ -119,8 +192,8 @@ class FeatureAPI:
     ) -> DatabaseContext:
         if selector is not None and isinstance(selector, dict):
             selector = Selector.parse_dict(selector)
-        context = self.database.provider.get_current_state(
-            page_size, page_number, selector
+        context = self.database.query_videos(
+            self.view, page_size, page_number, selector
         )
         return DatabaseContext(
             name=self.database.get_name(),
@@ -131,21 +204,20 @@ class FeatureAPI:
 
     # cannot make proxy ?
     def classifier_concatenate_path(self, to_property) -> None:
-        path = self.database.provider.get_classifier_path()
-        from_property = self.database.provider.get_grouping().field
-        self.database.provider.set_classifier_path([])
-        self.database.provider.set_group(0)
+        path = list(self.view.classifier)
+        from_property = self.view.grouping.field
+        self.view.classifier = []
+        self.view.group = 0
         alg = Algo(self.database)
         alg.move_property_values(path, from_property, to_property, concatenate=True)
 
     def playlist(self) -> str:
         db = self.database
-        pv = db.provider
         ops = Ops(db)
+        result = db.query_videos(self.view, None, None)
+        view_indices = [v.video_id for v in result.result]
         return str(
-            create_xspf_playlist(
-                map(ops.get_video_filename, pv.get_view_indices())
-            ).open()
+            create_xspf_playlist(map(ops.get_video_filename, view_indices)).open()
         )
 
     def set_similarities_reencoded(

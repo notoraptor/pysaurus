@@ -158,14 +158,14 @@ class AppContext(QObject):
     # =========================================================================
 
     @property
+    def _view(self):
+        """ViewContext — shared with the underlying API (single source of truth)."""
+        return self._api.view
+
+    @property
     def _database(self):
         """AbstractDatabase or None."""
         return self._api.database
-
-    @property
-    def _provider(self):
-        """VideoProvider or None."""
-        return self._database.provider if self._database else None
 
     @property
     def _ops(self):
@@ -226,13 +226,21 @@ class AppContext(QObject):
 
     def get_videos(
         self, page_size: int, page_number: int, selector=None
-    ) -> VideoSearchContext:
+    ) -> VideoSearchContext | None:
         """Return the context with videos (list[VideoPattern])."""
-        return self._provider.get_current_state(page_size, page_number, selector)
+        if not self._database:
+            return None
+        result = self._database.query_videos(
+            self._view, page_size, page_number, selector
+        )
+        # Sync group_id back (may have been clamped by query_videos)
+        self._view.group = result.group_id
+        return result
 
     def close_database(self) -> None:
         """Close the database."""
         self._api.close_database()
+        self._api.view.reset()
 
     def delete_database(self) -> None:
         """Delete the database."""
@@ -285,20 +293,20 @@ class AppContext(QObject):
 
     def classifier_select_group(self, group_id: int) -> None:
         """Add a group value to the classifier path."""
-        if self._provider:
-            self._provider.classifier_select_group(group_id)
+        if self._database:
+            self._api.classifier_select_group(group_id)
             self.state_changed.emit()
 
     def classifier_back(self) -> None:
         """Remove the last value from the classifier path."""
-        if self._provider:
-            self._provider.classifier_back()
+        if self._database:
+            self._api.classifier_back()
             self.state_changed.emit()
 
     def classifier_reverse(self) -> list:
         """Reverse the classifier path order. Returns the new path."""
-        if self._provider:
-            result = self._provider.classifier_reverse()
+        if self._database:
+            result = self._api.classifier_reverse()
             self.state_changed.emit()
             return result
         return []
@@ -310,20 +318,14 @@ class AppContext(QObject):
         Joins all path values with spaces and moves them to the target property.
         Clears the classifier path after concatenation.
         """
-        if self._provider and self._algos:
-            path = self._provider.get_classifier_path()
-            from_property = self._provider.get_grouping().field
-            self._provider.set_classifier_path([])
-            self._provider.set_group(0)
-            self._algos.move_property_values(
-                path, from_property, to_property, concatenate=True
-            )
+        if self._database:
+            self._api.classifier_concatenate_path(to_property)
             self.state_changed.emit()
 
     def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
         """Focus on a specific property value (resets classifier and jumps to value)."""
-        if self._provider:
-            self._provider.classifier_focus_prop_val(prop_name, field_value)
+        if self._database:
+            self._api.classifier_focus_prop_val(prop_name, field_value)
             self.state_changed.emit()
 
     # =========================================================================
@@ -332,9 +334,9 @@ class AppContext(QObject):
 
     def query_on_view(self, selector_dict: dict, operation: str, *args):
         """Query the current view without modifying state (no state_changed)."""
-        if self._provider:
-            return self._provider.apply_on_view(selector_dict, operation, *args)
-        return None
+        if not self._database:
+            return None
+        return self._api.apply_on_view(selector_dict, operation, *args)
 
     def apply_on_view(self, selector_dict: dict, operation: str, *args):
         """
@@ -348,11 +350,11 @@ class AppContext(QObject):
         Returns:
             Result from the operation (e.g., list of [value, count] pairs)
         """
-        if self._provider:
-            result = self._provider.apply_on_view(selector_dict, operation, *args)
-            self.state_changed.emit()
-            return result
-        return None
+        if not self._database:
+            return None
+        result = self._api.apply_on_view(selector_dict, operation, *args)
+        self.state_changed.emit()
+        return result
 
     def close_app(self) -> None:
         """Close the application properly."""
@@ -496,75 +498,68 @@ class AppContext(QObject):
 
     def set_group(self, group_id) -> None:
         """Select a group by index."""
-        if self._provider:
-            self._provider.set_group(group_id)
+        if self._database:
+            self._api.set_group(group_id)
             self.state_changed.emit()
 
     def notify_attributes_modified(self, fields, is_property) -> None:
-        """Notify the provider that video attributes have been modified."""
-        if self._provider:
-            self._provider.manage_attributes_modified(fields, is_property=is_property)
+        """Notify that video attributes have been modified (triggers refresh)."""
+        if self._database:
             self.state_changed.emit()
 
     def get_provider_state(self) -> "VideoSearchContext | None":
-        """Return the current provider state (minimal, for reading parameters)."""
-        if self._provider:
-            return self._provider.get_current_state(1, 0)
+        """Return the current view state (minimal, for reading parameters)."""
+        if self._database:
+            return self._database.query_videos(self._view, 1, 0)
         return None
 
     def set_sources(self, sources) -> None:
         """Set the video sources filter."""
-        if self._provider:
-            self._provider.set_sources(sources)
+        if self._database:
+            self._api.set_sources(sources)
             self.state_changed.emit()
 
     def set_groups(
         self, *, field, is_property, sorting, reverse, allow_singletons
     ) -> None:
         """Set the grouping parameters."""
-        if self._provider:
-            self._provider.set_groups(
-                field=field,
-                is_property=is_property,
-                sorting=sorting,
-                reverse=reverse,
-                allow_singletons=allow_singletons,
-            )
+        if self._database:
+            self._api.set_groups(field, is_property, sorting, reverse, allow_singletons)
             self.state_changed.emit()
 
     def clear_groups(self) -> None:
         """Clear (remove) the current grouping."""
-        if self._provider:
-            self._provider.set_groups(None)
+        if self._database:
+            self._api.set_groups(None)
             self.state_changed.emit()
 
     def set_search(self, text, cond) -> None:
         """Set the search filter."""
-        if self._provider:
-            self._provider.set_search(text, cond)
+        if self._database:
+            self._api.set_search(text, cond)
             self.state_changed.emit()
 
     def set_sorting(self, sorting) -> None:
         """Set the sorting order."""
-        if self._provider:
-            self._provider.set_sort(sorting)
+        if self._database:
+            self._api.set_sorting(sorting)
             self.state_changed.emit()
 
     def open_random_video(self) -> str | None:
         """Choose a random video, open it, and update the search to show it.
 
-        Delegates to provider.choose_random_video() which resets
-        grouping/classifier, sets search by ID, and opens the video.
+        Delegates to FeatureAPI.open_random_video() which finds a random
+        unwatched found video, resets grouping/classifier, and sets search by ID.
         Returns the search text (video ID as string), or None.
         """
-        if self._provider:
-            try:
-                self._provider.choose_random_video(open_video=True)
-            except Exception:
-                return None
+        if not self._database:
+            return None
+        try:
+            self._api.open_random_video(open_video=True)
             self.state_changed.emit()
-            return self._provider.get_search().text
-        return None
+            return self._view.search.text
+        except Exception:
+            return None
 
     # =========================================================================
     # Facade methods — API

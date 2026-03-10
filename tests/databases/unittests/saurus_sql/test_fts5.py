@@ -14,6 +14,7 @@ import pytest
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
 from pysaurus.database.saurus.sql.sql_functions import pysaurus_text_to_fts
+from pysaurus.video_provider.view_context import ViewContext
 from tests.utils import get_saurus_sql_database
 
 
@@ -66,10 +67,10 @@ def _fts_match(db: PysaurusCollection, match_expr: str) -> list[int]:
 def _search_via_provider(
     db: PysaurusCollection, text: str, cond: str = "and"
 ) -> list[int]:
-    """Search via provider (applies source/grouping filters)."""
-    provider = db.provider
-    provider.set_search(text, cond)
-    return provider.get_view_indices()
+    """Search via ViewContext + query_videos (applies source/grouping filters)."""
+    view = ViewContext()
+    view.set_search(text, cond)
+    return [v.video_id for v in db.query_videos(view, None, None).result]
 
 
 def _fts_contains(properties_text: str | None, raw_value: str) -> bool:
@@ -128,7 +129,6 @@ class TestFtsRowLifecycle:
         video_id = db.db.query_one("SELECT video_id FROM video LIMIT 1")[0]
         assert _fts_row(db, video_id) is not None
 
-        db.provider.get_view_indices()  # initialize provider
         db.video_entry_del(video_id)
 
         assert _fts_row(db, video_id) is None
@@ -142,7 +142,6 @@ class TestFtsRowLifecycle:
                 "SELECT video_id FROM video ORDER BY video_id LIMIT 5"
             )
         ]
-        db.provider.get_view_indices()
         for vid in ids:
             db.video_entry_del(vid)
 
@@ -468,7 +467,6 @@ class TestFtsSearch:
         assert 196 in _search_via_provider(self.db, "xyzalphaterm", "and")
 
         self.db.videos_tag_set("category", {196: ["xyzbetaword"]})
-        self.db.provider.refresh()
 
         assert 196 not in _search_via_provider(self.db, "xyzalphaterm", "and")
         assert 196 in _search_via_provider(self.db, "xyzbetaword", "and")
@@ -480,7 +478,6 @@ class TestFtsSearch:
         self.db.videos_tag_set(
             "category", {196: ["xyzalphaterm", "xyzbetaword", "xyzdeltaword"]}
         )
-        self.db.provider.refresh()
 
         assert 196 in _search_via_provider(self.db, "xyzdeltaword", "and")
 
@@ -497,33 +494,36 @@ class TestFtsSearchWithGrouping:
         """Search + grouping by property must compose correctly."""
         db.videos_tag_set("category", {196: ["xyzgroupsearchword"]})
 
-        provider = db.provider
-        provider.set_groups(
-            "category", True, sorting="count", reverse=True, allow_singletons=True
+        view = ViewContext()
+        view.set_grouping(
+            "category",
+            is_property=True,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
         )
         # Find the group that contains our search term
-        provider.get_view_indices()
-        group_def = provider.get_group_def()
+        result = db.query_videos(view, 1, 0)
         target_idx = None
-        for i, g in enumerate(group_def["groups"]):
-            if g["value"] == "xyzgroupsearchword":
+        for i, s in enumerate(result.classifier_stats):
+            if s.value == "xyzgroupsearchword":
                 target_idx = i
                 break
         assert target_idx is not None, "Group 'xyzgroupsearchword' not found"
-        provider.set_group(target_idx)
-        provider.set_search("xyzgroupsearchword", "and")
-        results = provider.get_view_indices()
-        assert 196 in results
+        view.set_group(target_idx)
+        view.set_search("xyzgroupsearchword", "and")
+        result = db.query_videos(view, None, None)
+        assert 196 in [v.video_id for v in result.result]
 
     def test_search_with_attribute_grouping(self, db):
         """Search + grouping by attribute must compose correctly."""
         db.videos_tag_set("category", {196: ["xyzattrgroupword"]})
 
-        provider = db.provider
-        provider.set_groups("audio_bit_rate", allow_singletons=True)
-        provider.set_search("xyzattrgroupword", "and")
-        results = provider.get_view_indices()
-        assert 196 in results
+        view = ViewContext()
+        view.set_grouping("audio_bit_rate", allow_singletons=True)
+        view.set_search("xyzattrgroupword", "and")
+        result = db.query_videos(view, None, None)
+        assert 196 in [v.video_id for v in result.result]
 
 
 # =============================================================================
@@ -594,7 +594,7 @@ class TestFtsExactSearch:
             "UPDATE video SET filename = ? WHERE video_id = ?",
             ["/test/AB.c.mp4", video_id],
         )
-        self.db.provider.refresh()
+
         results = _search_via_provider(self.db, "AB.c", "exact")
         assert video_id in results
 
@@ -602,7 +602,7 @@ class TestFtsExactSearch:
         """EXACT search for 'Some.Val' must find property 'Some.Value'."""
         video_id = 196
         self.db.videos_tag_set("category", {video_id: ["Some.Value"]})
-        self.db.provider.refresh()
+
         results = _search_via_provider(self.db, "Some.Val", "exact")
         assert video_id in results
 
@@ -610,7 +610,7 @@ class TestFtsExactSearch:
         """EXACT search for 'Some.Value' must find property 'Some.Value'."""
         video_id = 196
         self.db.videos_tag_set("category", {video_id: ["Some.Value"]})
-        self.db.provider.refresh()
+
         results = _search_via_provider(self.db, "Some.Value", "exact")
         assert video_id in results
 
@@ -621,7 +621,7 @@ class TestFtsExactSearch:
             "UPDATE video SET filename = ? WHERE video_id = ?",
             ["/test/AB.c.mp4", video_id],
         )
-        self.db.provider.refresh()
+
         # Search with different cases
         assert video_id in _search_via_provider(self.db, "ab.c", "exact")
         assert video_id in _search_via_provider(self.db, "AB.C", "exact")
@@ -669,7 +669,6 @@ class TestFtsIntegrity:
         db.video_entry_set_tags(video_id, {"category": ["xyzwillbedeleted"]})
         assert _fts_contains(_fts_row(db, video_id)["properties"], "xyzwillbedeleted")
 
-        db.provider.get_view_indices()
         db.video_entry_del(video_id)
 
         assert _fts_row(db, video_id) is None
@@ -721,21 +720,20 @@ class TestFtsIntegrity:
         assert "xyztagval" in row["properties"]
         assert _fts_count(db) == _video_count(db)
 
-    def test_provider_refresh_after_modification(self, db):
-        """Provider must reflect FTS changes after refresh."""
-        provider = db.provider
-        provider.set_search("xyzrefreshtest", "and")
-        assert len(provider.get_view_indices()) == 0
+    def test_query_videos_after_modification(self, db):
+        """query_videos must reflect FTS changes after modification."""
+        view = ViewContext()
+        view.set_search("xyzrefreshtest", "and")
+        result = db.query_videos(view, None, None)
+        assert len(result.result) == 0
 
         db.videos_tag_set("category", {196: ["xyzrefreshtest"]})
-        provider.refresh()
-        results = provider.get_view_indices()
-        assert 196 in results
+        result = db.query_videos(view, None, None)
+        assert 196 in [v.video_id for v in result.result]
 
         db.videos_tag_set("category", {196: []})
-        provider.refresh()
-        results = provider.get_view_indices()
-        assert 196 not in results
+        result = db.query_videos(view, None, None)
+        assert 196 not in [v.video_id for v in result.result]
 
 
 # =============================================================================

@@ -49,9 +49,8 @@ class DatabaseAlgorithms:
         return self.db.notifier
 
     def refresh(self) -> None:
-        """Update database and refresh provider."""
+        """Update database."""
         self.update()
-        self.db.provider.refresh()
 
     @Profiler.profile_method()
     def update(self) -> None:

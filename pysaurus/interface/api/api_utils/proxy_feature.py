@@ -47,15 +47,6 @@ class FromDb(ProxyFeature):
         super().__init__(getter=lambda: api.database, method=method, returns=returns)
 
 
-class FromView(ProxyFeature):
-    __slots__ = ()
-
-    def __init__(self, api, method, returns=False):
-        super().__init__(
-            getter=lambda: api.database.provider, method=method, returns=returns
-        )
-
-
 class FromApp(ProxyFeature):
     __slots__ = ()
 

@@ -44,8 +44,12 @@ class MockAppContext:
     """
 
     def __init__(self, mock_database: MockDatabase):
+        from pysaurus.video_provider.view_context import ViewContext
+
         self._database = mock_database
         self._application = MockApplication()
+        self._view = ViewContext()
+        self._last_result = None
 
     # State
 
@@ -127,9 +131,6 @@ class MockAppContext:
     def toggle_watched(self, video_id) -> None:
         if self._database and self._database.ops:
             self._database.ops.mark_as_read(video_id)
-            provider = self._database.provider if self._database else None
-            if provider:
-                provider.manage_attributes_modified(["watched"], is_property=False)
 
     def trash_video(self, video_id) -> None:
         if self._database and self._database.ops:
@@ -139,39 +140,38 @@ class MockAppContext:
         if self._database and self._database.ops:
             self._database.ops.delete_video(video_id)
 
-    # Provider / view
+    # View
 
     def get_videos(self, page_size: int, page_number: int, selector=None):
-        provider = self._database.provider if self._database else None
-        return provider.get_current_state(page_size, page_number, selector)
+        if not self._database:
+            return None
+        self._last_result = self._database.query_videos(
+            self._view, page_size, page_number, selector
+        )
+        self._view.group = self._last_result.group_id
+        return self._last_result
 
     def set_group(self, group_id) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.set_group(group_id)
+        if self._database:
+            self._view.set_group(group_id)
 
     def notify_attributes_modified(self, fields, is_property) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.manage_attributes_modified(fields, is_property=is_property)
+        pass
 
     def get_provider_state(self):
-        provider = self._database.provider if self._database else None
-        if provider:
-            return provider.get_current_state(1, 0)
+        if self._database:
+            return self._database.query_videos(self._view, 1, 0)
         return None
 
     def set_sources(self, sources) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.set_sources(sources)
+        if self._database:
+            self._view.set_sources(sources)
 
     def set_groups(
         self, *, field, is_property, sorting, reverse, allow_singletons
     ) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.set_groups(
+        if self._database:
+            self._view.set_grouping(
                 field=field,
                 is_property=is_property,
                 sorting=sorting,
@@ -180,40 +180,35 @@ class MockAppContext:
             )
 
     def clear_groups(self) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.set_groups(None)
+        if self._database:
+            self._view.set_grouping(None)
 
     def set_search(self, text, cond) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.set_search(text, cond)
+        if self._database:
+            self._view.set_search(text, cond)
 
     def set_sorting(self, sorting) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.set_sort(sorting)
+        if self._database:
+            self._view.set_sort(sorting)
 
     def get_random_video_id(self):
-        provider = self._database.provider if self._database else None
-        if provider:
-            return provider.get_random_found_video_id()
+        if not self._database:
+            return None
+        import random
+
+        videos = self._database.get_videos(where={"found": True})
+        if videos:
+            return random.choice(videos).video_id
         return None
 
     def reset_grouping_and_classifier(self) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.reset_parameters(
-                provider.LAYER_GROUPING, provider.LAYER_CLASSIFIER, provider.LAYER_GROUP
-            )
+        if self._database:
+            self._view.set_grouping(None)
 
     def set_random_video_search(self, video_id) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.reset_parameters(
-                provider.LAYER_GROUPING, provider.LAYER_CLASSIFIER, provider.LAYER_GROUP
-            )
-            provider.set_search(str(video_id), "id")
+        if self._database:
+            self._view.set_grouping(None)
+            self._view.set_search(str(video_id), "id")
 
     # API
 
@@ -275,37 +270,45 @@ class MockAppContext:
         return []
 
     def classifier_select_group(self, group_id: int) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.classifier_select_group(group_id)
+        if self._database and self._last_result:
+            value = self._last_result.result_groups[group_id].get_value()
+            self._view.classifier_select(value)
 
     def classifier_back(self) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.classifier_back()
+        if self._database:
+            self._view.classifier_back()
 
     def classifier_reverse(self) -> list:
-        provider = self._database.provider if self._database else None
-        if provider:
-            return provider.classifier_reverse()
+        if self._database:
+            return self._view.classifier_reverse()
         return []
 
     def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
-        provider = self._database.provider if self._database else None
-        if provider:
-            provider.classifier_focus_prop_val(prop_name, field_value)
+        if not self._database:
+            return
+        self._view.set_grouping(
+            field=prop_name,
+            is_property=True,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
+        )
+        result = self._database.query_videos(self._view, 1, 0)
+        group_id = result.result_groups.lookup_index(field_value)
+        value = result.result_groups[group_id].get_value()
+        self._view.classifier_select(value)
 
     def query_on_view(self, selector_dict: dict, operation: str, *args):
-        provider = self._database.provider if self._database else None
-        if provider:
-            return provider.apply_on_view(selector_dict, operation, *args)
-        return None
+        return self._apply_on_view_impl(selector_dict, operation, *args)
 
     def apply_on_view(self, selector_dict: dict, operation: str, *args):
-        provider = self._database.provider if self._database else None
-        if provider:
-            return provider.apply_on_view(selector_dict, operation, *args)
-        return None
+        return self._apply_on_view_impl(selector_dict, operation, *args)
+
+    def _apply_on_view_impl(self, selector_dict, operation, *args):
+        if not self._database:
+            return None
+        # Delegate to mock provider which handles both old and new selector formats
+        return self._database.provider.apply_on_view(selector_dict, operation, *args)
 
     def confirm_unique_moves(self) -> int:
         return 0
