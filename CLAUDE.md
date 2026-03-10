@@ -57,10 +57,11 @@ Edit files in `src/` — the `build/` directory is auto-generated.
 __main__.py (GUI selector)
     → Interface Layer (PyWebView / PySide6 / QtWebView)
         → GuiAPI / FeatureAPI (proxy-based API)
-            → AbstractDatabase
-                ├─ .ops → DatabaseOperations (CRUD)
-                ├─ .algos → DatabaseAlgorithms (batch processing)
-                └─ .provider → AbstractVideoProvider (filtering pipeline)
+            ├─ .view → ViewContext (filtering/grouping state)
+            └─ → AbstractDatabase
+                 ├─ .ops → DatabaseOperations (CRUD)
+                 ├─ .algos → DatabaseAlgorithms (batch processing)
+                 └─ .query_videos(view, ...) → VideoSearchContext
 ```
 
 ### Two Top-level Python Packages
@@ -87,7 +88,6 @@ Two backend implementations, selected by `USE_SQL` flag in `database/database.py
 
 - **`pysaurus_collection.py`** — implements `AbstractDatabase` with SQLite
 - **`pysaurus_connection.py`** — extends `Skullite` (from `skullite` package), loads schema from `database.sql`
-- **`saurus_provider.py`** — implements `AbstractVideoProvider` with SQL queries
 - **`video_mega_group.py` / `video_mega_search.py`** — SQL query builders for grouping and search
 - **`migration/`** — tools for JSON → SQL migration and verification
 
@@ -96,19 +96,22 @@ Key schema notes (`saurus/sql/database.sql`):
 - `video_text` is an **FTS5 virtual table** for full-text search with triggers to stay in sync
 - Property value triggers are managed manually in Python (not SQL triggers) for batch performance
 
-### Video Provider
+### View Layer (`dbview/`)
 
-`video_provider/abstract_video_provider.py` — layered filtering/grouping pipeline:
-LAYER_SOURCE → LAYER_GROUPING → LAYER_CLASSIFIER → LAYER_GROUP → LAYER_SEARCH → LAYER_SORT
+- **`view_context.py`** — `ViewContext`: pure state holder for view parameters (sources, grouping, classifier, group, search, sorting). Owned by the API/interface layer, passed to `db.query_videos()`.
+- **`view_tools.py`** — `GroupDef`, `SearchDef`, `LookupArray`, etc.
+- **`view_utils.py`** — `parse_sources()`, `parse_sorting()`
+- **`field_stat.py`** — statistics for field groups
+- **`source_def.py`** — source path definitions
 
-Two implementations: `JsonDatabaseVideoProvider` (Python-based) and `SaurusProvider` (SQL-based).
+Each interface owns a `ViewContext` and mutates it (`view.set_search(...)`, `view.set_grouping(...)`, etc.), then calls `db.query_videos(view, page_size, page)` to get a `VideoSearchContext`.
 
 ### API Layer — Proxy Pattern (`interface/api/`)
 
 All frontends call `api.__run_feature__(name, *args)`, which looks up a proxy dict, then falls back to calling `self.<name>(*args)` directly.
 
 **`ProxyFeature`** (`api_utils/proxy_feature.py`) wraps `(getter_fn, method, returns_value)`:
-1. Calls `getter()` to get the live target (db, provider, etc.)
+1. Calls `getter()` to get the live target (db, app, etc.)
 2. Calls `getattr(target, method.__name__)(*args)`
 3. Returns the result only if `returns=True`; otherwise returns `None` (side-effect only)
 
@@ -117,14 +120,13 @@ Proxy subclasses and their targets:
 | Class | Target | Use case |
 |---|---|---|
 | `FromDb` | `api.database` | Direct `AbstractDatabase` methods |
-| `FromView` | `api.database.provider` | `AbstractVideoProvider` methods |
 | `FromApp` | `api.application` | `Application` methods |
 | `FromOps` | `DatabaseOperations(api.database)` | CRUD via `db.ops` |
 | `FromAlgo` | `DatabaseAlgorithms(api.database)` | Batch processing via `db.algos` |
 | `FromTk` | `filedial` module | File dialog calls |
 | `FromPyperclip` | `pyperclip` module | Clipboard operations |
 
-- **`FeatureAPI`** — base API class exposing 50+ features via these proxies.
+- **`FeatureAPI`** — base API class exposing 50+ features via these proxies. Owns a `ViewContext` (`self.view`) for view state management, with explicit view methods (set_sources, set_search, set_sort, set_groups, etc.).
 - **`GuiAPI`** — extends `FeatureAPI` with Flask video server (`ServerLauncher`), thread management, VLC integration, and an abstract `_notify()` method each frontend implements.
 
 ### Notification System
@@ -161,7 +163,7 @@ Python backend sends typed `Notification` objects (`pysaurus/core/notifications.
 
 ### PySide6 Conventions (`interface/pyside6/`)
 
-PySide6 is the primary GUI frontend. Unlike web frontends, it does **not** go through `FeatureAPI`. Instead, all calls go through the **`AppContext` facade** — pages and dialogs must never access internal attributes (`_database`, `_ops`, `_algos`, `_provider`) directly.
+PySide6 is the primary GUI frontend. Unlike web frontends, it does **not** go through `FeatureAPI`. Instead, all calls go through the **`AppContext` facade** — pages and dialogs must never access internal attributes (`_database`, `_ops`, `_algos`, `_view`) directly.
 
 #### Auto-refresh via `state_changed` signal
 
@@ -170,7 +172,7 @@ PySide6 is the primary GUI frontend. Unlike web frontends, it does **not** go th
 
 #### Backend notification
 
-- Every backend write operation (in `AbstractDatabase`, `DatabaseOperations`, `DatabaseAlgorithms`) must call `_notify_fields_modified(fields, is_property)` so the `VideoProvider` stays synchronized. Without this, grouping/filtering can become stale.
+- Every backend write operation (in `AbstractDatabase`, `DatabaseOperations`, `DatabaseAlgorithms`) must call `_notify_fields_modified(fields, is_property)` to save the database. Since `query_videos()` is stateless, the next query will automatically pick up all changes.
 
 #### Double-execution protection
 
