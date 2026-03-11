@@ -1,9 +1,9 @@
-from pysaurus.core.schematizer.schematizable import Short, WithSchema
+from dataclasses import dataclass
 
 
-class LazyVideoRuntimeInfo(WithSchema):
-    __slots__ = ()
-    size: Short["s", int] = 0
-    mtime: Short["m", float] = 0.0
-    driver_id: Short["d", int] = None
-    is_file: Short["f", bool] = False
+@dataclass(slots=True)
+class LazyVideoRuntimeInfo:
+    size: int = 0
+    mtime: float = 0.0
+    driver_id: int = None
+    is_file: bool = False

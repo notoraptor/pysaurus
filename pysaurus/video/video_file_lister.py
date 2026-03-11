@@ -24,7 +24,7 @@ def _scan_folder_for_videos(folder: str, files: dict[AbsolutePath, VideoRuntimeI
                 # https://docs.python.org/3/library/os.html#os.DirEntry.stat
                 entry_path = AbsolutePath(entry.path)
                 stat = os.stat(entry_path.path)
-                files[entry_path] = VideoRuntimeInfo.from_keys(
+                files[entry_path] = VideoRuntimeInfo(
                     size=stat.st_size,
                     mtime=correct_mtime(stat.st_mtime, entry_path.path),
                     driver_id=stat.st_dev,
@@ -39,7 +39,7 @@ def scan_path_for_videos(
         _scan_folder_for_videos(path.path, files)
     elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:
         stat = FileSystem.stat(path.path)
-        files[path] = VideoRuntimeInfo.from_keys(
+        files[path] = VideoRuntimeInfo(
             size=stat.st_size,
             mtime=correct_mtime(stat.st_mtime, path.path),
             driver_id=stat.st_dev,

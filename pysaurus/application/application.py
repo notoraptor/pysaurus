@@ -1,5 +1,6 @@
 import logging
 import os
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
 
@@ -19,7 +20,6 @@ from pysaurus.core.dict_file_format import dff_dump, dff_load
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.schematizer.schematizable import WithSchema
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.database import Database
 from pysaurus.core.language import say
@@ -27,8 +27,8 @@ from pysaurus.core.language import say
 logger = logging.getLogger(__name__)
 
 
-class Config(WithSchema):
-    __slots__ = ()
+@dataclass(slots=True)
+class Config:
     language: str = "english"
 
 
@@ -70,7 +70,7 @@ class Application:
         # Load config file.
         if self.config_path.exists():
             assert self.config_path.isfile()
-            self.config = Config(parse_json(self.config_path))
+            self.config = Config(**parse_json(self.config_path))
         say.set_language(self.config.language)
         say.set_folder((self.app_dir / "lang").mkdir())
 
@@ -182,7 +182,7 @@ class Application:
 
     def save_config(self):
         with open(self.config_path.path, "w") as file:
-            json.dump(self.config.to_json(), file)
+            json.dump(asdict(self.config), file)
 
     def __close__(self):
         """Close application."""

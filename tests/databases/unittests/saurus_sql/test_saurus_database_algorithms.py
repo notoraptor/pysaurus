@@ -27,7 +27,7 @@ def _get_runtime_info(db) -> dict[AbsolutePath, VideoRuntimeInfo]:
     ):
         # driver_id is TEXT in SQL but int in VideoRuntimeInfo, so cast back
         driver_id = int(v.driver_id) if v.driver_id is not None else None
-        result[v.filename] = VideoRuntimeInfo.from_keys(
+        result[v.filename] = VideoRuntimeInfo(
             size=v.file_size, mtime=v.mtime, driver_id=driver_id, is_file=True
         )
     return result
@@ -103,7 +103,7 @@ class TestFindVideoPathsForUpdate:
         db = mem_saurus_database
         file_paths = _get_runtime_info(db)
         new_path = AbsolutePath("/videos/brand_new_video.mp4")
-        file_paths[new_path] = VideoRuntimeInfo.from_keys(
+        file_paths[new_path] = VideoRuntimeInfo(
             size=999, mtime=99999.0, driver_id=1, is_file=True
         )
 
@@ -116,7 +116,7 @@ class TestFindVideoPathsForUpdate:
         # Pick one file and change its mtime
         target = next(iter(file_paths))
         info = file_paths[target]
-        file_paths[target] = VideoRuntimeInfo.from_keys(
+        file_paths[target] = VideoRuntimeInfo(
             size=info.size,
             mtime=info.mtime + 1.0,
             driver_id=info.driver_id,
@@ -131,7 +131,7 @@ class TestFindVideoPathsForUpdate:
         file_paths = _get_runtime_info(db)
         target = next(iter(file_paths))
         info = file_paths[target]
-        file_paths[target] = VideoRuntimeInfo.from_keys(
+        file_paths[target] = VideoRuntimeInfo(
             size=info.size + 1, mtime=info.mtime, driver_id=info.driver_id, is_file=True
         )
 
@@ -146,7 +146,7 @@ class TestFindVideoPathsForUpdate:
         modified = []
         for i, (path, info) in enumerate(file_paths.items()):
             if i % 100 == 0:
-                file_paths[path] = VideoRuntimeInfo.from_keys(
+                file_paths[path] = VideoRuntimeInfo(
                     size=info.size + 1,
                     mtime=info.mtime,
                     driver_id=info.driver_id,
@@ -155,7 +155,7 @@ class TestFindVideoPathsForUpdate:
                 modified.append(path)
         # Add a new file
         new_path = AbsolutePath("/videos/new_video.mp4")
-        file_paths[new_path] = VideoRuntimeInfo.from_keys(
+        file_paths[new_path] = VideoRuntimeInfo(
             size=1000, mtime=1.0, driver_id=1, is_file=True
         )
 
@@ -216,7 +216,7 @@ class TestBenchmarks:
         # Modify 1% of files
         for i, (path, info) in enumerate(file_paths.items()):
             if i % 100 == 0:
-                file_paths[path] = VideoRuntimeInfo.from_keys(
+                file_paths[path] = VideoRuntimeInfo(
                     size=info.size + 1,
                     mtime=info.mtime,
                     driver_id=info.driver_id,
