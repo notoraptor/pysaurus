@@ -16,7 +16,7 @@ uv run -m pysaurus
 uv run -m pysaurus pywebview   # or: qtwebview, pyside6
 
 # Run CLI (benchmark/debug console, configured via .pysaurus.yaml)
-uv run -m pysaurus.interface.console.run --backend sql --db <name>
+uv run -m pysaurus.interface.console.run --db <name>
 
 # Run all tests
 uv run pytest
@@ -80,17 +80,15 @@ Layered separation of concerns:
 - **`database/database_operations.py`** — high-level CRUD operations (accessed via `db.ops`)
 - **`database/database_algorithms.py`** — batch processing: update, miniatures, moves (accessed via `db.algos`)
 
-Two backend implementations, selected by `USE_SQL` flag in `database/database.py` (currently `True`):
-- **`database/jsdb/json_database.py`** — legacy JSON file persistence
-- **`saurus/sql/pysaurus_collection.py`** — current SQLite implementation (uses `skullite` wrapper)
+Single backend implementation:
+- **`saurus/sql/pysaurus_collection.py`** — SQLite implementation (uses `skullite` wrapper)
+- **`database/database.py`** — exposes `Database = PysaurusCollection`
 
 ### SQL Layer (`saurus/sql/`)
 
 - **`pysaurus_collection.py`** — implements `AbstractDatabase` with SQLite
 - **`pysaurus_connection.py`** — extends `Skullite` (from `skullite` package), loads schema from `database.sql`
 - **`video_mega_group.py` / `video_mega_search.py`** — SQL query builders for grouping and search
-- **`migration/`** — tools for JSON → SQL migration and verification
-
 Key schema notes (`saurus/sql/database.sql`):
 - `video` table uses **virtual generated columns** (e.g., `readable`, `found`, `length_seconds`, `bit_rate`, `day`, `year`)
 - `video_text` is an **FTS5 virtual table** for full-text search with triggers to stay in sync

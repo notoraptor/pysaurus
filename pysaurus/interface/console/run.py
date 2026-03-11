@@ -14,7 +14,6 @@ from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
-from pysaurus.database.jsdb.json_database import JsonDatabase
 from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
 from pysaurus.dbview.view_context import ViewContext
 
@@ -24,24 +23,16 @@ CONFIG_FILE = ".pysaurus.yaml"
 def main():
     defaults = _load_config()
     parser = argparse.ArgumentParser(description="Pysaurus CLI benchmark")
-    parser.add_argument(
-        "--backend",
-        choices=["json", "sql"],
-        default=defaults.get("backend"),
-        help="Database backend (json or sql)",
-    )
     parser.add_argument("--db", default=defaults.get("db"), help="Database name")
     parser.add_argument(
         "--home", default=defaults.get("home"), help="Home directory (default: ~)"
     )
     args, remaining = parser.parse_known_args()
 
-    if not args.backend:
-        parser.error("--backend is required (or set cli.backend in .pysaurus.yaml)")
     if not args.db:
         parser.error("--db is required (or set cli.db in .pysaurus.yaml)")
 
-    db = _open_database(args.db, args.backend, args.home)
+    db = _open_database(args.db, args.home)
     api = BenchmarkAPI(db)
 
     with Information():
@@ -67,21 +58,17 @@ def _load_config() -> dict:
     return cli
 
 
-def _open_database(db_name: str, backend: str, home: str) -> AbstractDatabase:
+def _open_database(db_name: str, home: str) -> AbstractDatabase:
     home = Path(home) if home else Path.home()
     db_path = home / ".Pysaurus" / "databases" / db_name
     if not db_path.is_dir():
         print(f"Database not found: {db_path}", file=sys.stderr)
         sys.exit(1)
 
-    backend_label = backend.upper()
-    print(f"Opening {backend_label} database: {db_path}")
+    print(f"Opening database: {db_path}")
 
     with PerfCounter() as timer:
-        if backend == "json":
-            db = JsonDatabase(str(db_path))
-        else:
-            db = PysaurusCollection(str(db_path))
+        db = PysaurusCollection(str(db_path))
 
     print(f"Opened in {timer.microseconds / 1000:.3f} ms")
     return db

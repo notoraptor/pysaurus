@@ -35,5 +35,4 @@ Ideas and improvements extracted from the old `todo.md`.
 
 ## Nettoyage
 
-- **Supprimer jsdb**: supprimer `JsonDatabase`, `JsonDatabaseVideoProvider`
-  et le package `pysaurus/database/jsdb/`. Seul le backend SQL reste.
+(Rien pour l'instant.)

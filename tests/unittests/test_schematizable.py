@@ -676,25 +676,6 @@ class TestRealWorldSchemas:
         info = LazyVideoRuntimeInfo.from_dict(data)
         assert info.to_dict() == data
 
-    def test_video_schema_linear_type(self):
-        from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo
-
-        lt = LazyVideo.SCHEMA.to_linear_type()
-        # Should be a list of [short, desc] pairs, sorted by field name
-        assert isinstance(lt, list)
-        assert len(lt) == 32  # 32 fields in LazyVideo schema
-        # runtime is a nested SchemaType with desc != False
-        runtime_entry = next(p for p in lt if p[0] == "R")
-        assert runtime_entry[1] != False  # nested type descriptor
-
-    def test_video_schema_short_keys(self):
-        from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo
-
-        assert LazyVideo.SCHEMA.get_short_key("filename") == "f"
-        assert LazyVideo.SCHEMA.get_short_key("audio_codec") == "a"
-        assert LazyVideo.SCHEMA.get_short_key("width") == "w"
-        assert LazyVideo.SCHEMA.get_long_key("f") == "filename"
-        assert LazyVideo.SCHEMA.get_long_key("a") == "audio_codec"
 
 
 # ---------------------------------------------------------------------------
