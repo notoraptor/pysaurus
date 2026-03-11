@@ -10,9 +10,7 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase, Change
 from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
-from pysaurus.video.lazy_video_runtime_info import (
-    LazyVideoRuntimeInfo as VideoRuntimeInfo,
-)
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.database.saurus.sql.prop_type_search import prop_type_search

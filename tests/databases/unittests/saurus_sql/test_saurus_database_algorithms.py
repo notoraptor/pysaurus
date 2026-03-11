@@ -7,9 +7,7 @@ from pysaurus.database.database_algorithms import DatabaseAlgorithms
 from pysaurus.database.saurus.sql.saurus_database_algorithms import (
     SaurusDatabaseAlgorithms,
 )
-from pysaurus.video.lazy_video_runtime_info import (
-    LazyVideoRuntimeInfo as VideoRuntimeInfo,
-)
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
 
 def _get_all_found(db) -> dict[str, bool]:
