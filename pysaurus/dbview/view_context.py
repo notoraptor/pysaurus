@@ -10,6 +10,7 @@ It is serializable (for web interfaces) and testable without a database.
 
 from typing import Sequence
 
+from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.dbview.view_utils import parse_sorting, parse_sources
 from pysaurus.dbview.view_tools import GroupDef, SearchDef
@@ -47,7 +48,10 @@ class ViewContext:
         self.group = max(group_id, 0)
 
     def set_search(self, text: str, cond: str = "and") -> None:
-        self.search = SearchDef(text, cond)
+        try:
+            self.search = SearchDef(text, cond)
+        except ValueError as exc:
+            raise PysaurusError(str(exc))
 
     def set_sort(self, sorting: Sequence[str]) -> None:
         self.sorting = parse_sorting(sorting)

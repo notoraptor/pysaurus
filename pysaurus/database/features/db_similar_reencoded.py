@@ -6,6 +6,7 @@ from pysaurus.video.video_pattern import VideoPattern
 FIELD = "similarity_id_reencoded"
 MAX_DURATION_DIFF = 0.25  # seconds
 MAX_TITLE_DIFF_RATIO = 0.5  # suffix/prefix length < 50% of shorter title
+MIN_TITLE_DIFF = 8  # absolute minimum allowed difference in characters
 
 
 class DbSimilarReencoded:
@@ -98,4 +99,4 @@ class DbSimilarReencoded:
         if shorter not in longer:
             return False
         diff_len = len(longer) - len(shorter)
-        return diff_len < len(shorter) * MAX_TITLE_DIFF_RATIO
+        return diff_len < max(len(shorter) * MAX_TITLE_DIFF_RATIO, MIN_TITLE_DIFF)

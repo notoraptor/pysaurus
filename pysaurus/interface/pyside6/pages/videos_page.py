@@ -1108,6 +1108,9 @@ class VideosPage(QWidget):
         if not search or not search.text:
             self.search_mode_label.setText("")
             self.btn_search_clear.setEnabled(False)
+            if self.search_input.text():
+                self.search_input.clear()
+            self._highlight_search_mode(None)
             return
 
         # Map condition to user-friendly label
@@ -1126,6 +1129,20 @@ class VideosPage(QWidget):
             self.search_input.setText(search.text)
 
         self.btn_search_clear.setEnabled(True)
+        self._highlight_search_mode(search.cond)
+
+    def _highlight_search_mode(self, cond):
+        """Bold the active search mode button, unbold the others."""
+        buttons = {
+            "and": self.btn_search_and,
+            "or": self.btn_search_or,
+            "exact": self.btn_search_exact,
+            "id": self.btn_search_id,
+        }
+        for mode, btn in buttons.items():
+            font = btn.font()
+            font.setBold(mode == cond)
+            btn.setFont(font)
 
     def _update_grouping_display(self, context: VideoSearchContext):
         """Update the grouping info label with detailed information."""

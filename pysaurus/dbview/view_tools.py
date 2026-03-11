@@ -123,6 +123,14 @@ class SearchDef(ToDict):
     def __init__(self, text: str | None = None, cond: str | None = None):
         self.text = text.strip() if text else None
         self.cond = self._Cond((cond and cond.strip()) or "and")
+        # Check text is an integer string if we search by ID
+        if self.cond == "id" and self.text:
+            try:
+                int(self.text)
+            except ValueError:
+                raise ValueError(
+                    "Search text must be an integer when looking for video ID"
+                )
 
     def __bool__(self):
         return bool(self.text)
