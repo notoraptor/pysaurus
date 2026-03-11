@@ -1,7 +1,7 @@
 import logging
 import pprint
 
-from pysaurus.core.prettylogging import PrettyLogging
+from wip.tools.prettylogging import PrettyLogging
 
 
 def main():

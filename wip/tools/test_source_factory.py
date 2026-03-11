@@ -1,6 +1,6 @@
 import pytest
 
-from pysaurus.video.source_factory import SOURCES
+from wip.tools.source_factory import SOURCES
 
 
 def test_source_factory():
