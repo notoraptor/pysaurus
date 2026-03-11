@@ -23,6 +23,9 @@ from pysaurus.database.saurus.sql.video_mega_group import video_mega_group
 from pysaurus.database.saurus.sql.video_mega_search import video_mega_search
 from pysaurus.database.saurus.sql.video_mega_utils import _get_video_moves
 from pysaurus.dbview.field_stat import FieldStat
+from pysaurus.database.saurus.sql.saurus_database_algorithms import (
+    SaurusDatabaseAlgorithms,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,29 +36,12 @@ def get_sql_prefix(field: str) -> str:
     return PREFIX.get(field, "v.")
 
 
-def _map_filenames_to_video_ids(
-    db: PysaurusConnection, entries: list[VideoEntry], *, strict: bool = False
-) -> dict[str, VideoEntry]:
-    entry_map = {entry.filename: entry for entry in entries}
-    if len(entry_map) != len(entries):
-        raise ValueError("Duplicate filenames in entries")
-    filenames = list(entry_map.keys())
-    nb_matched = 0
-    with db:
-        for row in db.query(
-            f"SELECT filename, video_id FROM video "
-            f"WHERE filename IN ({sql_placeholders(len(filenames))})",
-            filenames,
-        ):
-            entry_map[row[0]].video_id = row[1]
-            nb_matched += 1
-    if strict and nb_matched != len(entries):
-        raise RuntimeError(f"Expected {len(entries)} video IDs, got {nb_matched}")
-    return entry_map
-
-
 class PysaurusCollection(AbstractDatabase):
     __slots__ = ("db",)
+
+    @property
+    def algos(self) -> SaurusDatabaseAlgorithms:
+        return SaurusDatabaseAlgorithms(self)
 
     def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
         super().__init__(path, notifier)
@@ -455,7 +441,7 @@ class PysaurusCollection(AbstractDatabase):
         video_entries: list[VideoEntry],
         runtime_info: dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
-        _map_filenames_to_video_ids(self.db, video_entries)
+        self._map_filenames_to_video_ids(video_entries)
         old_entries = [entry for entry in video_entries if entry.video_id is not None]
         new_entries = [entry for entry in video_entries if entry.video_id is None]
         self._update_video_entries(old_entries, runtime_info)
@@ -535,7 +521,7 @@ class PysaurusCollection(AbstractDatabase):
             f"VALUES ({','.join(f':{field}' for field in fields)})",
             dicts,
         )
-        _map_filenames_to_video_ids(self.db, entries, strict=True)
+        self._map_filenames_to_video_ids(entries, strict=True)
         errors = [
             (entry.video_id, error) for entry in entries for error in entry.errors
         ]
@@ -557,6 +543,27 @@ class PysaurusCollection(AbstractDatabase):
             "VALUES (?, ?, ?, ?)",
             audio_languages + subtitle_languages,
         )
+
+    def _map_filenames_to_video_ids(
+        self, entries: list[VideoEntry], *, strict: bool = False
+    ) -> dict[str, VideoEntry]:
+        db = self.db
+        entry_map = {entry.filename: entry for entry in entries}
+        if len(entry_map) != len(entries):
+            raise ValueError("Duplicate filenames in entries")
+        filenames = list(entry_map.keys())
+        nb_matched = 0
+        with db:
+            for row in db.query(
+                f"SELECT filename, video_id FROM video "
+                f"WHERE filename IN ({sql_placeholders(len(filenames))})",
+                filenames,
+            ):
+                entry_map[row[0]].video_id = row[1]
+                nb_matched += 1
+        if strict and nb_matched != len(entries):
+            raise RuntimeError(f"Expected {len(entries)} video IDs, got {nb_matched}")
+        return entry_map
 
     def _update_fts_properties(self, video_ids=None):
         """Update the `properties` column in FTS5 video_text table.
