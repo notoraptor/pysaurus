@@ -12,7 +12,7 @@ and fake_saurus_database for read-only tests.
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
+from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
 
 
 # =============================================================================

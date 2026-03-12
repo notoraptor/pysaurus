@@ -4,7 +4,7 @@ from typing import Iterable
 
 from skullite import Skullite, SkulliteFunction
 
-from pysaurus.database.saurus.sql import sql_functions
+from pysaurus.database.saurus import sql_functions
 
 
 class PysaurusConnection(Skullite):

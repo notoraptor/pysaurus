@@ -1,6 +1,6 @@
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.database.saurus.sql.sql_utils import FieldQuery
-from pysaurus.database.saurus.sql.sql_video_wrapper import F
+from pysaurus.database.saurus.sql_utils import FieldQuery
+from pysaurus.database.saurus.sql_video_wrapper import F
 
 
 class VideoFieldQueryParser:

@@ -4,9 +4,7 @@ import pytest
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.database.database_algorithms import DatabaseAlgorithms
-from pysaurus.database.saurus.sql.saurus_database_algorithms import (
-    SaurusDatabaseAlgorithms,
-)
+from pysaurus.database.saurus.saurus_database_algorithms import SaurusDatabaseAlgorithms
 from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
 

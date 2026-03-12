@@ -1,5 +1,5 @@
 from pysaurus.core.semantic_text import get_longest_number_in_string
-from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 
 FORMATTED_DURATION_TIME_BASE = "COALESCE(NULLIF(v.duration_time_base, 0), 1)"
 SQL_LENGTH = f"(v.duration * 1.0 / {FORMATTED_DURATION_TIME_BASE})"

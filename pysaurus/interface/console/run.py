@@ -14,7 +14,7 @@ from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
-from pysaurus.database.saurus.sql.pysaurus_collection import PysaurusCollection
+from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
 from pysaurus.dbview.view_context import ViewContext
 
 CONFIG_FILE = ".pysaurus.yaml"

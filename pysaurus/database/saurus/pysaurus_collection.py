@@ -13,17 +13,15 @@ from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropU
 from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
-from pysaurus.database.saurus.sql.prop_type_search import prop_type_search
-from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
-from pysaurus.database.saurus.sql.sql_utils import sql_placeholders
-from pysaurus.database.saurus.sql.sql_useful_constants import WRITABLE_FIELDS
-from pysaurus.database.saurus.sql.video_mega_group import video_mega_group
-from pysaurus.database.saurus.sql.video_mega_search import video_mega_search
-from pysaurus.database.saurus.sql.video_mega_utils import _get_video_moves
+from pysaurus.database.saurus.prop_type_search import prop_type_search
+from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.sql_utils import sql_placeholders
+from pysaurus.database.saurus.sql_useful_constants import WRITABLE_FIELDS
+from pysaurus.database.saurus.video_mega_group import video_mega_group
+from pysaurus.database.saurus.video_mega_search import video_mega_search
+from pysaurus.database.saurus.video_mega_utils import _get_video_moves
 from pysaurus.dbview.field_stat import FieldStat
-from pysaurus.database.saurus.sql.saurus_database_algorithms import (
-    SaurusDatabaseAlgorithms,
-)
+from pysaurus.database.saurus.saurus_database_algorithms import SaurusDatabaseAlgorithms
 
 logger = logging.getLogger(__name__)
 

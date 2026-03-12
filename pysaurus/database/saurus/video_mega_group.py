@@ -10,22 +10,22 @@ from pysaurus.video.video_constants import SIMILARITY_FIELDS as _SIMILARITY_FIEL
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.dbview.view_tools import GroupDef, SearchDef
-from pysaurus.database.saurus.sql.grouping_utils import SqlFieldFactory
-from pysaurus.database.saurus.sql.pysaurus_connection import PysaurusConnection
-from pysaurus.database.saurus.sql.saurus_provider_utils import (
+from pysaurus.database.saurus.grouping_utils import SqlFieldFactory
+from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
+from pysaurus.database.saurus.saurus_provider_utils import (
     GroupCount,
     ProviderVideoParser,
     convert_dict_to_sql,
     search_to_sql,
 )
-from pysaurus.database.saurus.sql.sql_utils import (
+from pysaurus.database.saurus.sql_utils import (
     QueryMaker,
     SQLWhereBuilder,
     TableDef,
     sql_placeholders,
 )
-from pysaurus.database.saurus.sql.sql_video_wrapper import VIDEO_TABLE_FIELD_NAMES
-from pysaurus.database.saurus.sql.video_mega_utils import _get_videos
+from pysaurus.database.saurus.sql_video_wrapper import VIDEO_TABLE_FIELD_NAMES
+from pysaurus.database.saurus.video_mega_utils import _get_videos
 
 
 def video_mega_group(
