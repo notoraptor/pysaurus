@@ -11,9 +11,9 @@ Pysaurus is a video collection manager (WIP) written in Python 3.13. It handles 
 All commands must be run with `uv run`:
 
 ```bash
-# Run the application (default GUI: pywebview on Windows, qt on Linux)
+# Run the application (default GUI: pyside6)
 uv run -m pysaurus
-uv run -m pysaurus pywebview   # or: qtwebview, pyside6
+uv run -m pysaurus pyside6   # or: pywebview, qtwebview
 
 # Run CLI (benchmark/debug console, configured via .pysaurus.yaml)
 uv run -m pysaurus.interface.console.run --db <name>
@@ -54,8 +54,8 @@ Edit files in `src/` — the `build/` directory is auto-generated.
 ### High-level Flow
 
 ```
-__main__.py (GUI selector)
-    → Interface Layer (PyWebView / PySide6 / QtWebView)
+__main__.py (GUI selector, default: pyside6)
+    → Interface Layer (PySide6 / PyWebView / QtWebView)
         → GuiAPI / FeatureAPI (proxy-based API)
             ├─ .view → ViewContext (filtering/grouping state)
             └─ → AbstractDatabase
@@ -64,14 +64,13 @@ __main__.py (GUI selector)
                  └─ .query_videos(view, ...) → VideoSearchContext
 ```
 
-### Two Top-level Python Packages
+### Package Structure
 
-- **`pysaurus/`** — core application code
-- **`saurus/`** — SQL-specific layer (separate top-level package, not inside `pysaurus/`)
+Single top-level package **`pysaurus/`** containing all application code, including the SQL layer at `pysaurus/database/saurus/`.
 
 ### Entry Point
 
-`pysaurus/__main__.py` — selects GUI at runtime based on CLI argument (`pywebview`, `qtwebview`, `pyside6`). Default: pywebview (Windows), qtwebview (Linux).
+`pysaurus/__main__.py` — selects GUI at runtime based on CLI argument (`pyside6`, `pywebview`, `qtwebview`). Default: `pyside6`.
 
 ### Database Layer
 
@@ -81,15 +80,15 @@ Layered separation of concerns:
 - **`database/database_algorithms.py`** — batch processing: update, miniatures, moves (accessed via `db.algos`)
 
 Single backend implementation:
-- **`saurus/sql/pysaurus_collection.py`** — SQLite implementation (uses `skullite` wrapper)
+- **`database/saurus/pysaurus_collection.py`** — SQLite implementation (uses `skullite` wrapper)
 - **`database/database.py`** — exposes `Database = PysaurusCollection`
 
-### SQL Layer (`saurus/sql/`)
+### SQL Layer (`database/saurus/`)
 
 - **`pysaurus_collection.py`** — implements `AbstractDatabase` with SQLite
 - **`pysaurus_connection.py`** — extends `Skullite` (from `skullite` package), loads schema from `database.sql`
 - **`video_mega_group.py` / `video_mega_search.py`** — SQL query builders for grouping and search
-Key schema notes (`saurus/sql/database.sql`):
+Key schema notes (`database/saurus/database.sql`):
 - `video` table uses **virtual generated columns** (e.g., `readable`, `found`, `length_seconds`, `bit_rate`, `day`, `year`)
 - `video_text` is an **FTS5 virtual table** for full-text search with triggers to stay in sync
 - Property value triggers are managed manually in Python (not SQL triggers) for batch performance
@@ -100,7 +99,6 @@ Key schema notes (`saurus/sql/database.sql`):
 - **`view_tools.py`** — `GroupDef`, `SearchDef`, `LookupArray`, etc.
 - **`view_utils.py`** — `parse_sources()`, `parse_sorting()`
 - **`field_stat.py`** — statistics for field groups
-- **`source_def.py`** — source path definitions
 
 Each interface owns a `ViewContext` and mutates it (`view.set_search(...)`, `view.set_grouping(...)`, etc.), then calls `db.query_videos(view, page_size, page)` to get a `VideoSearchContext`.
 
@@ -133,11 +131,11 @@ Python backend sends typed `Notification` objects (`pysaurus/core/notifications.
 
 ### GUI Frontends
 
-| Name | Module | Mechanism | Default on |
+| Name | Module | Mechanism | Status |
 |---|---|---|---|
-| `pywebview` | `using_pywebview/` | Flask HTTP server + `webview` JS bridge | Windows |
-| `qtwebview` | `qtwebview/` | `PySide6.QtWebEngineWidgets` + `QWebChannel` | Linux |
-| `pyside6` | `pyside6/` | Native Qt widgets (no web) | — |
+| `pyside6` | `pyside6/` | Native Qt widgets (no web) | Default / Primary |
+| `pywebview` | `using_pywebview/` | Flask HTTP server + `webview` JS bridge | Legacy |
+| `qtwebview` | `qtwebview/` | `PySide6.QtWebEngineWidgets` + `QWebChannel` | Legacy |
 
 ### Web Frontend (`interface/web/`)
 
