@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Pysaurus - Opération en cours{% endblock %}
+
+{% block content %}
+<h1>Opération en cours</h1>
+<progress id="bar" max="100" value="0"></progress>
+<p id="status">Démarrage...</p>
+<p id="error"></p>
+<script>
+function poll() {
+    fetch("{{ url_for('operation_status') }}")
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            document.getElementById("bar").value = data.percent;
+            document.getElementById("status").textContent = data.message || "En cours...";
+            if (data.error) {
+                document.getElementById("error").textContent = "Erreur : " + data.error;
+            }
+            if (data.done) {
+                if (data.error) {
+                    document.getElementById("status").textContent = "Terminé avec erreur.";
+                } else {
+                    window.location = data.redirect;
+                }
+            } else {
+                setTimeout(poll, 500);
+            }
+        });
+}
+setTimeout(poll, 500);
+</script>
+{% endblock %}

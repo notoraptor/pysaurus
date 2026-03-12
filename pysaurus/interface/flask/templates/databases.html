@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Pysaurus - Bases de données{% endblock %}
+
+{% block content %}
+<h1>Bases de données</h1>
+
+<section>
+    <h2>Ouvrir</h2>
+    {% if databases %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for name in databases %}
+                    <tr>
+                        <td>{{ name }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('open_database') }}">
+                                <input type="hidden" name="name" value="{{ name }}">
+                                <button type="submit">Ouvrir</button>
+                            </form>
+                            <form method="post" action="{{ url_for('delete_database') }}" onsubmit="return confirm('Supprimer définitivement la base « {{ name }} » ?')">
+                                <input type="hidden" name="name" value="{{ name }}">
+                                <button type="submit">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Aucune base de données.</p>
+    {% endif %}
+</section>
+
+<section>
+    <h2>Créer</h2>
+    <form method="post" action="{{ url_for('create_database') }}">
+        <fieldset>
+            <legend>Nouvelle base de données</legend>
+            <label for="db-name">Nom</label>
+            <input type="text" id="db-name" name="name" required autofocus placeholder="ma_collection">
+            <label for="db-folders">Dossiers sources (un par ligne)</label>
+            <textarea id="db-folders" name="folders" rows="4" placeholder="/chemin/vers/videos"></textarea>
+            <button type="submit">Créer</button>
+        </fieldset>
+    </form>
+</section>
+{% endblock %}

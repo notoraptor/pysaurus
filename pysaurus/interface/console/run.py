@@ -8,6 +8,7 @@ from pathlib import Path
 import fire
 import yaml
 
+from pysaurus.core.fs_utils import is_fat_filesystem
 from pysaurus.core.informer import Information
 from pysaurus.core.perf_counter import PerfCounter
 from pysaurus.database.abstract_database import AbstractDatabase
@@ -381,6 +382,71 @@ class BenchmarkAPI:
                 print(f"  ... ({len(modified_files) - limit} more)")
 
         return f"{len(new_files)} new, {len(modified_files)} modified"
+
+    def fix_mtime(self, apply: bool = False, limit: int = 20):
+        """Fix mtime values for videos on FAT/exFAT drives (DST drift correction).
+
+        Re-reads mtime from disk, applies correct_mtime(), and updates the DB
+        for any video whose stored mtime differs from the corrected disk value.
+
+        Args:
+            apply: Actually update the DB. Without this flag, only shows what
+                   would change (dry run).
+            limit: Max number of files to display.
+        """
+        if not isinstance(self._db, PysaurusCollection):
+            return "Only available for SQL backend."
+
+        with PerfCounter() as t:
+            all_files = Videos.get_runtime_info_from_paths(self._db.get_folders())
+        print(
+            f"Scan: {len(all_files)} video(s) on disk ({t.microseconds / 1000:.3f} ms)"
+        )
+
+        # Build map: filename -> (video_id, db_mtime)
+        db_videos: dict[str, tuple[int, float]] = {}
+        for v in self._db.get_videos(
+            include=["filename", "file_size", "mtime", "driver_id"]
+        ):
+            db_videos[str(v.filename)] = (v.video_id, v.mtime)
+
+        # Find mtimes that need correction
+        corrections: list[tuple[int, str, float, float]] = []
+        for file_name, file_info in sorted(all_files.items()):
+            key = str(file_name)
+            if key not in db_videos:
+                continue
+            if not is_fat_filesystem(key):
+                continue
+            video_id, db_mtime = db_videos[key]
+            # file_info.mtime is already corrected by the lister
+            disk_mtime = file_info.mtime
+            if db_mtime != disk_mtime:
+                corrections.append((video_id, key, db_mtime, disk_mtime))
+
+        if not corrections:
+            return "No mtime corrections needed."
+
+        print(f"\n{len(corrections)} video(s) with incorrect mtime on FAT/exFAT:")
+        for video_id, filename, old, new in corrections[:limit]:
+            diff = new - old
+            print(f"  [{video_id}] {filename}")
+            print(f"    {old} -> {new} (diff: {diff:+.0f}s)")
+        if len(corrections) > limit:
+            print(f"  ... ({len(corrections) - limit} more)")
+
+        if not apply:
+            print("\nDry run. Use fix_mtime --apply to update the database.")
+            return f"{len(corrections)} correction(s) pending"
+
+        with PerfCounter() as t:
+            self._db.db.modify_many(
+                "UPDATE video SET mtime = ? WHERE video_id = ?",
+                ((new, vid) for vid, _, _, new in corrections),
+            )
+            self._db.save()
+        print(f"\nUpdated {len(corrections)} mtime(s) ({t.microseconds / 1000:.3f} ms)")
+        return f"{len(corrections)} correction(s) applied"
 
     def repeat(self, command: str = "", n: int = 1):
         """Repeat a command N times and report timing."""

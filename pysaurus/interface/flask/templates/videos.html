@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Pysaurus - {{ database_name }} - Vidéos{% endblock %}
+
+{% block content %}
+<h1>Vidéos <small>({{ view_count }})</small></h1>
+
+{# ============ Stats + Update ============ #}
+<div class="toolbar">
+    <span class="stats">{{ page_total_size }} — {{ page_total_duration }}</span>
+    <a class="btn" href="{{ url_for('random_video') }}">Vidéo aléatoire</a>
+    <form method="post" action="{{ url_for('start_operation') }}">
+        <input type="hidden" name="operation" value="update">
+        <button type="submit">Mettre à jour</button>
+    </form>
+</div>
+
+{# ============ Search ============ #}
+<details{% if search_text %} open{% endif %}>
+    <summary>Recherche{% if search_text %} : « {{ search_text }} »{% endif %}</summary>
+    <form method="post" action="{{ url_for('search_videos') }}">
+        <fieldset>
+            <input type="text" name="q" value="{{ search_text }}" placeholder="Rechercher..." autofocus>
+            <select name="cond">
+                <option value="and" {{ 'selected' if search_cond == 'and' }}>ET (tous les mots)</option>
+                <option value="or" {{ 'selected' if search_cond == 'or' }}>OU (au moins un mot)</option>
+                <option value="exact" {{ 'selected' if search_cond == 'exact' }}>Expression exacte</option>
+                <option value="id" {{ 'selected' if search_cond == 'id' }}>ID vidéo</option>
+            </select>
+            <button type="submit">Chercher</button>
+            {% if search_text %}
+                <a class="btn btn-clear" href="{{ url_for('videos', **keep_params(q='', cond='', page='1')) }}">Effacer</a>
+            {% endif %}
+        </fieldset>
+    </form>
+</details>
+
+{# ============ Sort ============ #}
+<details>
+    <summary>Tri : {{ sorting or "par défaut" }}</summary>
+    <form method="post" action="{{ url_for('sort_videos') }}">
+        <fieldset>
+            <select name="sort">
+                <option value="-date" {{ 'selected' if sorting == '-date' }}>Date (récent d'abord)</option>
+                <option value="date" {{ 'selected' if sorting == 'date' }}>Date (ancien d'abord)</option>
+                <option value="title" {{ 'selected' if sorting == 'title' }}>Titre (A-Z)</option>
+                <option value="-title" {{ 'selected' if sorting == '-title' }}>Titre (Z-A)</option>
+                <option value="-file_size" {{ 'selected' if sorting == '-file_size' }}>Taille (décroissant)</option>
+                <option value="file_size" {{ 'selected' if sorting == 'file_size' }}>Taille (croissant)</option>
+                <option value="-duration" {{ 'selected' if sorting == '-duration' }}>Durée (décroissant)</option>
+                <option value="duration" {{ 'selected' if sorting == 'duration' }}>Durée (croissant)</option>
+            </select>
+            <button type="submit">Trier</button>
+        </fieldset>
+    </form>
+</details>
+
+{# ============ Grouping setup ============ #}
+<details{% if grouping and grouping.field %} open{% endif %}>
+    <summary>Groupement{% if grouping and grouping.field %} : {{ grouping.field }}{% endif %}</summary>
+    <form method="post" action="{{ url_for('group_videos') }}">
+        <fieldset>
+            <label for="gf">Champ</label>
+            <select id="gf" name="group_field">
+                <option value="">— Aucun —</option>
+                <optgroup label="Attributs vidéo">
+                    {% for name, title in group_fields %}
+                        <option value="{{ name }}" {{ 'selected' if grouping and grouping.field == name and not grouping.is_property }}>{{ title }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% if prop_types %}
+                    <optgroup label="Propriétés">
+                        {% for pt in prop_types %}
+                            <option value="{{ pt.name }}" data-property="1" {{ 'selected' if grouping and grouping.field == pt.name and grouping.is_property }}>{{ pt.name }} ({{ pt.type }})</option>
+                        {% endfor %}
+                    </optgroup>
+                {% endif %}
+            </select>
+
+            <label for="gs">Tri des groupes</label>
+            <select id="gs" name="group_sorting">
+                <option value="field" {{ 'selected' if not grouping or grouping.sorting == 'field' }}>Par valeur</option>
+                <option value="count" {{ 'selected' if grouping and grouping.sorting == 'count' }}>Par nombre</option>
+                <option value="length" {{ 'selected' if grouping and grouping.sorting == 'length' }}>Par longueur</option>
+            </select>
+
+            <label>
+                <input type="checkbox" name="group_reverse" value="1" {{ 'checked' if grouping and grouping.reverse }}>
+                Ordre inversé
+            </label>
+
+            <label>
+                <input type="checkbox" name="group_singletons" value="1" {{ 'checked' if not grouping or grouping.allow_singletons }}>
+                Groupes à 1 élément
+            </label>
+
+            <input type="hidden" name="group_is_property" value="0" id="gip">
+            <button type="submit">Grouper</button>
+        </fieldset>
+    </form>
+    <script>
+    document.getElementById("gf").addEventListener("change", function() {
+        var opt = this.options[this.selectedIndex];
+        document.getElementById("gip").value = opt.dataset.property ? "1" : "0";
+    });
+    (function() {
+        var opt = document.getElementById("gf").options[document.getElementById("gf").selectedIndex];
+        if (opt && opt.dataset.property) document.getElementById("gip").value = "1";
+    })();
+    </script>
+</details>
+
+{# ============ Grouping navigation bar ============ #}
+{% if grouping and grouping.field and classifier_stats %}
+    <section class="group-bar">
+        <p>
+            Groupé par : <strong>{{ grouping.field }}</strong>
+            — Groupe {{ (group_id or 0) + 1 }}/{{ classifier_stats|length }}
+            {% if classifier_stats %}
+                — <strong>{{ classifier_stats[group_id or 0].value }}</strong>
+                ({{ classifier_stats[group_id or 0].count }} vidéo{{ 's' if classifier_stats[group_id or 0].count > 1 }})
+            {% endif %}
+            — <a href="{{ url_for('videos', **keep_params(group_field='', group_is_property='', group_sorting='', group_reverse='', group_singletons='', group='', page='1')) }}">Supprimer le groupement</a>
+        </p>
+        {% if classifier_stats|length > 1 %}
+            <form method="get" action="{{ url_for('videos') }}">
+                {% for key, value in request.args.items() %}
+                    {% if key != 'group' and key != 'page' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+                <input type="hidden" name="page" value="1">
+
+                {% set prev_group = (group_id or 0) - 1 %}
+                {% set next_group = (group_id or 0) + 1 %}
+
+                <a class="btn btn-sm{% if prev_group < 0 %} disabled{% endif %}"
+                   {% if prev_group >= 0 %}href="{{ url_for('videos', **keep_params(group=prev_group, page='1')) }}"{% endif %}
+                >&#9664;&#9664;</a>
+                <a class="btn btn-sm{% if prev_group < 0 %} disabled{% endif %}"
+                   {% if prev_group >= 0 %}href="{{ url_for('videos', **keep_params(group=prev_group, page='1')) }}"{% endif %}
+                >&#9664; Préc.</a>
+
+                <select name="group" onchange="this.form.submit()">
+                    {% for stat in classifier_stats %}
+                        <option value="{{ loop.index0 }}" {{ 'selected' if loop.index0 == (group_id or 0) }}>{{ stat.value }} ({{ stat.count }})</option>
+                    {% endfor %}
+                </select>
+
+                <a class="btn btn-sm{% if next_group >= classifier_stats|length %} disabled{% endif %}"
+                   {% if next_group < classifier_stats|length %}href="{{ url_for('videos', **keep_params(group=next_group, page='1')) }}"{% endif %}
+                >Suiv. &#9654;</a>
+                <a class="btn btn-sm{% if next_group >= classifier_stats|length %} disabled{% endif %}"
+                   {% if next_group < classifier_stats|length %}href="{{ url_for('videos', **keep_params(group=next_group, page='1')) }}"{% endif %}
+                >&#9654;&#9654;</a>
+            </form>
+        {% endif %}
+    </section>
+{% endif %}
+
+{# ============ Pagination + page size ============ #}
+{% macro pagination() %}
+<nav class="pagination">
+    <a class="btn btn-sm{% if page <= 1 %} disabled{% endif %}"
+       {% if page > 1 %}href="{{ url_for('videos', **keep_params(page=1)) }}"{% endif %}
+    >&#9664;&#9664;</a>
+    <a class="btn btn-sm{% if page <= 1 %} disabled{% endif %}"
+       {% if page > 1 %}href="{{ url_for('videos', **keep_params(page=page - 1)) }}"{% endif %}
+    >&#9664;</a>
+
+    <form class="page-jump" method="get" action="{{ url_for('videos') }}">
+        {% for key, value in request.args.items() %}
+            {% if key != 'page' %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+            {% endif %}
+        {% endfor %}
+        <span>Page</span>
+        <input type="number" name="page" value="{{ page }}" min="1" max="{{ nb_pages }}" size="3">
+        <span>/ {{ nb_pages }}</span>
+    </form>
+
+    <a class="btn btn-sm{% if page >= nb_pages %} disabled{% endif %}"
+       {% if page < nb_pages %}href="{{ url_for('videos', **keep_params(page=page + 1)) }}"{% endif %}
+    >&#9654;</a>
+    <a class="btn btn-sm{% if page >= nb_pages %} disabled{% endif %}"
+       {% if page < nb_pages %}href="{{ url_for('videos', **keep_params(page=nb_pages)) }}"{% endif %}
+    >&#9654;&#9654;</a>
+
+    <span class="page-size-selector">
+        Afficher :
+        {% for ps in [10, 20, 50, 100] %}
+            {% if ps == page_size %}
+                <strong>{{ ps }}</strong>
+            {% else %}
+                <a href="{{ url_for('videos', **keep_params(page_size=ps, page=1)) }}">{{ ps }}</a>
+            {% endif %}
+        {% endfor %}
+    </span>
+</nav>
+{% endmacro %}
+
+{{ pagination() }}
+
+{# ============ Video list ============ #}
+{% if videos %}
+    <div class="video-list">
+        {% for video in videos %}
+            <a class="video-item{% if not video.found %} not-found{% endif %}" href="{{ url_for('video_detail', video_id=video.video_id) }}">
+                <div class="video-thumb">
+                    <img src="{{ url_for('thumbnail', video_id=video.video_id) }}" alt="" loading="lazy">
+                    <span class="video-badge">{{ video.length }}</span>
+                </div>
+                <div class="video-info">
+                    <div class="video-title">{{ video.title }}</div>
+                    <div class="video-meta">
+                        {{ video.extension }}
+                        · {{ video.size }}
+                        · {{ video.width }}×{{ video.height }}
+                        {% if video.frame_rate %}· {{ "%.2g"|format(video.frame_rate) }} fps{% endif %}
+                    </div>
+                    <div class="video-meta">
+                        {{ video.video_codec }}{% if video.audio_codec %} / {{ video.audio_codec }}{% endif %}
+                        · {{ video.date }}
+                        {% if video.watched %} · <span class="watched-badge">vu</span>{% endif %}
+                        {% if not video.found %} · <span class="missing-badge">introuvable</span>{% endif %}
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>Aucune vidéo trouvée.</p>
+{% endif %}
+
+{{ pagination() }}
+{% endblock %}

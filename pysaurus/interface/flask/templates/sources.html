@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Pysaurus - {{ database_name }} - Sources{% endblock %}
+
+{% block content %}
+<h1>Dossiers sources</h1>
+
+<section>
+    <h2>Dossiers actuels</h2>
+    {% if folders %}
+        <ul>
+            {% for folder in folders %}
+                <li>{{ folder }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucun dossier source configuré.</p>
+    {% endif %}
+</section>
+
+<section>
+    <h2>Modifier</h2>
+    <form method="post" action="{{ url_for('update_sources') }}">
+        <fieldset>
+            <legend>Dossiers sources (un par ligne)</legend>
+            <textarea name="folders" rows="6" placeholder="/chemin/vers/videos">{{ folders|join('\n') }}</textarea>
+            <button type="submit">Enregistrer</button>
+        </fieldset>
+    </form>
+</section>
+{% endblock %}

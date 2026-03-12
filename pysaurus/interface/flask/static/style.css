@@ -1,0 +1,575 @@
+/* Pysaurus Flask interface */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #1a1a1a;
+    background: #f8f8f8;
+    line-height: 1.5;
+}
+
+a {
+    color: #2980b9;
+}
+
+a:hover {
+    color: #1a5276;
+}
+
+/* Header / Navigation */
+
+header {
+    background: #2c3e50;
+    color: white;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+}
+
+nav > a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav > a:hover {
+    text-decoration: underline;
+}
+
+nav > span {
+    color: #a0c4e8;
+    margin-right: auto;
+}
+
+nav form {
+    margin: 0;
+}
+
+nav button {
+    background: transparent;
+    color: #e0e0e0;
+    border: 1px solid #e0e0e0;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+nav button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Main content */
+
+main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+h1 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+h1 small {
+    font-weight: normal;
+    font-size: 0.6em;
+    color: #666;
+}
+
+h2 {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.3rem;
+}
+
+/* Toolbar (stats + update button) */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.toolbar .stats {
+    color: #555;
+    font-size: 0.9em;
+}
+
+.toolbar form {
+    margin: 0;
+}
+
+.toolbar button {
+    margin-top: 0;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85em;
+}
+
+/* Tables */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background: #ecf0f1;
+    font-weight: 600;
+}
+
+td form {
+    display: inline-block;
+    margin: 0 0.25rem;
+}
+
+td img {
+    vertical-align: middle;
+}
+
+/* Forms */
+
+fieldset {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+legend {
+    font-weight: 600;
+    padding: 0 0.5rem;
+}
+
+legend small {
+    font-weight: normal;
+    color: #666;
+}
+
+label {
+    display: block;
+    margin-top: 0.75rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+input[type="text"], textarea, select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font: inherit;
+}
+
+input[type="text"], textarea {
+    width: 100%;
+}
+
+button {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1.2rem;
+    background: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font: inherit;
+}
+
+button:hover {
+    background: #1a252f;
+}
+
+/* Buttons (link-style) */
+
+.btn {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    text-decoration: none;
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+.btn-sm {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.85em;
+}
+
+.btn-clear {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-clear:hover {
+    background: #c0392b;
+    color: white;
+}
+
+.btn.disabled {
+    color: #bbb;
+    pointer-events: none;
+}
+
+/* Flash messages */
+
+.flash {
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.flash.error {
+    background: #fdecea;
+    color: #b71c1c;
+    border: 1px solid #f5c6cb;
+}
+
+.flash.message {
+    background: #e8f5e9;
+    color: #1b5e20;
+    border: 1px solid #c8e6c9;
+}
+
+/* Details / Summary (used for collapsible sections) */
+
+details {
+    margin: 0.75rem 0;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: 500;
+    padding: 0.4rem 0;
+}
+
+details form {
+    margin-top: 0.5rem;
+}
+
+details form button {
+    margin-top: 0.25rem;
+}
+
+/* Videos page — inline fieldsets (search, sort) */
+
+details > form > fieldset {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+details > form > fieldset > input[type="text"] {
+    width: auto;
+    flex: 1;
+    min-width: 150px;
+}
+
+details > form > fieldset > button {
+    margin-top: 0;
+}
+
+/* Group navigation bar */
+
+.group-bar {
+    background: #eef2f7;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.group-bar p {
+    margin: 0 0 0.5rem;
+}
+
+.group-bar form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Pagination */
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+    flex-wrap: wrap;
+}
+
+.page-jump {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0;
+}
+
+.page-jump input[type="number"] {
+    width: 4em;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font: inherit;
+    text-align: center;
+}
+
+.page-size-selector {
+    margin-left: auto;
+    font-size: 0.85em;
+    color: #555;
+}
+
+.page-size-selector a {
+    margin: 0 0.15rem;
+}
+
+.page-size-selector strong {
+    margin: 0 0.15rem;
+    color: #1a1a1a;
+}
+
+/* Video list */
+
+.video-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.video-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.1s;
+}
+
+.video-item:hover {
+    background: #eef2f7;
+    color: inherit;
+}
+
+.video-item.not-found {
+    opacity: 0.5;
+}
+
+.video-thumb {
+    position: relative;
+    flex-shrink: 0;
+    width: 160px;
+    height: 90px;
+    background: #1a1a1a;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.video-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.video-badge {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    font-size: 0.7em;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+.video-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    gap: 0.15rem;
+}
+
+.video-title {
+    font-weight: 600;
+    font-size: 0.95em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.video-meta {
+    font-size: 0.8em;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.watched-badge {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.missing-badge {
+    color: #c0392b;
+    font-weight: 600;
+}
+
+/* Video detail page */
+
+.detail-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-thumb {
+    position: relative;
+    flex-shrink: 0;
+    width: 320px;
+    height: 180px;
+    background: #1a1a1a;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.detail-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.detail-title-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.detail-title-block h1 {
+    margin: 0;
+    font-size: 1.4em;
+    word-break: break-word;
+}
+
+.detail-subtitle {
+    font-size: 0.85em;
+    color: #666;
+    word-break: break-all;
+    margin-top: 0.25rem;
+}
+
+.detail-section {
+    margin-bottom: 1.5rem;
+}
+
+.detail-table {
+    width: auto;
+    margin-bottom: 1rem;
+}
+
+.detail-table th {
+    background: none;
+    color: #666;
+    font-weight: 500;
+    white-space: nowrap;
+    width: 1%;
+    padding-right: 1.5rem;
+}
+
+.detail-table td {
+    word-break: break-all;
+}
+
+.text-muted {
+    color: #888;
+    font-size: 0.9em;
+}
+
+.action-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.action-bar form {
+    margin: 0;
+}
+
+.action-bar button {
+    margin-top: 0;
+}
+
+.btn-danger {
+    background: #c0392b;
+}
+
+.btn-danger:hover {
+    background: #96281b;
+}
+
+/* Property multi-value editing */
+
+.prop-field {
+    display: block;
+}
+
+.multi-values {
+    margin-bottom: 0.25rem;
+}
+
+.multi-value-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.multi-value-row input[type="text"] {
+    flex: 1;
+}
+
+.multi-value-row button {
+    margin-top: 0;
+    padding: 0.3rem 0.6rem;
+    background: #c0392b;
+    flex-shrink: 0;
+}
+
+.multi-value-row button:hover {
+    background: #96281b;
+}
+
+/* Operation progress page */
+
+progress {
+    width: 100%;
+    height: 1.5rem;
+    margin: 1rem 0;
+}
+
+#error {
+    color: #b71c1c;
+    font-weight: 500;
+}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Pysaurus - {{ database_name }} - Propriétés{% endblock %}
+
+{% block content %}
+<h1>Propriétés</h1>
+
+{# ============ Existing properties ============ #}
+{% if prop_types %}
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Multiple</th>
+                <th>Valeur par défaut</th>
+                <th>Énumération</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pt in prop_types %}
+                <tr>
+                    <td>{{ pt.name }}</td>
+                    <td>{{ pt.type }}</td>
+                    <td>{{ "oui" if pt.multiple else "non" }}</td>
+                    <td>{{ pt.defaultValues|join(", ") }}</td>
+                    <td>{{ pt.enumeration|join(", ") if pt.enumeration else "—" }}</td>
+                    <td>
+                        <details>
+                            <summary>Renommer</summary>
+                            <form method="post" action="{{ url_for('rename_prop_type', name=pt.name) }}">
+                                <input type="text" name="new_name" value="{{ pt.name }}" required>
+                                <button type="submit">Renommer</button>
+                            </form>
+                        </details>
+                        <form method="post" action="{{ url_for('delete_prop_type', name=pt.name) }}" onsubmit="return confirm('Supprimer la propriété « {{ pt.name }} » ?')">
+                            <button type="submit">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Aucune propriété définie.</p>
+{% endif %}
+
+{# ============ Create property ============ #}
+<section>
+    <h2>Créer une propriété</h2>
+    <form method="post" action="{{ url_for('create_prop_type') }}">
+        <fieldset>
+            <legend>Nouvelle propriété</legend>
+
+            <label for="prop-name">Nom</label>
+            <input type="text" id="prop-name" name="name" required placeholder="genre">
+
+            <label for="prop-type">Type</label>
+            <select id="prop-type" name="type">
+                <option value="str">str</option>
+                <option value="int">int</option>
+                <option value="float">float</option>
+                <option value="bool">bool</option>
+            </select>
+
+            <label for="prop-multiple">
+                <input type="checkbox" id="prop-multiple" name="multiple" value="1">
+                Valeurs multiples (str uniquement)
+            </label>
+
+            <label for="prop-default">Valeur par défaut</label>
+            <input type="text" id="prop-default" name="default" placeholder="valeur par défaut">
+
+            <label for="prop-enum">Énumération (valeurs séparées par des virgules, str uniquement)</label>
+            <input type="text" id="prop-enum" name="enumeration" placeholder="action, comédie, drame">
+
+            <button type="submit">Créer</button>
+        </fieldset>
+    </form>
+</section>
+{% endblock %}

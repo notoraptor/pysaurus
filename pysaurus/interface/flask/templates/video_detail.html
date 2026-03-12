@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Pysaurus - {{ video.title }}{% endblock %}
+
+{% block content %}
+<p><a href="{{ url_for('videos') }}">&larr; Retour à la liste</a></p>
+
+<div class="detail-header">
+    <div class="detail-thumb">
+        <img src="{{ url_for('thumbnail', video_id=video.video_id) }}" alt="">
+        <span class="video-badge">{{ video.length }}</span>
+    </div>
+    <div class="detail-title-block">
+        <h1>{{ video.title }}</h1>
+        {% if video.meta_title and video.meta_title != video.file_title %}
+            <div class="detail-subtitle">{{ video.file_title }}</div>
+        {% endif %}
+        <div class="detail-subtitle">{{ video.filename }}</div>
+    </div>
+</div>
+
+{# ============ Info ============ #}
+<section class="detail-section">
+    <h2>Fichier</h2>
+    <table class="detail-table">
+        <tr><th>Taille</th><td>{{ video.size }}</td></tr>
+        <tr><th>Extension</th><td>{{ video.extension }}</td></tr>
+        <tr><th>Container</th><td>{{ video.container_format }}</td></tr>
+        <tr><th>Date de modification</th><td>{{ video.date }}</td></tr>
+        <tr><th>Date d'entrée</th><td>{{ video.date_entry_modified }}</td></tr>
+        <tr><th>Dernier visionnage</th><td>{{ video.date_entry_opened }}</td></tr>
+    </table>
+
+    <h2>Vidéo</h2>
+    <table class="detail-table">
+        <tr><th>Résolution</th><td>{{ video.width }}×{{ video.height }}</td></tr>
+        <tr><th>Codec</th><td>{{ video.video_codec }}{% if video.video_codec_description %} <span class="text-muted">({{ video.video_codec_description }})</span>{% endif %}</td></tr>
+        <tr><th>Débit</th><td>{{ video.bit_rate }}</td></tr>
+        <tr><th>Images/s</th><td>{{ "%.2f"|format(video.frame_rate) }}</td></tr>
+        {% if video.bit_depth %}
+            <tr><th>Profondeur</th><td>{{ video.bit_depth }} bits</td></tr>
+        {% endif %}
+    </table>
+
+    <h2>Audio</h2>
+    <table class="detail-table">
+        <tr><th>Codec</th><td>{{ video.audio_codec }}{% if video.audio_codec_description %} <span class="text-muted">({{ video.audio_codec_description }})</span>{% endif %}</td></tr>
+        {% if video.sample_rate %}
+            <tr><th>Échantillonnage</th><td>{{ video.sample_rate }} Hz</td></tr>
+        {% endif %}
+        {% if video.channels %}
+            <tr><th>Canaux</th><td>{{ video.channels }}</td></tr>
+        {% endif %}
+        {% if video.audio_bit_rate_kbps %}
+            <tr><th>Débit audio</th><td>{{ video.audio_bit_rate_kbps }} kbps</td></tr>
+        {% endif %}
+        {% if video.audio_bits %}
+            <tr><th>Bits audio</th><td>{{ video.audio_bits }}</td></tr>
+        {% endif %}
+        {% if video.audio_languages %}
+            <tr><th>Langues</th><td>{{ video.audio_languages|join(", ") }}</td></tr>
+        {% endif %}
+        {% if video.subtitle_languages %}
+            <tr><th>Sous-titres</th><td>{{ video.subtitle_languages|join(", ") }}</td></tr>
+        {% endif %}
+    </table>
+
+    <h2>État</h2>
+    <table class="detail-table">
+        <tr>
+            <th>Vu</th>
+            <td>
+                {{ "Oui" if video.watched else "Non" }}
+                <form method="post" action="{{ url_for('toggle_watched', video_id=video.video_id) }}">
+                    <button type="submit">{{ "Marquer non vu" if video.watched else "Marquer vu" }}</button>
+                </form>
+            </td>
+        </tr>
+        <tr><th>Trouvé</th><td>{{ "Oui" if video.found else "Non" }}</td></tr>
+        <tr><th>Lisible</th><td>{{ "Oui" if video.readable else "Non" }}</td></tr>
+        <tr><th>Miniature</th><td>{{ "Oui" if video.with_thumbnails else "Non" }}</td></tr>
+        {% if video.similarity_id is not none %}
+            <tr><th>Similarité</th><td>{{ video.similarity }}</td></tr>
+        {% endif %}
+        {% if video.similarity_id_reencoded is not none %}
+            <tr><th>Similarité (ré-enc.)</th><td>{{ video.similarity_reencoded }}</td></tr>
+        {% endif %}
+        <tr><th>ID</th><td>{{ video.video_id }}</td></tr>
+    </table>
+</section>
+
+{# ============ Actions ============ #}
+<section class="detail-section">
+    <h2>Actions</h2>
+
+    <div class="action-bar">
+        <form method="post" action="{{ url_for('play_video', video_id=video.video_id) }}">
+            <button type="submit">Lire la vidéo</button>
+        </form>
+        <form method="post" action="{{ url_for('open_folder', video_id=video.video_id) }}">
+            <button type="submit">Ouvrir le dossier</button>
+        </form>
+    </div>
+
+    <details>
+        <summary>Renommer</summary>
+        <form method="post" action="{{ url_for('rename_video', video_id=video.video_id) }}">
+            <input type="text" name="new_title" value="{{ video.file_title }}" required>
+            <button type="submit">Renommer</button>
+        </form>
+    </details>
+
+    <details>
+        <summary>Supprimer</summary>
+        <form method="post" action="{{ url_for('trash_video', video_id=video.video_id) }}" onsubmit="return confirm('Mettre cette vidéo à la corbeille ?')">
+            <button type="submit">Corbeille</button>
+        </form>
+        <form method="post" action="{{ url_for('delete_video', video_id=video.video_id) }}" onsubmit="return confirm('Supprimer DÉFINITIVEMENT cette vidéo ?')">
+            <button type="submit" class="btn-danger">Supprimer définitivement</button>
+        </form>
+    </details>
+</section>
+
+{# ============ Properties ============ #}
+{% if prop_types %}
+<section class="detail-section">
+    <h2>Propriétés</h2>
+    <form method="post" action="{{ url_for('update_properties', video_id=video.video_id) }}">
+        {% for pt in prop_types %}
+            {% set name = pt.name %}
+            {% set ptype = pt.type %}
+            {% set multiple = pt.multiple %}
+            {% set current_values = video.properties.get(name, []) %}
+            <fieldset class="prop-field">
+                <legend>{{ name }} <small>({{ ptype }}{% if multiple %}, multiple{% endif %})</small></legend>
+                {% if ptype == "bool" %}
+                    <select name="prop_{{ name }}">
+                        <option value="false" {{ '' if current_values and current_values[0] else 'selected' }}>Non</option>
+                        <option value="true" {{ 'selected' if current_values and current_values[0] else '' }}>Oui</option>
+                    </select>
+                {% elif multiple %}
+                    <div class="multi-values" data-name="prop_{{ name }}">
+                        {% for val in current_values %}
+                            <div class="multi-value-row">
+                                <input type="text" name="prop_{{ name }}" value="{{ val }}">
+                                <button type="button" onclick="this.parentElement.remove()">−</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" onclick="addValue(this.previousElementSibling, 'prop_{{ name }}')">+ Ajouter</button>
+                {% else %}
+                    <input type="text" name="prop_{{ name }}" value="{{ current_values[0] if current_values else '' }}" placeholder="{{ ptype }}">
+                {% endif %}
+            </fieldset>
+        {% endfor %}
+        <button type="submit">Enregistrer les propriétés</button>
+    </form>
+</section>
+<script>
+function addValue(container, name) {
+    var row = document.createElement("div");
+    row.className = "multi-value-row";
+    var input = document.createElement("input");
+    input.type = "text";
+    input.name = name;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "\u2212";
+    btn.onclick = function() { row.remove(); };
+    row.appendChild(input);
+    row.appendChild(btn);
+    container.appendChild(row);
+    input.focus();
+}
+</script>
+{% endif %}
+{% endblock %}

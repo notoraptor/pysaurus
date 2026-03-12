@@ -4,6 +4,7 @@
 /*.zip
 *.log
 *.pyc
+__pycache__/
 *.csv
 *.tsv
 .idea
