@@ -4,7 +4,7 @@ from pysaurus.core import constants
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.fs_utils import correct_mtime
 from pysaurus.core.modules import FileSystem
-from pysaurus.video import VideoRuntimeInfo
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
 
 def _scan_folder_for_videos(folder: str, files: dict[AbsolutePath, VideoRuntimeInfo]):

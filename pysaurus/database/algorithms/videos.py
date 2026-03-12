@@ -6,7 +6,7 @@ from pysaurus.core.informer import Information
 from pysaurus.core.modules import FNV64
 from pysaurus.core.parallelization import parallelize
 from pysaurus.core.profiling import Profiler
-from pysaurus.video import VideoRuntimeInfo
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video.video_file_lister import scan_path_for_videos
 from pysaurus.video_raptor.video_raptor_pyav import (
     PythonVideoRaptor,

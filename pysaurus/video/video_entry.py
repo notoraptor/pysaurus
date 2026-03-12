@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass, field
 from typing import Any, Sequence
 
-from pysaurus.video import VideoRuntimeInfo
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
 
 @dataclass(slots=True)
