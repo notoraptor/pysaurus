@@ -5,12 +5,12 @@ from typing import Any
 from pysaurus.core.classes import Selector
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
+from pysaurus.dbview.field_stat import FieldStat
+from pysaurus.dbview.view_tools import GroupDef, SearchDef
 from pysaurus.video.video_constants import COMMON_FIELDS, SIMILARITY_FIELDS
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_sorting import VideoSorting
-from pysaurus.dbview.field_stat import FieldStat
-from pysaurus.dbview.view_tools import GroupDef, SearchDef
 
 
 @dataclass(slots=True)

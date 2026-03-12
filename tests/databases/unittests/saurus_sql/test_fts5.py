@@ -17,7 +17,6 @@ from pysaurus.database.saurus.sql_functions import pysaurus_text_to_fts
 from pysaurus.dbview.view_context import ViewContext
 from tests.utils import get_saurus_sql_database
 
-
 EXAMPLE_DB_FOLDER = pytest.importorskip("tests.conftest").EXAMPLE_DB_FOLDER
 
 

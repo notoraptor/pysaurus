@@ -1,9 +1,9 @@
 from typing import Any, Iterable, Self
 
 from pysaurus.core import functions
-from pysaurus.dbview.view_tools import SearchDef
-from pysaurus.database.saurus.video_parser import VideoFieldQueryParser
 from pysaurus.database.saurus.sql_utils import FieldQuery
+from pysaurus.database.saurus.video_parser import VideoFieldQueryParser
+from pysaurus.dbview.view_tools import SearchDef
 
 
 def get_jointure(field: str) -> str:

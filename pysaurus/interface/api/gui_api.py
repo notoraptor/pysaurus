@@ -14,6 +14,7 @@ from pysaurus.core.classes import Runnable
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.informer import Information
+from pysaurus.core.language import say
 from pysaurus.core.notifications import (
     Cancelled,
     DatabaseReady,
@@ -29,7 +30,6 @@ from pysaurus.database.features.db_similar_videos import DbSimilarVideos
 from pysaurus.interface.api.api_utils.proxy_feature import FromPyperclip, FromTk
 from pysaurus.interface.api.api_utils.vlc_path import PYTHON_HAS_RUNTIME_VLC, VLC_PATH
 from pysaurus.interface.api.feature_api import FeatureAPI
-from pysaurus.core.language import say
 
 logger = logging.getLogger(__name__)
 

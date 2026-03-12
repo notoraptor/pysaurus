@@ -1,14 +1,12 @@
 import dataclasses
 import json
+import socket
 import threading
+from contextlib import closing
 from dataclasses import dataclass
 from multiprocessing.connection import Client, Listener
 from pathlib import Path
 from typing import Any, Callable
-
-
-import socket
-from contextlib import closing
 
 
 def get_random_unused_port():

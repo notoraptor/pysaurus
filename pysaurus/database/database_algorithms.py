@@ -16,14 +16,14 @@ import ujson as json
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.datestring import Date
+from pysaurus.core.language import say
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video.video_entry import VideoEntry
-from pysaurus.core.language import say
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
 logger = logging.getLogger(__name__)
 

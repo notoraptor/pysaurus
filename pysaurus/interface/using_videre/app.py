@@ -1,9 +1,10 @@
 # ruff: noqa: F811
 from typing import Any, Callable
 
-from ovld import OvldMC
-
 import videre
+from ovld import OvldMC
+from videre.widgets.widget import Widget
+
 from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.constants import VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE
 from pysaurus.core.informer import Information
@@ -15,7 +16,6 @@ from pysaurus.interface.using_videre.videre_notifications import (
     RequestedDatabaseUpdate,
     RequestedHomePage,
 )
-from videre.widgets.widget import Widget
 
 
 class App(metaclass=OvldMC):

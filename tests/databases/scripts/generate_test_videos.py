@@ -21,7 +21,6 @@ from pathlib import Path
 import av
 import numpy as np
 
-
 # Smaller resolutions for faster generation
 RESOLUTIONS = [(160, 120), (320, 240), (320, 180), (480, 270), (640, 360)]
 

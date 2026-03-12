@@ -10,8 +10,8 @@ import pprint
 import pytest
 
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.interface.common.common import FIELD_MAP
 from pysaurus.dbview.view_context import ViewContext
+from pysaurus.interface.common.common import FIELD_MAP
 
 
 @pytest.fixture

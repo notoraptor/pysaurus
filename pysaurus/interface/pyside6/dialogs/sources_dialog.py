@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-
 # Source tree structure
 SOURCE_TREE = {
     "readable": {

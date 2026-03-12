@@ -12,8 +12,8 @@ from typing import Sequence
 
 from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
-from pysaurus.dbview.view_utils import parse_sorting, parse_sources
 from pysaurus.dbview.view_tools import GroupDef, SearchDef
+from pysaurus.dbview.view_utils import parse_sorting, parse_sources
 
 
 class ViewContext:

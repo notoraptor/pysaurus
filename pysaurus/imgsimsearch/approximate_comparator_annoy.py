@@ -1,9 +1,8 @@
 """Currently unused."""
 
-from typing import Any
-
-import math
 import logging
+import math
+from typing import Any
 
 try:
     from annoy import AnnoyIndex

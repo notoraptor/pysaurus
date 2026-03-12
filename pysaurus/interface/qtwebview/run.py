@@ -1,6 +1,5 @@
 # ruff: noqa: E402
 import logging
-
 import sys
 
 from pysaurus import package_dir

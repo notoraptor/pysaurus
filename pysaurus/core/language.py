@@ -1,9 +1,11 @@
+from dataclasses import dataclass, field
+
+from filelock import SoftFileLock
+
 from pysaurus.core import dict_file_format as dff
 from pysaurus.core.absolute_path import AbsolutePath, PathType
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.modules import FNV64
-from dataclasses import dataclass, field
-from filelock import SoftFileLock
 
 
 @dataclass

@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.interface.pyside6.widgets.flow_layout import FlowLayout
-
 from pysaurus.video.video_pattern import VideoPattern
 
 # Zero Width Space - allows line breaks without visible character

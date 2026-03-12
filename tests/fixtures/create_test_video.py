@@ -11,10 +11,10 @@ Usage:
 """
 
 import argparse
+from pathlib import Path
 
 import av
 import numpy as np
-from pathlib import Path
 
 
 def create_test_video(duration_seconds=1, output_path=None):

@@ -2,12 +2,12 @@ from collections import defaultdict
 from typing import Iterable, Sequence
 
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.properties.properties import PropTypeValidator
-from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.database.saurus.prop_type_search import prop_type_search
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.sql_utils import sql_placeholders
 from pysaurus.database.saurus.sql_video_wrapper import SQLVideoWrapper
+from pysaurus.properties.properties import PropTypeValidator
+from pysaurus.video.video_pattern import VideoPattern
 
 
 def _get_videos(

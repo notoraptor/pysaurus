@@ -35,14 +35,16 @@ def conn():
     c.create_function("text_to_fts", 1, _text_to_fts, deterministic=True)
     # Create tables
     c.executescript("""
-        CREATE TABLE video (
-            video_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename TEXT NOT NULL,
-            meta_title TEXT NOT NULL DEFAULT ''
-        );
-        CREATE VIRTUAL TABLE video_text
+                    CREATE TABLE video
+                    (
+                        video_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+                        filename   TEXT NOT NULL,
+                        meta_title TEXT NOT NULL DEFAULT ''
+                    );
+                    CREATE
+                    VIRTUAL TABLE video_text
             USING fts5(filename, meta_title, properties);
-    """)
+                    """)
     yield c
     c.close()
 
@@ -107,12 +109,14 @@ class TestInsertTrigger:
     def test_after_insert_new_video_id(self, conn):
         """AFTER INSERT trigger can read NEW.video_id (autoincrement)."""
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (NEW.video_id, NEW.filename, NEW.meta_title);
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id, NEW.filename, NEW.meta_title);
+                     END
+                     """)
         conn.execute(
             "INSERT INTO video (filename, meta_title) VALUES ('file1.mp4', 'Title1')"
         )
@@ -133,12 +137,14 @@ class TestInsertTrigger:
     def test_after_insert_multiple_rows(self, conn):
         """AFTER INSERT trigger works for multiple sequential inserts."""
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (NEW.video_id, NEW.filename, NEW.meta_title);
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id, NEW.filename, NEW.meta_title);
+                     END
+                     """)
         for i in range(5):
             conn.execute(
                 "INSERT INTO video (filename, meta_title) VALUES (?, ?)",
@@ -161,16 +167,16 @@ class TestInsertTrigger:
     def test_after_insert_with_function(self, conn):
         """AFTER INSERT trigger can call registered Python function."""
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id,
+                                 text_to_fts(NEW.filename),
+                                 text_to_fts(NEW.meta_title));
+                     END
+                     """)
         conn.execute(
             "INSERT INTO video (filename, meta_title) "
             "VALUES ('MyCamelFile.mp4', 'SomeTitle')"
@@ -186,16 +192,16 @@ class TestInsertTrigger:
     def test_after_insert_searchable(self, conn):
         """FTS5 row created by trigger is searchable via MATCH."""
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id,
+                                 text_to_fts(NEW.filename),
+                                 text_to_fts(NEW.meta_title));
+                     END
+                     """)
         conn.execute(
             "INSERT INTO video (filename, meta_title) "
             "VALUES ('MyCamelFile.mp4', 'SomeTitle')"
@@ -210,16 +216,16 @@ class TestInsertTrigger:
     def test_after_insert_executemany(self, conn):
         """AFTER INSERT trigger works with executemany (batch insert)."""
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id,
+                                 text_to_fts(NEW.filename),
+                                 text_to_fts(NEW.meta_title));
+                     END
+                     """)
         data = [(f"File{i}Name.mp4", f"Title{i}") for i in range(10)]
         conn.executemany("INSERT INTO video (filename, meta_title) VALUES (?, ?)", data)
 
@@ -232,12 +238,14 @@ class TestInsertTrigger:
         """BEFORE INSERT trigger: NEW.video_id is NULL for autoincrement."""
         # This documents the known limitation
         conn.execute("""
-            CREATE TRIGGER on_video_insert_before BEFORE INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (NEW.video_id, NEW.filename, NEW.meta_title);
-            END
-        """)
+                     CREATE TRIGGER on_video_insert_before
+                         BEFORE INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id, NEW.filename, NEW.meta_title);
+                     END
+                     """)
         # BEFORE INSERT: NEW.video_id should be NULL for autoincrement
         # This should either fail or produce unexpected results
         try:
@@ -268,35 +276,37 @@ class TestUpdateTrigger:
         self.conn = conn
         # Insert trigger for seeding
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id,
+                                 text_to_fts(NEW.filename),
+                                 text_to_fts(NEW.meta_title));
+                     END
+                     """)
         # UPDATE triggers
         conn.execute("""
-            CREATE TRIGGER on_video_update_filename
-            AFTER UPDATE OF filename ON video
-            BEGIN
-                UPDATE video_text
-                SET filename = text_to_fts(NEW.filename)
-                WHERE rowid = OLD.video_id;
-            END
-        """)
+                     CREATE TRIGGER on_video_update_filename
+                         AFTER UPDATE OF filename
+                         ON video
+                     BEGIN
+                         UPDATE video_text
+                         SET filename = text_to_fts(NEW.filename)
+                         WHERE rowid = OLD.video_id;
+                     END
+                     """)
         conn.execute("""
-            CREATE TRIGGER on_video_update_meta_title
-            AFTER UPDATE OF meta_title ON video
-            BEGIN
-                UPDATE video_text
-                SET meta_title = text_to_fts(NEW.meta_title)
-                WHERE rowid = OLD.video_id;
-            END
-        """)
+                     CREATE TRIGGER on_video_update_meta_title
+                         AFTER UPDATE OF meta_title
+                         ON video
+                     BEGIN
+                         UPDATE video_text
+                         SET meta_title = text_to_fts(NEW.meta_title)
+                         WHERE rowid = OLD.video_id;
+                     END
+                     """)
         # Seed data
         conn.execute(
             "INSERT INTO video (filename, meta_title) "
@@ -415,18 +425,22 @@ class TestDeleteTrigger:
     def test_delete_removes_fts_row(self, conn):
         """DELETE FROM video must remove the video_text row via trigger."""
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (NEW.video_id, NEW.filename, NEW.meta_title);
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id, NEW.filename, NEW.meta_title);
+                     END
+                     """)
         conn.execute("""
-            CREATE TRIGGER on_video_delete AFTER DELETE ON video
-            BEGIN
-                DELETE FROM video_text WHERE rowid = OLD.video_id;
-            END
-        """)
+                     CREATE TRIGGER on_video_delete
+                         AFTER DELETE
+                         ON video
+                     BEGIN
+                         DELETE FROM video_text WHERE rowid = OLD.video_id;
+                     END
+                     """)
         conn.execute("INSERT INTO video (filename) VALUES ('test.mp4')")
         vid = conn.execute("SELECT video_id FROM video").fetchone()[0]
         assert (
@@ -458,37 +472,41 @@ class TestFullIntegration:
     def setup_full(self, conn):
         self.conn = conn
         conn.executescript("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END;
+                           CREATE TRIGGER on_video_insert
+                               AFTER INSERT
+                               ON video
+                           BEGIN
+                               INSERT INTO video_text (rowid, filename, meta_title)
+                               VALUES (NEW.video_id,
+                                       text_to_fts(NEW.filename),
+                                       text_to_fts(NEW.meta_title));
+                           END;
 
-            CREATE TRIGGER on_video_update_filename
-            AFTER UPDATE OF filename ON video
-            BEGIN
-                UPDATE video_text
-                SET filename = text_to_fts(NEW.filename)
-                WHERE rowid = OLD.video_id;
-            END;
+                           CREATE TRIGGER on_video_update_filename
+                               AFTER UPDATE OF filename
+                               ON video
+                           BEGIN
+                               UPDATE video_text
+                               SET filename = text_to_fts(NEW.filename)
+                               WHERE rowid = OLD.video_id;
+                           END;
 
-            CREATE TRIGGER on_video_update_meta_title
-            AFTER UPDATE OF meta_title ON video
-            BEGIN
-                UPDATE video_text
-                SET meta_title = text_to_fts(NEW.meta_title)
-                WHERE rowid = OLD.video_id;
-            END;
+                           CREATE TRIGGER on_video_update_meta_title
+                               AFTER UPDATE OF meta_title
+                               ON video
+                           BEGIN
+                               UPDATE video_text
+                               SET meta_title = text_to_fts(NEW.meta_title)
+                               WHERE rowid = OLD.video_id;
+                           END;
 
-            CREATE TRIGGER on_video_delete AFTER DELETE ON video
-            BEGIN
-                DELETE FROM video_text WHERE rowid = OLD.video_id;
-            END;
-        """)
+                           CREATE TRIGGER on_video_delete
+                               AFTER DELETE
+                               ON video
+                           BEGIN
+                               DELETE FROM video_text WHERE rowid = OLD.video_id;
+                           END;
+                           """)
 
     def test_full_lifecycle(self):
         """INSERT -> UPDATE -> DELETE lifecycle with FTS5."""
@@ -610,16 +628,16 @@ class TestEdgeCases:
         # executescript uses a separate internal connection in some implementations
         # Test that the function is available
         conn.executescript("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END;
-        """)
+                           CREATE TRIGGER on_video_insert
+                               AFTER INSERT
+                               ON video
+                           BEGIN
+                               INSERT INTO video_text (rowid, filename, meta_title)
+                               VALUES (NEW.video_id,
+                                       text_to_fts(NEW.filename),
+                                       text_to_fts(NEW.meta_title));
+                           END;
+                           """)
         conn.execute("INSERT INTO video (filename) VALUES ('TestFile.mp4')")
         fts = conn.execute("SELECT filename FROM video_text").fetchone()
         assert fts["filename"] == "test file.mp4"
@@ -627,16 +645,16 @@ class TestEdgeCases:
     def test_function_survives_across_transactions(self, conn):
         """Registered function works across multiple transactions."""
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id,
+                                 text_to_fts(NEW.filename),
+                                 text_to_fts(NEW.meta_title));
+                     END
+                     """)
         conn.execute("BEGIN")
         conn.execute("INSERT INTO video (filename) VALUES ('First.mp4')")
         conn.execute("COMMIT")
@@ -650,16 +668,16 @@ class TestEdgeCases:
     def test_trigger_after_drop_and_recreate_fts(self, conn):
         """Triggers still work after dropping and recreating FTS table."""
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id,
+                                 text_to_fts(NEW.filename),
+                                 text_to_fts(NEW.meta_title));
+                     END
+                     """)
         conn.execute("INSERT INTO video (filename) VALUES ('Before.mp4')")
         assert conn.execute("SELECT COUNT(*) FROM video_text").fetchone()[0] == 1
 
@@ -671,16 +689,16 @@ class TestEdgeCases:
             "USING fts5(filename, meta_title, properties)"
         )
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id,
+                                 text_to_fts(NEW.filename),
+                                 text_to_fts(NEW.meta_title));
+                     END
+                     """)
 
         conn.execute("INSERT INTO video (filename) VALUES ('After.mp4')")
         assert conn.execute("SELECT COUNT(*) FROM video_text").fetchone()[0] == 1
@@ -699,14 +717,15 @@ class TestEdgeCases:
 
         # Create ONLY filename trigger
         conn.execute("""
-            CREATE TRIGGER on_video_update_filename
-            AFTER UPDATE OF filename ON video
-            BEGIN
-                UPDATE video_text
-                SET filename = text_to_fts(NEW.filename)
-                WHERE rowid = OLD.video_id;
-            END
-        """)
+                     CREATE TRIGGER on_video_update_filename
+                         AFTER UPDATE OF filename
+                         ON video
+                     BEGIN
+                         UPDATE video_text
+                         SET filename = text_to_fts(NEW.filename)
+                         WHERE rowid = OLD.video_id;
+                     END
+                     """)
 
         # Update meta_title (should NOT trigger filename update)
         conn.execute(
@@ -720,16 +739,16 @@ class TestEdgeCases:
     def test_insert_trigger_with_skullite_modify_many(self, conn):
         """Trigger works with parameterized executemany (like Skullite.modify_many)."""
         conn.execute("""
-            CREATE TRIGGER on_video_insert AFTER INSERT ON video
-            BEGIN
-                INSERT INTO video_text (rowid, filename, meta_title)
-                VALUES (
-                    NEW.video_id,
-                    text_to_fts(NEW.filename),
-                    text_to_fts(NEW.meta_title)
-                );
-            END
-        """)
+                     CREATE TRIGGER on_video_insert
+                         AFTER INSERT
+                         ON video
+                     BEGIN
+                         INSERT INTO video_text (rowid, filename, meta_title)
+                         VALUES (NEW.video_id,
+                                 text_to_fts(NEW.filename),
+                                 text_to_fts(NEW.meta_title));
+                     END
+                     """)
         data = [
             {"filename": f"CamelFile{i}.mp4", "meta_title": f"CamelTitle{i}"}
             for i in range(5)

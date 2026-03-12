@@ -3,17 +3,17 @@ from typing import Iterable
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.informer import Information
+from pysaurus.core.language import say
 from pysaurus.core.modules import FNV64
 from pysaurus.core.parallelization import parallelize
 from pysaurus.core.profiling import Profiler
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video.video_file_lister import scan_path_for_videos
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video_raptor.video_raptor_pyav import (
     PythonVideoRaptor,
     VideoTask,
     VideoTaskResult,
 )
-from pysaurus.core.language import say
 
 
 class Videos:

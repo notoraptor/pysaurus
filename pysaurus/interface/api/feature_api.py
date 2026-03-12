@@ -13,6 +13,7 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
 from pysaurus.database.database_algorithms import DatabaseAlgorithms as Algo
 from pysaurus.database.database_operations import DatabaseOperations as Ops
+from pysaurus.dbview.view_context import ViewContext
 from pysaurus.interface.api.api_utils.proxy_feature import (
     FromAlgo,
     FromApp,
@@ -21,7 +22,6 @@ from pysaurus.interface.api.api_utils.proxy_feature import (
     ProxyFeature,
 )
 from pysaurus.video.database_context import DatabaseContext
-from pysaurus.dbview.view_context import ViewContext
 
 
 class FeatureAPI:

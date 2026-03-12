@@ -12,10 +12,9 @@ from typing import Any
 
 from pysaurus.application import exceptions
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.dbview.view_tools import GroupDef
-
+from pysaurus.video.video_search_context import VideoSearchContext
 
 # Load test data
 TEST_DATA_PATH = Path(__file__).parent / "test_data.json"

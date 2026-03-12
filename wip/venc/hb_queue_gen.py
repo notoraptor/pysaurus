@@ -16,9 +16,9 @@ Options:
     --help       Show this help
 """
 
-import json
-import copy
 import argparse
+import copy
+import json
 import sys
 import uuid
 from pathlib import Path

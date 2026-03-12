@@ -9,19 +9,19 @@ from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase, Change
-from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
-from pysaurus.video.video_entry import VideoEntry
-from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.database.saurus.prop_type_search import prop_type_search
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
-from pysaurus.database.saurus.sql_utils import sql_placeholders
+from pysaurus.database.saurus.saurus_database_algorithms import SaurusDatabaseAlgorithms
 from pysaurus.database.saurus.sql_useful_constants import WRITABLE_FIELDS
+from pysaurus.database.saurus.sql_utils import sql_placeholders
 from pysaurus.database.saurus.video_mega_group import video_mega_group
 from pysaurus.database.saurus.video_mega_search import video_mega_search
 from pysaurus.database.saurus.video_mega_utils import _get_video_moves
 from pysaurus.dbview.field_stat import FieldStat
-from pysaurus.database.saurus.saurus_database_algorithms import SaurusDatabaseAlgorithms
+from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
+from pysaurus.video.video_entry import VideoEntry
+from pysaurus.video.video_pattern import VideoPattern
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
 logger = logging.getLogger(__name__)
 

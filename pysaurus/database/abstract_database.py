@@ -12,12 +12,12 @@ from pysaurus.database.database_algorithms import DatabaseAlgorithms
 from pysaurus.database.database_operations import DatabaseOperations
 from pysaurus.database.db_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.database.db_way_def import DbWays
+from pysaurus.dbview.view_context import ViewContext
 from pysaurus.properties.properties import PropRawType, PropUnitType
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video.video_search_context import VideoSearchContext
-from pysaurus.dbview.view_context import ViewContext
 
 logger = logging.getLogger(__name__)
 

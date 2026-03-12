@@ -3,10 +3,10 @@ from collections import namedtuple
 import numpy as np
 
 from pysaurus.core.job_notifications import AbstractNotifier
+from pysaurus.core.language import say
 from pysaurus.core.miniature import Miniature, NumpyMiniature
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.language import say
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 V = SIMPLE_MAX_PIXEL_DISTANCE
