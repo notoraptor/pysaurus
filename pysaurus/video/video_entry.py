@@ -47,13 +47,6 @@ class VideoEntry:
     # Missing: `properties`: dict[str, list[PropUnitType]]
     # Missing: `moves`: list of dicts {video_id => int, filename => str}
 
-    def to_formatted_dict(self):
-        output = asdict(self)
-        del output["mtime"]
-        del output["driver_id"]
-        del output["is_file"]
-        return output
-
     def to_table(
         self, for_update=False, runtime_info: VideoRuntimeInfo = None
     ) -> dict[str, Any]:
