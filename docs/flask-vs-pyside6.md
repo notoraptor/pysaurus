@@ -100,10 +100,10 @@ pour identifier ce qui est récupérable côté serveur avec un minimum de JavaS
 | Action PySide6 | Faisable sans JS | Méthode | État |
 |---|---|---|---|
 | Ouvrir le dossier contenant | Oui | `locate_file()` | **fait** |
-| Copier titre/chemin | Non (JS minimal) | `navigator.clipboard` | à faire |
+| Copier titre/chemin | Non (JS minimal) | `navigator.clipboard` | **fait** |
 | Déplacer fichier | Oui | Formulaire texte pour le dossier cible | à faire |
 | Vidéo aléatoire | Oui | Route `/videos/random` | **fait** |
-| Générer playlist | Oui | Route retournant un fichier .m3u | à faire |
+| Générer playlist | Oui | Route `/videos/playlist` (XSPF) | **fait** |
 
 ## 8. Sélection multiple et opérations batch
 
@@ -186,6 +186,6 @@ pour identifier ce qui est récupérable côté serveur avec un minimum de JavaS
 16. Classifier path (navigation hiérarchique)
 17. Déplacer des valeurs entre propriétés
 18. Remplir avec termes des noms de fichiers
-19. Générer playlist
-20. Copier titre/chemin (JS minimal)
+19. ~~Générer playlist~~ (fait)
+20. ~~Copier titre/chemin (JS minimal)~~ (fait)
 21. Déplacer fichier

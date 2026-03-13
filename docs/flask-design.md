@@ -77,6 +77,8 @@ La barre de navigation (`base.html`) affiche le nom de la database courante et u
 | `/videos/search` | POST -> redirect GET | Rechercher | Redirige avec query params `q` et `cond` |
 | `/videos/sort` | POST -> redirect GET | Trier | Redirige avec query param `sort` |
 | `/videos/group` | POST -> redirect GET | Grouper | Redirige avec query params `group_field`, `group_is_property`, etc. |
+| `/videos/random` | GET | Vidéo aléatoire | Redirige vers `/video/<id>` d'une vidéo aléatoire de la vue |
+| `/videos/playlist` | GET | Télécharger une playlist XSPF | `create_xspf_playlist(filenames)` sur toutes les vidéos de la vue |
 
 État de la vue via query params : `?page=1&page_size=20&q=...&cond=and&sort=...&group_field=...&group_is_property=0&group_sorting=field&group_reverse=0&group_singletons=1&group=0`
 
@@ -112,8 +114,9 @@ Quand un groupement est actif, une barre de navigation s'affiche au-dessus du ta
 | `/video/<id>/play` | POST | Ouvrir dans le lecteur système | `ops.open_video(video_id)` |
 | `/video/<id>/trash` | POST | Mettre à la corbeille (avec confirmation JS) | `ops.trash_video(video_id)` |
 | `/video/<id>/delete` | POST | Supprimer définitivement (avec confirmation JS) | `ops.delete_video(video_id)` |
+| `/video/<id>/open-folder` | POST | Ouvrir le dossier contenant | `ops.locate_file(video_id)` |
 
-La page affiche les informations de la vidéo (codec, résolution, FPS, date, etc.) dans un tableau, puis les actions dans des sections `<details>/<summary>` (renommer, supprimer).
+La page affiche les informations de la vidéo (codec, résolution, FPS, date, etc.) dans un tableau, puis les actions (lire, ouvrir dossier, copier titre/chemin, renommer, supprimer). Les boutons « Copier le titre » et « Copier le chemin » utilisent `navigator.clipboard.writeText()` avec un feedback visuel « Copié ! » (~8 lignes de JS).
 
 #### Édition des propriétés multi-valuées
 
@@ -243,7 +246,7 @@ Les deux modes appellent `_init()` qui crée l'`Application`, initialise `FlaskC
 - **Écoute locale uniquement** : le serveur Flask doit écouter sur `127.0.0.1` (jamais `0.0.0.0`) pour éviter d'exposer l'application sur le réseau
 - **Mono-thread** : suffisant (un seul utilisateur local). Le seul thread secondaire est celui des opérations longues
 - **Pas de Node.js, pas de build step** : templates HTML modifiables directement
-- **JavaScript minimal** : uniquement pour les confirmations de suppression (`confirm()`), la page de progression (polling `fetch`), la navigation par groupes (`onchange`), l'édition de propriétés multi-valuées (boutons +/−), et la sélection de vidéos (tout cocher/décocher + compteur)
+- **JavaScript minimal** : uniquement pour les confirmations de suppression (`confirm()`), la page de progression (polling `fetch`), la navigation par groupes (`onchange`), l'édition de propriétés multi-valuées (boutons +/−), la sélection de vidéos (tout cocher/décocher + compteur), et la copie dans le presse-papiers (`navigator.clipboard`)
 - **Confirmations de suppression** : toute opération de suppression (database, vidéo, propriété) utilise `onsubmit="return confirm('...')"` sur le formulaire pour demander une confirmation avant exécution
 
 ## Fonctionnalités non implémentées

@@ -9,6 +9,7 @@
 <div class="toolbar">
     <span class="stats">{{ page_total_size }} — {{ page_total_duration }}</span>
     <a class="btn" href="{{ url_for('random_video') }}">Vidéo aléatoire</a>
+    <a class="btn" href="{{ url_for('playlist', **keep_params()) }}">Playlist</a>
     <form method="post" action="{{ url_for('start_operation') }}">
         <input type="hidden" name="operation" value="update">
         <button type="submit">Mettre à jour</button>

@@ -4,7 +4,7 @@ import random
 import secrets
 from functools import wraps
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, Response, flash, redirect, render_template, request, url_for
 
 from pysaurus.core.core_exceptions import ApplicationError
 from pysaurus.core.duration import Duration
@@ -230,6 +230,32 @@ def create_app() -> Flask:
             keep_params=_keep_query_params,
             group_fields=group_fields,
             prop_types=prop_types,
+        )
+
+    @app.route("/videos/playlist")
+    @require_database
+    @require_no_operation
+    @handle_errors
+    def playlist():
+        view = _build_view()
+        ctx = _ctx()
+        context = ctx.database.query_videos(view, None, None)
+        videos_list = context.result or []
+        if not videos_list:
+            flash("Aucune vidéo dans la vue courante.", "error")
+            return redirect(url_for("videos"))
+        filenames = [
+            ctx.ops.get_video_filename(v.video_id) for v in videos_list
+        ]
+        from pysaurus.core.file_utils import create_xspf_playlist
+
+        path = create_xspf_playlist(filenames)
+        with open(path.path, "r") as f:
+            content = f.read()
+        return Response(
+            content,
+            mimetype="application/xspf+xml",
+            headers={"Content-Disposition": "attachment; filename=playlist.xspf"},
         )
 
     @app.route("/videos/random")
