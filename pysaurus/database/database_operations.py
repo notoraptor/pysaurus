@@ -69,13 +69,13 @@ class DatabaseOperations:
         """Mark video as watched with current timestamp."""
         self.db.videos_set_field("date_entry_opened", {video_id: Date.now().time})
         self.db.videos_set_field("watched", {video_id: True})
-        self._notify_fields_modified(["date_entry_opened", "watched"])
+        self.db._notify_fields_modified(["date_entry_opened", "watched"])
 
     def mark_as_read(self, video_id: int) -> bool:
         """Toggle watched status and return new value."""
         (row,) = self.db.get_videos(where={"video_id": video_id})
         self.db.videos_set_field("watched", {video_id: not row.watched})
-        self._notify_fields_modified(["watched"])
+        self.db._notify_fields_modified(["watched"])
         (row,) = self.db.get_videos(where={"video_id": video_id})
         return row.watched
 
@@ -120,7 +120,7 @@ class DatabaseOperations:
     ):
         """Set similarity IDs for videos."""
         self.db.videos_set_field(field, similarities)
-        self._notify_fields_modified([field], is_property=False)
+        self.db._notify_fields_modified([field], is_property=False)
 
     def set_similarities_from_list(
         self,
@@ -192,7 +192,7 @@ class DatabaseOperations:
             updates,
             action=(self.db.action.ADD if merge else self.db.action.REPLACE),
         )
-        self._notify_fields_modified([name], is_property=True)
+        self.db._notify_fields_modified([name], is_property=True)
 
     def validate_prop_values(self, name, values: list) -> list[PropValueType]:
         """Validate property values according to property type."""
@@ -205,7 +205,3 @@ class DatabaseOperations:
         else:
             values = [prop_type.validate(value) for value in values]
         return values
-
-    def _notify_fields_modified(self, fields, *, is_property=False):
-        """Save database after fields were modified."""
-        self.db.save()

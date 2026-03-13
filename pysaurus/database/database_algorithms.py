@@ -332,7 +332,7 @@ class DatabaseAlgorithms:
                 {video_id: to_extended for video_id in from_new},
                 action=self.db.action.ADD,
             )
-            ops._notify_fields_modified([from_name, to_name], is_property=True)
+            self.db._notify_fields_modified([from_name, to_name], is_property=True)
         return len(from_new)
 
     def delete_property_values(self, name: str, values: list) -> None:
