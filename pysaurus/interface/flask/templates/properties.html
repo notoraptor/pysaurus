@@ -29,7 +29,7 @@
                             <button type="submit" class="btn btn-sm">{{ "→ simple" if pt.multiple else "→ multiple" }}</button>
                         </form>
                     </td>
-                    <td>{{ pt.defaultValues|join(", ") }}</td>
+                    <td>{{ pt.default|join(", ") }}</td>
                     <td>{{ pt.enumeration|join(", ") if pt.enumeration else "—" }}</td>
                     <td>
                         <a class="btn" href="{{ url_for('prop_values', name=pt.name) }}">Valeurs</a>

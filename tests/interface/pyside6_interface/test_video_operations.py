@@ -214,7 +214,7 @@ class TestVideoPropertyModification:
 
         # Get a prop_type
         prop_types = mock_context._database.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         # Call the edit method directly
         page._edit_property_for_selection(genre_prop)

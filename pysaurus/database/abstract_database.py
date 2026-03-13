@@ -14,7 +14,7 @@ from pysaurus.database.db_paths import Basename
 from pysaurus.database.db_paths import DatabasePaths
 from pysaurus.database.db_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.dbview.view_context import ViewContext
-from pysaurus.properties.properties import PropRawType, PropUnitType
+from pysaurus.properties.properties import PropRawType, PropType, PropUnitType
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_runtime_info import VideoRuntimeInfo
@@ -90,7 +90,7 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ) -> list[dict]:
+    ) -> list[PropType]:
         raise NotImplementedError()
 
     @abstractmethod

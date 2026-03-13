@@ -213,7 +213,7 @@ class TestDatabaseRename:
         if prop_types:
             pt = prop_types[0]
             # Read a property to verify DB access after rename
-            values = disk_db.videos_tag_get(pt["name"])
+            values = disk_db.videos_tag_get(pt.name)
             assert isinstance(values, dict)
 
     def test_rename_paths_updated(self, disk_db):

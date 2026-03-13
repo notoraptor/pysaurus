@@ -98,7 +98,7 @@ class TestFeatureAPIDatabase:
 
         # Verify it exists
         props = api.__run_feature__("describe_prop_types")
-        prop_names = [p["name"] for p in props]
+        prop_names = [p.name for p in props]
         assert "test_prop" in prop_names
 
         # Remove property
@@ -106,7 +106,7 @@ class TestFeatureAPIDatabase:
 
         # Verify it's gone
         props = api.__run_feature__("describe_prop_types")
-        prop_names = [p["name"] for p in props]
+        prop_names = [p.name for p in props]
         assert "test_prop" not in prop_names
 
     def test_rename_prop_type(self, feature_api_with_db):
@@ -121,7 +121,7 @@ class TestFeatureAPIDatabase:
 
         # Verify rename
         props = api.__run_feature__("describe_prop_types")
-        prop_names = [p["name"] for p in props]
+        prop_names = [p.name for p in props]
         assert "old_name" not in prop_names
         assert "new_name" in prop_names
 
@@ -140,8 +140,8 @@ class TestFeatureAPIDatabase:
 
         # Verify
         props = api.__run_feature__("describe_prop_types")
-        single_prop = next(p for p in props if p["name"] == "single_prop")
-        assert single_prop["multiple"] is True
+        single_prop = next(p for p in props if p.name == "single_prop")
+        assert single_prop.multiple is True
 
         # Cleanup
         api.__run_feature__("remove_prop_type", "single_prop")
@@ -361,7 +361,7 @@ class TestFeatureAPIDatabase:
 
         # Verify (just check it doesn't crash)
         props = api.__run_feature__("describe_prop_types")
-        assert "test_terms" in [p["name"] for p in props]
+        assert "test_terms" in [p.name for p in props]
 
         # Cleanup
         api.__run_feature__("remove_prop_type", "test_terms")

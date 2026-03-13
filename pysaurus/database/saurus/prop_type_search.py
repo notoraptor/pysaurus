@@ -1,6 +1,6 @@
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.sql_utils import SQLWhereBuilder
-from pysaurus.properties.properties import PROP_UNIT_CONVERTER
+from pysaurus.properties.properties import PROP_UNIT_CONVERTER, PropType
 
 
 def prop_type_search(
@@ -11,7 +11,7 @@ def prop_type_search(
     multiple=None,
     with_enum=None,
     default=None,
-) -> list[dict]:
+) -> list[PropType]:
     where_clause = SQLWhereBuilder()
     if name is not None:
         where_clause.append_field("name", name)
@@ -39,14 +39,14 @@ def prop_type_search(
             or (len(enumeration) > 1 and set(enumeration) == set(with_enum))
         ) and (default is None or enumeration[0] == default):
             ret.append(
-                {
-                    "property_id": row["property_id"],
-                    "name": row["name"],
-                    "type": row["type"],
-                    "multiple": bool(row["multiple"]),
-                    "defaultValues": [] if row["multiple"] else [enumeration[0]],
-                    "enumeration": enumeration if len(enumeration) > 1 else None,
-                }
+                PropType(
+                    property_id=row["property_id"],
+                    name=row["name"],
+                    type=row["type"],
+                    multiple=bool(row["multiple"]),
+                    default=[] if row["multiple"] else [enumeration[0]],
+                    enumeration=enumeration if len(enumeration) > 1 else None,
+                )
             )
 
     return ret

@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from pysaurus.properties.properties import PropType
+
 
 class MoveValuesDialog(QDialog):
     """
@@ -25,24 +27,24 @@ class MoveValuesDialog(QDialog):
     - Target property must be string type
     """
 
-    def __init__(self, source_prop: dict, prop_types: list, ctx, parent=None):
+    def __init__(
+        self, source_prop: PropType, prop_types: list[PropType], ctx, parent=None
+    ):
         super().__init__(parent)
         self.source_prop = source_prop
         self.prop_types = prop_types
         self.ctx = ctx
 
         self._selected_values: list = []
-        self._target_prop: dict | None = None
+        self._target_prop: PropType | None = None
         self._concatenate = False
 
         # Filter target properties (string type, different from source)
         self._target_props = [
-            pt
-            for pt in prop_types
-            if pt.get("type") == "str" and pt["name"] != source_prop["name"]
+            pt for pt in prop_types if pt.type == "str" and pt.name != source_prop.name
         ]
 
-        self.setWindowTitle(f"Move Values from {source_prop['name']}")
+        self.setWindowTitle(f"Move Values from {source_prop.name}")
         self.setMinimumWidth(500)
         self.setMinimumHeight(400)
 
@@ -55,7 +57,7 @@ class MoveValuesDialog(QDialog):
 
         # Description
         desc_label = QLabel(
-            f"Select values from <b>{self.source_prop['name']}</b> to move to another property.\n"
+            f"Select values from <b>{self.source_prop.name}</b> to move to another property.\n"
             "The values will be removed from the source and added to the target."
         )
         desc_label.setWordWrap(True)
@@ -74,9 +76,7 @@ class MoveValuesDialog(QDialog):
         self.target_combo = QComboBox()
         if self._target_props:
             for pt in self._target_props:
-                label = (
-                    f"{pt['name']} ({'multiple' if pt.get('multiple') else 'single'})"
-                )
+                label = f"{pt.name} ({'multiple' if pt.multiple else 'single'})"
                 self.target_combo.addItem(label, pt)
         else:
             self.target_combo.addItem("(No eligible target properties)")
@@ -124,7 +124,7 @@ class MoveValuesDialog(QDialog):
         # Get all values with counts
         from collections import Counter
 
-        all_values = self.ctx.get_property_values(self.source_prop["name"])
+        all_values = self.ctx.get_property_values(self.source_prop.name)
         counter = Counter()
         for values in all_values.values():
             counter.update(values)

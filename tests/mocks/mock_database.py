@@ -14,6 +14,7 @@ from pysaurus.application import exceptions
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.dbview.view_tools import GroupDef
+from pysaurus.properties.properties import PropType
 from pysaurus.video.video_search_context import VideoSearchContext
 
 # Load test data
@@ -466,20 +467,20 @@ class MockDatabase:
         """Get database folders."""
         return self._folders
 
-    def get_prop_types(self) -> list[dict]:
-        """Get property types in flat format for PySide6 interface."""
+    def get_prop_types(self) -> list[PropType]:
+        """Get property types as PropType objects."""
         result = []
         for pt in self._prop_types:
-            # Flatten the definition into the prop_type dict
             definition = pt.get("definition", {})
-            flat_pt = {
-                "name": pt["name"],
-                "type": definition.get("type", "str"),
-                "multiple": pt.get("multiple", False),
-                "enumeration": definition.get("enumeration"),
-                "defaultValues": definition.get("defaultValues", []),
-            }
-            result.append(flat_pt)
+            result.append(
+                PropType(
+                    name=pt["name"],
+                    type=definition.get("type", "str"),
+                    multiple=pt.get("multiple", False),
+                    default=definition.get("defaultValues", []),
+                    enumeration=definition.get("enumeration"),
+                )
+            )
         return result
 
     def get_videos(

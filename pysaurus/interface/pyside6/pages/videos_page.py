@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from pysaurus.core.classes import Selector
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
+from pysaurus.properties.properties import PropType
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.interface.common.common import format_group_value
 from pysaurus.interface.pyside6.app_context import AppContext
@@ -1518,7 +1519,7 @@ class VideosPage(QWidget):
         # Get str non-enum properties
         prop_types = self.ctx.get_prop_types()
         str_props = [
-            p["name"] for p in prop_types if p["type"] == "str" and not p["enumeration"]
+            p.name for p in prop_types if p.type == "str" and not p.enumeration
         ]
         if not str_props:
             QMessageBox.information(
@@ -1777,7 +1778,7 @@ class VideosPage(QWidget):
         # Show menu of properties to choose from
         menu = QMenu(self)
         for prop_type in prop_types:
-            prop_name = prop_type["name"]
+            prop_name = prop_type.name
             action = menu.addAction(prop_name)
             action.setData(prop_type)
 
@@ -1789,12 +1790,12 @@ class VideosPage(QWidget):
             prop_type = action.data()
             self._edit_property_for_selection(prop_type)
 
-    def _edit_property_for_selection(self, prop_type: dict):
+    def _edit_property_for_selection(self, prop_type: PropType):
         """Edit a specific property for selected videos."""
         if not self.ctx.has_database():
             return
 
-        prop_name = prop_type["name"]
+        prop_name = prop_type.name
         selection_count = self._selector.size_from(self._view_count)
 
         # Get current values and counts using apply_on_view
@@ -2037,7 +2038,7 @@ class VideosPage(QWidget):
 
         # Get string properties to concatenate into
         prop_types = self.ctx.get_prop_types()
-        string_props = [p for p in prop_types if p["type"] == "str"]
+        string_props = [p for p in prop_types if p.type == "str"]
 
         if not string_props:
             QMessageBox.information(
@@ -2049,7 +2050,7 @@ class VideosPage(QWidget):
             return
 
         # Show selection dialog
-        prop_names = [p["name"] for p in string_props]
+        prop_names = [p.name for p in string_props]
         name, ok = QInputDialog.getItem(
             self,
             "Concatenate Path",

@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.interface.common.common import FIELD_MAP
+from pysaurus.properties.properties import PropType
 
 
 class GroupingDialog(QDialog):
@@ -30,7 +31,10 @@ class GroupingDialog(QDialog):
     """
 
     def __init__(
-        self, prop_types: list = None, current_grouping: dict | None = None, parent=None
+        self,
+        prop_types: list[PropType] = None,
+        current_grouping: dict | None = None,
+        parent=None,
     ):
         super().__init__(parent)
         self.setWindowTitle("Set Grouping")
@@ -119,7 +123,7 @@ class GroupingDialog(QDialog):
         else:
             # Custom properties
             for prop_type in self._prop_types:
-                self.field_combo.addItem(prop_type["name"], prop_type["name"])
+                self.field_combo.addItem(prop_type.name, prop_type.name)
 
     def _on_type_changed(self, index: int):
         """Handle field type change."""

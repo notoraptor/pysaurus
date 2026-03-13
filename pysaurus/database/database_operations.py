@@ -196,10 +196,7 @@ class DatabaseOperations:
 
     def validate_prop_values(self, name, values: list) -> list[PropValueType]:
         """Validate property values according to property type."""
-        from pysaurus.properties.properties import PropTypeValidator
-
-        (prop_dict,) = self.db.get_prop_types(name=name)
-        prop_type = PropTypeValidator(prop_dict)
+        (prop_type,) = self.db.get_prop_types(name=name)
         if prop_type.multiple:
             values = prop_type.validate(values)
         else:

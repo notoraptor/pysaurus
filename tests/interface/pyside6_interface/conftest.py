@@ -72,7 +72,7 @@ class MockAppContext:
 
     # Property types
 
-    def get_prop_types(self, **kwargs) -> list[dict]:
+    def get_prop_types(self, **kwargs) -> list:
         if self._database:
             return self._database.get_prop_types(**kwargs)
         return []
@@ -349,7 +349,7 @@ def prop_types(mock_database):
     Get property types from mock database.
 
     Returns:
-        list[dict]: List of property type definitions
+        list[PropType]: List of property type definitions
     """
     return mock_database.get_prop_types()
 

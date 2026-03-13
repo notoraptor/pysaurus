@@ -11,6 +11,8 @@ Bottom of each column has bulk action buttons.
 """
 
 from PySide6.QtCore import Qt
+
+from pysaurus.properties.properties import PropType
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -110,7 +112,7 @@ class BatchEditPropertyDialog(QDialog):
     def __init__(
         self,
         prop_name: str,
-        prop_type: dict,
+        prop_type: PropType,
         nb_videos: int,
         values_and_counts: list,
         parent=None,
@@ -118,9 +120,9 @@ class BatchEditPropertyDialog(QDialog):
         super().__init__(parent)
         self.prop_name = prop_name
         self.prop_type = prop_type
-        self.ptype = prop_type["type"]
-        self.is_multiple = prop_type["multiple"]
-        self.enumeration = prop_type.get("enumeration")
+        self.ptype = prop_type.type
+        self.is_multiple = prop_type.multiple
+        self.enumeration = prop_type.enumeration
         self.nb_videos = nb_videos
 
         # Build value -> count mapping
@@ -459,7 +461,7 @@ class BatchEditPropertyDialog(QDialog):
     @staticmethod
     def edit_property(
         prop_name: str,
-        prop_type: dict,
+        prop_type: PropType,
         nb_videos: int,
         values_and_counts: list,
         parent=None,

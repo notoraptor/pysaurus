@@ -29,7 +29,7 @@ class FillPropertyDialog(QDialog):
 
         # Filter to only string-multiple properties
         self._eligible_props = [
-            pt for pt in prop_types if pt.get("type") == "str" and pt.get("multiple")
+            pt for pt in prop_types if pt.type == "str" and pt.multiple
         ]
 
         self.setWindowTitle("Fill Property with Terms")
@@ -57,7 +57,7 @@ class FillPropertyDialog(QDialog):
         self.prop_combo = QComboBox()
         if self._eligible_props:
             for pt in self._eligible_props:
-                self.prop_combo.addItem(pt["name"], pt)
+                self.prop_combo.addItem(pt.name, pt)
         else:
             self.prop_combo.addItem("(No eligible properties)")
             self.prop_combo.setEnabled(False)

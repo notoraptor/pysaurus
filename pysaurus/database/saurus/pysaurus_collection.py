@@ -19,7 +19,7 @@ from pysaurus.database.saurus.video_mega_group import video_mega_group
 from pysaurus.database.saurus.video_mega_search import video_mega_search
 from pysaurus.database.saurus.video_mega_utils import _get_video_moves
 from pysaurus.dbview.field_stat import FieldStat
-from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
+from pysaurus.properties.properties import PropRawType, PropType, PropUnitType
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_runtime_info import VideoRuntimeInfo
@@ -120,8 +120,7 @@ class PysaurusCollection(AbstractDatabase):
     def videos_tag_get(
         self, name: str, indices: list[int] = ()
     ) -> dict[int, list[PropUnitType]]:
-        (prop_desc,) = self.get_prop_types(name=name)
-        pt = PropTypeValidator(prop_desc)
+        (pt,) = self.get_prop_types(name=name)
         output = {}
         with self.db:
             for row in self.db.query(
@@ -149,8 +148,7 @@ class PysaurusCollection(AbstractDatabase):
         if not updates:
             return
 
-        (prop_desc,) = self.get_prop_types(name=name)
-        pt = PropTypeValidator(prop_desc)
+        (pt,) = self.get_prop_types(name=name)
         video_ids = list(updates.keys())
         if len(video_ids) == 1 and video_ids[0] is None:
             placeholders_string = None
@@ -225,7 +223,7 @@ class PysaurusCollection(AbstractDatabase):
                 )
 
         # 3. Update FTS5 properties column if property is string type
-        if pt.type is str:
+        if pt.type == "str":
             self._update_fts_properties(
                 None if placeholders_string is None else video_ids
             )
@@ -235,15 +233,12 @@ class PysaurusCollection(AbstractDatabase):
     ) -> None:
         if not properties:
             return
-        props: dict[str, PropTypeValidator] = {
-            prop_desc["name"]: PropTypeValidator(prop_desc)
-            for prop_desc in self.get_prop_types()
-        }
+        props: dict[str, PropType] = {pt.name: pt for pt in self.get_prop_types()}
         validated_properties = {
             name: props[name].to_str(props[name].instantiate(values))
             for name, values in properties.items()
         }
-        string_properties = [name for name in properties if props[name].type is str]
+        string_properties = [name for name in properties if props[name].type == "str"]
         unique_prop_indices = [
             props[name].property_id for name in properties if not props[name].multiple
         ]
@@ -274,7 +269,7 @@ class PysaurusCollection(AbstractDatabase):
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ) -> list[dict]:
+    ) -> list[PropType]:
         return prop_type_search(
             self.db,
             name=name,
@@ -287,24 +282,18 @@ class PysaurusCollection(AbstractDatabase):
     def prop_type_add(
         self, name: str, prop_type: str | type, definition: PropRawType, multiple: bool
     ) -> None:
-        prop_def = PropTypeValidator.define(
-            name, prop_type, definition, multiple, describe=True
-        )
-        if self.get_prop_types(name=prop_def["name"]):
-            raise exceptions.PropertyAlreadyExists(prop_def["name"])
+        prop_def = PropType.define(name, prop_type, definition, multiple)
+        if self.get_prop_types(name=prop_def.name):
+            raise exceptions.PropertyAlreadyExists(prop_def.name)
         property_id = self.db.modify(
             "INSERT INTO property (name, type, multiple) VALUES (?, ?, ?)",
-            [prop_def["name"], prop_def["type"], int(prop_def["multiple"])],
+            [prop_def.name, prop_def.type, int(prop_def.multiple)],
         )
+        enum_values = prop_def.enumeration or prop_def.default
         self.db.modify_many(
             "INSERT INTO property_enumeration (property_id, enum_value, rank) "
             "VALUES (?, ?, ?)",
-            [
-                (property_id, value, rank)
-                for rank, value in enumerate(
-                    prop_def["enumeration"] or [prop_def["default"]]
-                )
-            ],
+            [(property_id, value, rank) for rank, value in enumerate(enum_values)],
         )
 
     def prop_type_del(self, name: str):
@@ -342,8 +331,8 @@ class PysaurusCollection(AbstractDatabase):
     def prop_type_set_multiple(self, name: str, multiple: bool) -> None:
         props = self.get_prop_types(name=name)
         if props:
-            (prop_desc,) = props
-            if bool(prop_desc["multiple"]) is bool(multiple):
+            (pt,) = props
+            if bool(pt.multiple) is bool(multiple):
                 raise exceptions.PropertyAlreadyMultiple(name, multiple)
             if not multiple:
                 res = self.db.query_one(
@@ -352,7 +341,7 @@ class PysaurusCollection(AbstractDatabase):
                     "JOIN video AS v ON p.video_id = v.video_id "
                     "WHERE p.property_id = ? "
                     "GROUP BY p.video_id ORDER BY nb DESC LIMIT 1",
-                    [prop_desc["property_id"]],
+                    [pt.property_id],
                 )
                 if res["nb"] > 1:
                     raise exceptions.PropertyToUniqueError(name, res["filename"])

@@ -157,7 +157,7 @@ class TestClassifierOperations:
         prop_types = ctx._database.get_prop_types()
         if not prop_types:
             pytest.skip("No properties in test database")
-        prop_name = prop_types[0]["name"]
+        prop_name = prop_types[0].name
         # Find a value for this property
         all_tags = ctx._database.videos_tag_get(prop_name)
         values = set()
@@ -182,10 +182,10 @@ class TestClassifierOperations:
     def test_classifier_concatenate_path(self, ctx, qtbot):
         # Use an existing property from the test database
         prop_types = ctx._database.get_prop_types()
-        multi_props = [p for p in prop_types if p["multiple"]]
+        multi_props = [p for p in prop_types if p.multiple]
         if not multi_props:
             pytest.skip("No multiple properties in test database")
-        prop_name = multi_props[0]["name"]
+        prop_name = multi_props[0].name
         # Create destination property
         ctx._database.prop_type_add("concat_dst", "str", "", True)
         # Set grouping to the source property
@@ -239,7 +239,7 @@ class TestApplyOnView:
         prop_types = ctx._database.get_prop_types()
         if not prop_types:
             pytest.skip("No properties in test database")
-        prop_name = prop_types[0]["name"]
+        prop_name = prop_types[0].name
         ctx.get_videos(100, 0)
 
         selector = {"all": True, "include": [], "exclude": []}

@@ -4,6 +4,8 @@ Dialog for batch editing properties of multiple videos.
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
+
+from pysaurus.properties.properties import PropType
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -38,11 +40,11 @@ class NonSubmittingLineEdit(QLineEdit):
 class MultipleValuesWidget(QWidget):
     """Widget for editing multiple values of a property."""
 
-    def __init__(self, prop_type: dict, parent=None):
+    def __init__(self, prop_type: PropType, parent=None):
         super().__init__(parent)
         self.prop_type = prop_type
-        self.ptype = prop_type["type"]
-        self.enumeration = prop_type.get("enumeration")
+        self.ptype = prop_type.type
+        self.enumeration = prop_type.enumeration
         self._buttons: list[QPushButton] = []  # Track buttons for enabling/disabling
 
         self._setup_ui()
@@ -199,7 +201,9 @@ class BatchEditDialog(QDialog):
     - An appropriate input widget based on the property type
     """
 
-    def __init__(self, video_ids: list[int], prop_types: list, ctx, parent=None):
+    def __init__(
+        self, video_ids: list[int], prop_types: list[PropType], ctx, parent=None
+    ):
         super().__init__(parent)
         self.video_ids = video_ids
         self.prop_types = prop_types
@@ -255,16 +259,16 @@ class BatchEditDialog(QDialog):
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
 
-    def _create_property_group(self, prop_type: dict) -> QGroupBox:
+    def _create_property_group(self, prop_type: PropType) -> QGroupBox:
         """Create a group box for a property with checkbox and input."""
         group = QGroupBox()
         layout = QHBoxLayout(group)
 
-        name = prop_type["name"]
-        ptype = prop_type["type"]  # str: "bool", "int", "float", "str"
-        is_multiple = prop_type["multiple"]
-        enumeration = prop_type.get("enumeration")
-        default_values = prop_type.get("defaultValues", [])
+        name = prop_type.name
+        ptype = prop_type.type  # str: "bool", "int", "float", "str"
+        is_multiple = prop_type.multiple
+        enumeration = prop_type.enumeration
+        default_values = prop_type.default
         default = default_values[0] if default_values else None
 
         # Build label with type info
@@ -330,15 +334,15 @@ class BatchEditDialog(QDialog):
         changes = {}
 
         for prop_type in self.prop_types:
-            name = prop_type["name"]
+            name = prop_type.name
             checkbox, widget = self._property_widgets.get(name, (None, None))
             if not checkbox or not checkbox.isChecked():
                 continue
 
-            ptype = prop_type["type"]  # str: "bool", "int", "float", "str"
-            is_multiple = prop_type["multiple"]
-            enumeration = prop_type.get("enumeration")
-            default_values = prop_type.get("defaultValues", [])
+            ptype = prop_type.type  # str: "bool", "int", "float", "str"
+            is_multiple = prop_type.multiple
+            enumeration = prop_type.enumeration
+            default_values = prop_type.default
             default = default_values[0] if default_values else None
 
             try:

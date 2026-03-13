@@ -17,72 +17,82 @@ PROP_UNIT_TYPE_MAP = {t.__name__: t for t in PROP_UNIT_TYPES}
 PROP_UNIT_CONVERTER = {**PROP_UNIT_TYPE_MAP, "bool": _str_to_bool}
 
 
-class PropTypeDesc:
-    __slots__ = ("_desc",)
+class PropType:
+    __slots__ = (
+        "name",
+        "type",
+        "multiple",
+        "default",
+        "enumeration",
+        "property_id",
+        "_enum_set",
+    )
 
-    def __init__(self, prop_desc: dict):
-        self._desc = prop_desc
+    def __init__(
+        self,
+        name: str,
+        type: str,
+        multiple: bool,
+        default: list[PropUnitType],
+        enumeration: list[PropUnitType] | None,
+        property_id: int | None = None,
+    ):
+        self.name = name
+        self.type = type
+        self.multiple = multiple
+        self.default = default
+        self.enumeration = enumeration
+        self.property_id = property_id
+        self._enum_set = set(enumeration or ())
 
     @property
-    def name(self) -> str:
-        return self._desc["name"]
+    def python_type(self) -> type:
+        return PROP_UNIT_TYPE_MAP[self.type]
 
-    @property
-    def type(self):
-        return PROP_UNIT_TYPE_MAP[self._desc["type"]]
+    # =========================================================================
+    # Serialization
+    # =========================================================================
 
-    @property
-    def enumeration(self) -> list[PropUnitType] | None:
-        return self._desc["enumeration"]
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "multiple": self.multiple,
+            "defaultValues": self.default,
+            "enumeration": self.enumeration,
+            "property_id": self.property_id,
+        }
 
-    @property
-    def multiple(self) -> bool:
-        return self._desc["multiple"]
+    # =========================================================================
+    # SQL conversion
+    # =========================================================================
 
-    @property
-    def default(self) -> list[PropUnitType]:
-        return self._desc["defaultValues"]
-
-    @property
-    def property_id(self) -> int | None:
-        return self._desc.get("property_id")
-
-
-class PropTypeValidator(PropTypeDesc):
-    __slots__ = ("to_str", "_enum_set")
-
-    def __init__(self, prop_desc: dict):
-        super().__init__(prop_desc)
-        if self.type is str:
-            to_str = self._str_to_sql
-        elif self.type is bool:
-            to_str = self._bool_to_sql
+    def to_str(self, values: list) -> list[str]:
+        if self.type == "str":
+            return values
+        elif self.type == "bool":
+            return [str(int(value)) for value in values]
         else:
-            to_str = self._value_to_sql
+            return [str(value) for value in values]
 
-        self.to_str = to_str
-        self._enum_set = set(self.enumeration or ())
+    def from_string(self, value: str) -> PropUnitType:
+        if self.type == "str":
+            return value
+        elif self.type == "bool":
+            return bool(int(value))
+        else:
+            return self.python_type(value)
 
-    def _bool_to_sql(self, values: list[bool]) -> list[str]:
-        return [str(int(value)) for value in values]
+    def from_strings(self, values: Collection[str]) -> Collection[PropUnitType]:
+        if not values:
+            return []
+        if not self.multiple and len(values) != 1:
+            raise exceptions.InvalidUniquePropertyValue(self, values)
+        return [self.from_string(v) for v in values]
 
-    def _str_to_sql(self, values: list[str]) -> list[str]:
-        return values
-
-    def _value_to_sql(self, values: list) -> list[str]:
-        return [str(value) for value in values]
-
-    def __str__(self):
-        return (
-            f"{type(self).__name__}"
-            f"({self.name}, "
-            f"{self.type.__name__}, "
-            f"multiple={self.multiple}, "
-            f"default={repr(self.default)}, "
-            f"enumeration={repr(self.enumeration)})"
-        )
-
-    __repr__ = __str__
+    # =========================================================================
+    # Validation
+    # =========================================================================
 
     def validate(self, value: PropRawType) -> PropValueType:
         if self.multiple:
@@ -91,7 +101,7 @@ class PropTypeValidator(PropTypeDesc):
             if not isinstance(value, set):
                 value = set(value)
             for element in value:
-                if not isinstance(element, self.type):
+                if not isinstance(element, self.python_type):
                     raise exceptions.InvalidPropertyValue(self, element)
             if self._enum_set:
                 for element in value:
@@ -99,9 +109,9 @@ class PropTypeValidator(PropTypeDesc):
                         raise exceptions.InvalidPropertyValue(self, element)
             return sorted(value)
 
-        if self.type is float and isinstance(value, int):
+        if self.python_type is float and isinstance(value, int):
             value = float(value)
-        if not isinstance(value, self.type):
+        if not isinstance(value, self.python_type):
             raise exceptions.InvalidPropertyValue(self, value)
         if self._enum_set and value not in self._enum_set:
             raise exceptions.InvalidPropertyValue(self, value)
@@ -112,39 +122,30 @@ class PropTypeValidator(PropTypeDesc):
             return []
         if self.multiple:
             return self.validate(values)
-        else:  # list must contain only 1 value.
+        else:
             (value,) = values
             return [self.validate(value)]
 
-    def from_strings(self, values: Collection[str]) -> Collection[PropUnitType]:
-        if not values:
-            return []
-        if not self.multiple and len(values) != 1:
-            raise exceptions.InvalidUniquePropertyValue(self, values)
-        if self.type is str:
-            return values
-        elif self.type is bool:
-            return [bool(int(value)) for value in values]
-        else:
-            return [self.type(value) for value in values]
+    # =========================================================================
+    # Factory
+    # =========================================================================
 
-    def from_string(self, value: str) -> PropUnitType:
+    def __str__(self):
         return (
-            value
-            if self.type is str
-            else (bool(int(value)) if self.type is bool else self.type(value))
+            f"PropType"
+            f"({self.name}, "
+            f"{self.type}, "
+            f"multiple={self.multiple}, "
+            f"default={repr(self.default)}, "
+            f"enumeration={repr(self.enumeration)})"
         )
+
+    __repr__ = __str__
 
     @classmethod
     def define(
-        cls,
-        name: str,
-        prop_type: str | type,
-        definition: PropRawType,
-        multiple: bool,
-        *,
-        describe=False,
-    ) -> dict:
+        cls, name: str, prop_type: str | type, definition: PropRawType, multiple: bool
+    ) -> "PropType":
         name = name.strip()
         if not name:
             raise exceptions.MissingPropertyName()
@@ -169,14 +170,12 @@ class PropTypeValidator(PropTypeDesc):
             enum_type = Enumeration(definition)
             definition = [definition[0]] + sorted(enum_type.values - {definition[0]})
 
-        if describe:
-            enumeration = definition if isinstance(definition, list) else None
-            return {
-                "name": name,
-                "type": prop_type.__name__,
-                "multiple": multiple,
-                "default": enumeration[0] if enumeration else definition,
-                "enumeration": enumeration,
-            }
-        else:
-            return {"name": name, "definition": definition, "multiple": multiple}
+        enumeration = definition if isinstance(definition, list) else None
+        default_value = enumeration[0] if enumeration else definition
+        return cls(
+            name=name,
+            type=prop_type.__name__,
+            multiple=multiple,
+            default=[] if multiple else [default_value],
+            enumeration=enumeration,
+        )

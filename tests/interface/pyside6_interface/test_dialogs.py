@@ -7,6 +7,7 @@ Tests BatchEditPropertyDialog and VideoPropertiesDialog.
 import pytest
 from PySide6.QtCore import Qt
 
+from pysaurus.properties.properties import PropType
 from tests.mocks.mock_database import MockVideoPattern
 
 
@@ -16,13 +17,9 @@ class TestBatchEditPropertyDialog:
     @pytest.fixture
     def prop_type_string_multiple(self):
         """String multiple property type."""
-        return {
-            "name": "genre",
-            "type": "str",
-            "multiple": True,
-            "enumeration": None,
-            "defaultValues": [],
-        }
+        return PropType(
+            name="genre", type="str", multiple=True, default=[], enumeration=None
+        )
 
     @pytest.fixture
     def values_and_counts(self):
@@ -176,13 +173,9 @@ class TestBatchEditPropertyDialogButtons:
 
     @pytest.fixture
     def prop_type_string_multiple(self):
-        return {
-            "name": "genre",
-            "type": "str",
-            "multiple": True,
-            "enumeration": None,
-            "defaultValues": [],
-        }
+        return PropType(
+            name="genre", type="str", multiple=True, default=[], enumeration=None
+        )
 
     @pytest.fixture
     def values_and_counts(self):
@@ -404,17 +397,20 @@ class TestMultipleValuesWidget:
     @pytest.fixture
     def prop_type_multiple(self):
         """Multiple string property type."""
-        return {"name": "tags", "type": "str", "multiple": True, "enumeration": None}
+        return PropType(
+            name="tags", type="str", multiple=True, default=[], enumeration=None
+        )
 
     @pytest.fixture
     def prop_type_enum(self):
         """Enumeration property type."""
-        return {
-            "name": "status",
-            "type": "str",
-            "multiple": True,
-            "enumeration": ["new", "watched", "archived"],
-        }
+        return PropType(
+            name="status",
+            type="str",
+            multiple=True,
+            default=[],
+            enumeration=["new", "watched", "archived"],
+        )
 
     def test_widget_creation_free_form(self, qtbot, prop_type_multiple):
         """Test creating widget for free-form values."""

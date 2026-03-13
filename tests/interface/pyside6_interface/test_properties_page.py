@@ -200,7 +200,7 @@ class TestPropertiesPageCreate:
         assert "success" in infos[0][1].lower()
 
         # Property should be added to database
-        prop_names = [pt["name"] for pt in mock_context.get_prop_types()]
+        prop_names = [pt.name for pt in mock_context.get_prop_types()]
         assert "new_property" in prop_names
 
 
@@ -250,7 +250,7 @@ class TestPropertiesPageActions:
         page._on_rename("genre")
 
         # Check that property was renamed
-        prop_names = [pt["name"] for pt in mock_context.get_prop_types()]
+        prop_names = [pt.name for pt in mock_context.get_prop_types()]
         assert "new_genre" in prop_names
         assert "genre" not in prop_names
 
@@ -276,5 +276,5 @@ class TestPropertiesPageActions:
 
         # Check that property was converted
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
-        assert genre_prop["multiple"] is False
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
+        assert genre_prop.multiple is False

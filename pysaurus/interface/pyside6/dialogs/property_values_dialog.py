@@ -5,6 +5,8 @@ Dialog for managing property values across all videos.
 from collections import Counter
 
 from PySide6.QtCore import Qt
+
+from pysaurus.properties.properties import PropType
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -31,7 +33,7 @@ class PropertyValuesDialog(QDialog):
     - Apply modifiers (lowercase, uppercase)
     """
 
-    def __init__(self, prop_name: str, prop_type: dict, ctx, parent=None):
+    def __init__(self, prop_name: str, prop_type: PropType, ctx, parent=None):
         super().__init__(parent)
         self.prop_name = prop_name
         self.prop_type = prop_type
@@ -51,8 +53,8 @@ class PropertyValuesDialog(QDialog):
         layout = QVBoxLayout(self)
 
         # Header info
-        type_name = self.prop_type.get("type", "str")  # Already a string
-        multiple = "Yes" if self.prop_type.get("multiple") else "No"
+        type_name = self.prop_type.type
+        multiple = "Yes" if self.prop_type.multiple else "No"
         info_label = QLabel(
             f"<b>{self.prop_name}</b> (type: {type_name}, multiple: {multiple})"
         )

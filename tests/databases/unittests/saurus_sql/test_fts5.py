@@ -361,11 +361,11 @@ class TestFtsPropTypeDel:
         str_props = db.get_prop_types(with_type=str)
         tagged_ids = set()
         for prop in str_props:
-            tagged_ids.update(db.videos_tag_get(prop["name"]).keys())
+            tagged_ids.update(db.videos_tag_get(prop.name).keys())
         assert len(tagged_ids) > 0
 
         for prop in str_props:
-            db.prop_type_del(prop["name"])
+            db.prop_type_del(prop.name)
 
         for vid in tagged_ids:
             row = _fts_row(db, vid)

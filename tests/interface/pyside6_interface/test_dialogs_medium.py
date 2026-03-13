@@ -7,6 +7,8 @@ Tests SortingDialog, GroupingDialog, SourcesDialog, GoToPageDialog.
 import pytest
 from PySide6.QtCore import Qt
 
+from pysaurus.properties.properties import PropType
+
 
 class TestSortingDialog:
     """Tests for SortingDialog."""
@@ -157,8 +159,12 @@ class TestGroupingDialog:
     def prop_types(self):
         """Sample property types."""
         return [
-            {"name": "genre", "type": "str", "multiple": True},
-            {"name": "rating", "type": "int", "multiple": False},
+            PropType(
+                name="genre", type="str", multiple=True, default=[], enumeration=None
+            ),
+            PropType(
+                name="rating", type="int", multiple=False, default=[0], enumeration=None
+            ),
         ]
 
     def test_dialog_creation(self, qtbot, prop_types):

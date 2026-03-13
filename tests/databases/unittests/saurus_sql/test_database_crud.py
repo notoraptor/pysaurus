@@ -64,21 +64,21 @@ class TestPropertyTypeCRUD:
         db.prop_type_add("test_tags", "str", "", True)
         props = db.get_prop_types(name="test_tags")
         assert len(props) == 1
-        assert props[0]["name"] == "test_tags"
-        assert bool(props[0]["multiple"]) is True
+        assert props[0].name == "test_tags"
+        assert bool(props[0].multiple) is True
 
     def test_prop_type_add_int(self, db):
         db.prop_type_add("rating", "int", 0, False)
         props = db.get_prop_types(name="rating")
         assert len(props) == 1
-        assert bool(props[0]["multiple"]) is False
+        assert bool(props[0].multiple) is False
 
     def test_prop_type_add_enum(self, db):
         enum_values = ["low", "medium", "high"]
         db.prop_type_add("quality", "str", enum_values, False)
         props = db.get_prop_types(name="quality")
         assert len(props) == 1
-        assert set(props[0]["enumeration"]) == set(enum_values)
+        assert set(props[0].enumeration) == set(enum_values)
 
     def test_prop_type_del(self, db):
         db.prop_type_add("temp_prop", "str", "", True)
@@ -96,10 +96,10 @@ class TestPropertyTypeCRUD:
 
     def test_prop_type_set_multiple(self, db):
         db.prop_type_add("tags", "str", "", False)
-        assert bool(db.get_prop_types(name="tags")[0]["multiple"]) is False
+        assert bool(db.get_prop_types(name="tags")[0].multiple) is False
 
         db.prop_type_set_multiple("tags", True)
-        assert bool(db.get_prop_types(name="tags")[0]["multiple"]) is True
+        assert bool(db.get_prop_types(name="tags")[0].multiple) is True
 
 
 # =============================================================================
@@ -114,15 +114,15 @@ class TestGetPropTypes:
         props = ro_db.get_prop_types()
         assert isinstance(props, list)
         for p in props:
-            assert "name" in p
+            assert hasattr(p, "name")
 
     def test_get_by_name(self, ro_db):
         all_props = ro_db.get_prop_types()
         if all_props:
-            name = all_props[0]["name"]
+            name = all_props[0].name
             by_name = ro_db.get_prop_types(name=name)
             assert len(by_name) == 1
-            assert by_name[0]["name"] == name
+            assert by_name[0].name == name
 
 
 # =============================================================================
@@ -200,7 +200,7 @@ class TestVideosTagGet:
     def test_get_all(self, ro_db):
         all_props = ro_db.get_prop_types()
         for prop in all_props:
-            tags = ro_db.videos_tag_get(prop["name"])
+            tags = ro_db.videos_tag_get(prop.name)
             assert isinstance(tags, dict)
 
     def test_get_with_indices(self, ro_db):
@@ -209,7 +209,7 @@ class TestVideosTagGet:
         sample_ids = [v.video_id for v in videos[:10]]
 
         for prop in all_props:
-            tags = ro_db.videos_tag_get(prop["name"], indices=sample_ids)
+            tags = ro_db.videos_tag_get(prop.name, indices=sample_ids)
             assert isinstance(tags, dict)
             # All returned keys should be in sample_ids
             assert set(tags.keys()).issubset(set(sample_ids))

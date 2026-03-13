@@ -17,6 +17,7 @@ from pysaurus.core.notifications import (
     ProfilingStart,
 )
 from pysaurus.interface.pyside6.pyside6_api import PySide6API
+from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
 
@@ -389,7 +390,7 @@ class AppContext(QObject):
     # Facade methods — Property types
     # =========================================================================
 
-    def get_prop_types(self, **kwargs) -> list[dict]:
+    def get_prop_types(self, **kwargs) -> list[PropType]:
         """Return property type definitions."""
         if self._database:
             return self._database.get_prop_types(**kwargs)
@@ -628,7 +629,7 @@ class AppContext(QObject):
             (prop_desc,) = self._database.get_prop_types(name=prop_name)
             updates = {vid: values for vid in video_ids}
             self._ops.set_property_for_videos(
-                prop_name, updates, merge=prop_desc["multiple"]
+                prop_name, updates, merge=prop_desc.multiple
             )
             self.state_changed.emit()
 

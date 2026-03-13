@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.interface.pyside6.app_context import AppContext
+from pysaurus.properties.properties import PropType
 
 
 class PropertiesPage(QWidget):
@@ -251,12 +252,12 @@ class PropertiesPage(QWidget):
         self.props_table.setRowCount(len(self._prop_types))
 
         for i, prop_type in enumerate(self._prop_types):
-            name = prop_type.get("name", "")
-            ptype = prop_type.get("type", "str")  # String like "str", "int", etc.
-            default_values = prop_type.get("defaultValues", [])
+            name = prop_type.name
+            ptype = prop_type.type  # String like "str", "int", etc.
+            default_values = prop_type.default
             default = default_values[0] if default_values else None
-            multiple = prop_type.get("multiple", False)
-            enumeration = prop_type.get("enumeration")
+            multiple = prop_type.multiple
+            enumeration = prop_type.enumeration
 
             # Name
             name_item = QTableWidgetItem(name)
@@ -298,16 +299,16 @@ class PropertiesPage(QWidget):
 
         self.props_table.resizeColumnsToContents()
 
-    def _create_actions_widget(self, prop_type: dict) -> QWidget:
+    def _create_actions_widget(self, prop_type: PropType) -> QWidget:
         """Create the actions widget for a property row."""
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(2)
 
-        name = prop_type.get("name", "")
-        ptype = prop_type.get("type", "str")  # String like "str", "int", etc.
-        multiple = prop_type.get("multiple", False)
+        name = prop_type.name
+        ptype = prop_type.type  # String like "str", "int", etc.
+        multiple = prop_type.multiple
         is_string = ptype == "str"
 
         # Create dropdown button with menu
@@ -498,9 +499,7 @@ class PropertiesPage(QWidget):
         )
 
         # Find the property type
-        prop_type = next(
-            (pt for pt in self._prop_types if pt.get("name") == name), None
-        )
+        prop_type = next((pt for pt in self._prop_types if pt.name == name), None)
         if not prop_type:
             return
 
@@ -514,9 +513,7 @@ class PropertiesPage(QWidget):
         )
 
         # Find the property type
-        prop_type = next(
-            (pt for pt in self._prop_types if pt.get("name") == name), None
-        )
+        prop_type = next((pt for pt in self._prop_types if pt.name == name), None)
         if not prop_type:
             return
 
@@ -526,12 +523,12 @@ class PropertiesPage(QWidget):
             if values and target_prop:
                 try:
                     count = self.ctx.move_property_values(
-                        values, name, target_prop["name"], concatenate=concatenate
+                        values, name, target_prop.name, concatenate=concatenate
                     )
                     QMessageBox.information(
                         self,
                         "Success",
-                        f"Moved values for {count} videos from '{name}' to '{target_prop['name']}'.",
+                        f"Moved values for {count} videos from '{name}' to '{target_prop.name}'.",
                     )
                 except Exception as e:
                     QMessageBox.warning(self, "Error", f"Failed to move values: {e}")
@@ -549,7 +546,7 @@ class PropertiesPage(QWidget):
                 reply = QMessageBox.question(
                     self,
                     "Fill Property",
-                    f"Fill '{prop_type['name']}' with terms extracted from video filenames?\n\n"
+                    f"Fill '{prop_type.name}' with terms extracted from video filenames?\n\n"
                     f"{'Only videos without values will be affected.' if only_empty else 'All videos will be affected.'}",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
@@ -557,12 +554,12 @@ class PropertiesPage(QWidget):
                 if reply == QMessageBox.StandardButton.Yes:
                     try:
                         self.ctx.fill_property_with_terms(
-                            prop_type["name"], only_empty=only_empty
+                            prop_type.name, only_empty=only_empty
                         )
                         QMessageBox.information(
                             self,
                             "Success",
-                            f"Property '{prop_type['name']}' filled with terms.",
+                            f"Property '{prop_type.name}' filled with terms.",
                         )
                     except Exception as e:
                         QMessageBox.warning(

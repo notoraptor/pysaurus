@@ -400,17 +400,17 @@ def create_app() -> Flask:
         prop_types = ctx.get_prop_types()
         properties = {}
         for pt in prop_types:
-            name = pt["name"]
+            name = pt.name
             field_name = f"prop_{name}"
-            ptype = pt["type"]
-            if pt["multiple"]:
+            ptype = pt.type
+            if pt.multiple:
                 raw_values = request.form.getlist(field_name)
                 values = [v.strip() for v in raw_values if v.strip()]
             else:
                 raw = request.form.get(field_name, "").strip()
                 values = [raw] if raw else []
             if not values:
-                properties[name] = pt["defaultValues"]
+                properties[name] = pt.default
             else:
                 properties[name] = [_parse_prop_value(v, ptype) for v in values]
         ctx.database.video_entry_set_tags(video_id, properties)
@@ -471,7 +471,7 @@ def create_app() -> Flask:
     @handle_errors
     def toggle_prop_multiple(name):
         (prop_type,) = _ctx().database.get_prop_types(name=name)
-        new_multiple = not prop_type["multiple"]
+        new_multiple = not prop_type.multiple
         _ctx().database.prop_type_set_multiple(name, new_multiple)
         label = "multiple" if new_multiple else "simple"
         flash(f"Propriété « {name} » convertie en {label}.")
@@ -514,7 +514,7 @@ def create_app() -> Flask:
     def delete_prop_values(name):
         (prop_type,) = _ctx().database.get_prop_types(name=name)
         raw_values = request.form.getlist("values")
-        ptype = prop_type["type"]
+        ptype = prop_type.type
         values = [_parse_prop_value(v, ptype) for v in raw_values if v.strip()]
         if values:
             _ctx().algos.delete_property_values(name, values)
@@ -527,7 +527,7 @@ def create_app() -> Flask:
     @handle_errors
     def rename_prop_value(name):
         (prop_type,) = _ctx().database.get_prop_types(name=name)
-        ptype = prop_type["type"]
+        ptype = prop_type.type
         old_value = request.form.get("old_value", "").strip()
         new_value = request.form.get("new_value", "").strip()
         if old_value and new_value:

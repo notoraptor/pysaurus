@@ -6,7 +6,7 @@ from pysaurus.database.saurus.prop_type_search import prop_type_search
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.sql_utils import sql_placeholders
 from pysaurus.database.saurus.sql_video_wrapper import SQLVideoWrapper
-from pysaurus.properties.properties import PropTypeValidator
+from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern
 
 
@@ -69,9 +69,8 @@ def _get_videos(
             ):
                 languages[row[0]][row[1]].append(row[2])
     if with_properties:
-        prop_types: dict[int, PropTypeValidator] = {
-            desc["property_id"]: PropTypeValidator(desc)
-            for desc in prop_type_search(db)
+        prop_types: dict[int, PropType] = {
+            pt.property_id: pt for pt in prop_type_search(db)
         }
         with db:
             for row in db.query(

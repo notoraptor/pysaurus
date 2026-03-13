@@ -4,6 +4,8 @@ Dialog for viewing and editing video properties.
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
+
+from pysaurus.properties.properties import PropType
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -44,11 +46,11 @@ class NonSubmittingLineEdit(QLineEdit):
 class MultipleValuesWidget(QWidget):
     """Widget for editing multiple values of a property."""
 
-    def __init__(self, prop_type: dict, parent=None):
+    def __init__(self, prop_type: PropType, parent=None):
         super().__init__(parent)
         self.prop_type = prop_type
-        self.ptype = prop_type["type"]
-        self.enumeration = prop_type.get("enumeration")
+        self.ptype = prop_type.type
+        self.enumeration = prop_type.enumeration
         self._initial_values: list = []  # For reset functionality
 
         self._setup_ui()
@@ -235,7 +237,9 @@ class VideoPropertiesDialog(QDialog):
     - Properties: Editable custom properties
     """
 
-    def __init__(self, video: VideoPattern, prop_types: list, ctx, parent=None):
+    def __init__(
+        self, video: VideoPattern, prop_types: list[PropType], ctx, parent=None
+    ):
         super().__init__(parent)
         self.video = video
         self.prop_types = prop_types
@@ -408,13 +412,13 @@ class VideoPropertiesDialog(QDialog):
 
         for prop_type in self.prop_types:
             prop_widget = self._create_property_widget(prop_type)
-            self._property_widgets[prop_type["name"]] = prop_widget
+            self._property_widgets[prop_type.name] = prop_widget
 
             # Create label with type info
-            is_multiple = prop_type["multiple"]
-            enumeration = prop_type.get("enumeration")
+            is_multiple = prop_type.multiple
+            enumeration = prop_type.enumeration
 
-            label_text = f"{prop_type['name']}"
+            label_text = f"{prop_type.name}"
             if is_multiple:
                 label_text += " (multiple)"
             if enumeration:
@@ -427,11 +431,11 @@ class VideoPropertiesDialog(QDialog):
         scroll.setWidget(widget)
         return scroll
 
-    def _create_property_widget(self, prop_type: dict) -> QWidget:
+    def _create_property_widget(self, prop_type: PropType) -> QWidget:
         """Create a widget for editing a property based on its type."""
-        ptype = prop_type["type"]  # str: "bool", "int", "float", "str"
-        is_multiple = prop_type["multiple"]
-        enumeration = prop_type.get("enumeration")
+        ptype = prop_type.type  # str: "bool", "int", "float", "str"
+        is_multiple = prop_type.multiple
+        enumeration = prop_type.enumeration
 
         # Multiple values use the special widget
         if is_multiple:
@@ -470,21 +474,21 @@ class VideoPropertiesDialog(QDialog):
             return
 
         for prop_type in self.prop_types:
-            name = prop_type["name"]
+            name = prop_type.name
             widget = self._property_widgets.get(name)
             if not widget:
                 continue
 
-            # Get default value from defaultValues list
-            default_values = prop_type.get("defaultValues", [])
+            # Get default value from default list
+            default_values = prop_type.default
             default = default_values[0] if default_values else None
 
             # Get current value
             value = self.video.get_property(name, default)
 
-            ptype = prop_type["type"]  # str: "bool", "int", "float", "str"
-            is_multiple = prop_type["multiple"]
-            enumeration = prop_type.get("enumeration")
+            ptype = prop_type.type  # str: "bool", "int", "float", "str"
+            is_multiple = prop_type.multiple
+            enumeration = prop_type.enumeration
 
             # Handle multiple values widget
             if is_multiple:
@@ -530,18 +534,18 @@ class VideoPropertiesDialog(QDialog):
         changes = {}
 
         for prop_type in self.prop_types:
-            name = prop_type["name"]
+            name = prop_type.name
             widget = self._property_widgets.get(name)
             if not widget:
                 continue
 
-            # Get default value from defaultValues list
-            default_values = prop_type.get("defaultValues", [])
+            # Get default value from default list
+            default_values = prop_type.default
             default = default_values[0] if default_values else None
 
-            ptype = prop_type["type"]  # str: "bool", "int", "float", "str"
-            is_multiple = prop_type["multiple"]
-            enumeration = prop_type.get("enumeration")
+            ptype = prop_type.type  # str: "bool", "int", "float", "str"
+            is_multiple = prop_type.multiple
+            enumeration = prop_type.enumeration
 
             try:
                 # Multiple values widget

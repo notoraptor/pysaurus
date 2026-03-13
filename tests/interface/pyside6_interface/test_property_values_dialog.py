@@ -20,7 +20,7 @@ class TestPropertyValuesDialogCreation:
         )
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -34,7 +34,7 @@ class TestPropertyValuesDialogCreation:
         )
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -49,7 +49,7 @@ class TestPropertyValuesDialogCreation:
         )
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -69,7 +69,7 @@ class TestPropertyValuesDialogCreation:
         )
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -105,7 +105,7 @@ class TestPropertyValuesDialogModifiers:
         )
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -204,7 +204,7 @@ class TestPropertyValuesDialogModifiers:
         before = self._get_all_genre_values(mock_context)
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -233,7 +233,7 @@ class TestPropertyValuesDialogDelete:
         )
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -267,7 +267,7 @@ class TestPropertyValuesDialogDelete:
         )
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -299,7 +299,7 @@ class TestPropertyValuesDialogRename:
         from PySide6.QtWidgets import QInputDialog
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -333,7 +333,7 @@ class TestPropertyValuesDialogRename:
         from PySide6.QtWidgets import QInputDialog
 
         prop_types = mock_context.get_prop_types()
-        genre_prop = next(pt for pt in prop_types if pt["name"] == "genre")
+        genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
         dialog = PropertyValuesDialog("genre", genre_prop, mock_context)
         qtbot.addWidget(dialog)
@@ -412,7 +412,7 @@ class TestPropertyValuesDialogFromPropertiesPage:
 
         # Get the genre property type
         prop_type = next(
-            pt for pt in mock_context.get_prop_types() if pt["name"] == "genre"
+            pt for pt in mock_context.get_prop_types() if pt.name == "genre"
         )
 
         # Create and interact with dialog (simulating what _on_manage_values does)
