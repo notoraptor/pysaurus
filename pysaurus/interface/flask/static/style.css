@@ -346,18 +346,59 @@ details > form > fieldset > button {
 
 /* Video list */
 
+.selection-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.85em;
+}
+
+.selection-toolbar label {
+    display: inline;
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+#selection-count {
+    color: #2980b9;
+    font-weight: 600;
+}
+
 .video-list {
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
+.video-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    border-radius: 4px;
+    padding-left: 0.5rem;
+}
+
+.video-entry.not-found {
+    opacity: 0.5;
+}
+
+.video-checkbox {
+    flex-shrink: 0;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
 .video-item {
     display: flex;
     gap: 0.75rem;
     padding: 0.5rem;
-    background: white;
-    border-radius: 4px;
+    padding-left: 0.25rem;
+    flex: 1;
+    min-width: 0;
     text-decoration: none;
     color: inherit;
     transition: background 0.1s;
@@ -366,10 +407,6 @@ details > form > fieldset > button {
 .video-item:hover {
     background: #eef2f7;
     color: inherit;
-}
-
-.video-item.not-found {
-    opacity: 0.5;
 }
 
 .video-thumb {

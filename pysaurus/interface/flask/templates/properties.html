@@ -23,10 +23,16 @@
                 <tr>
                     <td>{{ pt.name }}</td>
                     <td>{{ pt.type }}</td>
-                    <td>{{ "oui" if pt.multiple else "non" }}</td>
+                    <td>
+                        {{ "oui" if pt.multiple else "non" }}
+                        <form method="post" action="{{ url_for('toggle_prop_multiple', name=pt.name) }}">
+                            <button type="submit" class="btn btn-sm">{{ "→ simple" if pt.multiple else "→ multiple" }}</button>
+                        </form>
+                    </td>
                     <td>{{ pt.defaultValues|join(", ") }}</td>
                     <td>{{ pt.enumeration|join(", ") if pt.enumeration else "—" }}</td>
                     <td>
+                        <a class="btn" href="{{ url_for('prop_values', name=pt.name) }}">Valeurs</a>
                         <details>
                             <summary>Renommer</summary>
                             <form method="post" action="{{ url_for('rename_prop_type', name=pt.name) }}">

@@ -3,7 +3,17 @@
 {% block title %}Pysaurus - {{ database_name }} - Sources{% endblock %}
 
 {% block content %}
-<h1>Dossiers sources</h1>
+<h1>Configuration — {{ database_name }}</h1>
+
+<section>
+    <h2>Renommer la base</h2>
+    <form method="post" action="{{ url_for('rename_database') }}">
+        <fieldset>
+            <input type="text" name="new_name" value="{{ database_name }}" required>
+            <button type="submit">Renommer</button>
+        </fieldset>
+    </form>
+</section>
 
 <section>
     <h2>Dossiers actuels</h2>

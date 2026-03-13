@@ -119,9 +119,9 @@ pour identifier ce qui est récupérable côté serveur avec un minimum de JavaS
 - Suppression batch (database, corbeille, permanent)
 
 ### À récupérer
-- [ ] Checkboxes HTML dans le formulaire vidéo
-- [ ] Tout cocher/décocher (JS minimal)
-- [ ] Suppression batch
+- [x] Checkboxes HTML dans le formulaire vidéo
+- [x] Tout cocher/décocher (JS minimal)
+- [ ] Suppression batch (ignoré pour le moment)
 - [ ] Édition batch des propriétés (formulaire dédié après sélection)
 
 ## 9. Propriétés — fonctionnalités manquantes
@@ -136,17 +136,17 @@ pour identifier ce qui est récupérable côté serveur avec un minimum de JavaS
 - Remplir avec les termes des noms de fichiers
 
 ### À récupérer
-- [ ] Gérer les valeurs (renommer/supprimer) — formulaire POST
-- [ ] Convertir single ↔ multiple — bouton POST
+- [x] Gérer les valeurs (renommer/supprimer) — formulaire POST
+- [x] Convertir single ↔ multiple — bouton POST
 - [ ] Déplacer des valeurs entre propriétés — formulaire POST
 - [ ] Remplir avec termes — formulaire POST
 
 ## 10. Base de données — manques
 
 ### À récupérer
-- [ ] Renommer une base de données — formulaire POST
-- [ ] Trouver les vidéos similaires — opération longue (même pattern que update)
-- [ ] Trouver les vidéos ré-encodées — opération longue
+- [x] Renommer une base de données — formulaire POST
+- [x] Trouver les vidéos similaires — opération longue (même pattern que update)
+- [x] Trouver les vidéos ré-encodées — opération longue
 
 ## 11. Classifier path (navigation hiérarchique)
 
@@ -171,20 +171,21 @@ pour identifier ce qui est récupérable côté serveur avec un minimum de JavaS
 5. ~~Grouping : valeur du groupe courant affichée~~
 6. ~~Détail vidéo enrichi (tous les champs, vignette 320×180, ouvrir dossier)~~
 7. ~~Vidéo aléatoire (route `/videos/random`)~~
+8. ~~Thumbnails inline (base64 data URI, 1 requête SQL au lieu de N requêtes HTTP)~~
 
 ### Prochaines étapes (priorité moyenne)
-8. Sélection multiple + suppression batch
-9. Édition batch des propriétés
-10. Gestion des valeurs de propriété (renommer/supprimer)
-11. Recherche de vidéos similaires (opération longue)
-12. Renommer une base de données
-13. Convertir propriété single ↔ multiple
+9. ~~Sélection multiple~~ (fait) — suppression batch ignorée pour le moment
+10. Édition batch des propriétés
+11. ~~Gestion des valeurs de propriété (renommer/supprimer)~~ (fait)
+12. ~~Recherche de vidéos similaires + ré-encodées (opérations longues)~~ (fait)
+13. ~~Renommer une base de données~~ (fait)
+14. ~~Convertir propriété single ↔ multiple~~ (fait)
 
 ### Priorité basse (fonctionnalités avancées)
-14. Tri multi-champs
-15. Classifier path (navigation hiérarchique)
-16. Déplacer des valeurs entre propriétés
-17. Remplir avec termes des noms de fichiers
-18. Générer playlist
-19. Copier titre/chemin (JS minimal)
-20. Déplacer fichier
+15. Tri multi-champs
+16. Classifier path (navigation hiérarchique)
+17. Déplacer des valeurs entre propriétés
+18. Remplir avec termes des noms de fichiers
+19. Générer playlist
+20. Copier titre/chemin (JS minimal)
+21. Déplacer fichier

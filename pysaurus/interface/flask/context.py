@@ -87,6 +87,15 @@ class FlaskContext:
     def delete_database(self, name: str) -> None:
         self.application.delete_database_from_name(name)
 
+    def rename_database(self, new_name: str) -> None:
+        if self._database:
+            old_path = self._database.ways.db_folder
+            self._database.rename(new_name)
+            new_path = self._database.ways.db_folder
+            if old_path in self.application.databases:
+                del self.application.databases[old_path]
+                self.application.databases[new_path] = self._database
+
     # Video operations
 
     def get_video(self, video_id: int):
@@ -94,22 +103,30 @@ class FlaskContext:
         videos = self._database.get_videos(where={"video_id": video_id})
         return videos[0] if videos else None
 
-    def get_thumbnail_data(self, video_id: int) -> bytes | None:
-        """Return raw thumbnail bytes, using a thread-safe ephemeral query.
+    def get_thumbnails_base64(self, video_ids: list[int]) -> dict[int, str]:
+        """Return {video_id: "data:image/jpeg;base64,..."} for given IDs.
 
-        Unlike get_videos(), this avoids skullite's persistent mode (`with db:`)
-        which is not safe for concurrent access from Flask's threaded server.
+        Fetches all thumbnails in a single SQL query and encodes them
+        as data URIs for direct embedding in <img src="...">.
         """
+        from base64 import b64encode
+
         from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
 
         db = self._database
-        if isinstance(db, PysaurusCollection):
-            row = db.db.query_one(
-                "SELECT thumbnail FROM video_thumbnail WHERE video_id = ?",
-                [video_id],
-            )
-            return row[0] if row else None
-        return None
+        if not isinstance(db, PysaurusCollection) or not video_ids:
+            return {}
+        placeholders = ",".join("?" * len(video_ids))
+        rows = db.db.query_all(
+            f"SELECT video_id, thumbnail FROM video_thumbnail "
+            f"WHERE video_id IN ({placeholders})",
+            video_ids,
+        )
+        return {
+            row[0]: f"data:image/jpeg;base64,{b64encode(row[1]).decode()}"
+            for row in rows
+            if row[1]
+        }
 
     def get_prop_types(self) -> list[dict]:
         return self._database.get_prop_types() if self._database else []

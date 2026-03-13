@@ -29,6 +29,7 @@ pysaurus/interface/flask/
         videos.html      # Tableau paginé de vidéos + recherche/tri/groupes
         video_detail.html  # Détail d'une vidéo + édition propriétés
         properties.html  # Gestion des types de propriétés
+        prop_values.html # Gestion des valeurs d'une propriété
         sources.html     # Gestion des dossiers sources
         operation_progress.html  # Barre de progression + polling JS
 ```
@@ -62,6 +63,7 @@ Les opérations courtes sont synchrones (la requête HTTP bloque). Les opératio
 | `/create` | POST | Créer une database | `app.new_database(name, folders)` puis `algos.refresh()` en opération longue |
 | `/delete` | POST | Supprimer une database (avec confirmation JS) | `app.delete_database_from_name(name)` |
 | `/close` | POST | Fermer la database courante | `context.close_database()` |
+| `/rename` | POST | Renommer la database courante | `context.rename_database(new_name)` |
 
 Après ouverture, redirection directe vers `/videos` (pas de refresh automatique, comme en PySide6). Après création, `algos.refresh()` est lancé comme opération longue (la base est vide, il faut scanner les dossiers). La mise à jour manuelle est disponible via le bouton « Mettre à jour la base » sur la page vidéos.
 
@@ -128,9 +130,15 @@ Les propriétés booléennes utilisent un `<select>` (Oui/Non). Les propriétés
 | `/properties` | GET | Liste + formulaire création | `db.get_prop_types()` |
 | `/properties/create` | POST | Créer | `db.prop_type_add(name, prop_type, definition, multiple)` |
 | `/properties/<name>/rename` | POST | Renommer | `db.prop_type_set_name(old_name, new_name)` |
+| `/properties/<name>/toggle-multiple` | POST | Convertir single ↔ multiple | `db.prop_type_set_multiple(name, bool)` |
 | `/properties/<name>/delete` | POST | Supprimer (avec confirmation JS) | `db.prop_type_del(name)` |
+| `/properties/<name>/values` | GET | Liste des valeurs avec comptes | `db.videos_tag_get(name)` |
+| `/properties/<name>/values/delete` | POST | Supprimer des valeurs (avec confirmation JS) | `algos.delete_property_values(name, values)` |
+| `/properties/<name>/values/rename` | POST | Renommer une valeur | `algos.replace_property_values(name, [old], new)` |
 
 Le formulaire de création accepte : nom, type (str/int/float/bool), multiple (checkbox), valeur par défaut, et énumération (valeurs séparées par des virgules, pour type str uniquement). Le paramètre `definition` passé à `prop_type_add` est soit un scalaire (valeur par défaut), soit une liste (énumération).
+
+La page de gestion des valeurs (`/properties/<name>/values`) affiche toutes les valeurs distinctes d'une propriété, triées par nombre décroissant de vidéos. Chaque valeur peut être renommée (formulaire inline dans un `<details>`) ou supprimée (avec confirmation JS).
 
 ### 5. Sources (`/sources`)
 
@@ -141,11 +149,15 @@ Le formulaire de création accepte : nom, type (str/int/float/bool), multiple (c
 
 Chemins de dossiers saisis dans un `<textarea>` (un par ligne), pas de dialogue fichier.
 
-### 6. Miniatures (`/thumbnail/<video_id>`)
+### 6. Miniatures
 
-Route dédiée renvoyant le JPEG binaire. Utilisée via `<img src="/thumbnail/42">`.
+Les miniatures sont chargées en une seule requête SQL lors du rendu de la page, encodées en base64, et embarquées directement dans le HTML via des data URIs (`<img src="data:image/jpeg;base64,...">`).
 
-Si la miniature n'existe pas, renvoie un GIF transparent 1×1 comme placeholder (pas de fichier statique).
+- `FlaskContext.get_thumbnails_base64(video_ids)` retourne un `dict[int, str]` mappant chaque `video_id` à son data URI
+- Sur `/videos`, tous les thumbnails de la page courante sont chargés d'un coup
+- Sur `/video/<id>`, le thumbnail unique est passé au template
+
+Pas de route `/thumbnail/<id>` séparée : tout est inline, ce qui élimine N requêtes HTTP supplémentaires et les problèmes de concurrence thread liés à skullite.
 
 ## Décorateurs de routes
 
@@ -167,7 +179,7 @@ Composition typique : `@require_database @require_no_operation @handle_errors`.
 
 ## Opérations longues
 
-Certaines opérations backend peuvent durer longtemps : `algos.refresh()` (scan des dossiers, extraction de métadonnées, génération de miniatures). Le backend émet des notifications de progression (`JobToDo`, `JobStep`, `End`) pendant ces opérations.
+Certaines opérations backend peuvent durer longtemps : `algos.refresh()` (scan des dossiers, extraction de métadonnées, génération de miniatures), `DbSimilarVideos.find_similar_videos()` (recherche de vidéos visuellement similaires), `DbSimilarReencoded.find_similar_reencoded()` (détection de ré-encodages). Le backend émet des notifications de progression (`JobToDo`, `JobStep`, `End`) pendant ces opérations.
 
 ### Mécanisme : thread secondaire + polling JS
 
@@ -231,7 +243,7 @@ Les deux modes appellent `_init()` qui crée l'`Application`, initialise `FlaskC
 - **Écoute locale uniquement** : le serveur Flask doit écouter sur `127.0.0.1` (jamais `0.0.0.0`) pour éviter d'exposer l'application sur le réseau
 - **Mono-thread** : suffisant (un seul utilisateur local). Le seul thread secondaire est celui des opérations longues
 - **Pas de Node.js, pas de build step** : templates HTML modifiables directement
-- **JavaScript minimal** : uniquement pour les confirmations de suppression (`confirm()`), la page de progression (polling `fetch`), la navigation par groupes (`onchange`), et l'édition de propriétés multi-valuées (boutons +/−)
+- **JavaScript minimal** : uniquement pour les confirmations de suppression (`confirm()`), la page de progression (polling `fetch`), la navigation par groupes (`onchange`), l'édition de propriétés multi-valuées (boutons +/−), et la sélection de vidéos (tout cocher/décocher + compteur)
 - **Confirmations de suppression** : toute opération de suppression (database, vidéo, propriété) utilise `onsubmit="return confirm('...')"` sur le formulaire pour demander une confirmation avant exécution
 
 ## Fonctionnalités non implémentées

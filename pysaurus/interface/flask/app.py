@@ -4,7 +4,7 @@ import random
 import secrets
 from functools import wraps
 
-from flask import Flask, Response, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, url_for
 
 from pysaurus.core.core_exceptions import ApplicationError
 from pysaurus.core.duration import Duration
@@ -167,6 +167,16 @@ def create_app() -> Flask:
             flash(f"Base de données « {name} » supprimée.")
         return redirect(url_for("index"))
 
+    @app.route("/rename", methods=["POST"])
+    @require_database
+    @handle_errors
+    def rename_database():
+        new_name = request.form.get("new_name", "").strip()
+        if new_name:
+            _ctx().rename_database(new_name)
+            flash(f"Base de données renommée en « {new_name} ».")
+        return redirect(url_for("videos"))
+
     @app.route("/close", methods=["POST"])
     def close_database():
         _ctx().close_database()
@@ -197,10 +207,14 @@ def create_app() -> Flask:
         videos_list = context.result or []
         page_total_size = FileSize(sum(v.file_size for v in videos_list))
         page_total_duration = Duration(sum(v.length.t for v in videos_list))
+        thumbnails = ctx.get_thumbnails_base64(
+            [v.video_id for v in videos_list]
+        )
 
         return render_template(
             "videos.html",
             videos=videos_list,
+            thumbnails=thumbnails,
             page=page,
             nb_pages=context.nb_pages or 1,
             page_size=page_size,
@@ -293,7 +307,14 @@ def create_app() -> Flask:
             flash("Vidéo introuvable.", "error")
             return redirect(url_for("videos"))
         prop_types = ctx.get_prop_types()
-        return render_template("video_detail.html", video=video, prop_types=prop_types)
+        thumbnails = ctx.get_thumbnails_base64([video_id])
+        thumbnail = thumbnails.get(video_id, "")
+        return render_template(
+            "video_detail.html",
+            video=video,
+            prop_types=prop_types,
+            thumbnail=thumbnail,
+        )
 
     @app.route("/video/<int:video_id>/toggle-watched", methods=["POST"])
     @require_database
@@ -425,6 +446,18 @@ def create_app() -> Flask:
             flash(f"Propriété renommée en « {new_name} ».")
         return redirect(url_for("properties"))
 
+    @app.route("/properties/<name>/toggle-multiple", methods=["POST"])
+    @require_database
+    @require_no_operation
+    @handle_errors
+    def toggle_prop_multiple(name):
+        (prop_type,) = _ctx().database.get_prop_types(name=name)
+        new_multiple = not prop_type["multiple"]
+        _ctx().database.prop_type_set_multiple(name, new_multiple)
+        label = "multiple" if new_multiple else "simple"
+        flash(f"Propriété « {name} » convertie en {label}.")
+        return redirect(url_for("properties"))
+
     @app.route("/properties/<name>/delete", methods=["POST"])
     @require_database
     @require_no_operation
@@ -433,6 +466,59 @@ def create_app() -> Flask:
         _ctx().database.prop_type_del(name)
         flash(f"Propriété « {name} » supprimée.")
         return redirect(url_for("properties"))
+
+    @app.route("/properties/<name>/values")
+    @require_database
+    @require_no_operation
+    @handle_errors
+    def prop_values(name):
+        ctx = _ctx()
+        (prop_type,) = ctx.database.get_prop_types(name=name)
+        counts = {}
+        for values in ctx.database.videos_tag_get(name).values():
+            for v in values:
+                counts[v] = counts.get(v, 0) + 1
+        sorted_values = sorted(counts.items(), key=lambda item: (-item[1], str(item[0])))
+        return render_template(
+            "prop_values.html",
+            prop_name=name,
+            prop_type=prop_type,
+            value_counts=sorted_values,
+        )
+
+    @app.route("/properties/<name>/values/delete", methods=["POST"])
+    @require_database
+    @require_no_operation
+    @handle_errors
+    def delete_prop_values(name):
+        (prop_type,) = _ctx().database.get_prop_types(name=name)
+        raw_values = request.form.getlist("values")
+        ptype = prop_type["type"]
+        values = [_parse_prop_value(v, ptype) for v in raw_values if v.strip()]
+        if values:
+            _ctx().algos.delete_property_values(name, values)
+            flash(f"{len(values)} valeur(s) supprimée(s) de « {name} ».")
+        return redirect(url_for("prop_values", name=name))
+
+    @app.route("/properties/<name>/values/rename", methods=["POST"])
+    @require_database
+    @require_no_operation
+    @handle_errors
+    def rename_prop_value(name):
+        (prop_type,) = _ctx().database.get_prop_types(name=name)
+        ptype = prop_type["type"]
+        old_value = request.form.get("old_value", "").strip()
+        new_value = request.form.get("new_value", "").strip()
+        if old_value and new_value:
+            modified = _ctx().algos.replace_property_values(
+                name, [_parse_prop_value(old_value, ptype)],
+                _parse_prop_value(new_value, ptype),
+            )
+            if modified:
+                flash(f"Valeur « {old_value} » renommée en « {new_value} ».")
+            else:
+                flash("Aucune vidéo modifiée.", "error")
+        return redirect(url_for("prop_values", name=name))
 
     # =================================================================
     # Sources
@@ -487,27 +573,25 @@ def create_app() -> Flask:
         ctx = _ctx()
         if op_name == "update":
             ctx.start_operation(ctx.algos.refresh, redirect_url="/videos")
+        elif op_name == "find_similar":
+            from pysaurus.database.features.db_similar_videos import DbSimilarVideos
+
+            ctx.start_operation(
+                lambda: DbSimilarVideos.find_similar_videos(ctx.database),
+                redirect_url="/videos",
+            )
+        elif op_name == "find_reencoded":
+            from pysaurus.database.features.db_similar_reencoded import (
+                DbSimilarReencoded,
+            )
+
+            ctx.start_operation(
+                lambda: DbSimilarReencoded.find_similar_reencoded(ctx.database),
+                redirect_url="/videos",
+            )
         else:
             flash("Opération inconnue.", "error")
             return redirect(url_for("videos"))
         return redirect(url_for("operation_progress"))
-
-    # =================================================================
-    # Thumbnails
-    # =================================================================
-
-    @app.route("/thumbnail/<int:video_id>")
-    @require_database
-    def thumbnail(video_id):
-        thumb_data = _ctx().get_thumbnail_data(video_id)
-        if thumb_data:
-            return Response(thumb_data, mimetype="image/jpeg")
-        # 1x1 transparent GIF as placeholder
-        return Response(
-            b"GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff"
-            b"\x00\x00\x00!\xf9\x04\x00\x00\x00\x00\x00,\x00"
-            b"\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;",
-            mimetype="image/gif",
-        )
 
     return app

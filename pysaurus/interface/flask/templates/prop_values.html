@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Pysaurus - {{ database_name }} - {{ prop_name }} — Valeurs{% endblock %}
+
+{% block content %}
+<p><a href="{{ url_for('properties') }}">&larr; Retour aux propriétés</a></p>
+
+<h1>{{ prop_name }} <small>({{ prop_type.type }}{% if prop_type.multiple %}, multiple{% endif %})</small></h1>
+
+{% if value_counts %}
+    <p>{{ value_counts|length }} valeur(s) distincte(s)</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Valeur</th>
+                <th>Vidéos</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for value, count in value_counts %}
+                <tr>
+                    <td>{{ value }}</td>
+                    <td>{{ count }}</td>
+                    <td>
+                        <details>
+                            <summary>Renommer</summary>
+                            <form method="post" action="{{ url_for('rename_prop_value', name=prop_name) }}">
+                                <input type="hidden" name="old_value" value="{{ value }}">
+                                <input type="text" name="new_value" value="{{ value }}" required>
+                                <button type="submit">Renommer</button>
+                            </form>
+                        </details>
+                        <form method="post" action="{{ url_for('delete_prop_values', name=prop_name) }}" onsubmit="return confirm('Supprimer la valeur « {{ value }} » de toutes les vidéos ?')">
+                            <input type="hidden" name="values" value="{{ value }}">
+                            <button type="submit">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Aucune valeur pour cette propriété.</p>
+{% endif %}
+{% endblock %}
