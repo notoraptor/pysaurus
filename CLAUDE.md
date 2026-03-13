@@ -13,7 +13,7 @@ All commands must be run with `uv run`:
 ```bash
 # Run the application (default GUI: pyside6)
 uv run -m pysaurus
-uv run -m pysaurus pyside6   # or: pywebview, qtwebview
+uv run -m pysaurus pyside6   # or: flask, flaskview, pywebview, qtwebview
 
 # Run CLI (benchmark/debug console, configured via .pysaurus.yaml)
 uv run -m pysaurus.interface.console.run --db <name>
@@ -70,7 +70,7 @@ Single top-level package **`pysaurus/`** containing all application code, includ
 
 ### Entry Point
 
-`pysaurus/__main__.py` — selects GUI at runtime based on CLI argument (`pyside6`, `pywebview`, `qtwebview`). Default: `pyside6`.
+`pysaurus/__main__.py` — selects GUI at runtime based on CLI argument (`pyside6`, `flask`, `flaskview`, `pywebview`, `qtwebview`). Default: `pyside6`.
 
 ### Database Layer
 
@@ -134,8 +134,21 @@ Python backend sends typed `Notification` objects (`pysaurus/core/notifications.
 | Name | Module | Mechanism | Status |
 |---|---|---|---|
 | `pyside6` | `pyside6/` | Native Qt widgets (no web) | Default / Primary |
+| `flask` | `flask/` | Flask + Jinja2 server-side rendering, opens in browser | Active (fallback) |
+| `flaskview` | `flask/` | Same as `flask` but in a `pywebview` desktop window | Active (fallback) |
 | `pywebview` | `using_pywebview/` | Flask HTTP server + `webview` JS bridge | Legacy |
 | `qtwebview` | `qtwebview/` | `PySide6.QtWebEngineWidgets` + `QWebChannel` | Legacy |
+
+### Flask Interface (`interface/flask/`)
+
+Lightweight web interface — server-side rendered, minimal JavaScript. Designed as a pure-Python fallback requiring no system dependencies (no Qt, no Node.js). See `docs/flask-design.md` for full design doc.
+
+- **`FlaskContext`** — facade to `Application`/`AbstractDatabase`/`DatabaseOperations`/`DatabaseAlgorithms` (similar role to `AppContext` in PySide6)
+- **Stateless view**: no persistent `ViewContext` — each request rebuilds an ephemeral `ViewContext` from URL query params (`_build_view()`)
+- **Thumbnails**: loaded in a single SQL query per page, embedded as base64 data URIs (no separate `/thumbnail/<id>` route)
+- **Long operations** (update, similarity search): run in a daemon thread, progress polled via JS every second
+- **Does NOT use `FeatureAPI`** — calls `db.*`, `ops.*`, `algos.*` directly (no proxy system)
+- Feature parity tracking: `docs/flask-vs-pyside6.md`
 
 ### Web Frontend (`interface/web/`)
 
@@ -168,7 +181,7 @@ PySide6 is the primary GUI frontend. Unlike web frontends, it does **not** go th
 
 #### Backend notification
 
-- Every backend write operation (in `AbstractDatabase`, `DatabaseOperations`, `DatabaseAlgorithms`) must call `_notify_fields_modified(fields, is_property)` to save the database. Since `query_videos()` is stateless, the next query will automatically pick up all changes.
+- Every backend write operation (in `AbstractDatabase`, `DatabaseOperations`, `DatabaseAlgorithms`) must call `AbstractDatabase._notify_fields_modified(fields, is_property)` to save the database. All notification calls go through the single `_notify_fields_modified` on `AbstractDatabase` — there is no duplicate in `DatabaseOperations`. Since `query_videos()` is stateless, the next query will automatically pick up all changes.
 
 #### Double-execution protection
 
@@ -205,3 +218,4 @@ PySide6 is the primary GUI frontend. Unlike web frontends, it does **not** go th
 - Two test databases in `tests/home_dir_test/.Pysaurus/databases/`: `test_database` (small) and `example_db_in_pysaurus` (90 videos with properties)
 - Qt tests use `QT_QPA_PLATFORM=offscreen` (set in `tests/interface/pyside6_interface/conftest.py`)
 - `pyfakefs` for filesystem mocking, `pytest-qt` for Qt tests, `pytest-xdist` for parallel runs
+- **No test coverage for the Flask interface** — changes to `pysaurus/interface/flask/` are not validated by existing tests
