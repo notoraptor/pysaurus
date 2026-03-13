@@ -246,7 +246,12 @@ class VideosPage(QWidget):
     def _toggle_show_only_selected(self, checked: bool = None):
         """Toggle between showing all videos and showing only selected."""
         if checked is None:
-            checked = self.btn_show_only_selected.isChecked()
+            # Called from keyboard shortcut: toggle the button, which will
+            # re-enter this method with the new checked value via toggled signal.
+            self.btn_show_only_selected.setChecked(
+                not self.btn_show_only_selected.isChecked()
+            )
+            return
         self._show_only_selected = checked
         self.page_number = 0
         self.refresh()
@@ -1888,11 +1893,6 @@ class VideosPage(QWidget):
                     allow_singletons=grouping["allow_singletons"],
                 )
             self.page_number = 0
-
-    def _toggle_show_only_selected(self):
-        self.btn_show_only_selected.setChecked(
-            not self.btn_show_only_selected.isChecked()
-        )
 
     def _on_search_and(self):
         self._do_search("and")

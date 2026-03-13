@@ -4,6 +4,8 @@ Tests for PySide6 VideosPage.
 Tests the main video browsing page with mock database.
 """
 
+from pysaurus.interface.pyside6.pages.videos_page import VideosPage
+
 
 class TestVideosPageCreation:
     """Tests for VideosPage initialization."""
@@ -291,8 +293,6 @@ class TestVideosPageSelector:
 
     def test_selector_deselect(self, qtbot, mock_context):
         """Test deselecting a video removes it from selector."""
-        from pysaurus.interface.pyside6.pages.videos_page import VideosPage
-
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
         page.refresh()
@@ -303,3 +303,298 @@ class TestVideosPageSelector:
 
         page._on_video_selection_changed(1, False)
         assert 1 not in page._selector._selection
+
+
+class TestVideosPageViewMode:
+    """Tests for view mode switching (grid/list)."""
+
+    def test_initial_view_is_list(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+
+        assert page._current_view == VideosPage.VIEW_LIST
+
+    def test_switch_to_grid_view(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._on_view_changed(VideosPage.VIEW_GRID)
+
+        assert page._current_view == VideosPage.VIEW_GRID
+        assert page.view_stack.currentIndex() == VideosPage.VIEW_GRID
+
+    def test_switch_to_list_view(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._on_view_changed(VideosPage.VIEW_GRID)
+        page._on_view_changed(VideosPage.VIEW_LIST)
+
+        assert page._current_view == VideosPage.VIEW_LIST
+
+    def test_view_combo_triggers_change(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page.view_combo.setCurrentIndex(VideosPage.VIEW_GRID)
+
+        assert page._current_view == VideosPage.VIEW_GRID
+
+
+class TestVideosPagePageSize:
+    """Tests for page size changes."""
+
+    def test_change_page_size(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._on_page_size_changed("50")
+
+        assert page.page_size == 50
+        assert page.page_number == 0
+
+    def test_page_size_resets_to_page_zero(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.page_number = 3
+        page.refresh()
+
+        page._on_page_size_changed("10")
+
+        assert page.page_number == 0
+
+
+class TestVideosPageSearchModes:
+    """Tests for different search modes."""
+
+    def test_search_and_mode(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        calls = []
+        mock_context.set_search = lambda text, cond: calls.append((text, cond))
+
+        page.search_input.setText("test query")
+        page._on_search_and()
+
+        assert calls == [("test query", "and")]
+
+    def test_search_or_mode(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        calls = []
+        mock_context.set_search = lambda text, cond: calls.append((text, cond))
+
+        page.search_input.setText("test query")
+        page._on_search_or()
+
+        assert calls == [("test query", "or")]
+
+    def test_search_exact_mode(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        calls = []
+        mock_context.set_search = lambda text, cond: calls.append((text, cond))
+
+        page.search_input.setText("test query")
+        page._on_search_exact()
+
+        assert calls == [("test query", "exact")]
+
+    def test_search_id_mode(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        calls = []
+        mock_context.set_search = lambda text, cond: calls.append((text, cond))
+
+        page.search_input.setText("42")
+        page._on_search_id()
+
+        assert calls == [("42", "id")]
+
+    def test_clear_search_resets_mode(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._search_mode = "or"
+        page._clear_search()
+
+        assert page._search_mode == "and"
+        assert page.search_input.text() == ""
+
+    def test_empty_search_not_applied(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        calls = []
+        mock_context.set_search = lambda text, cond: calls.append((text, cond))
+
+        page.search_input.setText("")
+        page._do_search("and")
+
+        assert len(calls) == 0
+
+
+class TestVideosPageClearActions:
+    """Tests for clear/reset actions."""
+
+    def test_clear_sources(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.page_number = 3
+        page.refresh()
+
+        calls = []
+        mock_context.set_sources = lambda src: calls.append(src)
+
+        page._clear_sources()
+
+        assert calls == [None]
+        assert page.page_number == 0
+
+    def test_clear_grouping(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.page_number = 3
+        page.refresh()
+
+        calls = []
+        mock_context.clear_groups = lambda: calls.append(True)
+
+        page._clear_grouping()
+
+        assert len(calls) == 1
+        assert page.page_number == 0
+
+    def test_clear_sorting(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.page_number = 3
+        page.refresh()
+
+        calls = []
+        mock_context.set_sorting = lambda s: calls.append(s)
+
+        page._clear_sorting()
+
+        assert calls == [None]
+        assert page.page_number == 0
+
+
+class TestVideosPageToggleShowSelected:
+    """Tests for the show-only-selected toggle (the fixed bug)."""
+
+    def test_toggle_via_signal(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._toggle_show_only_selected(True)
+
+        assert page._show_only_selected is True
+        assert page.page_number == 0
+
+    def test_toggle_off(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._toggle_show_only_selected(True)
+        page._toggle_show_only_selected(False)
+
+        assert page._show_only_selected is False
+
+    def test_toggle_via_button(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page.btn_show_only_selected.setChecked(True)
+
+        assert page._show_only_selected is True
+
+    def test_clear_selection_resets_show_only(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._toggle_show_only_selected(True)
+        page._clear_selection()
+
+        assert page._show_only_selected is False
+        assert not page.btn_show_only_selected.isChecked()
+
+
+class TestVideosPageSelectAllInView:
+    """Tests for select-all-in-view functionality."""
+
+    def test_select_all_in_view(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._select_all_in_view()
+
+        assert page._selector._to_exclude  # Should switch to exclude mode
+
+    def test_select_all_in_view_then_clear(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._select_all_in_view()
+        page._clear_selection()
+
+        assert not page._selector._to_exclude
+        assert len(page._selector._selection) == 0
+
+
+class TestVideosPageSelectionLabel:
+    """Tests for selection label updates."""
+
+    def test_selection_label_empty_initially(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        assert page.selection_label.text() == ""
+
+    def test_selection_label_shows_count(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._on_video_selection_changed(1, True)
+        page._update_selection_display()
+
+        assert "1 selected" in page.selection_label.text()
+
+    def test_batch_edit_disabled_with_no_selection(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        assert not page.btn_batch_edit.isEnabled()
+
+    def test_batch_edit_enabled_with_selection(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._on_video_selection_changed(1, True)
+        page._update_selection_display()
+
+        assert page.btn_batch_edit.isEnabled()
