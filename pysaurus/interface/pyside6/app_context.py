@@ -250,11 +250,11 @@ class AppContext(QObject):
         """Rename the database and update the application registry."""
         if self._database:
             # Get old path before renaming
-            old_path = self._database.ways.db_folder
+            old_path = self._database.get_database_folder()
             # Perform the rename (this changes ways.db_folder)
             self._database.rename(new_name)
             # Get new path after renaming
-            new_path = self._database.ways.db_folder
+            new_path = self._database.get_database_folder()
             # Update Application.databases dictionary
             if old_path in self._application.databases:
                 del self._application.databases[old_path]
@@ -374,7 +374,7 @@ class AppContext(QObject):
 
     def get_database_folder_path(self) -> str:
         """Return the database folder path as a string."""
-        return str(self._database.ways.db_folder) if self._database else ""
+        return str(self._database.get_database_folder()) if self._database else ""
 
     # =========================================================================
     # Facade methods — Application

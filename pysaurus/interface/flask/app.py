@@ -207,9 +207,7 @@ def create_app() -> Flask:
         videos_list = context.result or []
         page_total_size = FileSize(sum(v.file_size for v in videos_list))
         page_total_duration = Duration(sum(v.length.t for v in videos_list))
-        thumbnails = ctx.get_thumbnails_base64(
-            [v.video_id for v in videos_list]
-        )
+        thumbnails = ctx.get_thumbnails_base64([v.video_id for v in videos_list])
 
         return render_template(
             "videos.html",
@@ -244,9 +242,7 @@ def create_app() -> Flask:
         if not videos_list:
             flash("Aucune vidéo dans la vue courante.", "error")
             return redirect(url_for("videos"))
-        filenames = [
-            ctx.ops.get_video_filename(v.video_id) for v in videos_list
-        ]
+        filenames = [ctx.ops.get_video_filename(v.video_id) for v in videos_list]
         from pysaurus.core.file_utils import create_xspf_playlist
 
         path = create_xspf_playlist(filenames)
@@ -336,10 +332,7 @@ def create_app() -> Flask:
         thumbnails = ctx.get_thumbnails_base64([video_id])
         thumbnail = thumbnails.get(video_id, "")
         return render_template(
-            "video_detail.html",
-            video=video,
-            prop_types=prop_types,
-            thumbnail=thumbnail,
+            "video_detail.html", video=video, prop_types=prop_types, thumbnail=thumbnail
         )
 
     @app.route("/video/<int:video_id>/toggle-watched", methods=["POST"])
@@ -504,7 +497,9 @@ def create_app() -> Flask:
         for values in ctx.database.videos_tag_get(name).values():
             for v in values:
                 counts[v] = counts.get(v, 0) + 1
-        sorted_values = sorted(counts.items(), key=lambda item: (-item[1], str(item[0])))
+        sorted_values = sorted(
+            counts.items(), key=lambda item: (-item[1], str(item[0]))
+        )
         return render_template(
             "prop_values.html",
             prop_name=name,
@@ -537,7 +532,8 @@ def create_app() -> Flask:
         new_value = request.form.get("new_value", "").strip()
         if old_value and new_value:
             modified = _ctx().algos.replace_property_values(
-                name, [_parse_prop_value(old_value, ptype)],
+                name,
+                [_parse_prop_value(old_value, ptype)],
                 _parse_prop_value(new_value, ptype),
             )
             if modified:

@@ -63,7 +63,7 @@ class TestPropertyValuesDialogCreation:
 
     def test_dialog_shows_modifier_buttons(self, qtbot, mock_context):
         """Test that dialog shows buttons for all available modifiers."""
-        from pysaurus.database.property_value_modifier import PropertyValueModifier
+        from pysaurus.properties.property_value_modifier import PropertyValueModifier
         from pysaurus.interface.pyside6.dialogs.property_values_dialog import (
             PropertyValuesDialog,
         )

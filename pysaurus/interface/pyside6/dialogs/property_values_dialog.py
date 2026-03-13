@@ -93,7 +93,7 @@ class PropertyValuesDialog(QDialog):
         actions_layout.addWidget(QLabel("Apply to all values:"))
 
         # Get available modifiers from PropertyValueModifier
-        from pysaurus.database.property_value_modifier import PropertyValueModifier
+        from pysaurus.properties.property_value_modifier import PropertyValueModifier
 
         self._modifier_buttons: list[QPushButton] = []
         modifiers = PropertyValueModifier.get_modifiers()

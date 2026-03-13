@@ -89,9 +89,9 @@ class FlaskContext:
 
     def rename_database(self, new_name: str) -> None:
         if self._database:
-            old_path = self._database.ways.db_folder
+            old_path = self._database.get_database_folder()
             self._database.rename(new_name)
-            new_path = self._database.ways.db_folder
+            new_path = self._database.get_database_folder()
             if old_path in self.application.databases:
                 del self.application.databases[old_path]
                 self.application.databases[new_path] = self._database

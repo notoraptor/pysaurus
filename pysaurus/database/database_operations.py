@@ -12,7 +12,7 @@ from typing import Collection
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.datestring import Date
-from pysaurus.database.property_value_modifier import PropertyValueModifier
+from pysaurus.properties.property_value_modifier import PropertyValueModifier
 from pysaurus.properties.properties import PropUnitType, PropValueType
 
 

@@ -158,7 +158,7 @@ class DatabaseAlgorithms:
     @Profiler.profile_method()
     def ensure_miniatures(self) -> list[Miniature]:
         """Generate miniatures for videos with thumbnails."""
-        miniatures_path = self.db.ways.db_miniatures_path
+        miniatures_path = self.db.get_miniatures_path()
         prev_miniatures = Miniatures.read_miniatures_file(miniatures_path)
 
         existing_filenames = {

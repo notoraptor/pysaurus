@@ -152,7 +152,7 @@ class GuiAPI(FeatureAPI):
 
     def _notification_callback(self, notification: Notification):
         if self.database:
-            Information.log(str(self.database.ways.db_log_path), notification)
+            Information.log(str(self.database.get_log_path()), notification)
         self._notify(notification)
 
     @abstractmethod

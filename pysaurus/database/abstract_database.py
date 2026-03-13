@@ -10,8 +10,9 @@ from pysaurus.core.datestring import Date
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database_algorithms import DatabaseAlgorithms
 from pysaurus.database.database_operations import DatabaseOperations
+from pysaurus.database.db_paths import Basename
+from pysaurus.database.db_paths import DatabasePaths
 from pysaurus.database.db_utils import DatabaseSaved, DatabaseToSaveContext
-from pysaurus.database.db_way_def import DbWays
 from pysaurus.dbview.view_context import ViewContext
 from pysaurus.properties.properties import PropRawType, PropUnitType
 from pysaurus.video.video_entry import VideoEntry
@@ -20,6 +21,9 @@ from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video.video_search_context import VideoSearchContext
 
 logger = logging.getLogger(__name__)
+
+DB_LOG_PATH = Basename("log_path", "log")
+DB_MINIATURES_PATH = Basename("miniatures_path", "miniatures.json")
 
 
 class Change(enum.StrEnum):
@@ -58,9 +62,18 @@ class AbstractDatabase(ABC):
 
     def __init__(self, db_folder: PathType, notifier=DEFAULT_NOTIFIER):
         db_folder = AbsolutePath.ensure(db_folder).assert_dir()
-        self.ways = DbWays(db_folder)
+        self.ways = DatabasePaths(db_folder, (DB_LOG_PATH, DB_MINIATURES_PATH))
         self.notifier = notifier
         self.in_save_context = False
+
+    def get_database_folder(self) -> AbsolutePath:
+        return self.ways.db_folder
+
+    def get_log_path(self) -> AbsolutePath:
+        return self.ways.get_path(DB_LOG_PATH)
+
+    def get_miniatures_path(self) -> AbsolutePath:
+        return self.ways.get_path(DB_MINIATURES_PATH)
 
     @abstractmethod
     def _set_date(self, date: Date):
@@ -299,7 +312,7 @@ class AbstractDatabase(ABC):
 
     def get_name(self) -> str:
         """Get database name."""
-        return self.ways.db_folder.title
+        return self.get_database_folder().title
 
     def rename(self, new_name: str) -> None:
         if new_name.startswith("."):

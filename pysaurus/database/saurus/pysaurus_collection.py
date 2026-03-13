@@ -9,6 +9,7 @@ from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase, Change
+from pysaurus.database.db_paths import Basename
 from pysaurus.database.saurus.prop_type_search import prop_type_search
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.saurus_database_algorithms import SaurusDatabaseAlgorithms
@@ -24,6 +25,9 @@ from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
 logger = logging.getLogger(__name__)
+
+DB_SQL_PATH = Basename("sql_path", "full.db")
+
 
 PREFIX = {"thumbnail": "", "with_thumbnails": ""}
 
@@ -41,12 +45,17 @@ class PysaurusCollection(AbstractDatabase):
 
     def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
         super().__init__(path, notifier)
-        self.db = PysaurusConnection(self.ways.db_sql_path.path)
+        self.ways.add_path(DB_SQL_PATH)
+        self.db = PysaurusConnection(self.ways.get_path(DB_SQL_PATH).path)
         if folders:
             self.set_folders(
                 set(self.get_folders())
                 | {AbsolutePath.ensure(folder) for folder in folders}
             )
+
+    def rename(self, new_name: str) -> None:
+        super().rename(new_name)
+        self.db = PysaurusConnection(self.ways.get_path(DB_SQL_PATH).path)
 
     def query_videos(self, view, page_size, page_number, selector=None):
         grouped_by_moves = view.grouping and view.grouping.field == "move_id"

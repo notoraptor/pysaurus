@@ -235,7 +235,7 @@ class MockOps:
 
     def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
         """Apply a modifier function to property values."""
-        from pysaurus.database.property_value_modifier import PropertyValueModifier
+        from pysaurus.properties.property_value_modifier import PropertyValueModifier
 
         function = getattr(PropertyValueModifier(), mod_name)
         for v in self._db._videos:

@@ -60,7 +60,7 @@ class MockAppContext:
         return self._database.get_name() if self._database else ""
 
     def get_database_folder_path(self) -> str:
-        return str(self._database.ways.db_folder) if self._database else ""
+        return str(self._database.get_database_folder()) if self._database else ""
 
     # Application
 
