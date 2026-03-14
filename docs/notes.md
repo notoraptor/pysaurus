@@ -28,3 +28,8 @@ On a un menu de sélection, et des boutons de sélection. Est-ce redondant ?
 Il y a plusieurs boutons: n'est-ce pas mieux de les regrouper dans un dropdown, plutôt que de les afficher sur une ligne ?
 Le menu de sélection et les boutons ne sont pas synchronisés: parfois, un bouton est désactivé, mais son action correspondante
 dans le menu est toujours cliquable.
+
+Quand une boîte de dialogue s'ouvre pour confirmer une opération sur une vidéo (par exemple, pour supprimer une vidéo):
+- Il vaudrait mieux afficher le file path complet (en police mono), plutôt que seulement le titr
+- Il vaudrait mieux afficher aussi la miniature de la vidéo. Pour que l'utilisateur ait la confirmation visuelle
+  de la vidéo qu'il veut modifier.
