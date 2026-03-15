@@ -108,16 +108,8 @@ class MainWindow(QMainWindow):
         menu_bar = QMenuBar()
         self.setMenuBar(menu_bar)
 
-        # File menu
-        file_menu = QMenu("&File", self)
-        menu_bar.addMenu(file_menu)
-
-        file_menu.addAction("Session &Log...", self._show_session_log)
-        file_menu.addSeparator()
-        file_menu.addAction("&Quit", self.close)
-
-        # Database menu (only enabled when a database is open)
-        self.database_menu = QMenu("D&atabase", self)
+        # Database menu
+        self.database_menu = QMenu("&Database", self)
         menu_bar.addMenu(self.database_menu)
 
         self._action_rename_db = self.database_menu.addAction(
@@ -141,6 +133,11 @@ class MainWindow(QMainWindow):
         self._action_close_db = self.database_menu.addAction(
             "&Close Database", self._on_close_database
         )
+        self.database_menu.addSeparator()
+        self._action_session_log = self.database_menu.addAction(
+            "Session &Log...", self._show_session_log
+        )
+        self.database_menu.addAction("&Quit", self.close)
 
         # View menu
         self.view_menu = QMenu("&View", self)
@@ -464,8 +461,14 @@ class MainWindow(QMainWindow):
         current_page = self.stack.currentIndex()
         on_videos_page = current_page == self.PAGE_VIDEOS
 
-        # Database menu: enabled when a database is open
-        self.database_menu.setEnabled(has_db)
+        # Database menu actions: enabled when a database is open
+        self._action_rename_db.setEnabled(has_db)
+        self._action_edit_folders.setEnabled(has_db)
+        self._action_update_db.setEnabled(has_db)
+        self._action_find_similar.setEnabled(has_db)
+        self._action_find_reencoded.setEnabled(has_db)
+        self._action_close_db.setEnabled(has_db)
+        self._action_session_log.setEnabled(has_db)
 
         # View menu: enabled when on videos page
         self.view_menu.setEnabled(has_db and on_videos_page)

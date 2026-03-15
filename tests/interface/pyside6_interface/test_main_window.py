@@ -207,14 +207,19 @@ class TestPageNavigation:
 class TestMenuState:
     """Tests for menu enable/disable based on application state."""
 
-    def test_database_menu_disabled_without_database(self, main_window):
-        main_window._update_menu_state()
-        assert not main_window.database_menu.isEnabled()
-
-    def test_database_menu_enabled_with_database(self, main_window):
-        main_window.ctx._simulate_open()
+    def test_database_actions_disabled_without_database(self, main_window):
         main_window._update_menu_state()
         assert main_window.database_menu.isEnabled()
+        assert not main_window._action_rename_db.isEnabled()
+        assert not main_window._action_close_db.isEnabled()
+        assert not main_window._action_session_log.isEnabled()
+
+    def test_database_actions_enabled_with_database(self, main_window):
+        main_window.ctx._simulate_open()
+        main_window._update_menu_state()
+        assert main_window._action_rename_db.isEnabled()
+        assert main_window._action_close_db.isEnabled()
+        assert main_window._action_session_log.isEnabled()
 
     def test_view_menu_disabled_without_database(self, main_window):
         main_window._update_menu_state()
