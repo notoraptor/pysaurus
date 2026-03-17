@@ -33,3 +33,19 @@ Quand une boîte de dialogue s'ouvre pour confirmer une opération sur une vidé
 - Il vaudrait mieux afficher le file path complet (en police mono), plutôt que seulement le titr
 - Il vaudrait mieux afficher aussi la miniature de la vidéo. Pour que l'utilisateur ait la confirmation visuelle
   de la vidéo qu'il veut modifier.
+
+Sur une vidéo, je veux pouvoir l'ouvrir en cliquant sur ton chemin fichier. Ce serait plus rapide que de devoir
+chaque fois passer par clic droit -> "open".
+
+Quand on édite les properties d'une vidéo, certaines propriétés sont mises à jour avec leur valeur par défaut, même
+si on n'avait rien entré pour ces propriétés. Un peu comme si l'interface pyside6 envoyait des valeurs par défaut
+pour les champs vides. Mais normalement, l'interface doit s'assurer d'envoyer uniquement: soit les valeurs précédentes
+de la propriété (s'il y en avait), soit les valeurs nouvellement entrées par l'utilisateur. Rien d'autres.
+
+La gestion de la sélection devrait-elle apparaître comme les fitlres, donc après la section "sorting" à gauche ?
+Ça permettrait notamment d'avoir un simple bouton "x" pour effacer la sélection. Mais ça pourrait être compliqué,
+car il y a beaucoup d'options pour gérer une sélection (sélectionner la page, sélectionner toute la vue, show only
+selected, edit properties ...).
+
+Faudrait-il implémenter la recherche inverse pour AND et OR ? 
+C'est-à-dire "NOT AND" (not (a and b and ...)), et "NOT OR" (not (a or b or ...))?
