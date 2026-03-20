@@ -49,3 +49,10 @@ selected, edit properties ...).
 
 Faudrait-il implémenter la recherche inverse pour AND et OR ? 
 C'est-à-dire "NOT AND" (not (a and b and ...)), et "NOT OR" (not (a or b or ...))?
+
+Le dialogue de modification des propriétés d'une vidéo est un peu pénible à manipuler. On est obligé de descendre
+pour éditer une propriété quand il y en a plusieurs. Je me demande si ce ne serait pas mieux d'organiser les
+propriétés en onglet: un onglet par propriétés, comme ça, moins de risque de défilement. Si on craint un mauvais affichage
+en cas de nombreuses propriétés, je pourrais suggérer un affichage vertical des onglets. Et en fait, des onglets conceptuels
+c'est-à-dire: un panneau vertical avec les noms des propriétés, à gauche, et quand on clique sur une d'entre elles,
+on affiche le panneau d'édition de la propriété à droite. Chacun des deux panneaux étant indépendamment scrollable.
