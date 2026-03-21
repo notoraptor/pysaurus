@@ -56,3 +56,55 @@ propriétés en onglet: un onglet par propriétés, comme ça, moins de risque d
 en cas de nombreuses propriétés, je pourrais suggérer un affichage vertical des onglets. Et en fait, des onglets conceptuels
 c'est-à-dire: un panneau vertical avec les noms des propriétés, à gauche, et quand on clique sur une d'entre elles,
 on affiche le panneau d'édition de la propriété à droite. Chacun des deux panneaux étant indépendamment scrollable.
+
+Dans l'ancienne interface web/react, quand on groupait les vidéos, les groupes étaient affichés dans un panneau paginé
+en dessous des filtres. Ça permettait en un coup d'oeil d'apprécier la diversité des groupes, en voyant les noms et
+comptes de plusieurs groupes à la fois. Actuellement, dans pyside6, c'est un dropdown au dessus de la vue des vidéos.
+Moins pratique, car il faut chaque fois déplier le dropdown pour voir plus d'info sur les autres groupes.
+
+Actuellement, dans les filtres, pour chaque filtre, on a une ligne avec un bouton "edit" (ou "set") et un petit bouton 
+rouge en croix pour réinitialiser le groupe. Je me dis qu'on pourrait compacter ça:
+- en remplaçant le bouton edit/set par un petit bouton avec une icône symbolisant le paramétrage. Le bouton serait bleu
+  ou vert (par opposition au bouton rouge de réinitialisation)
+- en plaçant les deux petits boutons à droite du titre du filtre, plutôt qu'en bas de la section de filtrage. Cela
+  ferait gagner une ligne, donc libérerait de la place en bas des filtrages, si on décidait éventuellement d'y mettre
+  un panneau de groupes.
+Cette optimisation de l'espace serait par contre inutile pour le filtre "search". Mais ça pourrait valoir la peine
+d'y déplacer quand même le bouton de réinitialisation vers la droite du titre "Search", pour harmoniser la vue.
+
+## Recherche par expression
+
+Il faudrait que je puisse ajouter la feature de recherche par expression. Par exemple:
+audio_bitrate > 200kbps and `category` == "this category". Mais ce serait un gros morceau. Il faudrait:
+- définir la syntaxe des expressions. Par exemple:
+  - nom de variable classique (exemple audio_bitrate) pour les attributs de vidéo (membres et @property de VideoPattern)
+  - nom entre accents graves (exemple `category`) pour les propriétés de vidéo (noms de prop types)
+  - lex expressions sont purement booléennes, par d'affectation:
+    - a and|or|xor b
+    - not a
+    - support des parenthèses et des expressions chaînées (par exemple: a and b and c and not(d) or (e xor f) ...)
+  - support des types Python basiques: str, bool, int, float
+  - support des opérateurs de comparaison: ==, !=, <, >, <=, >=
+    - support de l'opérateur is pour les booléens (a is True)
+    - support de l'opérateur in (a in b)
+      - donc, support des sets: on acceptera les accolades (sets python) et les crochets (listes python),
+        tous traités comme des sets. Exemple: a in [1, 2, 3] or b in {1, 2, 3}
+  - support de syntaxes supplémentaires pour certaines right values
+    - par exemple: bit_rate >= 203.4kbps
+      - On doit supporter 203.4kbps, à convertir simplement en bps (bits per seconds), donc * 1024
+    - support des dates. Exemples:
+      - day < 2023-02-05 (jour)
+      - date_modified > 2025-01-01-23:55 (jusqu'à la minute)
+      - date_entry_opened < 2025-01-01-23:55:05 (jusqu'à la seconde)
+- code distinct, ou intégré aux options de recherche actuelle ?
+  - si distinct: nom, arguments et emplacement de la méthode dans le code
+- à quel point une telle recherche serait rapide/optimisable dans l'implémentation SQL ?
+
+Ça va être un gros morceau. Travail préliminaire:
+- lister les types possibles de prop types
+- lister les attributs et property python de video pattern, et pour chacune, 
+  - les types disponibles
+  - les façons d'exprimer ces types
+    - par exemple, pour les dates, utiliser des strings formatées (2023-01-01..., etc), et non le pur timestamp
+    - pour les durées, utiliser des strings formatées (exemple, 2min12s), OU un nombre brut (nombre de secondes)
+    - pour les bit rates, nombre brut (bits, per seconde), ou strings formatées (23kbps, 12mbps ?)
