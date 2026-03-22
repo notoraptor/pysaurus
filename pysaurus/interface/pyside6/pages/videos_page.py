@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSplitter,
     QStackedWidget,
-    QToolBar,
     QVBoxLayout,
     QWidget,
 )
@@ -110,10 +109,6 @@ class VideosPage(QWidget):
         """Set up the UI components."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-
-        # Toolbar
-        toolbar = self._create_toolbar()
-        layout.addWidget(toolbar)
 
         # Main content with splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -383,29 +378,6 @@ class VideosPage(QWidget):
             QMessageBox.critical(
                 self, "Error Creating Playlist", f"Failed to create playlist: {str(e)}"
             )
-
-    def _create_toolbar(self) -> QToolBar:
-        """Create the toolbar."""
-        toolbar = QToolBar()
-
-        # View toggle
-        toolbar.addWidget(QLabel("View:"))
-        self.view_combo = QComboBox()
-        self.view_combo.addItems(["Grid", "List"])
-        self.view_combo.setCurrentIndex(self._current_view)
-        self.view_combo.currentIndexChanged.connect(self._on_view_changed)
-        toolbar.addWidget(self.view_combo)
-        toolbar.addSeparator()
-
-        # Page size
-        toolbar.addWidget(QLabel("Per page:"))
-        self.page_size_combo = QComboBox()
-        self.page_size_combo.addItems(["10", "20", "50", "100"])
-        self.page_size_combo.setCurrentText("20")
-        self.page_size_combo.currentTextChanged.connect(self._on_page_size_changed)
-        toolbar.addWidget(self.page_size_combo)
-
-        return toolbar
 
     def _create_filter_section(self, color: str) -> QFrame:
         """Create a filter section frame with alternating background color."""

@@ -21,15 +21,6 @@ class TestVideosPageCreation:
         assert page.page_size == 20
         assert page.page_number == 0
 
-    def test_page_has_view_combo(self, qtbot, mock_context):
-        """Test that VideosPage has a view toggle combo box."""
-        from pysaurus.interface.pyside6.pages.videos_page import VideosPage
-
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-
-        assert page.view_combo is not None
-
     def test_page_has_search_input(self, qtbot, mock_context):
         """Test that VideosPage has a search input."""
         from pysaurus.interface.pyside6.pages.videos_page import VideosPage
@@ -334,12 +325,12 @@ class TestVideosPageViewMode:
 
         assert page._current_view == VideosPage.VIEW_LIST
 
-    def test_view_combo_triggers_change(self, qtbot, mock_context):
+    def test_view_change_via_method(self, qtbot, mock_context):
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
         page.refresh()
 
-        page.view_combo.setCurrentIndex(VideosPage.VIEW_GRID)
+        page._on_view_changed(VideosPage.VIEW_GRID)
 
         assert page._current_view == VideosPage.VIEW_GRID
 
