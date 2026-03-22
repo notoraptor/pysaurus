@@ -54,7 +54,7 @@ d'afficher le bouton "continuer", passer automatiquement à la page vidéos.
 **Implémentation** : paramètre `autocontinue` sur la page de progression.
 Si `True` (cas "open"), passage automatique. Si `False` (défaut), bouton "continuer".
 
-### Progress ring au lieu de la barre de progression infinie
+### Progress ring au lieu de la barre de progression infinie ✅
 
 Remplacer la barre de progression horizontale infinie par un progress ring (indicateur
 circulaire) sur la page des opérations longues.

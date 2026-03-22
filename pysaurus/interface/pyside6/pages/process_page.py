@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pysaurus.interface.pyside6.widgets.spinner_widget import SpinnerWidget
+
 from pysaurus.core.job_notifications import (
     JobProgressDisplay,
     JobToDo,
@@ -180,22 +182,13 @@ class ProcessPage(QWidget):
         self.task_label.setStyleSheet("font-size: 14px; color: #555; padding: 5px;")
         layout.addWidget(self.task_label)
 
-        # Global progress bar (indeterminate)
-        self.global_progress = QProgressBar()
-        self.global_progress.setRange(0, 0)  # Indeterminate
-        self.global_progress.setFixedHeight(20)
-        self.global_progress.setStyleSheet("""
-            QProgressBar {
-                border: 1px solid #ccc;
-                border-radius: 3px;
-                background-color: #f0f0f0;
-            }
-            QProgressBar::chunk {
-                background-color: #0078d4;
-                border-radius: 2px;
-            }
-        """)
-        layout.addWidget(self.global_progress)
+        # Spinner (indeterminate progress ring)
+        self.spinner = SpinnerWidget(size=48)
+        spinner_layout = QHBoxLayout()
+        spinner_layout.addStretch()
+        spinner_layout.addWidget(self.spinner)
+        spinner_layout.addStretch()
+        layout.addLayout(spinner_layout)
 
         # Jobs container (scroll area for multiple progress bars)
         jobs_group = QFrame()
@@ -287,8 +280,7 @@ class ProcessPage(QWidget):
         """Handle end notification - auto-continue or show Continue button."""
         self._end_notification = notification
         self.title_label.setText(f"{self.title} - {notification}")
-        self.global_progress.setRange(0, 1)
-        self.global_progress.setValue(1)
+        self.spinner.stop()
 
         if self._autocontinue:
             self._on_continue()

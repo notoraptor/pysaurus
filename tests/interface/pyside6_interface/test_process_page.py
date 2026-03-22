@@ -5,7 +5,6 @@ Tests the progress display page including JobProgressWidget,
 ProcessNotificationCollector, and ProcessPage lifecycle.
 """
 
-
 from pysaurus.core.job_notifications import JobToDo
 from pysaurus.core.notifications import End
 
@@ -236,17 +235,16 @@ class TestProcessPage:
         page._on_continue()
         assert len(results) == 0
 
-    def test_global_progress_indeterminate_initially(self, qtbot):
+    def test_spinner_animating_initially(self, qtbot):
         from pysaurus.interface.pyside6.pages.process_page import ProcessPage
 
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
-        # Indeterminate: range is (0, 0)
-        assert page.global_progress.minimum() == 0
-        assert page.global_progress.maximum() == 0
+        assert page.spinner._timer.isActive()
+        assert not page.spinner._complete
 
-    def test_global_progress_after_end(self, qtbot):
+    def test_spinner_complete_after_end(self, qtbot):
         from pysaurus.interface.pyside6.pages.process_page import ProcessPage
 
         page = ProcessPage("Test")
@@ -254,9 +252,8 @@ class TestProcessPage:
 
         page.on_notification(End("Complete"))
 
-        assert page.global_progress.minimum() == 0
-        assert page.global_progress.maximum() == 1
-        assert page.global_progress.value() == 1
+        assert not page.spinner._timer.isActive()
+        assert page.spinner._complete
 
 
 class TestProcessNotificationCollector:
