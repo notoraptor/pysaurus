@@ -517,15 +517,6 @@ class TestVideosPageToggleShowSelected:
 
         assert page._show_only_selected is False
 
-    def test_toggle_via_button(self, qtbot, mock_context):
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-        page.refresh()
-
-        page.btn_show_only_selected.setChecked(True)
-
-        assert page._show_only_selected is True
-
     def test_clear_selection_resets_show_only(self, qtbot, mock_context):
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -535,7 +526,6 @@ class TestVideosPageToggleShowSelected:
         page._clear_selection()
 
         assert page._show_only_selected is False
-        assert not page.btn_show_only_selected.isChecked()
 
 
 class TestVideosPageSelectAllInView:
@@ -582,19 +572,17 @@ class TestVideosPageSelectionLabel:
 
         assert "1 selected" in page.selection_label.text()
 
-    def test_batch_edit_disabled_with_no_selection(self, qtbot, mock_context):
+    def test_selection_changed_signal_emitted(self, qtbot, mock_context):
+        """Selection changes emit signal for menu sync."""
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
         page.refresh()
 
-        assert not page.btn_batch_edit.isEnabled()
-
-    def test_batch_edit_enabled_with_selection(self, qtbot, mock_context):
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-        page.refresh()
+        signals = []
+        page.selection_changed.connect(lambda count: signals.append(count))
 
         page._on_video_selection_changed(1, True)
         page._update_selection_display()
 
-        assert page.btn_batch_edit.isEnabled()
+        assert len(signals) >= 1
+        assert signals[-1] > 0

@@ -422,9 +422,9 @@ class TestOptionsMenu:
 
     def test_toggle_show_only_selected(self, main_window):
         main_window._on_toggle_show_only_selected(True)
-        assert main_window.videos_page.btn_show_only_selected.isChecked()
+        assert main_window.videos_page._show_only_selected
         main_window._on_toggle_show_only_selected(False)
-        assert not main_window.videos_page.btn_show_only_selected.isChecked()
+        assert not main_window.videos_page._show_only_selected
 
 
 # =============================================================================

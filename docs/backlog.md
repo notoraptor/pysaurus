@@ -97,13 +97,11 @@ du titre du filtre. Gain d'une ligne par filtre, libérant de la place pour le p
 
 Harmoniser aussi le filtre "Search" en déplaçant son bouton de réinitialisation à droite du titre.
 
-### Redondance menu/boutons de sélection
+### Redondance menu/boutons de sélection ✅
 
 Le menu de sélection et les boutons de sélection sont potentiellement redondants.
-Options à évaluer :
-- Regrouper les boutons dans un dropdown
-- Ou déplacer la gestion de la sélection dans la zone des filtres (après "sorting")
-  avec un bouton "x" pour effacer la sélection
+Résolution : suppression des boutons toolbar, seul le label "N selected" reste.
+Toutes les actions passent par le menu Selection et les raccourcis clavier.
 
 ---
 

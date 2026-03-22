@@ -261,11 +261,7 @@ class MainWindow(QMainWindow):
         self.videos_page.move_video_requested.connect(self._on_move_video)
         self.videos_page.status_message_requested.connect(self._on_status_message)
 
-        # Sync "Show Only Selected" menu with button
-        self.videos_page.btn_show_only_selected.toggled.connect(
-            self._action_show_only_selected.setChecked
-        )
-        # Sync selection-dependent menu actions with button states
+        # Sync selection-dependent menu actions with selection state
         self.videos_page.selection_changed.connect(self._on_selection_changed)
 
         # Context signals
@@ -655,8 +651,7 @@ class MainWindow(QMainWindow):
 
     def _on_toggle_show_only_selected(self, checked: bool):
         """Handle show only selected toggle from menu."""
-        # Sync the button state in videos_page
-        self.videos_page.btn_show_only_selected.setChecked(checked)
+        self.videos_page._toggle_show_only_selected(checked)
 
     def _on_confirm_not_found_changed(self, checked: bool):
         """Handle confirm deletion setting change."""

@@ -248,12 +248,7 @@ class VideosPage(QWidget):
     def _toggle_show_only_selected(self, checked: bool = None):
         """Toggle between showing all videos and showing only selected."""
         if checked is None:
-            # Called from keyboard shortcut: toggle the button, which will
-            # re-enter this method with the new checked value via toggled signal.
-            self.btn_show_only_selected.setChecked(
-                not self.btn_show_only_selected.isChecked()
-            )
-            return
+            checked = not self._show_only_selected
         self._show_only_selected = checked
         self.page_number = 0
         self.refresh()
@@ -266,7 +261,6 @@ class VideosPage(QWidget):
         # Reset show only selected if active
         if self._show_only_selected:
             self._show_only_selected = False
-            self.btn_show_only_selected.setChecked(False)
         self._update_selection_display()
 
     def _update_selection_display(self):
@@ -291,9 +285,6 @@ class VideosPage(QWidget):
             self.selection_label.setText(f"{count} selected")
         else:
             self.selection_label.setText("")
-        self.btn_batch_edit.setEnabled(count > 0)
-        self.btn_toggle_watched.setEnabled(count > 0)
-        self.btn_clear_selection.setEnabled(count > 0)
         self.selection_changed.emit(count)
 
     def _open_selected(self):
@@ -371,44 +362,10 @@ class VideosPage(QWidget):
         toolbar.addWidget(self.page_size_combo)
         toolbar.addSeparator()
 
-        # Selection indicator and batch actions
+        # Selection indicator (actions are in the Selection menu)
         self.selection_label = QLabel("")
         self.selection_label.setStyleSheet("color: #0078d4; font-weight: bold;")
         toolbar.addWidget(self.selection_label)
-
-        self.btn_batch_edit = QPushButton("Edit Properties...")
-        self.btn_batch_edit.setToolTip("Edit properties for selected videos")
-        self.btn_batch_edit.clicked.connect(self._on_batch_edit)
-        self.btn_batch_edit.setEnabled(False)
-        toolbar.addWidget(self.btn_batch_edit)
-
-        self.btn_toggle_watched = QPushButton("Toggle Watched")
-        self.btn_toggle_watched.setToolTip("Toggle watched status for selected videos")
-        self.btn_toggle_watched.clicked.connect(self._on_toggle_watched_selection)
-        self.btn_toggle_watched.setEnabled(False)
-        toolbar.addWidget(self.btn_toggle_watched)
-
-        self.btn_clear_selection = QPushButton("Clear Selection")
-        self.btn_clear_selection.setToolTip("Clear selection (Escape)")
-        self.btn_clear_selection.clicked.connect(self._clear_selection)
-        self.btn_clear_selection.setEnabled(False)
-        toolbar.addWidget(self.btn_clear_selection)
-
-        toolbar.addSeparator()
-
-        # Advanced selection buttons
-        self.btn_select_all_view = QPushButton("Select All in View")
-        self.btn_select_all_view.setToolTip(
-            "Select all videos in the current filtered view"
-        )
-        self.btn_select_all_view.clicked.connect(self._select_all_in_view)
-        toolbar.addWidget(self.btn_select_all_view)
-
-        self.btn_show_only_selected = QPushButton("Show Selected")
-        self.btn_show_only_selected.setToolTip("Toggle: show only selected videos")
-        self.btn_show_only_selected.setCheckable(True)
-        self.btn_show_only_selected.toggled.connect(self._toggle_show_only_selected)
-        toolbar.addWidget(self.btn_show_only_selected)
 
         return toolbar
 
@@ -1630,11 +1587,7 @@ class VideosPage(QWidget):
         video_ids = self._selected_video_ids
         if not video_ids:
             return
-        self.btn_toggle_watched.setEnabled(False)
-        try:
-            self.ctx.toggle_watched_many(video_ids)
-        finally:
-            self.btn_toggle_watched.setEnabled(True)
+        self.ctx.toggle_watched_many(video_ids)
 
     def _move_video(self, video_id: int):
         """Move a video file to a different folder."""
@@ -1787,10 +1740,10 @@ class VideosPage(QWidget):
             action = menu.addAction(prop_name)
             action.setData(prop_type)
 
-        # Show menu at button position
-        action = menu.exec(
-            self.btn_batch_edit.mapToGlobal(self.btn_batch_edit.rect().bottomLeft())
-        )
+        # Show menu at cursor position
+        from PySide6.QtGui import QCursor
+
+        action = menu.exec(QCursor.pos())
         if action:
             prop_type = action.data()
             self._edit_property_for_selection(prop_type)
