@@ -80,6 +80,7 @@ class VideoListItem(QFrame):
 
     clicked = Signal(int, object)  # video_id, modifiers
     double_clicked = Signal(int)  # video_id
+    open_requested = Signal(int)  # video_id
     context_menu_requested = Signal(int, object)  # video_id, QPoint
     selection_changed = Signal(int, bool)  # video_id, selected
     property_value_clicked = Signal(str, object)  # prop_name, value
@@ -202,6 +203,14 @@ class VideoListItem(QFrame):
                 "border: 1px solid #f0f0fa; padding: 2px;"
             )
         filename_label.setTextFormat(Qt.TextFormat.RichText)
+        filename_label.setCursor(Qt.CursorShape.PointingHandCursor)
+        filename_label.setToolTip("Click to open video")
+        filename_label.mousePressEvent = self._on_filename_clicked
+        filename_label.enterEvent = self._on_filename_enter
+        filename_label.leaveEvent = self._on_filename_leave
+        self._filename_label = filename_label
+        self._filename_html = filename_display
+        self._filename_watched = self.video.watched
         details_layout.addWidget(filename_label)
 
         # Row 4: Format line with badges
@@ -577,6 +586,27 @@ class VideoListItem(QFrame):
     def _on_title_clicked(self, event):
         """Handle title label click - toggle checkbox."""
         self.checkbox.setChecked(not self.checkbox.isChecked())
+
+    def _on_filename_clicked(self, event):
+        """Handle filename label left-click - open the video."""
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.open_requested.emit(self.video.video_id)
+
+    def _on_filename_enter(self, event):
+        """Underline filename on hover to indicate it's clickable."""
+        if self._filename_watched:
+            self._filename_label.setText(
+                f"<code><i><u>{self._filename_html}</u></i></code>"
+            )
+        else:
+            self._filename_label.setText(f"<code><u>{self._filename_html}</u></code>")
+
+    def _on_filename_leave(self, event):
+        """Remove underline when mouse leaves filename."""
+        if self._filename_watched:
+            self._filename_label.setText(f"<code><i>{self._filename_html}</i></code>")
+        else:
+            self._filename_label.setText(f"<code>{self._filename_html}</code>")
 
     def _on_property_value_clicked(self, prop_name: str, value):
         """Handle property value click - emit signal to filter by this value."""

@@ -1245,6 +1245,7 @@ class VideosPage(QWidget):
             )
             item.clicked.connect(self._on_video_clicked)
             item.double_clicked.connect(self._on_video_double_clicked)
+            item.open_requested.connect(self._open_video)
             item.context_menu_requested.connect(self._on_video_context_menu)
             item.selection_changed.connect(self._on_video_selection_changed)
             item.property_value_clicked.connect(self._on_property_value_clicked)

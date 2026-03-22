@@ -65,7 +65,7 @@ Quand une boîte de dialogue confirme une opération sur une vidéo (supprimer, 
 - Afficher le chemin fichier complet en police mono (pas seulement le titre)
 - Afficher la miniature de la vidéo pour confirmation visuelle
 
-### Ouvrir une vidéo par clic sur le chemin
+### Ouvrir une vidéo par clic sur le chemin ✅
 
 Permettre d'ouvrir une vidéo en cliquant directement sur son chemin fichier,
 sans passer par clic droit → "open".
