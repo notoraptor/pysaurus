@@ -274,6 +274,7 @@ class MainWindow(QMainWindow):
             title="Opening Database",
             operation=lambda: self.ctx.open_database(name, update),
             on_end=self._on_database_operation_end,
+            autocontinue=not update,
         )
 
     def _on_database_creating(self, name: str, folders: list, update: bool):
@@ -412,7 +413,11 @@ class MainWindow(QMainWindow):
     # =========================================================================
 
     def _run_process(
-        self, title: str, operation: Callable[[], None], on_end: Callable[[End], None]
+        self,
+        title: str,
+        operation: Callable[[], None],
+        on_end: Callable[[End], None],
+        autocontinue: bool = False,
     ):
         """
         Run an operation with a dedicated ProcessPage.
@@ -424,6 +429,7 @@ class MainWindow(QMainWindow):
             title: Title to display on the process page
             operation: Function to call to start the operation
             on_end: Callback when operation ends (receives End notification)
+            autocontinue: If True, skip the Continue button and proceed immediately
         """
         if self._process_page is not None:
             return  # Already running a process
@@ -432,7 +438,9 @@ class MainWindow(QMainWindow):
         self._cleanup_process_page()
 
         # Create new process page
-        self._process_page = ProcessPage(title, callback=on_end)
+        self._process_page = ProcessPage(
+            title, callback=on_end, autocontinue=autocontinue
+        )
 
         # Add to stack and display
         self.stack.addWidget(self._process_page)

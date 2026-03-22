@@ -46,7 +46,7 @@ ton bleu. Les deux doivent être visuellement distinctes.
 
 ## P2 — Améliorations UX (PySide6)
 
-### Auto-continue après ouverture rapide de la base
+### Auto-continue après ouverture rapide de la base ✅
 
 Quand on ouvre la base sans update, l'opération est quasi instantanée. Plutôt que
 d'afficher le bouton "continuer", passer automatiquement à la page vidéos.

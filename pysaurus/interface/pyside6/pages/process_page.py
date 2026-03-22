@@ -144,11 +144,16 @@ class ProcessPage(QWidget):
     continue_clicked = Signal(object)  # Emits the End notification
 
     def __init__(
-        self, title: str, callback: Callable[[End], None] | None = None, parent=None
+        self,
+        title: str,
+        callback: Callable[[End], None] | None = None,
+        autocontinue: bool = False,
+        parent=None,
     ):
         super().__init__(parent)
         self.title = title
         self.callback = callback
+        self._autocontinue = autocontinue
         self._job_widgets: dict[str, JobProgressWidget] = {}
         self._end_notification: End | None = None
 
@@ -279,14 +284,17 @@ class ProcessPage(QWidget):
             )
 
     def _on_end(self, notification: End):
-        """Handle end notification - show Continue button."""
+        """Handle end notification - auto-continue or show Continue button."""
         self._end_notification = notification
         self.title_label.setText(f"{self.title} - {notification}")
-        self.task_label.setText("Click 'Continue' to proceed")
         self.global_progress.setRange(0, 1)
         self.global_progress.setValue(1)
-        self.btn_continue.setEnabled(True)
-        # Keep progress bars visible so user can see what happened
+
+        if self._autocontinue:
+            self._on_continue()
+        else:
+            self.task_label.setText("Click 'Continue' to proceed")
+            self.btn_continue.setEnabled(True)
 
     def _on_continue(self):
         """Handle Continue button click."""
