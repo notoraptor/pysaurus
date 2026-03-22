@@ -180,9 +180,10 @@ class MainWindow(QMainWindow):
             "Select All in &View\tCtrl+Shift+A", self.videos_page._select_all_in_view
         )
         self.selection_menu.addSeparator()
-        self.selection_menu.addAction(
+        self._action_clear_selection = self.selection_menu.addAction(
             "&Clear Selection\tEscape", self.videos_page._clear_selection
         )
+        self._action_clear_selection.setEnabled(False)
         self.selection_menu.addSeparator()
         self._action_show_only_selected = self.selection_menu.addAction(
             "Show Only &Selected\tCtrl+Shift+D"
@@ -192,9 +193,10 @@ class MainWindow(QMainWindow):
             self._on_toggle_show_only_selected
         )
         self.selection_menu.addSeparator()
-        self.selection_menu.addAction(
+        self._action_batch_edit = self.selection_menu.addAction(
             "&Edit Properties...", self.videos_page._on_batch_edit
         )
+        self._action_batch_edit.setEnabled(False)
 
         # Options menu
         self.options_menu = QMenu("&Options", self)
@@ -259,6 +261,8 @@ class MainWindow(QMainWindow):
         self.videos_page.btn_show_only_selected.toggled.connect(
             self._action_show_only_selected.setChecked
         )
+        # Sync selection-dependent menu actions with button states
+        self.videos_page.selection_changed.connect(self._on_selection_changed)
 
         # Context signals
         self.ctx.notification_received.connect(self._on_notification)
@@ -326,6 +330,12 @@ class MainWindow(QMainWindow):
     def _on_notification(self, notification):
         """Handle generic notifications (logged separately, not displayed in status bar)."""
         pass
+
+    def _on_selection_changed(self, count: int):
+        """Sync selection-dependent menu actions with toolbar buttons."""
+        has_selection = count > 0
+        self._action_clear_selection.setEnabled(has_selection)
+        self._action_batch_edit.setEnabled(has_selection)
 
     def _on_state_changed(self):
         """Refresh the active page when backend state changes."""
@@ -429,6 +439,9 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self._process_page)
         self.setWindowTitle(f"Pysaurus - {title}")
 
+        # Disable menus and navigation while processing
+        self._update_menu_state()
+
         # Route notifications to the process page
         self.ctx.set_notification_handler(self._process_page)
 
@@ -457,9 +470,10 @@ class MainWindow(QMainWindow):
 
     def _update_menu_state(self):
         """Enable/disable menus based on application state."""
-        has_db = self.ctx.has_database()
+        processing = self._process_page is not None
+        has_db = not processing and self.ctx.has_database()
         current_page = self.stack.currentIndex()
-        on_videos_page = current_page == self.PAGE_VIDEOS
+        on_videos_page = not processing and current_page == self.PAGE_VIDEOS
 
         # Database menu actions: enabled when a database is open
         self._action_rename_db.setEnabled(has_db)
@@ -476,10 +490,11 @@ class MainWindow(QMainWindow):
         # Selection menu: only relevant on videos page with a database
         self.selection_menu.setEnabled(has_db and on_videos_page)
 
-        # Options menu: Page Size only relevant on videos page
+        # Options menu: only relevant when a database is open
+        self.options_menu.setEnabled(has_db)
         self.page_size_menu.setEnabled(on_videos_page)
 
-        # Page selector radio buttons: visible when a database is open
+        # Page selector radio buttons: hidden during processing
         self._page_selector.setVisible(has_db)
         if has_db and current_page in (self.PAGE_VIDEOS, self.PAGE_PROPERTIES):
             self._page_button_group.blockSignals(True)

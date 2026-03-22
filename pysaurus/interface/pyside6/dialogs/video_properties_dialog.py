@@ -245,6 +245,11 @@ class VideoPropertiesDialog(QDialog):
         self.prop_types = prop_types
         self.ctx = ctx
         self._property_widgets: dict[str, QWidget] = {}
+        self._clear_buttons: dict[str, QPushButton] = {}
+        self._initially_defined: dict[str, bool] = {}
+        self._cleared: set[str] = set()
+        self._user_modified: set[str] = set()
+        self._loading = False
 
         self.setWindowTitle(f"Properties - {video.title}")
         self.setMinimumWidth(500)
@@ -411,116 +416,221 @@ class VideoPropertiesDialog(QDialog):
         form_layout = QFormLayout()
 
         for prop_type in self.prop_types:
-            prop_widget = self._create_property_widget(prop_type)
-            self._property_widgets[prop_type.name] = prop_widget
+            name = prop_type.name
 
             # Create label with type info
-            is_multiple = prop_type.multiple
-            enumeration = prop_type.enumeration
-
-            label_text = f"{prop_type.name}"
-            if is_multiple:
+            label_text = name
+            if prop_type.multiple:
                 label_text += " (multiple)"
-            if enumeration:
+            if prop_type.enumeration:
                 label_text += " [enum]"
 
-            form_layout.addRow(f"{label_text}:", prop_widget)
+            if prop_type.multiple:
+                prop_widget = MultipleValuesWidget(prop_type)
+                self._property_widgets[name] = prop_widget
+                form_layout.addRow(f"{label_text}:", prop_widget)
+            else:
+                # Single property: input widget + Clear button
+                container = QWidget()
+                h_layout = QHBoxLayout(container)
+                h_layout.setContentsMargins(0, 0, 0, 0)
+                h_layout.setSpacing(4)
+
+                input_widget = self._create_single_property_widget(prop_type)
+                h_layout.addWidget(input_widget, 1)
+
+                clear_btn = QPushButton("Clear")
+                clear_btn.setToolTip(f"Remove {name} value from this video")
+                clear_btn.setFixedWidth(50)
+                clear_btn.clicked.connect(
+                    lambda _checked, n=name: self._on_clear_property(n)
+                )
+                clear_btn.setVisible(False)
+                h_layout.addWidget(clear_btn)
+
+                self._property_widgets[name] = input_widget
+                self._clear_buttons[name] = clear_btn
+                form_layout.addRow(f"{label_text}:", container)
 
         layout.addLayout(form_layout)
         layout.addStretch()
         scroll.setWidget(widget)
         return scroll
 
-    def _create_property_widget(self, prop_type: PropType) -> QWidget:
-        """Create a widget for editing a property based on its type."""
-        ptype = prop_type.type  # str: "bool", "int", "float", "str"
-        is_multiple = prop_type.multiple
-        enumeration = prop_type.enumeration
+    def _create_single_property_widget(self, prop_type: PropType) -> QWidget:
+        """Create input widget for a single-value property, with change signal."""
+        name = prop_type.name
+        ptype = prop_type.type
 
-        # Multiple values use the special widget
-        if is_multiple:
-            return MultipleValuesWidget(prop_type)
-
-        # Enumeration: use combo box
-        if enumeration:
+        if prop_type.enumeration:
             widget = QComboBox()
-            for value in enumeration:
+            for value in prop_type.enumeration:
                 widget.addItem(str(value), value)
+            widget.activated.connect(lambda _idx, n=name: self._on_widget_changed(n))
             return widget
 
-        # Simple types
         if ptype == "bool":
             widget = QCheckBox()
+            widget.clicked.connect(lambda _checked, n=name: self._on_widget_changed(n))
             return widget
-        elif ptype == "int":
+        if ptype == "int":
             widget = QSpinBox()
             widget.setRange(-999999999, 999999999)
+            widget.valueChanged.connect(lambda _val, n=name: self._on_widget_changed(n))
             return widget
-        elif ptype == "float":
-            widget = QLineEdit()
+        # float or str
+        widget = QLineEdit()
+        if ptype == "float":
             widget.setPlaceholderText("Enter a number")
-            return widget
-        elif ptype == "str":
-            widget = QLineEdit()
-            return widget
-        else:
-            # Default to line edit
-            widget = QLineEdit()
-            return widget
+        widget.textEdited.connect(lambda _text, n=name: self._on_widget_changed(n))
+        return widget
+
+    def _on_widget_changed(self, name: str):
+        """Handle user modification of a single property widget."""
+        if self._loading:
+            return
+        self._user_modified.add(name)
+        self._cleared.discard(name)
+        self._update_prop_style(name)
+
+    def _on_clear_property(self, name: str):
+        """Handle Clear button click: remove the property value."""
+        self._cleared.add(name)
+        self._user_modified.discard(name)
+
+        # Reset widget to default value
+        prop_type = next(pt for pt in self.prop_types if pt.name == name)
+        default_values = prop_type.default
+        default = default_values[0] if default_values else None
+        widget = self._property_widgets[name]
+
+        self._loading = True
+        try:
+            if prop_type.enumeration:
+                index = widget.findData(default) if default is not None else 0
+                widget.setCurrentIndex(max(index, 0))
+            elif prop_type.type == "bool":
+                widget.setChecked(bool(default) if default is not None else False)
+            elif prop_type.type == "int":
+                widget.setValue(int(default) if default is not None else 0)
+            elif prop_type.type == "float":
+                widget.setText(str(default) if default is not None else "")
+            else:
+                widget.setText(str(default) if default else "")
+        finally:
+            self._loading = False
+
+        self._update_prop_style(name)
+
+    def _update_prop_style(self, name: str):
+        """Update italic style and Clear button visibility for a single property."""
+        widget = self._property_widgets.get(name)
+        if not widget:
+            return
+
+        is_defined = self._initially_defined.get(name, False)
+        is_cleared = name in self._cleared
+        is_modified = name in self._user_modified
+
+        # Italic when showing default value (not explicitly set)
+        use_italic = is_cleared or (not is_defined and not is_modified)
+        font = widget.font()
+        font.setItalic(use_italic)
+        widget.setFont(font)
+
+        # Clear button visible when a value would be saved
+        clear_btn = self._clear_buttons.get(name)
+        if clear_btn:
+            clear_btn.setVisible(not is_cleared and (is_defined or is_modified))
+
+    def _read_widget_value(self, prop_type: PropType, widget: QWidget):
+        """Read the current value from a property widget."""
+        ptype = prop_type.type
+        if prop_type.multiple:
+            return widget.get_values()
+        if prop_type.enumeration:
+            return widget.currentData()
+        if ptype == "bool":
+            return widget.isChecked()
+        if ptype == "int":
+            return widget.value()
+        if ptype == "float":
+            text = widget.text().strip()
+            default_values = prop_type.default
+            default = default_values[0] if default_values else None
+            return float(text) if text else default
+        return widget.text()
 
     def _load_properties(self):
         """Load current property values into widgets."""
+        self._initial_widget_values: dict = {}
+
         if not self.ctx.has_database():
             return
 
-        for prop_type in self.prop_types:
-            name = prop_type.name
-            widget = self._property_widgets.get(name)
-            if not widget:
-                continue
+        video_properties = getattr(self.video, "properties", {}) or {}
 
-            # Get default value from default list
-            default_values = prop_type.default
-            default = default_values[0] if default_values else None
+        self._loading = True
+        try:
+            for prop_type in self.prop_types:
+                name = prop_type.name
+                widget = self._property_widgets.get(name)
+                if not widget:
+                    continue
 
-            # Get current value
-            value = self.video.get_property(name, default)
+                # Track if property is explicitly defined on this video
+                prop_values = video_properties.get(name)
+                is_defined = prop_values is not None and len(prop_values) > 0
+                self._initially_defined[name] = is_defined
 
-            ptype = prop_type.type  # str: "bool", "int", "float", "str"
-            is_multiple = prop_type.multiple
-            enumeration = prop_type.enumeration
+                # Get default value from default list
+                default_values = prop_type.default
+                default = default_values[0] if default_values else None
 
-            # Handle multiple values widget
-            if is_multiple:
-                widget.set_values(value)
-                continue
+                # Get current value
+                value = self.video.get_property(name, default)
 
-            # Handle enumeration combo box
-            if enumeration:
-                # Value could be in a list
-                if isinstance(value, (list, tuple)):
-                    value = value[0] if value else enumeration[0]
-                # Find the index
-                index = widget.findData(value)
-                if index >= 0:
-                    widget.setCurrentIndex(index)
-                continue
+                ptype = prop_type.type
+                is_multiple = prop_type.multiple
+                enumeration = prop_type.enumeration
 
-            # Handle simple types
-            # If value is a list, extract first element
-            if isinstance(value, (list, tuple)):
-                value = value[0] if value else None
+                # Handle multiple values widget
+                if is_multiple:
+                    widget.set_values(value)
+                    self._initial_widget_values[name] = self._read_widget_value(
+                        prop_type, widget
+                    )
+                    continue
 
-            if ptype == "bool":
-                widget.setChecked(bool(value))
-            elif ptype == "int":
-                widget.setValue(int(value) if value is not None else 0)
-            elif ptype == "float":
-                widget.setText(str(value) if value is not None else "")
-            elif ptype == "str":
-                widget.setText(str(value) if value else "")
-            else:
-                widget.setText(str(value) if value else "")
+                # Handle enumeration combo box
+                if enumeration:
+                    if isinstance(value, (list, tuple)):
+                        value = value[0] if value else enumeration[0]
+                    index = widget.findData(value)
+                    if index >= 0:
+                        widget.setCurrentIndex(index)
+                elif isinstance(value, (list, tuple)):
+                    value = value[0] if value else None
+
+                # Handle simple types
+                if not enumeration:
+                    if ptype == "bool":
+                        widget.setChecked(bool(value))
+                    elif ptype == "int":
+                        widget.setValue(int(value) if value is not None else 0)
+                    elif ptype == "float":
+                        widget.setText(str(value) if value is not None else "")
+                    elif ptype == "str":
+                        widget.setText(str(value) if value else "")
+                    else:
+                        widget.setText(str(value) if value else "")
+
+                self._initial_widget_values[name] = self._read_widget_value(
+                    prop_type, widget
+                )
+                self._update_prop_style(name)
+        finally:
+            self._loading = False
 
     def _on_accept(self):
         """Save changes and close dialog."""
@@ -531,7 +641,8 @@ class VideoPropertiesDialog(QDialog):
         ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
         ok_button.setEnabled(False)
 
-        changes = {}
+        # {prop_name: [values]} to send to backend
+        properties = {}
 
         for prop_type in self.prop_types:
             name = prop_type.name
@@ -539,52 +650,24 @@ class VideoPropertiesDialog(QDialog):
             if not widget:
                 continue
 
-            # Get default value from default list
-            default_values = prop_type.default
-            default = default_values[0] if default_values else None
-
-            ptype = prop_type.type  # str: "bool", "int", "float", "str"
-            is_multiple = prop_type.multiple
-            enumeration = prop_type.enumeration
+            # Cleared single property: send empty list to delete
+            if name in self._cleared:
+                if self._initially_defined.get(name, False):
+                    properties[name] = []
+                continue
 
             try:
-                # Multiple values widget
-                if is_multiple:
-                    new_value = widget.get_values()
-                # Enumeration combo box
-                elif enumeration:
-                    new_value = widget.currentData()
-                # Simple types
-                elif ptype == "bool":
-                    new_value = widget.isChecked()
-                elif ptype == "int":
-                    new_value = widget.value()
-                elif ptype == "float":
-                    text = widget.text().strip()
-                    new_value = float(text) if text else default
-                elif ptype == "str":
-                    new_value = widget.text()
-                else:
-                    new_value = widget.text()
-
-                # Get current value to check if changed
-                current = self.video.get_property(name, default)
-                if new_value != current:
-                    changes[name] = new_value
-
+                new_value = self._read_widget_value(prop_type, widget)
+                initial = self._initial_widget_values.get(name)
+                if new_value != initial:
+                    if isinstance(new_value, list):
+                        properties[name] = new_value
+                    else:
+                        properties[name] = [new_value]
             except (ValueError, TypeError):
-                # Skip invalid values
                 pass
 
-        # Apply changes
-        if changes:
-            # video_entry_set_tags expects {prop_name: values} where values is a list
-            properties = {}
-            for name, value in changes.items():
-                if isinstance(value, list):
-                    properties[name] = value
-                else:
-                    properties[name] = [value]
+        if properties:
             self.ctx.set_video_properties(self.video.video_id, properties)
 
         self.accept()

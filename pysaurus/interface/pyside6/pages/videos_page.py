@@ -63,6 +63,7 @@ class VideosPage(QWidget):
     find_similar_reencoded_requested = Signal()
     move_video_requested = Signal(int, str)  # video_id, directory
     status_message_requested = Signal(str, int)  # message, timeout
+    selection_changed = Signal(int)  # selection count
 
     VIEW_GRID = 0
     VIEW_LIST = 1
@@ -291,6 +292,7 @@ class VideosPage(QWidget):
             self.selection_label.setText("")
         self.btn_batch_edit.setEnabled(count > 0)
         self.btn_clear_selection.setEnabled(count > 0)
+        self.selection_changed.emit(count)
 
     def _open_selected(self):
         """Open the selected video(s)."""

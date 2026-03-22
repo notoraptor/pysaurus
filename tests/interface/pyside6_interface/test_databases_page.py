@@ -92,9 +92,17 @@ class TestDatabaseItemWidget:
         assert len(signals) == 1
         assert signals[0] == ("test_db", False)
 
-    def test_widget_update_signal(self, qtbot):
+    def test_widget_update_signal(self, qtbot, monkeypatch):
         """Test that update button emits signal with update=True."""
+        from PySide6.QtWidgets import QMessageBox
+
         from pysaurus.interface.pyside6.pages.databases_page import DatabaseItemWidget
+
+        monkeypatch.setattr(
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+        )
 
         widget = DatabaseItemWidget("test_db")
         qtbot.addWidget(widget)

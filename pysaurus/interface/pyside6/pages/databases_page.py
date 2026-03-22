@@ -112,7 +112,16 @@ class DatabaseItemWidget(QFrame):
         self.open_clicked.emit(self.name, False)
 
     def _on_update(self):
-        self.open_clicked.emit(self.name, True)
+        reply = QMessageBox.question(
+            self,
+            "Update Database",
+            f"Open and update '{self.name}'?\n\n"
+            "This will scan all sources for new or modified videos\n"
+            "and may take some time.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.open_clicked.emit(self.name, True)
 
     def _on_delete(self):
         self.delete_clicked.emit(self.name)

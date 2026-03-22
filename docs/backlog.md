@@ -4,9 +4,9 @@ Backlog unifié, priorisé. Remplace `suggestions.md` et `notes.md`.
 
 ---
 
-## P0 — Bugs critiques
+## P0 — Bugs critiques ✅
 
-### Menus et navigation actifs pendant les opérations longues
+### Menus et navigation actifs pendant les opérations longues ✅
 
 Les radio buttons "videos"/"properties" et plusieurs menus restent cliquables quand
 la page de progression est affichée (par exemple pendant un update). Si une autre opération
@@ -15,7 +15,7 @@ est lancée en parallèle, cela pourrait corrompre la base de données.
 **Correction attendue** : désactiver tous les contrôles de navigation et menus d'action
 quand une opération longue est en cours.
 
-### Propriétés écrasées par des valeurs par défaut à l'édition
+### Propriétés écrasées par des valeurs par défaut à l'édition ✅
 
 Quand on édite les propriétés d'une vidéo, certaines propriétés sont mises à jour avec
 leur valeur par défaut, même si on n'avait rien entré pour ces propriétés. L'interface
@@ -24,7 +24,7 @@ envoie des valeurs par défaut pour les champs vides au lieu de préserver l'abs
 **Correction attendue** : n'envoyer que les valeurs précédentes (si elles existaient)
 ou les valeurs nouvellement entrées par l'utilisateur. Rien d'autre.
 
-### Menu de sélection et boutons désynchronisés
+### Menu de sélection et boutons désynchronisés ✅
 
 Un bouton de sélection peut être désactivé alors que l'action correspondante dans le menu
 reste cliquable. Les deux doivent refléter le même état.
