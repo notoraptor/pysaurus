@@ -555,12 +555,12 @@ class TestVideosPageSelectAllInView:
 class TestVideosPageSelectionLabel:
     """Tests for selection label updates."""
 
-    def test_selection_label_empty_initially(self, qtbot, mock_context):
+    def test_selection_label_shows_no_selection_initially(self, qtbot, mock_context):
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
         page.refresh()
 
-        assert page.selection_label.text() == ""
+        assert page.selection_label.text() == "no selection"
 
     def test_selection_label_shows_count(self, qtbot, mock_context):
         page = VideosPage(mock_context)

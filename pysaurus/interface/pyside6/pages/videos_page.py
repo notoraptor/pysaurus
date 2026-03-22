@@ -303,10 +303,18 @@ class VideosPage(QWidget):
         # Update selection indicator and batch action buttons
         # Use selector size for total selection count
         count = self._selector.size_from(self._view_count)
-        if count > 0:
+        has_selection = count > 0
+        if has_selection:
             self.selection_label.setText(f"{count} selected")
+            self.selection_label.setStyleSheet(
+                "color: #0078d4; font-weight: bold; background: transparent;"
+            )
         else:
-            self.selection_label.setText("")
+            self.selection_label.setText("no selection")
+            self.selection_label.setStyleSheet(
+                "color: #0078d4; font-style: italic; background: transparent;"
+            )
+        self.btn_selection_clear.setEnabled(has_selection)
 
     def _open_selected(self):
         """Open the selected video(s)."""
@@ -644,6 +652,7 @@ class VideosPage(QWidget):
         self.btn_selection_clear.setObjectName("clearBtn")
         self.btn_selection_clear.setToolTip("Clear selection (Escape)")
         self.btn_selection_clear.setFixedWidth(28)
+        self.btn_selection_clear.setEnabled(False)
         self.btn_selection_clear.clicked.connect(self._clear_selection)
         selection_header.addWidget(self.btn_selection_clear)
         selection_layout.addLayout(selection_header)
@@ -651,9 +660,9 @@ class VideosPage(QWidget):
         # Selection info label + Page/All buttons
         selection_row = QHBoxLayout()
         selection_row.setSpacing(2)
-        self.selection_label = QLabel("")
+        self.selection_label = QLabel("no selection")
         self.selection_label.setStyleSheet(
-            "color: #0078d4; font-weight: bold; background: transparent;"
+            "color: #0078d4; font-style: italic; background: transparent;"
         )
         selection_row.addWidget(self.selection_label, 1)
         self.btn_select_page = QPushButton("Page")
