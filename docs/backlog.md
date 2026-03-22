@@ -70,7 +70,7 @@ Quand une boîte de dialogue confirme une opération sur une vidéo (supprimer, 
 Permettre d'ouvrir une vidéo en cliquant directement sur son chemin fichier,
 sans passer par clic droit → "open".
 
-### Toggle watched en masse
+### Toggle watched en masse ✅
 
 Quand plusieurs vidéos sont sélectionnées, proposer un bouton "toggle all watched"
 à côté des autres boutons de sélection.

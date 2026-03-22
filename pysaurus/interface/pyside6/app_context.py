@@ -481,6 +481,12 @@ class AppContext(QObject):
             self._ops.mark_as_read(video_id)
             self.state_changed.emit()
 
+    def toggle_watched_many(self, video_ids: set[int]) -> None:
+        """Toggle watched status for multiple videos in a single batch."""
+        if self._ops:
+            self._ops.toggle_watched_many(video_ids)
+            self.state_changed.emit()
+
     def trash_video(self, video_id) -> None:
         """Move a video file to system trash."""
         if self._ops:

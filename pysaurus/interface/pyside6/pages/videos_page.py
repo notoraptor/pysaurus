@@ -292,6 +292,7 @@ class VideosPage(QWidget):
         else:
             self.selection_label.setText("")
         self.btn_batch_edit.setEnabled(count > 0)
+        self.btn_toggle_watched.setEnabled(count > 0)
         self.btn_clear_selection.setEnabled(count > 0)
         self.selection_changed.emit(count)
 
@@ -380,6 +381,12 @@ class VideosPage(QWidget):
         self.btn_batch_edit.clicked.connect(self._on_batch_edit)
         self.btn_batch_edit.setEnabled(False)
         toolbar.addWidget(self.btn_batch_edit)
+
+        self.btn_toggle_watched = QPushButton("Toggle Watched")
+        self.btn_toggle_watched.setToolTip("Toggle watched status for selected videos")
+        self.btn_toggle_watched.clicked.connect(self._on_toggle_watched_selection)
+        self.btn_toggle_watched.setEnabled(False)
+        toolbar.addWidget(self.btn_toggle_watched)
 
         self.btn_clear_selection = QPushButton("Clear Selection")
         self.btn_clear_selection.setToolTip("Clear selection (Escape)")
@@ -1633,6 +1640,17 @@ class VideosPage(QWidget):
     def _toggle_watched(self, video_id: int):
         """Toggle the watched status of a video."""
         self.ctx.toggle_watched(video_id)
+
+    def _on_toggle_watched_selection(self):
+        """Toggle watched status for all selected videos."""
+        video_ids = self._selected_video_ids
+        if not video_ids:
+            return
+        self.btn_toggle_watched.setEnabled(False)
+        try:
+            self.ctx.toggle_watched_many(video_ids)
+        finally:
+            self.btn_toggle_watched.setEnabled(True)
 
     def _move_video(self, video_id: int):
         """Move a video file to a different folder."""

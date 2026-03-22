@@ -197,6 +197,10 @@ class MainWindow(QMainWindow):
             "&Edit Properties...", self.videos_page._on_batch_edit
         )
         self._action_batch_edit.setEnabled(False)
+        self._action_toggle_watched = self.selection_menu.addAction(
+            "&Toggle Watched", self.videos_page._on_toggle_watched_selection
+        )
+        self._action_toggle_watched.setEnabled(False)
 
         # Options menu
         self.options_menu = QMenu("&Options", self)
@@ -337,6 +341,7 @@ class MainWindow(QMainWindow):
         has_selection = count > 0
         self._action_clear_selection.setEnabled(has_selection)
         self._action_batch_edit.setEnabled(has_selection)
+        self._action_toggle_watched.setEnabled(has_selection)
 
     def _on_state_changed(self):
         """Refresh the active page when backend state changes."""
