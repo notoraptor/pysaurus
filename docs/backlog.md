@@ -59,7 +59,7 @@ Si `True` (cas "open"), passage automatique. Si `False` (défaut), bouton "conti
 Remplacer la barre de progression horizontale infinie par un progress ring (indicateur
 circulaire) sur la page des opérations longues.
 
-### Dialogues de confirmation enrichis
+### Dialogues de confirmation enrichis ✅
 
 Quand une boîte de dialogue confirme une opération sur une vidéo (supprimer, etc.) :
 - Afficher le chemin fichier complet en police mono (pas seulement le titre)

@@ -40,6 +40,7 @@ from pysaurus.interface.pyside6.dialogs import (
     SourcesDialog,
     VideoPropertiesDialog,
 )
+from pysaurus.interface.pyside6.dialogs.video_confirm_dialog import VideoConfirmDialog
 from pysaurus.interface.pyside6.widgets.flow_layout import FlowLayout
 from pysaurus.interface.pyside6.widgets.video_card import VideoCard
 from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
@@ -1704,15 +1705,14 @@ class VideosPage(QWidget):
             )
             return
 
-        reply = QMessageBox.question(
-            self,
+        confirm_video = video or self.ctx.get_video_by_id(video_id)
+        if confirm_video and VideoConfirmDialog.confirm(
             "Delete Video",
-            f"Delete '{video_title}' from the database?\n\n"
+            "Delete this video from the database?\n\n"
             "(The file will NOT be deleted from disk)",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        )
-
-        if reply == QMessageBox.StandardButton.Yes:
+            confirm_video,
+            self,
+        ):
             self.ctx.delete_video_entry(video_id)
             self.status_message_requested.emit(
                 f"'{video_title}' removed from database", 5000
@@ -1724,15 +1724,13 @@ class VideosPage(QWidget):
         if not video:
             return
 
-        reply = QMessageBox.question(
-            self,
+        if VideoConfirmDialog.confirm(
             "Move to Trash",
-            f"Move '{video.title}' to the system trash?\n\n"
+            "Move this video to the system trash?\n\n"
             "(The file can be restored from the trash if needed)",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        )
-
-        if reply == QMessageBox.StandardButton.Yes:
+            video,
+            self,
+        ):
             try:
                 self.ctx.trash_video(video_id)
                 self.status_message_requested.emit(
@@ -1747,17 +1745,14 @@ class VideosPage(QWidget):
         if not video:
             return
 
-        reply = QMessageBox.warning(
-            self,
+        if VideoConfirmDialog.confirm(
             "Delete Permanently",
-            f"PERMANENTLY delete '{video.title}'?\n\n"
-            "⚠️ This action cannot be undone!\n"
+            "PERMANENTLY delete this video?\n\n"
+            "This action cannot be undone!\n"
             "The file will be deleted from disk.",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-
-        if reply == QMessageBox.StandardButton.Yes:
+            video,
+            self,
+        ):
             try:
                 self.ctx.delete_video_file(video_id)
                 self.status_message_requested.emit(
