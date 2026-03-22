@@ -254,21 +254,36 @@ class VideosPage(QWidget):
 
     def _on_selection_menu(self):
         """Show context menu with selection actions."""
+        count = self._selector.size_from(self._view_count)
+        has_selection = count > 0
+
         menu = QMenu(self)
         action_show = menu.addAction("Show Only Selected\tCtrl+Shift+D")
         action_show.setCheckable(True)
         action_show.setChecked(self._show_only_selected)
+        action_show.setEnabled(has_selection or self._show_only_selected)
         action_show.triggered.connect(self._toggle_show_only_selected)
         menu.addSeparator()
         action_toggle = menu.addAction("Toggle Watched")
+        action_toggle.setEnabled(has_selection)
         action_toggle.triggered.connect(self._on_toggle_watched_selection)
-        action_edit = menu.addAction("Edit Properties...")
-        action_edit.triggered.connect(self._on_batch_edit)
-        # Disable actions that need a selection
-        count = self._selector.size_from(self._view_count)
-        if count == 0:
-            action_toggle.setEnabled(False)
-            action_edit.setEnabled(False)
+
+        # Edit Properties as a submenu listing each property
+        edit_submenu = menu.addMenu("Edit Properties")
+        edit_submenu.setEnabled(has_selection)
+        if has_selection and self.ctx.has_database():
+            prop_types = self.ctx.get_prop_types()
+            if prop_types:
+                for prop_type in prop_types:
+                    action = edit_submenu.addAction(prop_type.name)
+                    action.setData(prop_type)
+                edit_submenu.triggered.connect(
+                    lambda a: self._edit_property_for_selection(a.data())
+                )
+            else:
+                no_props = edit_submenu.addAction("(no properties defined)")
+                no_props.setEnabled(False)
+
         menu.exec(
             self.btn_selection_settings.mapToGlobal(
                 self.btn_selection_settings.rect().bottomLeft()
