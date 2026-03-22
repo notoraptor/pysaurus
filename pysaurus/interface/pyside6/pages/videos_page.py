@@ -450,6 +450,15 @@ class VideosPage(QWidget):
                 background-color: #cccccc;
                 color: #888888;
             }
+            QPushButton#settingsBtn {
+                background-color: #1976d2;
+                color: white;
+                font-weight: bold;
+                padding: 2px 4px;
+            }
+            QPushButton#settingsBtn:hover {
+                background-color: #1565c0;
+            }
         """)
         layout = QVBoxLayout(sidebar)
         layout.setContentsMargins(3, 3, 3, 3)
@@ -457,64 +466,60 @@ class VideosPage(QWidget):
 
         # Sources section
         sources_section, sources_layout = self._create_filter_section(color_light)
+        sources_header = QHBoxLayout()
+        sources_header.setSpacing(2)
         sources_label = QLabel("Sources")
         sources_label.setStyleSheet("font-weight: bold; background: transparent;")
-        sources_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sources_layout.addWidget(sources_label)
+        sources_header.addWidget(sources_label)
+        sources_header.addStretch()
+        self.btn_sources = QPushButton("⚙")
+        self.btn_sources.setObjectName("settingsBtn")
+        self.btn_sources.setToolTip("Edit video sources (Ctrl+T)")
+        self.btn_sources.setFixedWidth(28)
+        self.btn_sources.clicked.connect(self._on_edit_sources)
+        sources_header.addWidget(self.btn_sources)
+        self.btn_sources_clear = QPushButton("✕")
+        self.btn_sources_clear.setObjectName("clearBtn")
+        self.btn_sources_clear.setToolTip("Reset to default sources (Ctrl+Shift+T)")
+        self.btn_sources_clear.setFixedWidth(28)
+        self.btn_sources_clear.clicked.connect(self._clear_sources)
+        sources_header.addWidget(self.btn_sources_clear)
+        sources_layout.addLayout(sources_header)
 
         self.sources_info = QLabel("All readable")
         self.sources_info.setStyleSheet("color: #555; background: transparent;")
         self.sources_info.setWordWrap(True)
         self.sources_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sources_layout.addWidget(self.sources_info)
-
-        sources_btn_layout = QHBoxLayout()
-        sources_btn_layout.setSpacing(2)
-        self.btn_sources = QPushButton("Edit...")
-        self.btn_sources.setToolTip("Edit video sources (Ctrl+T)")
-        self.btn_sources.clicked.connect(self._on_edit_sources)
-        sources_btn_layout.addWidget(self.btn_sources)
-
-        self.btn_sources_clear = QPushButton("✕")
-        self.btn_sources_clear.setObjectName("clearBtn")
-        self.btn_sources_clear.setToolTip("Reset to default sources (Ctrl+Shift+T)")
-        self.btn_sources_clear.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
-        )
-        self.btn_sources_clear.clicked.connect(self._clear_sources)
-        sources_btn_layout.addWidget(self.btn_sources_clear)
-        sources_layout.addLayout(sources_btn_layout)
         layout.addWidget(sources_section)
 
         # Grouping section
         grouping_section, grouping_layout = self._create_filter_section(color_lighter)
+        grouping_header = QHBoxLayout()
+        grouping_header.setSpacing(2)
         grouping_label = QLabel("Grouping")
         grouping_label.setStyleSheet("font-weight: bold; background: transparent;")
-        grouping_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grouping_layout.addWidget(grouping_label)
+        grouping_header.addWidget(grouping_label)
+        grouping_header.addStretch()
+        self.btn_grouping = QPushButton("⚙")
+        self.btn_grouping.setObjectName("settingsBtn")
+        self.btn_grouping.setToolTip("Configure video grouping (Ctrl+G)")
+        self.btn_grouping.setFixedWidth(28)
+        self.btn_grouping.clicked.connect(self._on_set_grouping)
+        grouping_header.addWidget(self.btn_grouping)
+        self.btn_grouping_clear = QPushButton("✕")
+        self.btn_grouping_clear.setObjectName("clearBtn")
+        self.btn_grouping_clear.setToolTip("Remove grouping (Ctrl+Shift+G)")
+        self.btn_grouping_clear.setFixedWidth(28)
+        self.btn_grouping_clear.clicked.connect(self._clear_grouping)
+        grouping_header.addWidget(self.btn_grouping_clear)
+        grouping_layout.addLayout(grouping_header)
 
         self.grouping_info = QLabel("No grouping")
         self.grouping_info.setStyleSheet("color: #555; background: transparent;")
         self.grouping_info.setWordWrap(True)
         self.grouping_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         grouping_layout.addWidget(self.grouping_info)
-
-        grouping_btn_layout = QHBoxLayout()
-        grouping_btn_layout.setSpacing(2)
-        self.btn_grouping = QPushButton("Set...")
-        self.btn_grouping.setToolTip("Configure video grouping (Ctrl+G)")
-        self.btn_grouping.clicked.connect(self._on_set_grouping)
-        grouping_btn_layout.addWidget(self.btn_grouping)
-
-        self.btn_grouping_clear = QPushButton("✕")
-        self.btn_grouping_clear.setObjectName("clearBtn")
-        self.btn_grouping_clear.setToolTip("Remove grouping (Ctrl+Shift+G)")
-        self.btn_grouping_clear.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
-        )
-        self.btn_grouping_clear.clicked.connect(self._clear_grouping)
-        grouping_btn_layout.addWidget(self.btn_grouping_clear)
-        grouping_layout.addLayout(grouping_btn_layout)
 
         # Button for confirming all unique moves (only visible when grouped by move_id)
         self.btn_confirm_unique_moves = QPushButton("Confirm all unique moves")
@@ -571,25 +576,25 @@ class VideosPage(QWidget):
 
         # Search section
         search_section, search_layout = self._create_filter_section(color_light)
+        search_header = QHBoxLayout()
+        search_header.setSpacing(2)
         search_label = QLabel("Search")
         search_label.setStyleSheet("font-weight: bold; background: transparent;")
-        search_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        search_layout.addWidget(search_label)
+        search_header.addWidget(search_label)
+        search_header.addStretch()
+        self.btn_search_clear = QPushButton("✕")
+        self.btn_search_clear.setObjectName("clearBtn")
+        self.btn_search_clear.setToolTip("Clear search (Ctrl+Shift+F)")
+        self.btn_search_clear.setFixedWidth(28)
+        self.btn_search_clear.clicked.connect(self._clear_search)
+        search_header.addWidget(self.btn_search_clear)
+        search_layout.addLayout(search_header)
 
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search... (Ctrl+F)")
         self.search_input.setToolTip("Search videos (Ctrl+F)")
         self.search_input.returnPressed.connect(self._on_search)
         search_layout.addWidget(self.search_input)
-
-        # Search mode indicator
-        self.search_mode_label = QLabel("")
-        self.search_mode_label.setStyleSheet(
-            "color: #0078d4; font-style: italic; background: transparent;"
-        )
-        self.search_mode_label.setWordWrap(True)
-        self.search_mode_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        search_layout.addWidget(self.search_mode_label)
 
         # First row: AND, OR buttons
         search_btn_layout1 = QHBoxLayout()
@@ -617,47 +622,36 @@ class VideosPage(QWidget):
         self.btn_search_id.setToolTip("Search by video ID")
         self.btn_search_id.clicked.connect(self._on_search_id)
         search_btn_layout2.addWidget(self.btn_search_id)
-
-        self.btn_search_clear = QPushButton("✕")
-        self.btn_search_clear.setObjectName("clearBtn")
-        self.btn_search_clear.setToolTip("Clear search (Ctrl+Shift+F)")
-        self.btn_search_clear.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
-        )
-        self.btn_search_clear.clicked.connect(self._clear_search)
-        search_btn_layout2.addWidget(self.btn_search_clear)
         search_layout.addLayout(search_btn_layout2)
         layout.addWidget(search_section)
 
         # Sorting section
         sorting_section, sorting_layout = self._create_filter_section(color_lighter)
+        sorting_header = QHBoxLayout()
+        sorting_header.setSpacing(2)
         sorting_label = QLabel("Sorting")
         sorting_label.setStyleSheet("font-weight: bold; background: transparent;")
-        sorting_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sorting_layout.addWidget(sorting_label)
+        sorting_header.addWidget(sorting_label)
+        sorting_header.addStretch()
+        self.btn_sorting = QPushButton("⚙")
+        self.btn_sorting.setObjectName("settingsBtn")
+        self.btn_sorting.setToolTip("Configure video sorting (Ctrl+Shift+S)")
+        self.btn_sorting.setFixedWidth(28)
+        self.btn_sorting.clicked.connect(self._on_set_sorting)
+        sorting_header.addWidget(self.btn_sorting)
+        self.btn_sorting_clear = QPushButton("✕")
+        self.btn_sorting_clear.setObjectName("clearBtn")
+        self.btn_sorting_clear.setToolTip("Reset to default sorting")
+        self.btn_sorting_clear.setFixedWidth(28)
+        self.btn_sorting_clear.clicked.connect(self._clear_sorting)
+        sorting_header.addWidget(self.btn_sorting_clear)
+        sorting_layout.addLayout(sorting_header)
 
         self.sorting_info = QLabel("Date ▼")
         self.sorting_info.setStyleSheet("color: #555; background: transparent;")
         self.sorting_info.setWordWrap(True)
         self.sorting_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sorting_layout.addWidget(self.sorting_info)
-
-        sorting_btn_layout = QHBoxLayout()
-        sorting_btn_layout.setSpacing(2)
-        self.btn_sorting = QPushButton("Set...")
-        self.btn_sorting.setToolTip("Configure video sorting (Ctrl+Shift+S)")
-        self.btn_sorting.clicked.connect(self._on_set_sorting)
-        sorting_btn_layout.addWidget(self.btn_sorting)
-
-        self.btn_sorting_clear = QPushButton("✕")
-        self.btn_sorting_clear.setObjectName("clearBtn")
-        self.btn_sorting_clear.setToolTip("Reset to default sorting")
-        self.btn_sorting_clear.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
-        )
-        self.btn_sorting_clear.clicked.connect(self._clear_sorting)
-        sorting_btn_layout.addWidget(self.btn_sorting_clear)
-        sorting_layout.addLayout(sorting_btn_layout)
         layout.addWidget(sorting_section)
 
         layout.addStretch()
@@ -1122,22 +1116,12 @@ class VideosPage(QWidget):
     def _update_search_display(self, search):
         """Update the search mode indicator."""
         if not search or not search.text:
-            self.search_mode_label.setText("")
             self.btn_search_clear.setEnabled(False)
             if self.search_input.text():
                 self.search_input.clear()
             self._highlight_search_mode(None)
             return
 
-        # Map condition to user-friendly label
-        mode_labels = {
-            "and": "All terms (AND)",
-            "or": "Any term (OR)",
-            "exact": "Exact sentence",
-            "id": "Video ID",
-        }
-        mode_label = mode_labels.get(search.cond, search.cond)
-        self.search_mode_label.setText(f"Mode: {mode_label}")
         self._search_mode = search.cond
 
         # Update search input if it doesn't match

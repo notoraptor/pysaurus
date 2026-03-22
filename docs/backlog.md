@@ -89,7 +89,7 @@ Actuellement les groupes sont dans un dropdown au-dessus de la vue vidéos.
 Afficher plutôt un panneau paginé (comme l'ancienne interface React) en dessous
 des filtres, montrant les noms et comptes de plusieurs groupes à la fois.
 
-### Compacter les filtres
+### Compacter les filtres ✅
 
 Pour chaque filtre, remplacer le bouton "edit"/"set" et le bouton rouge de réinitialisation
 par deux petits boutons icône (paramétrage bleu/vert + réinitialisation rouge) placés à droite
