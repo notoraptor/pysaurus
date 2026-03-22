@@ -100,8 +100,10 @@ Harmoniser aussi le filtre "Search" en déplaçant son bouton de réinitialisati
 ### Redondance menu/boutons de sélection ✅
 
 Le menu de sélection et les boutons de sélection sont potentiellement redondants.
-Résolution : suppression des boutons toolbar, seul le label "N selected" reste.
-Toutes les actions passent par le menu Selection et les raccourcis clavier.
+Résolution : la sélection est gérée dans la sidebar (comme un filtre), avec un
+bouton ⚙ ouvrant un menu contextuel (Show Only Selected, Toggle Watched, Edit
+Properties), des boutons Page/All, et un bouton ✕ pour clear. Le menu Selection
+de la barre de menu a été supprimé.
 
 ---
 

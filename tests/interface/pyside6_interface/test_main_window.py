@@ -235,15 +235,6 @@ class TestMenuState:
         main_window.show_properties_page()
         assert not main_window.view_menu.isEnabled()
 
-    def test_selection_menu_disabled_without_database(self, main_window):
-        main_window._update_menu_state()
-        assert not main_window.selection_menu.isEnabled()
-
-    def test_selection_menu_enabled_on_videos_page(self, main_window):
-        main_window.ctx._simulate_open()
-        main_window.show_videos_page()
-        assert main_window.selection_menu.isEnabled()
-
     def test_page_selector_hidden_without_database(self, main_window):
         main_window._update_menu_state()
         assert not main_window._page_selector.isVisible()
@@ -421,9 +412,9 @@ class TestOptionsMenu:
         assert main_window.videos_page.confirm_not_found_deletion is True
 
     def test_toggle_show_only_selected(self, main_window):
-        main_window._on_toggle_show_only_selected(True)
+        main_window.videos_page._toggle_show_only_selected(True)
         assert main_window.videos_page._show_only_selected
-        main_window._on_toggle_show_only_selected(False)
+        main_window.videos_page._toggle_show_only_selected(False)
         assert not main_window.videos_page._show_only_selected
 
 

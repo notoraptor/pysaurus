@@ -64,7 +64,6 @@ class VideosPage(QWidget):
     find_similar_reencoded_requested = Signal()
     move_video_requested = Signal(int, str)  # video_id, directory
     status_message_requested = Signal(str, int)  # message, timeout
-    selection_changed = Signal(int)  # selection count
 
     VIEW_GRID = 0
     VIEW_LIST = 1
@@ -253,6 +252,29 @@ class VideosPage(QWidget):
         self.page_number = 0
         self.refresh()
 
+    def _on_selection_menu(self):
+        """Show context menu with selection actions."""
+        menu = QMenu(self)
+        action_show = menu.addAction("Show Only Selected\tCtrl+Shift+D")
+        action_show.setCheckable(True)
+        action_show.setChecked(self._show_only_selected)
+        action_show.triggered.connect(self._toggle_show_only_selected)
+        menu.addSeparator()
+        action_toggle = menu.addAction("Toggle Watched")
+        action_toggle.triggered.connect(self._on_toggle_watched_selection)
+        action_edit = menu.addAction("Edit Properties...")
+        action_edit.triggered.connect(self._on_batch_edit)
+        # Disable actions that need a selection
+        count = self._selector.size_from(self._view_count)
+        if count == 0:
+            action_toggle.setEnabled(False)
+            action_edit.setEnabled(False)
+        menu.exec(
+            self.btn_selection_settings.mapToGlobal(
+                self.btn_selection_settings.rect().bottomLeft()
+            )
+        )
+
     def _clear_selection(self):
         """Clear video selection."""
         self._selector.deselect_all()
@@ -285,7 +307,6 @@ class VideosPage(QWidget):
             self.selection_label.setText(f"{count} selected")
         else:
             self.selection_label.setText("")
-        self.selection_changed.emit(count)
 
     def _open_selected(self):
         """Open the selected video(s)."""
@@ -360,12 +381,6 @@ class VideosPage(QWidget):
         self.page_size_combo.setCurrentText("20")
         self.page_size_combo.currentTextChanged.connect(self._on_page_size_changed)
         toolbar.addWidget(self.page_size_combo)
-        toolbar.addSeparator()
-
-        # Selection indicator (actions are in the Selection menu)
-        self.selection_label = QLabel("")
-        self.selection_label.setStyleSheet("color: #0078d4; font-weight: bold;")
-        toolbar.addWidget(self.selection_label)
 
         return toolbar
 
@@ -610,6 +625,49 @@ class VideosPage(QWidget):
         self.sorting_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sorting_layout.addWidget(self.sorting_info)
         layout.addWidget(sorting_section)
+
+        # Selection section
+        selection_section, selection_layout = self._create_filter_section(color_light)
+        selection_header = QHBoxLayout()
+        selection_header.setSpacing(2)
+        selection_label = QLabel("Selection")
+        selection_label.setStyleSheet("font-weight: bold; background: transparent;")
+        selection_header.addWidget(selection_label)
+        selection_header.addStretch()
+        self.btn_selection_settings = QPushButton("⚙")
+        self.btn_selection_settings.setObjectName("settingsBtn")
+        self.btn_selection_settings.setToolTip("Selection actions")
+        self.btn_selection_settings.setFixedWidth(28)
+        self.btn_selection_settings.clicked.connect(self._on_selection_menu)
+        selection_header.addWidget(self.btn_selection_settings)
+        self.btn_selection_clear = QPushButton("✕")
+        self.btn_selection_clear.setObjectName("clearBtn")
+        self.btn_selection_clear.setToolTip("Clear selection (Escape)")
+        self.btn_selection_clear.setFixedWidth(28)
+        self.btn_selection_clear.clicked.connect(self._clear_selection)
+        selection_header.addWidget(self.btn_selection_clear)
+        selection_layout.addLayout(selection_header)
+
+        # Selection info label + Page/All buttons
+        selection_row = QHBoxLayout()
+        selection_row.setSpacing(2)
+        self.selection_label = QLabel("")
+        self.selection_label.setStyleSheet(
+            "color: #0078d4; font-weight: bold; background: transparent;"
+        )
+        selection_row.addWidget(self.selection_label, 1)
+        self.btn_select_page = QPushButton("Page")
+        self.btn_select_page.setToolTip("Select all videos on current page (Ctrl+A)")
+        self.btn_select_page.clicked.connect(self._select_all)
+        selection_row.addWidget(self.btn_select_page)
+        self.btn_select_all = QPushButton("All")
+        self.btn_select_all.setToolTip(
+            "Select all videos in current view (Ctrl+Shift+A)"
+        )
+        self.btn_select_all.clicked.connect(self._select_all_in_view)
+        selection_row.addWidget(self.btn_select_all)
+        selection_layout.addLayout(selection_row)
+        layout.addWidget(selection_section)
 
         layout.addStretch()
 

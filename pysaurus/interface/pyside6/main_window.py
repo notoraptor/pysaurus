@@ -169,39 +169,6 @@ class MainWindow(QMainWindow):
         self._page_button_group.idClicked.connect(self._on_page_radio_clicked)
         menu_bar.setCornerWidget(self._page_selector, Qt.Corner.TopRightCorner)
 
-        # Selection menu (only relevant on videos page)
-        self.selection_menu = QMenu("&Selection", self)
-        menu_bar.addMenu(self.selection_menu)
-
-        self.selection_menu.addAction(
-            "Select &All (Page)\tCtrl+A", self.videos_page._select_all
-        )
-        self.selection_menu.addAction(
-            "Select All in &View\tCtrl+Shift+A", self.videos_page._select_all_in_view
-        )
-        self.selection_menu.addSeparator()
-        self._action_clear_selection = self.selection_menu.addAction(
-            "&Clear Selection\tEscape", self.videos_page._clear_selection
-        )
-        self._action_clear_selection.setEnabled(False)
-        self.selection_menu.addSeparator()
-        self._action_show_only_selected = self.selection_menu.addAction(
-            "Show Only &Selected\tCtrl+Shift+D"
-        )
-        self._action_show_only_selected.setCheckable(True)
-        self._action_show_only_selected.triggered.connect(
-            self._on_toggle_show_only_selected
-        )
-        self.selection_menu.addSeparator()
-        self._action_batch_edit = self.selection_menu.addAction(
-            "&Edit Properties...", self.videos_page._on_batch_edit
-        )
-        self._action_batch_edit.setEnabled(False)
-        self._action_toggle_watched = self.selection_menu.addAction(
-            "&Toggle Watched", self.videos_page._on_toggle_watched_selection
-        )
-        self._action_toggle_watched.setEnabled(False)
-
         # Options menu
         self.options_menu = QMenu("&Options", self)
         menu_bar.addMenu(self.options_menu)
@@ -260,9 +227,6 @@ class MainWindow(QMainWindow):
         )
         self.videos_page.move_video_requested.connect(self._on_move_video)
         self.videos_page.status_message_requested.connect(self._on_status_message)
-
-        # Sync selection-dependent menu actions with selection state
-        self.videos_page.selection_changed.connect(self._on_selection_changed)
 
         # Context signals
         self.ctx.notification_received.connect(self._on_notification)
@@ -331,13 +295,6 @@ class MainWindow(QMainWindow):
     def _on_notification(self, notification):
         """Handle generic notifications (logged separately, not displayed in status bar)."""
         pass
-
-    def _on_selection_changed(self, count: int):
-        """Sync selection-dependent menu actions with toolbar buttons."""
-        has_selection = count > 0
-        self._action_clear_selection.setEnabled(has_selection)
-        self._action_batch_edit.setEnabled(has_selection)
-        self._action_toggle_watched.setEnabled(has_selection)
 
     def _on_state_changed(self):
         """Refresh the active page when backend state changes."""
@@ -496,9 +453,6 @@ class MainWindow(QMainWindow):
         # View menu: enabled when on videos page
         self.view_menu.setEnabled(has_db and on_videos_page)
 
-        # Selection menu: only relevant on videos page with a database
-        self.selection_menu.setEnabled(has_db and on_videos_page)
-
         # Options menu: only relevant when a database is open
         self.options_menu.setEnabled(has_db)
         self.page_size_menu.setEnabled(on_videos_page)
@@ -648,10 +602,6 @@ class MainWindow(QMainWindow):
         # Update the videos page combo box to match
         self.videos_page.page_size_combo.setCurrentText(str(size))
         # This will trigger the page size change through the combo box signal
-
-    def _on_toggle_show_only_selected(self, checked: bool):
-        """Handle show only selected toggle from menu."""
-        self.videos_page._toggle_show_only_selected(checked)
 
     def _on_confirm_not_found_changed(self, checked: bool):
         """Handle confirm deletion setting change."""

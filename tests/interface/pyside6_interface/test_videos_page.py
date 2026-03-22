@@ -571,18 +571,3 @@ class TestVideosPageSelectionLabel:
         page._update_selection_display()
 
         assert "1 selected" in page.selection_label.text()
-
-    def test_selection_changed_signal_emitted(self, qtbot, mock_context):
-        """Selection changes emit signal for menu sync."""
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-        page.refresh()
-
-        signals = []
-        page.selection_changed.connect(lambda count: signals.append(count))
-
-        page._on_video_selection_changed(1, True)
-        page._update_selection_display()
-
-        assert len(signals) >= 1
-        assert signals[-1] > 0
