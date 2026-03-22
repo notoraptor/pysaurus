@@ -31,9 +31,9 @@ reste cliquable. Les deux doivent refléter le même état.
 
 ---
 
-## P1 — Bugs visuels
+## P1 — Bugs visuels ✅
 
-### Surbrillance cassée en vue liste
+### Surbrillance cassée en vue liste ✅
 
 En vue liste, un clic droit sur une vidéo, puis une deuxième, puis une troisième,
 laisse les trois en surbrillance bleue. La surbrillance ne devrait être visible que
@@ -152,6 +152,17 @@ pourrait être une première étape avant le langage complet.
 
 Système de plugins apparaissant dans le menu contextuel d'une vidéo.
 Chaque plugin définit un critère d'applicabilité et une action.
+
+### Annulation des opérations longues
+
+Actuellement, il est impossible d'interrompre un processus en cours (update, similarité, etc.).
+Le menu Database → Quit reste disponible sur la page de progression, mais quitter pendant
+une opération revient à tuer le processus brutalement. Les opérations longues utilisent
+souvent du multi-processus, ce qui rend l'annulation propre difficile à implémenter.
+
+**Difficulté** : élevée. Nécessite un mécanisme de cancellation coopératif dans les
+algorithmes de traitement (`database_algorithms.py`, `imgsimsearch/`), probablement
+via un flag partagé vérifié à chaque étape.
 
 ---
 

@@ -5,7 +5,7 @@ Video list item widget for displaying a video with all its details.
 import re
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QMouseEvent, QPixmap
+from PySide6.QtGui import QCursor, QMouseEvent, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -102,6 +102,8 @@ class VideoListItem(QFrame):
         super().__init__(parent)
         self.video = video
         self._selected = False
+        self._hovered = False
+        self._context_menu_open = False
         self._diff_fields = diff_fields or set()
         self._file_title_diffs = file_title_diffs  # Character ranges that differ
 
@@ -523,46 +525,31 @@ class VideoListItem(QFrame):
         return "".join(result)
 
     def _apply_style(self):
-        """Apply the item style (light theme)."""
-        if self._selected:
-            self.setStyleSheet("""
-                VideoListItem {
-                    background-color: #e3f2fd;
-                    border: 2px solid #1976d2;
-                    border-radius: 6px;
-                }
-            """)
+        """Apply the item style (light theme).
+
+        Uses manual hover tracking (enterEvent/leaveEvent) instead of CSS :hover
+        to avoid stuck highlights after context menu interactions.
+        Colors: selected (strong blue) vs hover (light blue) are visually distinct.
+        """
+        if self._selected and self._hovered:
+            bg, border, width = "#d0e8fc", "#1565c0", 2
+        elif self._selected:
+            bg, border, width = "#e3f2fd", "#1976d2", 2
+        elif self._hovered and not self.video.found:
+            bg, border, width = "#ffecb3", "#ff9800", 2
         elif not self.video.found:
-            # Not found: light yellow background
-            # previous:
-            # border-color: #ffb300;
-            # background-color: #fff8e1;
-            self.setStyleSheet("""
-                VideoListItem {
-                    background-color: #fffde7;
-                    border: 1px solid #ffe082;
-                    border-radius: 6px;
-                }
-                VideoListItem:hover {
-                    border: 2px solid #ff9800;
-                    background-color: #ffecb3;
-                }
-            """)
+            bg, border, width = "#fffde7", "#ffe082", 1
+        elif self._hovered:
+            bg, border, width = "#f5f9ff", "#90caf9", 1
         else:
-            # previous:
-            # border-color: #999999;
-            # background-color: #fafafa;
-            self.setStyleSheet("""
-                VideoListItem {
-                    background-color: #ffffff;
-                    border: 1px solid #dddddd;
-                    border-radius: 6px;
-                }
-                VideoListItem:hover {
-                    border: 2px solid #1976d2;
-                    background-color: #e3f2fd;
-                }
-            """)
+            bg, border, width = "#ffffff", "#dddddd", 1
+        self.setStyleSheet(f"""
+            VideoListItem {{
+                background-color: {bg};
+                border: {width}px solid {border};
+                border-radius: 6px;
+            }}
+        """)
 
     @property
     def selected(self) -> bool:
@@ -607,7 +594,25 @@ class VideoListItem(QFrame):
             self.double_clicked.emit(self.video.video_id)
         super().mouseDoubleClickEvent(event)
 
+    def enterEvent(self, event):
+        """Track hover state manually to avoid stuck :hover with context menus."""
+        self._hovered = True
+        self._apply_style()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        # Keep hover active while a context menu is open (Qt sends leaveEvent
+        # when the menu captures the mouse, but the cursor is still over us).
+        if not self._context_menu_open:
+            self._hovered = False
+            self._apply_style()
+        super().leaveEvent(event)
+
     def contextMenuEvent(self, event):
         """Handle context menu request."""
+        self._context_menu_open = True
         self.context_menu_requested.emit(self.video.video_id, event.globalPos())
-        super().contextMenuEvent(event)
+        self._context_menu_open = False
+        # Check CURRENT cursor position (not event position, which is always on us)
+        self._hovered = self.rect().contains(self.mapFromGlobal(QCursor.pos()))
+        self._apply_style()

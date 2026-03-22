@@ -5,7 +5,8 @@ Tests VideoCard and VideoListItem widgets with mock data.
 """
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
+from PySide6.QtGui import QEnterEvent
 
 from tests.mocks.mock_database import MockVideoPattern
 
@@ -265,3 +266,172 @@ class TestVideoListItem:
 
         assert len(double_clicks) == 1
         assert double_clicks[0] == 1
+
+
+def _make_enter_event(widget):
+    """Create an QEnterEvent for the given widget's center."""
+    center = QPointF(widget.width() / 2, widget.height() / 2)
+    return QEnterEvent(center, center, QPointF(widget.mapToGlobal(QPoint(0, 0))))
+
+
+class TestVideoListItemHover:
+    """Tests for VideoListItem hover and highlight behavior."""
+
+    def _make_item(self, qtbot, sample_video, prop_types):
+        from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
+
+        item = VideoListItem(sample_video, prop_types)
+        qtbot.addWidget(item)
+        item.resize(400, 120)
+        return item
+
+    def test_initial_state_no_hover_no_selection(self, qtbot, sample_video, prop_types):
+        """Item starts with no hover and no selection."""
+        item = self._make_item(qtbot, sample_video, prop_types)
+        assert not item._hovered
+        assert not item._selected
+        assert "#ffffff" in item.styleSheet()
+
+    def test_enter_sets_hover(self, qtbot, sample_video, prop_types):
+        """enterEvent sets _hovered and applies hover style."""
+        item = self._make_item(qtbot, sample_video, prop_types)
+        item.enterEvent(_make_enter_event(item))
+        assert item._hovered
+        # Hover color for found videos: light blue
+        assert "#f5f9ff" in item.styleSheet()
+
+    def test_leave_clears_hover(self, qtbot, sample_video, prop_types):
+        """leaveEvent clears _hovered and reverts to default style."""
+        item = self._make_item(qtbot, sample_video, prop_types)
+        item.enterEvent(_make_enter_event(item))
+        assert item._hovered
+
+        item.leaveEvent(QEvent(QEvent.Type.Leave))
+        assert not item._hovered
+        assert "#ffffff" in item.styleSheet()
+
+    def test_hover_and_selected_have_different_colors(
+        self, qtbot, sample_video, prop_types
+    ):
+        """Hover and selection styles must be visually distinct."""
+        item = self._make_item(qtbot, sample_video, prop_types)
+
+        # Get hover style
+        item.enterEvent(_make_enter_event(item))
+        hover_style = item.styleSheet()
+
+        # Get selection style
+        item.leaveEvent(QEvent(QEvent.Type.Leave))
+        item.selected = True
+        selected_style = item.styleSheet()
+
+        assert hover_style != selected_style
+        # Hover uses lighter blue
+        assert "#f5f9ff" in hover_style
+        # Selection uses stronger blue
+        assert "#e3f2fd" in selected_style
+
+    def test_selected_and_hovered_has_distinct_style(
+        self, qtbot, sample_video, prop_types
+    ):
+        """Selected + hovered combines into a third distinct style."""
+        item = self._make_item(qtbot, sample_video, prop_types)
+        item.selected = True
+        item.enterEvent(_make_enter_event(item))
+        style = item.styleSheet()
+        # Selected+hover uses darker blue
+        assert "#d0e8fc" in style
+
+    def test_context_menu_preserves_hover(self, qtbot, sample_video, prop_types):
+        """Hover stays active during context menu (leaveEvent is ignored)."""
+        item = self._make_item(qtbot, sample_video, prop_types)
+
+        # Simulate hover
+        item.enterEvent(_make_enter_event(item))
+        assert item._hovered
+
+        # Simulate context menu opening: set flag and fire leaveEvent
+        item._context_menu_open = True
+        item.leaveEvent(QEvent(QEvent.Type.Leave))
+
+        # Hover should be preserved
+        assert item._hovered
+
+        item._context_menu_open = False
+
+    def test_context_menu_clears_hover_when_cursor_leaves(
+        self, qtbot, sample_video, prop_types
+    ):
+        """After context menu closes, hover clears if cursor is outside."""
+        from unittest.mock import patch
+
+        from PySide6.QtGui import QCursor
+
+        item = self._make_item(qtbot, sample_video, prop_types)
+        item.enterEvent(_make_enter_event(item))
+        assert item._hovered
+
+        # Intercept the signal to avoid needing a real context menu
+        signals = []
+        item.context_menu_requested.connect(lambda *args: signals.append(args))
+
+        # Simulate cursor far outside the widget
+        far_away = item.mapToGlobal(QPoint(-1000, -1000))
+        with patch.object(QCursor, "pos", return_value=far_away):
+            from PySide6.QtGui import QContextMenuEvent
+
+            event = QContextMenuEvent(
+                QContextMenuEvent.Reason.Mouse,
+                QPoint(10, 10),
+                item.mapToGlobal(QPoint(10, 10)),
+            )
+            item.contextMenuEvent(event)
+
+        # Hover should be cleared
+        assert not item._hovered
+        assert "#ffffff" in item.styleSheet()
+
+    def test_context_menu_keeps_hover_when_cursor_stays(
+        self, qtbot, sample_video, prop_types
+    ):
+        """After context menu closes, hover stays if cursor is still over widget."""
+        from unittest.mock import patch
+
+        from PySide6.QtGui import QCursor
+
+        item = self._make_item(qtbot, sample_video, prop_types)
+        item.enterEvent(_make_enter_event(item))
+
+        signals = []
+        item.context_menu_requested.connect(lambda *args: signals.append(args))
+
+        # Simulate cursor still over the widget center
+        center = item.mapToGlobal(QPoint(item.width() // 2, item.height() // 2))
+        with patch.object(QCursor, "pos", return_value=center):
+            from PySide6.QtGui import QContextMenuEvent
+
+            event = QContextMenuEvent(
+                QContextMenuEvent.Reason.Mouse,
+                QPoint(10, 10),
+                item.mapToGlobal(QPoint(10, 10)),
+            )
+            item.contextMenuEvent(event)
+
+        assert item._hovered
+        assert "#f5f9ff" in item.styleSheet()
+
+    def test_not_found_video_hover_style(self, qtbot, sample_video_data, prop_types):
+        """Not-found videos have distinct hover color (orange, not blue)."""
+        from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
+
+        sample_video_data["found"] = False
+        video = MockVideoPattern(sample_video_data)
+
+        item = VideoListItem(video, prop_types)
+        qtbot.addWidget(item)
+        item.resize(400, 120)
+
+        item.enterEvent(_make_enter_event(item))
+        style = item.styleSheet()
+        # Not-found hover: orange
+        assert "#ffecb3" in style
