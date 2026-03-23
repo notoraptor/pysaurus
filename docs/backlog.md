@@ -122,31 +122,26 @@ Ajouter la négation des modes de recherche existants :
 
 ### Recherche par expression
 
-Mini-langage de requête pour des recherches avancées. Exemples :
+Mini-langage de requête typé pour des recherches avancées. Exemples :
 ```
-bit_rate > 5000000
-length_seconds < 60
-audio_bitrate > 200kbps and `category` == "this category"
+size > 1.5gi and extension in {".mp4", ".mkv"}
+length > 5min30s and "eng" in audio_languages
+date > 2024-03-15 and watched is False
+audio_bit_rate > 128k and width > height
 ```
 
-**Syntaxe envisagée** :
-- Nom classique (ex. `audio_bitrate`) pour les attributs vidéo
-- Nom entre accents graves (ex. `` `category` ``) pour les propriétés custom
-- Expressions purement booléennes : `and`, `or`, `xor`, `not`, parenthèses
-- Types : str, bool, int, float
-- Comparaisons : `==`, `!=`, `<`, `>`, `<=`, `>=`
-- Opérateurs spéciaux : `is` (booléens), `in` (appartenance à set/liste)
-- Syntaxes de valeurs spéciales :
-  - Bit rates : `203.4kbps` (converti en bps × 1024)
-  - Dates : `2023-02-05` (jour), `2025-01-01-23:55` (minute), `2025-01-01-23:55:05` (seconde)
-  - Durées : `2min12s` ou nombre brut en secondes
+**Conception terminée** — voir `docs/searchexp.design.md` (décisions,
+architecture) et `docs/searchexp.spec.md` (grammaire EBNF, règles de typage).
+
+**Résumé** : parser générique (indépendant de Pysaurus) → IR en dataclasses
+→ backend évaluateur. Littéraux : dates (6 précisions, ISO 8601), durées
+(`d`/`h`/`min`/`s`/`u`), multiplicateurs numériques (base 1000/1024).
+Opérateurs : `and`/`or`/`xor`/`not`, comparaisons, `is`, `in`/`not in`,
+`len()`. Propriétés custom via backticks. V1 : évaluation Python.
 
 **Questions ouvertes** :
-- Code distinct ou intégré aux options de recherche actuelle ?
-- Quelle optimisation SQL ? (traduction en WHERE clause vs évaluation Python)
-
-**Note** : la "recherche conditionnelle" (comparaisons simples dans `VideoFieldQueryParser`)
-pourrait être une première étape avant le langage complet.
+- Intégration UI (nouveau mode dans le filtre Search ? champ séparé ?)
+- Code existant `VideoFieldQueryParser` à examiner
 
 ### Plugins en menu contextuel vidéo
 
