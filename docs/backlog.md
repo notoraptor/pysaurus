@@ -44,7 +44,7 @@ ton bleu. Les deux doivent être visuellement distinctes.
 
 ---
 
-## P2 — Améliorations UX (PySide6)
+## P2 — Améliorations UX (PySide6) ✅
 
 ### Auto-continue après ouverture rapide de la base ✅
 
