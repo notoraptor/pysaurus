@@ -2,7 +2,7 @@
 Videos page for browsing and managing videos.
 """
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
@@ -102,6 +102,7 @@ class VideosPage(QWidget):
         )
         self._view_count: int = 0  # Total videos in current view (for selector size)
         self._search_mode: str = "and"  # Current search mode
+        self._active_search_text: str = ""  # Text of the currently active search
         self._setup_ui()
         self._setup_shortcuts()
 
@@ -561,6 +562,8 @@ class VideosPage(QWidget):
         self.search_input.setPlaceholderText("Search... (Ctrl+F)")
         self.search_input.setToolTip("Search videos (Ctrl+F)")
         self.search_input.returnPressed.connect(self._on_search)
+        self.search_input.textChanged.connect(self._on_search_text_changed)
+        self.search_input.installEventFilter(self)
         search_layout.addWidget(self.search_input)
 
         # First row: AND, OR buttons
@@ -1130,13 +1133,16 @@ class VideosPage(QWidget):
     def _update_search_display(self, search):
         """Update the search mode indicator."""
         if not search or not search.text:
+            self._active_search_text = ""
             self.btn_search_clear.setEnabled(False)
             if self.search_input.text():
                 self.search_input.clear()
             self._highlight_search_mode(None)
+            self._update_search_input_color()
             return
 
         self._search_mode = search.cond
+        self._active_search_text = search.text
 
         # Update search input if it doesn't match
         if self.search_input.text() != search.text:
@@ -1144,6 +1150,27 @@ class VideosPage(QWidget):
 
         self.btn_search_clear.setEnabled(True)
         self._highlight_search_mode(search.cond)
+        self._update_search_input_color()
+
+    def _on_search_text_changed(self):
+        """Update search input color when text changes."""
+        self._update_search_input_color()
+
+    def _update_search_input_color(self):
+        """Color search input blue when text matches the active search."""
+        if (
+            self._active_search_text
+            and self.search_input.text().strip() == self._active_search_text
+        ):
+            self.search_input.setStyleSheet("QLineEdit { color: #0055cc; }")
+        else:
+            self.search_input.setStyleSheet("")
+
+    def eventFilter(self, obj, event):
+        if obj is self.search_input and event.type() == QEvent.FocusOut:
+            if self._active_search_text:
+                self.search_input.setText(self._active_search_text)
+        return super().eventFilter(obj, event)
 
     def _highlight_search_mode(self, cond):
         """Bold the active search mode button, unbold the others."""
