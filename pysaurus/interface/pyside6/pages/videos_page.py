@@ -877,6 +877,9 @@ class VideosPage(QWidget):
             f"{context.selection_duration}"
         )
 
+        # Sync page_number from clamped result (safety net)
+        self.page_number = context.page_number
+
         # Update pagination
         nb_pages = max(1, context.nb_pages)
         self._total_pages = nb_pages
@@ -1303,8 +1306,8 @@ class VideosPage(QWidget):
 
     def _on_property_value_clicked(self, prop_name: str, value):
         """Handle property value click - focus on this property value."""
-        self.ctx.classifier_focus_prop_val(prop_name, value)
         self.page_number = 0
+        self.ctx.classifier_focus_prop_val(prop_name, value)
 
     def _on_video_double_clicked(self, video_id: int):
         """Handle video card double-click (open video)."""
@@ -1865,8 +1868,8 @@ class VideosPage(QWidget):
         dialog = SourcesDialog(current_sources, self)
         if dialog.exec():
             sources = dialog.get_sources()
-            self.ctx.set_sources(sources)
             self.page_number = 0
+            self.ctx.set_sources(sources)
 
     def _on_set_grouping(self):
         """Handle set grouping button."""
@@ -1888,6 +1891,7 @@ class VideosPage(QWidget):
         dialog = GroupingDialog(prop_types, current_grouping, self)
         if dialog.exec():
             grouping = dialog.get_grouping()
+            self.page_number = 0
             if grouping is None:
                 # Clear grouping
                 self.ctx.clear_groups()
@@ -1899,7 +1903,6 @@ class VideosPage(QWidget):
                     reverse=grouping["reverse"],
                     allow_singletons=grouping["allow_singletons"],
                 )
-            self.page_number = 0
 
     def _on_search_and(self):
         self._do_search("and")
@@ -1921,30 +1924,30 @@ class VideosPage(QWidget):
         """Perform search with given mode."""
         query = self.search_input.text().strip()
         if query:
-            self.ctx.set_search(query, mode)
             self.page_number = 0
+            self.ctx.set_search(query, mode)
 
     def _clear_search(self):
         """Clear the search."""
         self.search_input.clear()
         self._search_mode = "and"
-        self.ctx.set_search("", "and")
         self.page_number = 0
+        self.ctx.set_search("", "and")
 
     def _clear_sources(self):
         """Reset sources to default."""
-        self.ctx.set_sources(None)
         self.page_number = 0
+        self.ctx.set_sources(None)
 
     def _clear_grouping(self):
         """Remove grouping."""
-        self.ctx.clear_groups()
         self.page_number = 0
+        self.ctx.clear_groups()
 
     def _clear_sorting(self):
         """Reset sorting to default."""
-        self.ctx.set_sorting(None)
         self.page_number = 0
+        self.ctx.set_sorting(None)
 
     def _on_set_sorting(self):
         """Handle set sorting button."""
@@ -1963,8 +1966,8 @@ class VideosPage(QWidget):
                 f"-{field}" if reverse else f"+{field}"
                 for field, reverse in sorting_tuples
             ]
-            self.ctx.set_sorting(sorting_strings)
             self.page_number = 0
+            self.ctx.set_sorting(sorting_strings)
 
     def _on_random_video(self):
         """Open a random video and configure search to show it."""
@@ -2024,14 +2027,14 @@ class VideosPage(QWidget):
     def _on_classifier_add_group(self):
         """Add the current group to the classifier path."""
         if self._current_group_index >= 0:
-            self.ctx.classifier_select_group(self._current_group_index)
             self.page_number = 0
+            self.ctx.classifier_select_group(self._current_group_index)
 
     def _on_classifier_unstack(self):
         """Remove the last value from the classifier path."""
         if self._classifier_path:
-            self.ctx.classifier_back()
             self.page_number = 0
+            self.ctx.classifier_back()
 
     def _on_classifier_reverse(self):
         """Reverse the classifier path order."""
@@ -2108,8 +2111,8 @@ class VideosPage(QWidget):
         if not self._group_stats or index < 0 or index >= len(self._group_stats):
             return
 
-        self.ctx.set_group(index)
         self.page_number = 0
+        self.ctx.set_group(index)
         self._reset_scroll_to_top()
 
     def _on_go_to_page(self):
