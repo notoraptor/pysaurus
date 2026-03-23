@@ -82,11 +82,12 @@ Labels de section au-dessus des champs, fond alterné, focus + gras au clic,
 scroll protégé (combo/spinbox), boutons Reset/Clear complets, feedback couleur
 (bleu = modifié, italique = défaut).
 
-### Panneau de groupes paginé (au lieu du dropdown)
+### Panneau de groupes paginé (au lieu du dropdown) ✅
 
-Actuellement les groupes sont dans un dropdown au-dessus de la vue vidéos.
-Afficher plutôt un panneau paginé (comme l'ancienne interface React) en dessous
-des filtres, montrant les noms et comptes de plusieurs groupes à la fois.
+Dropdown supprimé. Panneau scrollable (QListWidget) en bas de la sidebar avec
+navigation (<<, <, X/Y, >, >>), lignes alternées, sélection en surbrillance.
+Group bar au-dessus des vidéos supprimée, bouton classifier déplacé dans le
+header du panneau. Filtre Grouping compacté en 2 lignes.
 
 ### Compacter les filtres ✅
 

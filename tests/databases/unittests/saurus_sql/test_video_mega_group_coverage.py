@@ -287,6 +287,18 @@ class TestVideoMegaGroupEdgeCases:
             indices_with_null = self._query_ids(db, view)
             assert len(indices_with_null) >= 0
 
+    def test_grouping_by_multi_column_field_with_length_sorting(self, saurus_database):
+        """Test grouping by multi-column fields with LENGTH sorting.
+
+        Fields like size_length and move_id have multiple SQL columns.
+        Previously raised ValueError; now handled via CONCAT in SQL.
+        """
+        for field in ("size_length", "move_id"):
+            view = ViewContext()
+            view.set_grouping(field, allow_singletons=True, sorting="length")
+            stats = self._query_stats(saurus_database, view)
+            assert len(stats) > 0
+
     def test_search_with_text_query(self, saurus_database):
         """Test search with text query (not by ID)."""
         view = ViewContext()

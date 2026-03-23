@@ -5,6 +5,7 @@ Videos page for browsing and managing videos.
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QComboBox,
     QDialog,
@@ -14,11 +15,11 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
     QLineEdit,
+    QListWidget,
     QMenu,
     QMessageBox,
     QPushButton,
     QScrollArea,
-    QSizePolicy,
     QSplitter,
     QStackedWidget,
     QVBoxLayout,
@@ -399,7 +400,7 @@ class VideosPage(QWidget):
 
         sidebar = QFrame()
         sidebar.setFrameStyle(QFrame.Shape.StyledPanel)
-        sidebar.setMaximumWidth(180)
+        sidebar.setMaximumWidth(200)
         # Compact button style for sidebar (font size set via QFont below)
         sidebar.setStyleSheet("""
             QPushButton {
@@ -426,6 +427,15 @@ class VideosPage(QWidget):
             }
             QPushButton#settingsBtn:hover {
                 background-color: #1565c0;
+            }
+            QPushButton#classifierBtn {
+                background-color: #4CAF50;
+                color: white;
+                font-weight: bold;
+                padding: 2px 4px;
+            }
+            QPushButton#classifierBtn:hover {
+                background-color: #45a049;
             }
         """)
         layout = QVBoxLayout(sidebar)
@@ -668,7 +678,93 @@ class VideosPage(QWidget):
         selection_layout.addLayout(selection_row)
         layout.addWidget(selection_section)
 
-        layout.addStretch()
+        # Groups panel (visible only when grouping is active)
+        self.groups_panel = QWidget()
+        groups_panel_layout = QVBoxLayout(self.groups_panel)
+        groups_panel_layout.setContentsMargins(4, 4, 4, 0)
+        groups_panel_layout.setSpacing(2)
+
+        # Title with classifier button
+        groups_header = QHBoxLayout()
+        groups_header.setSpacing(2)
+        groups_title = QLabel("Groups")
+        groups_title.setStyleSheet("font-weight: bold; background: transparent;")
+        groups_header.addWidget(groups_title)
+        groups_header.addStretch()
+
+        self.btn_add_to_classifier = QPushButton("✙")
+        self.btn_add_to_classifier.setObjectName("classifierBtn")
+        self.btn_add_to_classifier.setFixedWidth(28)
+        self.btn_add_to_classifier.setToolTip("Add current group to classifier path")
+        self.btn_add_to_classifier.clicked.connect(self._on_classifier_add_group)
+        self.btn_add_to_classifier.setVisible(False)
+        groups_header.addWidget(self.btn_add_to_classifier)
+
+        groups_panel_layout.addLayout(groups_header)
+
+        # Navigation: << < X/Y > >>
+        nav_btn_style = (
+            "QPushButton { font-weight: bold; }"
+            "QPushButton:hover { background-color: #1976d2; color: white; }"
+        )
+        groups_nav = QHBoxLayout()
+        groups_nav.setContentsMargins(0, 0, 0, 0)
+        groups_nav.setSpacing(2)
+
+        self.btn_first_group = QPushButton("<<")
+        self.btn_first_group.setFixedWidth(28)
+        self.btn_first_group.setToolTip("First group")
+        self.btn_first_group.setStyleSheet(nav_btn_style)
+        self.btn_first_group.clicked.connect(self._go_first_group)
+        groups_nav.addWidget(self.btn_first_group)
+
+        self.btn_prev_group = QPushButton("<")
+        self.btn_prev_group.setFixedWidth(28)
+        self.btn_prev_group.setToolTip("Previous group (Up arrow)")
+        self.btn_prev_group.setStyleSheet(nav_btn_style)
+        self.btn_prev_group.clicked.connect(self._go_prev_group)
+        groups_nav.addWidget(self.btn_prev_group)
+
+        self.group_count_label = QLabel("0/0")
+        self.group_count_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        groups_nav.addWidget(self.group_count_label, 1)
+
+        self.btn_next_group = QPushButton(">")
+        self.btn_next_group.setFixedWidth(28)
+        self.btn_next_group.setToolTip("Next group (Down arrow)")
+        self.btn_next_group.setStyleSheet(nav_btn_style)
+        self.btn_next_group.clicked.connect(self._go_next_group)
+        groups_nav.addWidget(self.btn_next_group)
+
+        self.btn_last_group = QPushButton(">>")
+        self.btn_last_group.setFixedWidth(28)
+        self.btn_last_group.setToolTip("Last group")
+        self.btn_last_group.setStyleSheet(nav_btn_style)
+        self.btn_last_group.clicked.connect(self._go_last_group)
+        groups_nav.addWidget(self.btn_last_group)
+
+        groups_panel_layout.addLayout(groups_nav)
+
+        self.groups_list = QListWidget()
+        self.groups_list.setAlternatingRowColors(True)
+        self.groups_list.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.groups_list.setTextElideMode(Qt.TextElideMode.ElideRight)
+        self.groups_list.setSelectionMode(
+            QAbstractItemView.SelectionMode.SingleSelection
+        )
+        self.groups_list.setStyleSheet(
+            "QListWidget::item:selected { color: white; }"
+        )
+        self.groups_list.currentRowChanged.connect(self._on_group_list_selected)
+        groups_panel_layout.addWidget(self.groups_list)
+
+        self.groups_panel.setVisible(False)
+        layout.addWidget(self.groups_panel, 1)
+
+        self._sidebar_stretch = layout.addStretch()
+        self._sidebar_layout = layout
 
         # Apply reduced font size to all buttons in sidebar
         for btn in sidebar.findChildren(QPushButton):
@@ -684,11 +780,6 @@ class VideosPage(QWidget):
         layout = QVBoxLayout(content)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-
-        # Group navigation bar (hidden by default)
-        self.group_bar = self._create_group_bar()
-        self.group_bar.setVisible(False)
-        layout.addWidget(self.group_bar)
 
         # Stacked widget for grid/list views
         self.view_stack = QStackedWidget()
@@ -734,77 +825,6 @@ class VideosPage(QWidget):
         layout.addWidget(self.stats_label)
 
         return content
-
-    def _create_group_bar(self) -> QWidget:
-        """Create the group navigation bar."""
-        bar = QFrame()
-        bar.setFrameStyle(QFrame.Shape.StyledPanel)
-        bar.setStyleSheet("QFrame { background-color: #f0f0f0; border-radius: 4px; }")
-        layout = QHBoxLayout(bar)
-        layout.setContentsMargins(8, 4, 8, 4)
-
-        # Group label
-        self.group_field_label = QLabel("Group:")
-        self.group_field_label.setStyleSheet("font-weight: bold;")
-        layout.addWidget(self.group_field_label)
-
-        # First group button
-        self.btn_first_group = QPushButton("<<")
-        self.btn_first_group.setFixedWidth(30)
-        self.btn_first_group.setToolTip("First group")
-        self.btn_first_group.clicked.connect(self._go_first_group)
-        layout.addWidget(self.btn_first_group)
-
-        # Previous group button
-        self.btn_prev_group = QPushButton("<")
-        self.btn_prev_group.setFixedWidth(30)
-        self.btn_prev_group.setToolTip("Previous group (Up arrow)")
-        self.btn_prev_group.clicked.connect(self._go_prev_group)
-        layout.addWidget(self.btn_prev_group)
-
-        # Group selector dropdown
-        self.group_combo = QComboBox()
-        self.group_combo.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
-        self.group_combo.setMinimumWidth(200)
-        self.group_combo.currentIndexChanged.connect(self._on_group_selected)
-        layout.addWidget(self.group_combo)
-
-        # Next group button
-        self.btn_next_group = QPushButton(">")
-        self.btn_next_group.setFixedWidth(30)
-        self.btn_next_group.setToolTip("Next group (Down arrow)")
-        self.btn_next_group.clicked.connect(self._go_next_group)
-        layout.addWidget(self.btn_next_group)
-
-        # Last group button
-        self.btn_last_group = QPushButton(">>")
-        self.btn_last_group.setFixedWidth(30)
-        self.btn_last_group.setToolTip("Last group")
-        self.btn_last_group.clicked.connect(self._go_last_group)
-        layout.addWidget(self.btn_last_group)
-
-        # Group count label
-        self.group_count_label = QLabel("0/0")
-        self.group_count_label.setMinimumWidth(60)
-        self.group_count_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.group_count_label)
-
-        # Add to classifier button (only visible for multiple properties)
-        self.btn_add_to_classifier = QPushButton("+")
-        self.btn_add_to_classifier.setFixedWidth(30)
-        self.btn_add_to_classifier.setToolTip("Add current group to classifier path")
-        self.btn_add_to_classifier.setStyleSheet(
-            "QPushButton { background-color: #4CAF50; color: white; "
-            "font-weight: bold; font-size: 14px; }"
-            "QPushButton:hover { background-color: #45a049; }"
-        )
-        self.btn_add_to_classifier.clicked.connect(self._on_classifier_add_group)
-        self.btn_add_to_classifier.setVisible(False)
-        layout.addWidget(self.btn_add_to_classifier)
-
-        return bar
 
     def _create_bottom_bar(self) -> QWidget:
         """Create the bottom bar with pagination."""
@@ -931,7 +951,7 @@ class VideosPage(QWidget):
             self._file_title_diffs = {}
             self.grouping_info.setText("No grouping")
             self.btn_grouping_clear.setEnabled(False)
-            self.group_bar.setVisible(False)
+            self._hide_groups_panel()
             self._group_stats = []
             self._current_group_index = -1
             self._grouped_by_moves = False
@@ -947,20 +967,16 @@ class VideosPage(QWidget):
         self._display_videos(context.result)
 
     def _update_group_bar(self, context: VideoSearchContext):
-        """Update the group navigation bar."""
+        """Update the groups panel in the sidebar."""
         self._group_stats = context.classifier_stats or []
 
         if not self._group_stats:
-            self.group_bar.setVisible(False)
+            self._hide_groups_panel()
             self._current_group_index = -1
             return
 
-        # Show the group bar
-        self.group_bar.setVisible(True)
-
-        # Update field label
-        field_name = context.grouping.field if context.grouping else "Group"
-        self.group_field_label.setText(f"{field_name}:")
+        # Show groups panel
+        self._show_groups_panel()
 
         # Get current group index (group_id is the index)
         if context.group_id is not None and 0 <= context.group_id < len(
@@ -970,19 +986,18 @@ class VideosPage(QWidget):
         else:
             self._current_group_index = 0 if self._group_stats else -1
 
-        # Populate combo box (block signals during update)
-        self.group_combo.blockSignals(True)
-        self.group_combo.clear()
+        # Populate groups list (block signals during update)
+        self.groups_list.blockSignals(True)
+        self.groups_list.clear()
         group_field = context.grouping.field if context.grouping else ""
         for stat in self._group_stats:
-            # Format: "value (count)"
             value_str = format_group_value(group_field, stat.value)
-            self.group_combo.addItem(f"{value_str} ({stat.count})", stat.value)
+            self.groups_list.addItem(f"{value_str} ({stat.count})")
         if self._current_group_index >= 0:
-            self.group_combo.setCurrentIndex(self._current_group_index)
-        self.group_combo.blockSignals(False)
+            self.groups_list.setCurrentRow(self._current_group_index)
+        self.groups_list.blockSignals(False)
 
-        # Update count label
+        # Update count label in sidebar panel header
         total_groups = len(self._group_stats)
         current_num = (
             self._current_group_index + 1 if self._current_group_index >= 0 else 0
@@ -1000,6 +1015,20 @@ class VideosPage(QWidget):
             self._current_group_index >= 0
             and self._current_group_index < total_groups - 1
         )
+
+    def _show_groups_panel(self):
+        """Show the groups panel and remove the sidebar stretch."""
+        if not self.groups_panel.isVisible():
+            self._sidebar_layout.removeItem(
+                self._sidebar_layout.itemAt(self._sidebar_layout.count() - 1)
+            )
+            self.groups_panel.setVisible(True)
+
+    def _hide_groups_panel(self):
+        """Hide the groups panel and restore the sidebar stretch."""
+        if self.groups_panel.isVisible():
+            self.groups_panel.setVisible(False)
+            self._sidebar_layout.addStretch()
 
     def _update_classifier_path(self, context: VideoSearchContext):
         """Update the classifier path display."""
@@ -1193,31 +1222,25 @@ class VideosPage(QWidget):
             self.btn_grouping_clear.setEnabled(False)
             return
 
-        # Build info lines
-        lines = []
-
-        # Field name (with property indicator)
+        # Line 1: compact title — "field" (#) ▼
         field_name = grouping.field.replace("_", " ").title()
         if grouping.is_property:
-            lines.append(f"Field: {field_name} (property)")
+            title = f'"{field_name}"'
         else:
-            lines.append(f"Field: {field_name}")
+            title = field_name
+        if grouping.sorting == "count":
+            title += " (#)"
+        elif grouping.sorting == "length":
+            title = f"|| {title} ||"
+        title += " \u25bc" if grouping.reverse else " \u25b2"
 
-        # Number of groups
+        # Line 2: group count + singletons
         nb_groups = len(context.classifier_stats) if context.classifier_stats else 0
-        lines.append(f"Groups: {nb_groups}")
-
-        # Sorting info
-        sort_labels = {"field": "by value", "count": "by count", "length": "by length"}
-        sort_text = sort_labels.get(grouping.sorting, grouping.sorting)
-        order = "desc" if grouping.reverse else "asc"
-        lines.append(f"Sort: {sort_text} ({order})")
-
-        # Singletons
+        count_line = f"{nb_groups} groups"
         if not grouping.allow_singletons:
-            lines.append("(no singletons)")
+            count_line += " (# > 1)"
 
-        self.grouping_info.setText("\n".join(lines))
+        self.grouping_info.setText(f"{title}\n{count_line}")
         self.btn_grouping_clear.setEnabled(True)
 
         # Update grouped_by_moves flag and show/hide the confirm button
@@ -2128,10 +2151,10 @@ class VideosPage(QWidget):
             if self._current_group_index != last_index:
                 self._select_group(last_index)
 
-    def _on_group_selected(self, index: int):
-        """Handle group selection from combo box."""
-        if index >= 0 and index != self._current_group_index:
-            self._select_group(index)
+    def _on_group_list_selected(self, row: int):
+        """Handle group selection from sidebar list."""
+        if row >= 0 and row != self._current_group_index:
+            self._select_group(row)
 
     def _select_group(self, index: int):
         """Select a group by index."""

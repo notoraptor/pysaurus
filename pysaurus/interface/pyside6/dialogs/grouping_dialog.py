@@ -25,7 +25,7 @@ class GroupingDialog(QDialog):
 
     Options:
     - Field to group by (video attribute or custom property)
-    - Sort order (by field value, by count, or by length)
+    - Sort order (by field value, by count, or by field value length)
     - Reverse order
     - Allow singletons (groups with only one video)
     """
@@ -73,7 +73,7 @@ class GroupingDialog(QDialog):
         self.sort_button_group = QButtonGroup(self)
         self.sort_field = QRadioButton("By field value")
         self.sort_count = QRadioButton("By video count")
-        self.sort_length = QRadioButton("By total length")
+        self.sort_length = QRadioButton("By field value length")
 
         self.sort_button_group.addButton(self.sort_field, 0)
         self.sort_button_group.addButton(self.sort_count, 1)

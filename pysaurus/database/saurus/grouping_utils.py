@@ -19,11 +19,8 @@ class SqlField:
         return ", ".join(self.definition)
 
     def get_length(self):
-        if len(self.definition) > 1:
-            raise ValueError(
-                f"Cannot get length of attribute with multiple columns: {self.name}"
-            )
-        return f"LENGTH(CONCAT({self.definition[0]}))"
+        args = ", ',', ".join(self.definition)
+        return f"LENGTH(CONCAT({args}))"
 
     def get_where(self) -> str:
         return " AND ".join(f"{column} = ?" for column in self.definition)
