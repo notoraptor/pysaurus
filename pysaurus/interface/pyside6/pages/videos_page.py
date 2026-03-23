@@ -754,9 +754,7 @@ class VideosPage(QWidget):
         self.groups_list.setSelectionMode(
             QAbstractItemView.SelectionMode.SingleSelection
         )
-        self.groups_list.setStyleSheet(
-            "QListWidget::item:selected { color: white; }"
-        )
+        self.groups_list.setStyleSheet("QListWidget::item:selected { color: white; }")
         self.groups_list.currentRowChanged.connect(self._on_group_list_selected)
         groups_panel_layout.addWidget(self.groups_list)
 
