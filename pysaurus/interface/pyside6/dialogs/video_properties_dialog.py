@@ -3,10 +3,11 @@ Dialog for viewing and editing video properties.
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeyEvent
+from PySide6.QtGui import QColor, QKeyEvent, QPalette, QWheelEvent
 
 from pysaurus.properties.properties import PropType
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -21,6 +22,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSpinBox,
+    QSplitter,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -41,6 +43,34 @@ class NonSubmittingLineEdit(QLineEdit):
             event.accept()
         else:
             super().keyPressEvent(event)
+
+
+class ScrollSafeComboBox(QComboBox):
+    """QComboBox that ignores wheel events unless it has focus."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+    def wheelEvent(self, event: QWheelEvent):
+        if self.hasFocus():
+            super().wheelEvent(event)
+        else:
+            event.ignore()
+
+
+class ScrollSafeSpinBox(QSpinBox):
+    """QSpinBox that ignores wheel events unless it has focus."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+    def wheelEvent(self, event: QWheelEvent):
+        if self.hasFocus():
+            super().wheelEvent(event)
+        else:
+            event.ignore()
 
 
 class MultipleValuesWidget(QWidget):
@@ -66,6 +96,7 @@ class MultipleValuesWidget(QWidget):
             for value in self.enumeration:
                 cb = QCheckBox(str(value))
                 cb.setProperty("enum_value", value)
+                cb.clicked.connect(self._update_enum_styles)
                 self.checkboxes[str(value)] = cb
                 layout.addWidget(cb)
 
@@ -158,6 +189,7 @@ class MultipleValuesWidget(QWidget):
             item.setData(Qt.ItemDataRole.UserRole, value)
             self.list_widget.addItem(item)
             self.input_edit.clear()
+            self._update_list_styles()
         except ValueError:
             pass  # Invalid input
 
@@ -168,18 +200,22 @@ class MultipleValuesWidget(QWidget):
         for item in selected:
             row = self.list_widget.row(item)
             self.list_widget.takeItem(row)
+        self._update_list_styles()
 
     def _reset_values(self):
         """Reset to initial values."""
         self._set_values_internal(self._initial_values)
+        self._update_styles()
 
     def _clear_values(self):
         """Clear all values."""
         if self.enumeration:
             for cb in self.checkboxes.values():
                 cb.setChecked(False)
+            self._update_enum_styles()
         else:
             self.list_widget.clear()
+            self._update_list_styles()
 
     def _set_values_internal(self, values: list):
         """Internal method to set values without updating initial values."""
@@ -211,6 +247,36 @@ class MultipleValuesWidget(QWidget):
         self._initial_values = list(values)
 
         self._set_values_internal(values)
+
+    def _update_styles(self):
+        """Update visual styles after any change."""
+        if self.enumeration:
+            self._update_enum_styles()
+        else:
+            self._update_list_styles()
+
+    def _update_enum_styles(self):
+        """Color checkboxes blue when their state differs from initial."""
+        initial_set = set(str(v) for v in self._initial_values)
+        for key, cb in self.checkboxes.items():
+            was_checked = key in initial_set
+            if cb.isChecked() != was_checked:
+                cb.setStyleSheet("QCheckBox { color: #0055cc; }")
+            else:
+                cb.setStyleSheet("")
+
+    def _update_list_styles(self):
+        """Color list items blue when they weren't in the initial values."""
+        initial_set = set(self._initial_values)
+        blue = QColor("#0055cc")
+        default = QColor()  # invalid = default color
+        for i in range(self.list_widget.count()):
+            item = self.list_widget.item(i)
+            value = item.data(Qt.ItemDataRole.UserRole)
+            if value not in initial_set:
+                item.setForeground(blue)
+            else:
+                item.setForeground(default)
 
     def get_values(self) -> list:
         """Get the current values."""
@@ -245,11 +311,14 @@ class VideoPropertiesDialog(QDialog):
         self.prop_types = prop_types
         self.ctx = ctx
         self._property_widgets: dict[str, QWidget] = {}
+        self._property_labels: dict[str, QLabel] = {}
         self._clear_buttons: dict[str, QPushButton] = {}
+        self._reset_buttons: dict[str, QPushButton] = {}
         self._initially_defined: dict[str, bool] = {}
         self._cleared: set[str] = set()
         self._user_modified: set[str] = set()
         self._loading = False
+        self._focused_prop: str | None = None
 
         self.setWindowTitle(f"Properties - {video.title}")
         self.setMinimumWidth(500)
@@ -257,6 +326,8 @@ class VideoPropertiesDialog(QDialog):
 
         self._setup_ui()
         self._load_properties()
+
+        QApplication.instance().focusChanged.connect(self._on_focus_changed)
 
     def _setup_ui(self):
         """Set up the UI."""
@@ -400,35 +471,69 @@ class VideoPropertiesDialog(QDialog):
 
     def _create_properties_tab(self) -> QWidget:
         """Create the properties tab with editable custom properties."""
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-
         if not self.prop_types:
+            widget = QWidget()
+            layout = QVBoxLayout(widget)
             layout.addWidget(QLabel("No custom properties defined."))
             layout.addStretch()
-            scroll.setWidget(widget)
-            return scroll
+            return widget
 
-        # Create a form for each property
-        form_layout = QFormLayout()
+        # Splitter: property list (left) + scrollable form (right)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
 
+        # Left: property name list (table of contents)
+        self._prop_list = QListWidget()
         for prop_type in self.prop_types:
+            self._prop_list.addItem(prop_type.name)
+        self._prop_list.currentRowChanged.connect(self._on_prop_list_selection)
+        splitter.addWidget(self._prop_list)
+
+        # Right: scrollable form with all properties
+        self._props_scroll = QScrollArea()
+        self._props_scroll.setWidgetResizable(True)
+
+        form_widget = QWidget()
+        form_layout = QVBoxLayout(form_widget)
+
+        self._property_sections: dict[str, QWidget] = {}
+
+        for i, prop_type in enumerate(self.prop_types):
             name = prop_type.name
 
-            # Create label with type info
+            # Section: label on top, widget below, alternating background
+            section = QWidget()
+            section.setAutoFillBackground(True)
+            if i % 2 == 1:
+                palette = section.palette()
+                base = palette.color(QPalette.ColorRole.Window)
+                palette.setColor(QPalette.ColorRole.Window, base.darker(107))
+                section.setPalette(palette)
+
+            section_layout = QVBoxLayout(section)
+            section_layout.setContentsMargins(8, 8, 8, 16)
+            section_layout.setSpacing(4)
+
+            # Label as section header
             label_text = name
+            detail_parts = []
             if prop_type.multiple:
-                label_text += " (multiple)"
+                detail_parts.append("multiple")
             if prop_type.enumeration:
-                label_text += " [enum]"
+                detail_parts.append("enum")
+            if detail_parts:
+                label_text += f"  ({', '.join(detail_parts)})"
+
+            label = QLabel(label_text)
+            font = label.font()
+            font.setPointSize(font.pointSize() + 2)
+            label.setFont(font)
+            self._property_labels[name] = label
+            section_layout.addWidget(label)
 
             if prop_type.multiple:
                 prop_widget = MultipleValuesWidget(prop_type)
                 self._property_widgets[name] = prop_widget
-                form_layout.addRow(f"{label_text}:", prop_widget)
+                section_layout.addWidget(prop_widget)
             else:
                 # Single property: input widget + Clear button
                 container = QWidget()
@@ -438,6 +543,15 @@ class VideoPropertiesDialog(QDialog):
 
                 input_widget = self._create_single_property_widget(prop_type)
                 h_layout.addWidget(input_widget, 1)
+
+                reset_btn = QPushButton("Reset")
+                reset_btn.setToolTip(f"Restore initial value of {name}")
+                reset_btn.setFixedWidth(50)
+                reset_btn.clicked.connect(
+                    lambda _checked, n=name: self._on_reset_property(n)
+                )
+                reset_btn.setVisible(False)
+                h_layout.addWidget(reset_btn)
 
                 clear_btn = QPushButton("Clear")
                 clear_btn.setToolTip(f"Remove {name} value from this video")
@@ -449,13 +563,64 @@ class VideoPropertiesDialog(QDialog):
                 h_layout.addWidget(clear_btn)
 
                 self._property_widgets[name] = input_widget
+                self._reset_buttons[name] = reset_btn
                 self._clear_buttons[name] = clear_btn
-                form_layout.addRow(f"{label_text}:", container)
+                section_layout.addWidget(container)
 
-        layout.addLayout(form_layout)
-        layout.addStretch()
-        scroll.setWidget(widget)
-        return scroll
+            form_layout.addWidget(section)
+            self._property_sections[name] = section
+
+        form_layout.addStretch()
+        self._props_scroll.setWidget(form_widget)
+        splitter.addWidget(self._props_scroll)
+
+        splitter.setSizes([150, 350])
+        return splitter
+
+    def _on_prop_list_selection(self, row: int):
+        """Scroll the properties form to the selected property and focus it."""
+        if row < 0 or row >= len(self.prop_types):
+            return
+        name = self.prop_types[row].name
+        section = self._property_sections.get(name)
+        if section:
+            self._props_scroll.ensureWidgetVisible(section)
+        widget = self._property_widgets.get(name)
+        if widget:
+            if isinstance(widget, MultipleValuesWidget):
+                if widget.enumeration:
+                    first_cb = next(iter(widget.checkboxes.values()), None)
+                    if first_cb:
+                        first_cb.setFocus()
+                else:
+                    widget.input_edit.setFocus()
+            else:
+                widget.setFocus()
+
+    def _on_focus_changed(self, _old, new):
+        """Bold the label of the property whose widget has focus."""
+        focused_prop = None
+        if new is not None:
+            for name, section in self._property_sections.items():
+                if new is section or section.isAncestorOf(new):
+                    focused_prop = name
+                    break
+        if focused_prop != self._focused_prop:
+            # Unbold previous
+            if self._focused_prop:
+                label = self._property_labels.get(self._focused_prop)
+                if label:
+                    font = label.font()
+                    font.setBold(False)
+                    label.setFont(font)
+            # Bold new
+            if focused_prop:
+                label = self._property_labels.get(focused_prop)
+                if label:
+                    font = label.font()
+                    font.setBold(True)
+                    label.setFont(font)
+            self._focused_prop = focused_prop
 
     def _create_single_property_widget(self, prop_type: PropType) -> QWidget:
         """Create input widget for a single-value property, with change signal."""
@@ -463,7 +628,7 @@ class VideoPropertiesDialog(QDialog):
         ptype = prop_type.type
 
         if prop_type.enumeration:
-            widget = QComboBox()
+            widget = ScrollSafeComboBox()
             for value in prop_type.enumeration:
                 widget.addItem(str(value), value)
             widget.activated.connect(lambda _idx, n=name: self._on_widget_changed(n))
@@ -474,7 +639,7 @@ class VideoPropertiesDialog(QDialog):
             widget.clicked.connect(lambda _checked, n=name: self._on_widget_changed(n))
             return widget
         if ptype == "int":
-            widget = QSpinBox()
+            widget = ScrollSafeSpinBox()
             widget.setRange(-999999999, 999999999)
             widget.valueChanged.connect(lambda _val, n=name: self._on_widget_changed(n))
             return widget
@@ -491,6 +656,33 @@ class VideoPropertiesDialog(QDialog):
             return
         self._user_modified.add(name)
         self._cleared.discard(name)
+        self._update_prop_style(name)
+
+    def _on_reset_property(self, name: str):
+        """Handle Reset button click: restore initial value."""
+        self._user_modified.discard(name)
+        self._cleared.discard(name)
+
+        prop_type = next(pt for pt in self.prop_types if pt.name == name)
+        widget = self._property_widgets[name]
+        initial = self._initial_widget_values.get(name)
+
+        self._loading = True
+        try:
+            if prop_type.enumeration:
+                index = widget.findData(initial) if initial is not None else 0
+                widget.setCurrentIndex(max(index, 0))
+            elif prop_type.type == "bool":
+                widget.setChecked(bool(initial) if initial is not None else False)
+            elif prop_type.type == "int":
+                widget.setValue(int(initial) if initial is not None else 0)
+            elif prop_type.type == "float":
+                widget.setText(str(initial) if initial is not None else "")
+            else:
+                widget.setText(str(initial) if initial is not None else "")
+        finally:
+            self._loading = False
+
         self._update_prop_style(name)
 
     def _on_clear_property(self, name: str):
@@ -523,7 +715,7 @@ class VideoPropertiesDialog(QDialog):
         self._update_prop_style(name)
 
     def _update_prop_style(self, name: str):
-        """Update italic style and Clear button visibility for a single property."""
+        """Update styling and button visibility for a single property."""
         widget = self._property_widgets.get(name)
         if not widget:
             return
@@ -537,6 +729,17 @@ class VideoPropertiesDialog(QDialog):
         font = widget.font()
         font.setItalic(use_italic)
         widget.setFont(font)
+
+        # Blue text when value differs from initial
+        if is_modified:
+            widget.setStyleSheet("color: #0055cc;")
+        else:
+            widget.setStyleSheet("")
+
+        # Reset button visible when value differs from initial
+        reset_btn = self._reset_buttons.get(name)
+        if reset_btn:
+            reset_btn.setVisible(is_modified or is_cleared)
 
         # Clear button visible when a value would be saved
         clear_btn = self._clear_buttons.get(name)

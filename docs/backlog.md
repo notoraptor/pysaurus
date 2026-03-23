@@ -75,13 +75,12 @@ sans passer par clic droit → "open".
 Quand plusieurs vidéos sont sélectionnées, proposer un bouton "toggle all watched"
 à côté des autres boutons de sélection.
 
-### Éditeur de propriétés en panneau split
+### Éditeur de propriétés en panneau split ✅
 
-Remplacer le défilement vertical de l'éditeur de propriétés par un panneau split :
-- À gauche : liste verticale des noms de propriétés (scrollable)
-- À droite : panneau d'édition de la propriété sélectionnée (scrollable)
-
-Chaque panneau est indépendamment scrollable.
+Panneau split avec table des matières à gauche et formulaire scrollable à droite.
+Labels de section au-dessus des champs, fond alterné, focus + gras au clic,
+scroll protégé (combo/spinbox), boutons Reset/Clear complets, feedback couleur
+(bleu = modifié, italique = défaut).
 
 ### Panneau de groupes paginé (au lieu du dropdown)
 
