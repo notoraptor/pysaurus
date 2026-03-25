@@ -31,6 +31,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "mypy>=1.19.1",
+    "poethepoet>=0.42.1",
     "pyfakefs>=5.10.2",
     "pytest>=8.4.1",
     "pytest-asyncio>=0.24.0",
@@ -67,3 +69,20 @@ exclude_also = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+# Make strict distinction between T and T | None
+strict_optional = true
+check_untyped_defs = true
+
+[tool.poe.tasks]
+format = "ruff format"
+lint = "ruff check --fix"
+typecheck = "mypy pysaurus/core/searchexp"
+check = ["format", "lint", "typecheck"]
