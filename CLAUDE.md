@@ -33,6 +33,12 @@ uv run pytest -n auto
 # Lint and format
 uv run ruff check .
 uv run ruff format .
+
+# Type check
+uv run mypy pysaurus/
+
+# Run all checks (format + lint + mypy)
+uv run poe check
 ```
 
 ### Web Frontend (React/Babel)
@@ -156,6 +162,15 @@ Lightweight web interface — server-side rendered, minimal JavaScript. Designed
 - **`BaseComponent`** (`src/BaseComponent.js`): base React component that auto-binds all methods and adds `setStateAsync()`
 - **`Backend`** static class (`src/utils/backend.js`): all Python API calls go through `python_call(name, ...args)` → `window.backend_call(name, args)`. `backend_call` is injected by the runtime (CEF = `window.python.call`, Qt = QWebChannel `backend.call`)
 - **Pages**: `DatabasesPage`, `HomePage`, `VideosPage`, `PropertiesPage`
+
+### Expression Search (`core/searchexp/`)
+
+Standalone parser for structured search expressions (e.g. `width > 1080 and "eng" in audio_languages`). Independent of Pysaurus — no references to `VideoPattern` or database internals.
+
+- **`ExpressionParser`** — receives `attributes` and/or `properties` dicts (`{name: FieldType}`), parses an expression string into an IR (AST)
+- **`fields_from_class()`** — helper to introspect a class's annotations into a `dict[str, FieldType]`
+- **IR nodes** — frozen dataclasses: `FieldRef`, `LiteralValue`, `Comparison`, `IsOp`, `InOp`, `LogicalOp`, `NotOp`, `FunctionCall`, `SetLiteral`
+- Design: `docs/searchexp.design.md` — Spec: `docs/searchexp.spec.md`
 
 ### Properties System
 
