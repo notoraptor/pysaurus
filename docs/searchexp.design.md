@@ -1,5 +1,9 @@
 # Recherche par expression
 
+**Implémentation** : `pysaurus/core/searchexp/` (parser, tokenizer, IR, helpers).
+Tests : `tests/unittests/test_searchexp.py`.
+Spécification formelle (grammaire EBNF) : `docs/searchexp.spec.md`.
+
 ## Bilan des valeurs manipulables
 
 ### 1. Types des propriétés custom (`PropType`)
@@ -352,13 +356,14 @@ Une propriété multi-valuée a le type `set[type_de_base]` :
 
 #### Expression vide
 
-Une expression vide ou constituée uniquement d'espaces n'est pas interprétée.
-Pas de recherche déclenchée.
+Une expression vide ou constituée uniquement d'espaces est rejetée par le
+parser (`ExpressionError`). C'est au code appelant de décider de ne pas
+déclencher de recherche quand l'expression est vide.
 
-#### `is not`
+#### ~~`is not`~~ (résolu)
 
-Supporté si facile à implémenter (sucre syntaxique pour `not (x is True)`).
-Sinon, rejeté — l'utilisateur utilise `is False` ou `not`.
+Supporté. `found is not True` est équivalent à `found is False`, et
+`found is not False` est équivalent à `found is True`.
 
 #### Priorité des opérateurs
 
@@ -402,19 +407,37 @@ ni le système de propriétés. Son vocabulaire :
 
 ##### Entrées du parser
 
-Le parser reçoit à l'initialisation :
+Le parser reçoit à l'initialisation deux dictionnaires `{nom: FieldType}` :
 
-1. **Définition des attributs** (obligatoire, au moins un des deux) :
-   - Une **classe** annotée → le parser introspecte les annotations pour
-     extraire les noms et types. Les types Python inconnus sont résolus
-     via un mapping de types fourni par le consommateur.
-   - Un **dictionnaire** `{nom: FieldType}` → le consommateur le construit
-     lui-même.
+1. **`attributes`** — attributs reconnus (noms nus). Optionnel.
+2. **`properties`** — propriétés custom (noms entre backticks). Optionnel.
 
-2. **Définition des propriétés** (optionnel) :
-   - Un **dictionnaire** `{nom: FieldType}`.
-   - Si absent, le parser accepte tout nom entre backticks sans validation
-     (mode lax).
+Au moins un des deux doit être fourni. Si les deux sont absents, le parser
+lève une `ValueError` car il ne pourrait reconnaître aucun champ. Il n'y a
+pas de mode lax : tout nom rencontré doit correspondre à un champ déclaré.
+
+Le parser ne reçoit jamais de classe Python — l'introspection est déléguée
+à la fonction helper `fields_from_class()`, qui produit un dict à partir
+d'une classe annotée.
+
+##### Helper `fields_from_class`
+
+Fonction utilitaire qui introspecte les annotations d'une classe et produit
+un `dict[str, FieldType]` consommable par le parser :
+
+```python
+fields_from_class(
+    cls,
+    *,
+    type_mapping={Date: FieldType.DATE, Duration: FieldType.DURATION, ...},
+    exclude={"duration", "file_size", "mtime", ...},
+) -> dict[str, FieldType]
+```
+
+- Les types Python standard (`bool`, `int`, `float`, `str`) sont mappés
+  automatiquement. `list[str]` est mappé en `FieldType.SET`.
+- Les types custom sont résolus via `type_mapping`.
+- Les attributs dans `exclude` sont omis du résultat.
 
 ##### Système de types interne
 
@@ -432,20 +455,6 @@ class FieldType(Enum):
     SET = "set"
 ```
 
-Pour l'introspection d'une classe, le consommateur fournit un mapping
-des types custom vers `FieldType` :
-
-```python
-type_mapping = {
-    Date: FieldType.DATE,
-    Duration: FieldType.DURATION,
-    FileSize: FieldType.FILESIZE,
-}
-```
-
-Les types Python standard (`bool`, `int`, `float`, `str`) sont mappés
-automatiquement. `list[str]` est mappé en `FieldType.SET`.
-
 ##### IR en sortie
 
 L'IR est une arborescence de **dataclasses** avec des types Python basiques
@@ -455,14 +464,15 @@ et des **enums**. Aucune référence à Pysaurus. Entièrement sérialisable
 Nœuds principaux :
 - `FieldRef(name, source: "attribute"|"property", field_type)` — référence
   à un champ
-- `Literal(value, field_type)` — valeur constante (convertie en valeur
+- `LiteralValue(value, field_type)` — valeur constante (convertie en valeur
   brute : date → timestamp float, durée → microsecondes int, etc.)
 - `Comparison(left, op, right)` — comparaison binaire
+- `IsOp(left, value: bool)` — opérateur `is` / `is not` (booléens uniquement)
+- `InOp(left, right, negated: bool)` — opérateur `in` / `not in`
 - `LogicalOp(left, op, right)` — opération logique (and, or, xor)
 - `NotOp(operand)` — négation
-- `FunctionCall(name, arg)` — appel de fonction (len)
+- `FunctionCall(name, arg, result_type)` — appel de fonction (len)
 - `SetLiteral(elements, element_type)` — ensemble littéral
-- `InOp(left, right)` — opérateur in/not in
 
 ##### Interprétation par Pysaurus
 
@@ -490,11 +500,12 @@ moteur d'évaluation.
 Comment ce mode de recherche s'intègre-t-il dans l'interface ?
 Nouveau mode dans le filtre Search existant ? Champ séparé ?
 
-#### ~~Stratégie d'évaluation~~ (partiellement résolu)
+#### ~~Stratégie d'évaluation~~ (résolu)
 
-V1 : évaluation Python sur les objets `VideoPattern` (simple, suffisant).
-Futur : traduction en clause SQL `WHERE` (optimisation si nécessaire).
-L'architecture parser → IR → backend rend les deux possibles.
+Le parser produit un IR (AST) indépendant de tout backend. Chaque backend
+implémente un évaluateur d'AST :
+- V1 : évaluation Python sur les objets `VideoPattern` (à implémenter).
+- Futur : traduction en clause SQL `WHERE` (optimisation si nécessaire).
 
 #### Code existant : `VideoFieldQueryParser`
 
@@ -510,8 +521,9 @@ d'expressions utilise `T` pour éviter l'ambiguïté au parsing.
 #### ~~Conversion interne des wrappers pour les comparaisons~~ (résolu)
 
 La conversion se fait **au parsing**. Les littéraux typés sont convertis en
-valeurs brutes et stockés dans le nœud `Literal` de l'IR :
-- `Date` → `float` (timestamp Unix)
+valeurs brutes et stockés dans le nœud `LiteralValue` de l'IR :
+- `Date` → `float` (timestamp Unix, heure locale pour cohérence avec
+  l'affichage `Date.__str__` qui utilise `datetime.fromtimestamp`)
 - `Duration` → `int` (microsecondes)
 - `FileSize` → `int` (octets bruts)
 - Nombre avec multiplicateur → `int` ou `float` (résultat de la multiplication)
