@@ -221,7 +221,9 @@ class VideoListItem(QFrame):
         video_codec_desc = self.video.video_codec_description or video_codec
         audio_codec = self.video.audio_codec or ""
         audio_codec_desc = self.video.audio_codec_description or audio_codec
-        bit_rate = str(self.video.bit_rate) if hasattr(self.video, "bit_rate") else ""
+        byte_rate = (
+            str(self.video.byte_rate) if hasattr(self.video, "byte_rate") else ""
+        )
 
         # Badge style: white text on dark background (using &nbsp; for padding since Qt ignores CSS padding)
         badge = "background-color: #333; color: white; font-weight: bold;"
@@ -236,15 +238,15 @@ class VideoListItem(QFrame):
         audio_codec_html = self._highlight_if_diff(
             "audio_codec", f'<span style="color: #666;">{audio_codec}</span>'
         )
-        bit_rate_html = self._highlight_if_diff(
-            "bit_rate", f"<b><i>{bit_rate}/s</i></b>"
+        byte_rate_html = self._highlight_if_diff(
+            "byte_rate", f"<b><i>{byte_rate}/s</i></b>"
         )
         format_line = (
             f"{ext_html} "
             f"{size_html} / {container_html} "
             f"({video_codec_html}, {audio_codec_html}) "
-            f'<span style="{badge}">&nbsp;Bit rate&nbsp;</span> '
-            f"{bit_rate_html}"
+            f'<span style="{badge}">&nbsp;Byte rate&nbsp;</span> '
+            f"{byte_rate_html}"
         )
         format_label = WrappingLabel(format_line)
         format_label.setTextFormat(Qt.TextFormat.RichText)
@@ -263,9 +265,7 @@ class VideoListItem(QFrame):
         sample_rate = self.video.sample_rate or 0
         audio_bits = self.video.audio_bits or 32
         channels = self.video.channels or 0
-        audio_bit_rate_kbps = (
-            round(self.video.audio_bit_rate / 1000) if self.video.audio_bit_rate else 0
-        )
+        audio_bit_rate_str = str(self.video.audio_bit_rate_formatted)
 
         duration_html = self._highlight_if_diff(
             "length", f'<b style="color: #0066cc;">{duration}</b>'
@@ -282,7 +282,7 @@ class VideoListItem(QFrame):
         audio_bits_html = self._highlight_if_diff("audio_bits", f"{audio_bits} bits")
         channels_html = self._highlight_if_diff("channels", f"{channels} ch")
         audio_bit_rate_html = self._highlight_if_diff(
-            "audio_bit_rate", f"{audio_bit_rate_kbps} Kb/s"
+            "audio_bit_rate", f"{audio_bit_rate_str}/s"
         )
 
         video_line = (

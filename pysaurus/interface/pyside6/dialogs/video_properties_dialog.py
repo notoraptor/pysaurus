@@ -4,8 +4,6 @@ Dialog for viewing and editing video properties.
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QKeyEvent, QPalette, QWheelEvent
-
-from pysaurus.properties.properties import PropType
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -30,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
+from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern
 
 
@@ -434,7 +433,7 @@ class VideoPropertiesDialog(QDialog):
         audio_layout.addRow(
             "Bit Rate:",
             QLabel(
-                f"{self.video.audio_bit_rate} bps"
+                f"{self.video.audio_bit_rate_formatted}/s"
                 if self.video.audio_bit_rate
                 else "N/A"
             ),

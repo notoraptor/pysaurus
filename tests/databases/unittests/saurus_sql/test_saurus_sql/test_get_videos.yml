@@ -1,11 +1,11 @@
 - audio_bit_rate: 0
-  audio_bit_rate_kbps: 0
+  audio_bit_rate_formatted: 0 b
   audio_bits: 0
   audio_codec: ''
   audio_codec_description: ''
   audio_languages: []
   bit_depth: 8
-  bit_rate: 59.47 KiB
+  byte_rate: 59.47 KiB
   channels: 0
   container_format: QuickTime / MOV
   date: '2023-09-26 19:22:54'
@@ -100,13 +100,13 @@
   without_thumbnails: false
   year: 2023
 - audio_bit_rate: 0
-  audio_bit_rate_kbps: 0
+  audio_bit_rate_formatted: 0 b
   audio_bits: 0
   audio_codec: ''
   audio_codec_description: ''
   audio_languages: []
   bit_depth: 8
-  bit_rate: 47.22 KiB
+  byte_rate: 47.22 KiB
   channels: 0
   container_format: QuickTime / MOV
   date: '2023-09-26 19:23:06'

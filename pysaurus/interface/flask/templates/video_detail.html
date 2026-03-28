@@ -35,7 +35,7 @@
     <table class="detail-table">
         <tr><th>Résolution</th><td>{{ video.width }}×{{ video.height }}</td></tr>
         <tr><th>Codec</th><td>{{ video.video_codec }}{% if video.video_codec_description %} <span class="text-muted">({{ video.video_codec_description }})</span>{% endif %}</td></tr>
-        <tr><th>Débit</th><td>{{ video.bit_rate }}</td></tr>
+        <tr><th>Débit</th><td>{{ video.byte_rate }}</td></tr>
         <tr><th>Images/s</th><td>{{ "%.2f"|format(video.frame_rate) }}</td></tr>
         {% if video.bit_depth %}
             <tr><th>Profondeur</th><td>{{ video.bit_depth }} bits</td></tr>
@@ -51,8 +51,8 @@
         {% if video.channels %}
             <tr><th>Canaux</th><td>{{ video.channels }}</td></tr>
         {% endif %}
-        {% if video.audio_bit_rate_kbps %}
-            <tr><th>Débit audio</th><td>{{ video.audio_bit_rate_kbps }} kbps</td></tr>
+        {% if video.audio_bit_rate %}
+            <tr><th>Débit audio</th><td>{{ video.audio_bit_rate_formatted }}/s</td></tr>
         {% endif %}
         {% if video.audio_bits %}
             <tr><th>Bits audio</th><td>{{ video.audio_bits }}</td></tr>

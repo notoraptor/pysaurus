@@ -1,6 +1,6 @@
 group_def:
   allow_singletons: false
-  field: bit_rate
+  field: byte_rate
   group_id: 0
   groups: []
   is_property: false

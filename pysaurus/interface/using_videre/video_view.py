@@ -81,7 +81,7 @@ class VideoView(videre.Container):
                     f"{video.extension.upper()} {video.size} / "
                     f"{video.container_format} /"
                     f" ({video.video_codec}, {video.audio_codec}) / "
-                    f"bite rate: {video.bit_rate}/s",
+                    f"byte rate: {video.byte_rate}/s",
                     wrap=videre.TextWrap.WORD,
                 ),
                 videre.Text(
@@ -90,7 +90,7 @@ class VideoView(videre.Container):
                     f"{video.bit_depth} bits | "
                     f"{video.sample_rate} Hz x {video.audio_bits or '32?'} bits "
                     f"({video.channels} channels), "
-                    f"{video.audio_bit_rate_kbps} Kb/s",
+                    f"{video.audio_bit_rate_formatted}/s",
                     wrap=videre.TextWrap.WORD,
                 ),
                 videre.Text(

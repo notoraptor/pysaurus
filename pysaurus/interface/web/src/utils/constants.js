@@ -90,7 +90,7 @@ export const FIELD_MAP = new FieldMap([
 	new FieldInfo("audio_bits", tr("audio bits per sample"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("audio_codec", tr("audio codec"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("audio_codec_description", tr("audio codec description"), GroupPermission.ALL, FieldType.str),
-	new FieldInfo("bit_rate", tr("bit rate"), GroupPermission.ONLY_MANY, FieldType.sortable),
+	new FieldInfo("byte_rate", tr("byte rate"), GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("bit_depth", tr("bit depth"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("container_format", tr("container format"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("date", tr("date modified"), GroupPermission.ONLY_MANY, FieldType.sortable),

@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TypedDict
 
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.bit_size import BitSize
 from pysaurus.core.classes import StringedTuple
 from pysaurus.core.datestring import Date
 from pysaurus.core.duration import Duration
@@ -250,7 +251,7 @@ class VideoPattern(ABC):
         return Date(self.mtime)
 
     @property
-    def bit_rate(self) -> FileSize:
+    def byte_rate(self) -> FileSize:
         return FileSize(
             self.file_size * self.duration_time_base / self.duration
             if self.duration
@@ -286,8 +287,8 @@ class VideoPattern(ABC):
         return self.meta_title or self.file_title
 
     @property
-    def audio_bit_rate_kbps(self) -> int:
-        return round(self.audio_bit_rate / 1000)
+    def audio_bit_rate_formatted(self) -> BitSize:
+        return BitSize(self.audio_bit_rate)
 
     @property
     def similarity(self) -> str:
@@ -357,7 +358,7 @@ class VideoPattern(ABC):
             "audio_codec_description": str(self.audio_codec_description),
             "audio_languages": self.audio_languages,
             "bit_depth": self.bit_depth,
-            "bit_rate": str(self.bit_rate),
+            "byte_rate": str(self.byte_rate),
             "channels": self.channels,
             "container_format": str(self.container_format),
             "date": str(self.date),

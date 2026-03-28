@@ -128,8 +128,8 @@ class MockVideoPattern:
         duration_time_base = d.get("duration_time_base", 1) or 1
         file_size = d.get("file_size", 0)
 
-        # Calculate bit_rate
-        bit_rate = FileSize(
+        # Calculate byte_rate
+        byte_rate = FileSize(
             file_size * duration_time_base / duration if duration else 0
         )
         length = Duration(duration * 1000000 / duration_time_base)
@@ -142,7 +142,7 @@ class MockVideoPattern:
             "audio_codec_description": str(d.get("audio_codec_description", "")),
             "audio_languages": d.get("audio_languages", []),
             "bit_depth": d.get("bit_depth", 0),
-            "bit_rate": str(bit_rate),
+            "byte_rate": str(byte_rate),
             "channels": d.get("channels", 0),
             "container_format": str(d.get("container_format", "")),
             "date": d.get("date_entry_modified", ""),

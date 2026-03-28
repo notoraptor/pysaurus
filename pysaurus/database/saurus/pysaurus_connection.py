@@ -29,7 +29,14 @@ class PysaurusConnection(Skullite):
         Must run before database.sql so that CREATE INDEX statements
         in the script can reference the new columns.
         """
-        migrations = ["ALTER TABLE video ADD COLUMN similarity_id_reencoded INTEGER"]
+        migrations = [
+            "ALTER TABLE video ADD COLUMN similarity_id_reencoded INTEGER",
+            # Rename virtual column bit_rate -> byte_rate
+            "ALTER TABLE video DROP COLUMN bit_rate",
+            "ALTER TABLE video ADD COLUMN byte_rate DOUBLE GENERATED ALWAYS AS"
+            " (IIF(duration = 0, 0, file_size *"
+            " COALESCE(NULLIF(duration_time_base, 0), 1) / duration)) VIRTUAL",
+        ]
         for sql in migrations:
             try:
                 with self.connect() as connection:

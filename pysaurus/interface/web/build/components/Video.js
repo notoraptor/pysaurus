@@ -168,9 +168,9 @@ System.register(["../BaseComponent.js", "../dialogs/Dialog.js", "../forms/FormVi
             className: cc(common.audio_codec)
           }, data.audio_codec), ")"), /*#__PURE__*/React.createElement("div", {
             className: "prepend"
-          }, /*#__PURE__*/React.createElement("code", null, "Bit rate")), /*#__PURE__*/React.createElement("div", {
-            className: cc(common.bit_rate)
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.bit_rate, "/s")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+          }, /*#__PURE__*/React.createElement("code", null, "Byte rate")), /*#__PURE__*/React.createElement("div", {
+            className: cc(common.byte_rate)
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.byte_rate, "/s")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             className: cc(common.length)
           }, data.length), " |", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.width)

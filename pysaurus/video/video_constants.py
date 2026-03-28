@@ -35,5 +35,5 @@ COMMON_FIELDS = (
     "width",
     "extension",
     "size",
-    "bit_rate",
+    "byte_rate",
 )

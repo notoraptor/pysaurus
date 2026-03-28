@@ -1,6 +1,7 @@
 from enum import IntEnum
 from typing import Any
 
+from pysaurus.core.bit_size import BitSize
 from pysaurus.dbview.view_tools import GroupDef
 
 
@@ -93,7 +94,7 @@ FIELD_MAP = FieldMap(
         FieldInfo("audio_bits", "audio bits per sample", GroupPerm.ALL, FieldType.INT),
         FieldInfo("audio_codec", "audio codec", GroupPerm.ALL, FieldType.STR),
         FieldInfo("audio_codec_description", None, GroupPerm.ALL, FieldType.STR),
-        FieldInfo("bit_rate", "bit rate", GroupPerm.ONLY_MANY, FieldType.SORTABLE),
+        FieldInfo("byte_rate", "byte rate", GroupPerm.ONLY_MANY, FieldType.SORTABLE),
         FieldInfo("bit_depth", "bit depth", GroupPerm.ALL, FieldType.INT),
         FieldInfo("container_format", None, GroupPerm.ALL, FieldType.STR),
         FieldInfo("date", "date modified", GroupPerm.ONLY_MANY, FieldType.SORTABLE),
@@ -233,7 +234,7 @@ def pretty_grouping(grouping: GroupDef) -> str:
 class GroupDisplayFormatter:
     @classmethod
     def audio_bit_rate(cls, value: int) -> str:
-        return f"{value / 1000 if value else 0} Kb/s"
+        return f"{BitSize(value)}/s"
 
     @classmethod
     def audio_bits(cls, value: int) -> str:

@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Tools
+
+- Prefer the LSP tool over Grep for Python symbol searches (references, definitions, usages). Fetch it via ToolSearch if needed.
+
 ## Project
 
 Pysaurus is a video collection manager (WIP) written in Python 3.13. It handles video metadata extraction, custom properties, advanced search/filtering, video similarity detection, and supports multiple GUI frontends.

@@ -213,11 +213,11 @@ export class Video extends BaseComponent {
 								)
 							</div>
 							<div className="prepend">
-								<code>Bit rate</code>
+								<code>Byte rate</code>
 							</div>
-							<div className={cc(common.bit_rate)}>
+							<div className={cc(common.byte_rate)}>
 								<strong>
-									<em>{data.bit_rate}/s</em>
+									<em>{data.byte_rate}/s</em>
 								</strong>
 							</div>
 						</div>

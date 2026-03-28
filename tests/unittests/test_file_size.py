@@ -5,7 +5,7 @@ from pysaurus.core.file_size import FileSize
 
 class TestFileSizeFormatting:
     def test_format_zero(self):
-        assert str(FileSize(0)) == "0.0 b"
+        assert str(FileSize(0)) == "0 b"
 
     def test_format_bytes(self):
         assert str(FileSize(1)) == "1.0 b"
@@ -120,13 +120,18 @@ class TestFileSizeComparison:
     def test_comparison_with_non_filesize(self):
         fs = FileSize(1024)
 
-        # Comparisons with non-FileSize should return False
+        # Equality with non-FileSize returns False
         assert not (fs == 1024)
-        assert not (fs != 1024)
-        assert not (fs < 1024)
-        assert not (fs > 1024)
-        assert not (fs <= 1024)
-        assert not (fs >= 1024)
+        # Other comparisons with non-FileSize return NotImplemented (→ TypeError)
+        assert fs != 1024
+        with pytest.raises(TypeError):
+            fs < 1024
+        with pytest.raises(TypeError):
+            fs > 1024
+        with pytest.raises(TypeError):
+            fs <= 1024
+        with pytest.raises(TypeError):
+            fs >= 1024
 
     def test_sorting(self):
         sizes = [
@@ -145,7 +150,7 @@ class TestFileSizeComparison:
         expected_order = [
             "-2.0 KiB",  # -2048
             "-1.0 KiB",  # -1024
-            "0.0 b",  # 0
+            "0 b",  # 0
             "512.0 b",  # 512
             "2.0 KiB",  # 2048
             "1.0 MiB",  # 1048576
@@ -235,7 +240,7 @@ class TestFileSizeConstants:
 class TestFileSizeEdgeCases:
     def test_zero(self):
         fs = FileSize(0)
-        assert str(fs) == "0.0 b"
+        assert str(fs) == "0 b"
         assert fs == FileSize(0)
         assert hash(fs) == hash(FileSize(0))
 
@@ -305,7 +310,7 @@ class TestFileSizeImmutability:
     "size,expected",
     [
         # Bytes range
-        (0, "0.0 b"),
+        (0, "0 b"),
         (1, "1.0 b"),
         (512, "512.0 b"),
         (1023, "1023.0 b"),

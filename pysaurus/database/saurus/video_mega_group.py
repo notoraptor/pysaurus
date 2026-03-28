@@ -445,7 +445,7 @@ def _query_move_id_groups(
 
 
 _FIELD_CONVERTERS: dict[str, Callable] = {
-    "bit_rate": FileSize,
+    "byte_rate": FileSize,
     "size": FileSize,
     "date": Date,
     "date_entry_modified": Date,

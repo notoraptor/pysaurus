@@ -1,14 +1,14 @@
 import math
 
 
-class FileSize:
-    BYTES = 1
-    KILO_BYTES = 1024
-    MEGA_BYTES = KILO_BYTES * KILO_BYTES
-    GIGA_BYTES = KILO_BYTES * MEGA_BYTES
-    TERA_BYTES = KILO_BYTES * GIGA_BYTES
-    BASES = [BYTES, KILO_BYTES, MEGA_BYTES, GIGA_BYTES, TERA_BYTES]
-    NAMES = ["b", "KiB", "MiB", "GiB", "TiB"]
+class BitSize:
+    BITS = 1
+    KILO_BITS = 1000
+    MEGA_BITS = KILO_BITS * 1000
+    GIGA_BITS = MEGA_BITS * 1000
+    TERA_BITS = GIGA_BITS * 1000
+    BASES = [BITS, KILO_BITS, MEGA_BITS, GIGA_BITS, TERA_BITS]
+    NAMES = ["b", "kb", "Mb", "Gb", "Tb"]
 
     __slots__ = ("__raw", "__neg", "__size", "__base")
 
@@ -19,7 +19,7 @@ class FileSize:
         self.__raw = raw
         self.__neg = neg
         self.__size = size
-        self.__base = (size and min(4, int(math.log(size, 1024)))) or 0
+        self.__base = (size and min(4, int(math.log(size, 1000)))) or 0
 
     def __hash__(self):
         return hash(self.__raw)
@@ -31,30 +31,30 @@ class FileSize:
         return float(self.__raw)
 
     def __eq__(self, other):
-        return isinstance(other, FileSize) and self.__raw == other.__raw
+        return isinstance(other, BitSize) and self.__raw == other.__raw
 
     def __ne__(self, other):
-        if not isinstance(other, FileSize):
+        if not isinstance(other, BitSize):
             return NotImplemented
         return self.__raw != other.__raw
 
     def __lt__(self, other):
-        if not isinstance(other, FileSize):
+        if not isinstance(other, BitSize):
             return NotImplemented
         return self.__raw < other.__raw
 
     def __gt__(self, other):
-        if not isinstance(other, FileSize):
+        if not isinstance(other, BitSize):
             return NotImplemented
         return self.__raw > other.__raw
 
     def __le__(self, other):
-        if not isinstance(other, FileSize):
+        if not isinstance(other, BitSize):
             return NotImplemented
         return self.__raw <= other.__raw
 
     def __ge__(self, other):
-        if not isinstance(other, FileSize):
+        if not isinstance(other, BitSize):
             return NotImplemented
         return self.__raw >= other.__raw
 

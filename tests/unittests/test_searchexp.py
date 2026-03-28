@@ -44,7 +44,7 @@ def _make_parser(**extra_attrs: FieldType) -> ExpressionParser:
         "frame_rate": FieldType.FLOAT,
         "audio_languages": FieldType.SET,
         "audio_bit_rate": FieldType.INT,
-        "bit_rate": FieldType.FILESIZE,
+        "byte_rate": FieldType.FILESIZE,
         **extra_attrs,
     }
     return ExpressionParser(attributes=attrs)

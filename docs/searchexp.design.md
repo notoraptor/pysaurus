@@ -102,7 +102,7 @@ et un `enumeration` optionnel (ensemble de valeurs autorisées).
 
 | Attribut | Type | Raison |
 |----------|------|--------|
-| `audio_bit_rate_kbps` | `int` | → `audio_bit_rate` (conversion triviale) |
+| `audio_bit_rate_formatted` | `BitSize` | → `audio_bit_rate` (wrapper d'affichage) |
 | `disk` | `str \| int` | type mixte, → `"C:" in filename` |
 | `day` | `int` | → `date` (précision jour) |
 | `not_found` | `bool` | → `not found` (inverse via langage) |

@@ -83,7 +83,7 @@ class SqlFieldFactory:
                 SqlField.auto("audio_codec"),
                 SqlField.auto("audio_codec_description"),
                 SqlField.auto("bit_depth"),
-                SqlField.auto("bit_rate"),
+                SqlField.auto("byte_rate"),
                 SqlField.auto("container_format"),
                 SqlField.auto("day"),
                 SqlField.auto("duration"),
