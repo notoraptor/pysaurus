@@ -219,6 +219,8 @@ passe de typage.
 
 ### Types du langage
 
+Types scalaires (`FieldType`) :
+
 | Type | Valeur interne |
 |------|---------------|
 | `bool` | `bool` |
@@ -228,7 +230,17 @@ passe de typage.
 | `Date` | `float` (timestamp) |
 | `Duration` | `int` (microsecondes) |
 | `FileSize` | `int` (octets) |
-| `set[T]` | ensemble de `T` |
+
+Type ensemble (`SetType`) :
+
+| Type | Déclaration | Valeur interne |
+|------|-------------|---------------|
+| `set[T]` | `SetType(element_type)` | ensemble de `T` |
+
+Le type d'éléments est connu à la déclaration du champ (ex.
+`SetType(FieldType.STR)` pour `audio_languages`). Raccourci :
+`FieldType.STR.as_set`. Cela permet de valider les types d'éléments
+au parsing (ex. `42 in audio_languages` rejeté si le set est de type `str`).
 
 ### Résolution des littéraux ambigus
 
@@ -236,6 +248,13 @@ Un littéral `NUMBER` qui ne contient ni partie fractionnaire ni multiplicateur
 (ex. `2024`) est ambigu : `int`, `float`, `Date`, `Duration`, ou `FileSize`
 selon le contexte. Le type est résolu par le champ de l'autre côté de
 l'opérateur.
+
+Règles pour les dates :
+- **Entier** comparé à un champ `Date` → interprété comme **année**
+  (`date > 100` = an 100, `date > 2024` = an 2024)
+- **Float** comparé à un champ `Date` → interprété comme **timestamp Unix**
+  (`date > 1700000000.0`)
+- Littéraux date composés (`2024-03-15`, etc.) → parsing ISO 8601
 
 ### Opérateurs par type
 
@@ -250,15 +269,18 @@ l'opérateur.
 
 ### Compatibilités croisées
 
-| Croisement | Autorisé |
-|-----------|----------|
-| `int` ↔ `float` | oui |
-| `FileSize` ↔ `int`, `float` | oui |
-| `Duration` ↔ `int`, `float` | oui |
-| `Date` ↔ `int`, `float` | oui |
-| `FileSize` ↔ `Duration` | non |
-| `FileSize` ↔ `Date` | non |
-| `Duration` ↔ `Date` | non |
+| Croisement | Autorisé | Coercition |
+|-----------|----------|------------|
+| `int` ↔ `float` | oui | promotion numérique |
+| `FileSize` ↔ `int`, `float` | oui | valeur brute (octets) |
+| `Duration` ↔ `int`, `float` | oui | valeur brute (microsecondes) |
+| `Date` ↔ `int` | oui | entier → année |
+| `Date` ↔ `float` | oui | float → timestamp Unix |
+| `FileSize` ↔ `Duration` | non | |
+| `FileSize` ↔ `Date` | non | |
+| `Duration` ↔ `Date` | non | |
+| `set[T]` ↔ `set[U]` | si `T` ↔ `U` | élément par élément |
+| `set[T]` ↔ scalaire | non | |
 
 ### Opérateurs logiques
 

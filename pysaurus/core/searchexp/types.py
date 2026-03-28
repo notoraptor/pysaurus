@@ -13,14 +13,28 @@ class FieldType(Enum):
     DATE = "date"
     DURATION = "duration"
     FILESIZE = "filesize"
-    SET = "set"
+
+    @property
+    def as_set(self) -> SetType:
+        """Return a SetType with this field type as element type."""
+        return SetType(self)
+
+
+@dataclass(frozen=True, slots=True)
+class SetType:
+    """A set field with a known element type."""
+
+    element_type: FieldType
+
+    def __str__(self) -> str:
+        return f"set[{self.element_type.value}]"
 
 
 @dataclass(frozen=True, slots=True)
 class FieldRef:
     name: str
     source: Literal["attribute", "property"]
-    field_type: FieldType
+    field_type: FieldType | SetType
 
 
 @dataclass(frozen=True, slots=True)

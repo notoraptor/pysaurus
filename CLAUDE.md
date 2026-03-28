@@ -38,10 +38,10 @@ uv run pytest -n auto
 uv run ruff check .
 uv run ruff format .
 
-# Type check
+# Type check (full)
 uv run mypy pysaurus/
 
-# Run all checks (format + lint + mypy)
+# Run all checks (format + lint + typecheck on searchexp only)
 uv run poe check
 ```
 
@@ -99,7 +99,7 @@ Single backend implementation:
 - **`pysaurus_connection.py`** — extends `Skullite` (from `skullite` package), loads schema from `database.sql`
 - **`video_mega_group.py` / `video_mega_search.py`** — SQL query builders for grouping and search
 Key schema notes (`database/saurus/database.sql`):
-- `video` table uses **virtual generated columns** (e.g., `readable`, `found`, `length_seconds`, `bit_rate`, `day`, `year`)
+- `video` table uses **virtual generated columns** (e.g., `readable`, `found`, `length_seconds`, `byte_rate`, `day`, `year`)
 - `video_text` is an **FTS5 virtual table** for full-text search with triggers to stay in sync
 - Property value triggers are managed manually in Python (not SQL triggers) for batch performance
 

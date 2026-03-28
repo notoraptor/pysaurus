@@ -4,7 +4,7 @@ import types
 import typing
 from typing import get_type_hints
 
-from .types import FieldType
+from .types import FieldType, SetType
 
 # Standard Python types mapped automatically
 _AUTO_MAP: dict[type, FieldType] = {
@@ -20,7 +20,7 @@ def fields_from_class(
     *,
     type_mapping: dict[type, FieldType] | None = None,
     exclude: set[str] | None = None,
-) -> dict[str, FieldType]:
+) -> dict[str, FieldType | SetType]:
     """Introspect a class's annotations and produce a {name: FieldType} dict.
 
     Parameters
@@ -46,7 +46,7 @@ def fields_from_class(
 
     exclude_set = exclude or set()
     hints = _get_annotations(cls, full_map)
-    result: dict[str, FieldType] = {}
+    result: dict[str, FieldType | SetType] = {}
 
     for name, annotation in hints.items():
         if name.startswith("_") or name in exclude_set:
@@ -113,16 +113,21 @@ def _build_namespace(cls: type, type_map: dict[type, FieldType]) -> dict[str, ty
 
 def _resolve_annotation(
     annotation: type, type_map: dict[type, FieldType]
-) -> FieldType | None:
-    """Resolve a type annotation to a FieldType."""
+) -> FieldType | SetType | None:
+    """Resolve a type annotation to a FieldType or SetType."""
     # Direct match
     if annotation in type_map:
         return type_map[annotation]
 
-    # Handle list[X] / List[X] → SET
+    # Handle list[X] / List[X] → SetType(element_type)
     origin = typing.get_origin(annotation)
     if origin is list:
-        return FieldType.SET
+        args = typing.get_args(annotation)
+        if args:
+            elem = _resolve_annotation(args[0], type_map)
+            if isinstance(elem, FieldType):
+                return SetType(elem)
+        return None
 
     # Handle X | None (Union types) — unwrap to X
     if origin is types.UnionType or origin is typing.Union:

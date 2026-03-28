@@ -152,9 +152,11 @@ def _try_tokenize_number_or_duration(source: str, pos: int) -> Token | None:
                         len(parts[k][0]) + len(parts[k][1]),
                     )
             # Check no duplicate suffixes
+            # (Defensive: ordering check above already catches duplicates
+            # since equal ranks fail the strictly-decreasing constraint.)
             seen = set()
             for digits, suffix, p in parts:
-                if suffix in seen:
+                if suffix in seen:  # pragma: no cover
                     from .errors import ExpressionError
 
                     raise ExpressionError(
@@ -170,7 +172,7 @@ def _try_tokenize_number_or_duration(source: str, pos: int) -> Token | None:
     i = pos
     while i < len(source) and source[i].isdigit():
         i += 1
-    if i == pos:
+    if i == pos:  # pragma: no cover — caller guarantees source[pos].isdigit()
         return None
 
     # Try date: exactly 4 digits followed by '-'
@@ -210,8 +212,12 @@ def _try_tokenize_number_or_duration(source: str, pos: int) -> Token | None:
                     and not rest_lower.startswith("min")
                 ):
                     continue
-                if suffix == "m" and len(rest) >= 3 and rest[:3].lower() == "min":
+                if (
+                    suffix == "m" and len(rest) >= 3 and rest[:3].lower() == "min"
+                ):  # pragma: no cover
                     # This is actually a duration suffix, not multiplier
+                    # (Defensive: the "mi" check above catches this case first
+                    # since rest_lower is only 2 chars and "mi" ⊂ "min".)
                     return None
                 continue
             i = end

@@ -14,4 +14,5 @@ from .types import (  # noqa: F401
     Node,
     NotOp,
     SetLiteral,
+    SetType,
 )

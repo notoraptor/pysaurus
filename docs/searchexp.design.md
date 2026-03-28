@@ -86,7 +86,7 @@ et un `enumeration` optionnel (ensemble de valeurs autorisées).
 
 | Attribut | Type | Dérivé de |
 |----------|------|-----------|
-| `bit_rate` | `FileSize` | `file_size * duration_time_base / duration` |
+| `byte_rate` | `FileSize` | `file_size * duration_time_base / duration` |
 | `date` | `Date` | `Date(mtime)` |
 | `extension` | `str` | `filename.extension` |
 | `file_title` | `str` | `filename.file_title` |
@@ -246,7 +246,7 @@ Règles :
 - Exemples :
   - `size > 1.5gi` → `> 1 610 612 736` (octets, base 1024)
   - `audio_bit_rate > 128k` → `> 128 000` (bits/s, base 1000)
-  - `bit_rate > 5mi` → `> 5 242 880` (octets/s, base 1024)
+  - `byte_rate > 5mi` → `> 5 242 880` (octets/s, base 1024)
   - `height > 1k` → `> 1 000` (fonctionne sur tout champ numérique)
 
 ### 5. Opérateurs et syntaxe du langage
@@ -452,8 +452,19 @@ class FieldType(Enum):
     DATE = "date"
     DURATION = "duration"
     FILESIZE = "filesize"
-    SET = "set"
+
+@dataclass(frozen=True, slots=True)
+class SetType:
+    element_type: FieldType
 ```
+
+`FieldType` couvre les types scalaires. `SetType(element_type)` représente
+un ensemble typé (ex. `SetType(FieldType.STR)` pour `list[str]`).
+Raccourci : `FieldType.STR.as_set`.
+
+L'API du parser accepte `dict[str, FieldType | SetType]`, ce qui permet
+de valider les types d'éléments dès le parsing (ex. `42 in audio_languages`
+est rejeté si `audio_languages` est `SetType(FieldType.STR)`).
 
 ##### IR en sortie
 
@@ -462,17 +473,17 @@ et des **enums**. Aucune référence à Pysaurus. Entièrement sérialisable
 (JSON, YAML, etc.).
 
 Nœuds principaux :
-- `FieldRef(name, source: "attribute"|"property", field_type)` — référence
-  à un champ
-- `LiteralValue(value, field_type)` — valeur constante (convertie en valeur
-  brute : date → timestamp float, durée → microsecondes int, etc.)
+- `FieldRef(name, source: "attribute"|"property", field_type: FieldType|SetType)`
+  — référence à un champ (scalaire ou ensemble typé)
+- `LiteralValue(value, field_type: FieldType)` — valeur constante (convertie
+  en valeur brute : date → timestamp float, durée → microsecondes int, etc.)
 - `Comparison(left, op, right)` — comparaison binaire
 - `IsOp(left, value: bool)` — opérateur `is` / `is not` (booléens uniquement)
 - `InOp(left, right, negated: bool)` — opérateur `in` / `not in`
 - `LogicalOp(left, op, right)` — opération logique (and, or, xor)
 - `NotOp(operand)` — négation
 - `FunctionCall(name, arg, result_type)` — appel de fonction (len)
-- `SetLiteral(elements, element_type)` — ensemble littéral
+- `SetLiteral(elements, element_type: FieldType)` — ensemble littéral
 
 ##### Interprétation par Pysaurus
 
@@ -524,6 +535,12 @@ La conversion se fait **au parsing**. Les littéraux typés sont convertis en
 valeurs brutes et stockés dans le nœud `LiteralValue` de l'IR :
 - `Date` → `float` (timestamp Unix, heure locale pour cohérence avec
   l'affichage `Date.__str__` qui utilise `datetime.fromtimestamp`)
+  - **Entier** comparé à un champ date → toujours interprété comme **année**
+    (`date > 100` = an 100, `date > 2024` = an 2024)
+  - **Float** comparé à un champ date → interprété comme **timestamp brut**
+    (`date > 1700000000.0` = timestamp Unix en secondes)
+  - Dates composées (`2024-03-15`, `2024-03-15T14:30`) → parsing ISO, timestamp
+    en heure locale
 - `Duration` → `int` (microsecondes)
 - `FileSize` → `int` (octets bruts)
 - Nombre avec multiplicateur → `int` ou `float` (résultat de la multiplication)

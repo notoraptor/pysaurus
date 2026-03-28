@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import calendar
 from datetime import datetime
 from typing import cast
 
@@ -24,6 +25,7 @@ from .types import (
     Node,
     NotOp,
     SetLiteral,
+    SetType,
 )
 
 # Types that support ordering comparisons (<, <=, >, >=)
@@ -46,7 +48,11 @@ _COMPAT_GROUPS: dict[FieldType, int] = {
 }
 
 
-def _types_compatible(a: FieldType, b: FieldType) -> bool:
+def _types_compatible(a: FieldType | SetType, b: FieldType | SetType) -> bool:
+    if isinstance(a, SetType) and isinstance(b, SetType):
+        return _types_compatible(a.element_type, b.element_type)
+    if isinstance(a, SetType) or isinstance(b, SetType):
+        return False
     if a == b:
         return True
     if a in _COMPAT_GROUPS and b in _COMPAT_GROUPS:
@@ -57,6 +63,13 @@ def _types_compatible(a: FieldType, b: FieldType) -> bool:
     return False
 
 
+def _type_name(t: FieldType | SetType) -> str:
+    """Human-readable name for error messages."""
+    if isinstance(t, SetType):
+        return str(t)
+    return t.value
+
+
 def _date_to_timestamp(text: str) -> float:
     """Convert a date string to a Unix timestamp (local time).
 
@@ -64,23 +77,33 @@ def _date_to_timestamp(text: str) -> float:
     ``datetime.fromtimestamp``), so the user sees consistent dates.
     """
     formats = [
-        ("%Y", 4),
-        ("%Y-%m", 7),
-        ("%Y-%m-%d", 10),
-        ("%Y-%m-%dT%H", 13),
-        ("%Y-%m-%dT%H:%M", 16),
         ("%Y-%m-%dT%H:%M:%S", 19),
+        ("%Y-%m-%dT%H:%M", 16),
+        ("%Y-%m-%dT%H", 13),
+        ("%Y-%m-%d", 10),
+        ("%Y-%m", 7),
     ]
     for fmt, expected_len in formats:
         if len(text) == expected_len:
             dt = datetime.strptime(text, fmt)
-            return dt.timestamp()
-    raise ValueError(f"Invalid date format: {text}")
+            return _naive_dt_to_timestamp(dt)
+    # Year only (any number of digits)
+    return _naive_dt_to_timestamp(datetime(int(text), 1, 1))
 
 
-def _is_date_shaped(text: str) -> bool:
-    """Check if a NUMBER token could be a date (4-digit year)."""
-    return len(text) == 4 and text.isdigit() and 1000 <= int(text) <= 9999
+def _naive_dt_to_timestamp(dt: datetime) -> float:
+    """Convert a naive datetime to a Unix timestamp (local time).
+
+    Works for dates before 1970 (unlike datetime.timestamp() on Windows).
+    """
+    try:
+        return dt.timestamp()
+    except (OSError, OverflowError):
+        utc_ts = calendar.timegm(dt.timetuple())
+        local_offset = datetime(2000, 1, 1).timestamp() - calendar.timegm(
+            datetime(2000, 1, 1).timetuple()
+        )
+        return utc_ts + local_offset
 
 
 class ExpressionParser:
@@ -89,8 +112,8 @@ class ExpressionParser:
     def __init__(
         self,
         *,
-        attributes: dict[str, FieldType] | None = None,
-        properties: dict[str, FieldType] | None = None,
+        attributes: dict[str, FieldType | SetType] | None = None,
+        properties: dict[str, FieldType | SetType] | None = None,
     ):
         if not attributes and not properties:
             raise ValueError(
@@ -114,7 +137,7 @@ def _check_boolean_context(node: Node) -> None:
     if isinstance(node, FieldRef):
         if node.field_type != FieldType.BOOL:
             raise ExpressionError(
-                f"Field '{node.name}' ({node.field_type.value}) used as boolean"
+                f"Field '{node.name}' ({_type_name(node.field_type)}) used as boolean"
                 f" — use a comparison operator",
                 0,
             )
@@ -133,8 +156,8 @@ class _Parser:
     def __init__(
         self,
         tokens: list[Token],
-        attributes: dict[str, FieldType],
-        properties: dict[str, FieldType],
+        attributes: dict[str, FieldType | SetType],
+        properties: dict[str, FieldType | SetType],
     ):
         self._tokens = tokens
         self._pos = 0
@@ -169,38 +192,36 @@ class _Parser:
 
     def _parse_or(self) -> Node:
         left = self._parse_xor()
-        while self._match(TokenType.OR):
+        while op_tok := self._match(TokenType.OR):
             right = self._parse_xor()
-            _ensure_boolean_operands(left, right, "or")
+            _ensure_boolean_operands(left, right, op_tok)
             left = LogicalOp(left, "or", right)
         return left
 
     def _parse_xor(self) -> Node:
         left = self._parse_and()
-        while self._match(TokenType.XOR):
+        while op_tok := self._match(TokenType.XOR):
             right = self._parse_and()
-            _ensure_boolean_operands(left, right, "xor")
+            _ensure_boolean_operands(left, right, op_tok)
             left = LogicalOp(left, "xor", right)
         return left
 
     def _parse_and(self) -> Node:
         left = self._parse_not()
-        while self._match(TokenType.AND):
+        while op_tok := self._match(TokenType.AND):
             right = self._parse_not()
-            _ensure_boolean_operands(left, right, "and")
+            _ensure_boolean_operands(left, right, op_tok)
             left = LogicalOp(left, "and", right)
         return left
 
     def _parse_not(self) -> Node:
-        tok = self._match(TokenType.NOT)
-        if tok:
-            # Check for "not in" — if next is IN, this is handled at comparison level
-            if self._peek().type == TokenType.IN:
-                # Back up — let comparison handle "not in"
-                self._pos -= 1
-                return self._parse_comparison()
-            operand = self._parse_not()
-            return NotOp(operand)
+        if self._peek().type == TokenType.NOT:
+            # Lookahead: NOT followed by IN is the "not in" composite operator,
+            # handled at comparison level — don't consume NOT here.
+            if self._tokens[self._pos + 1].type != TokenType.IN:
+                self._advance()
+                operand = self._parse_not()
+                return NotOp(operand)
         return self._parse_comparison()
 
     def _parse_comparison(self) -> Node:
@@ -278,9 +299,11 @@ class _Parser:
         self.expect(TokenType.RPAREN)
         arg = _resolve_field_or_fail(arg, func_tok)
         arg_type = _node_type(arg)
-        if arg_type not in (FieldType.STR, FieldType.SET):
+        if arg_type != FieldType.STR and not isinstance(arg_type, SetType):
             raise ExpressionError(
-                f"len() requires str or set, got {arg_type.value}", func_tok.position, 3
+                f"len() requires str or set, got {_type_name(arg_type)}",
+                func_tok.position,
+                3,
             )
         return FunctionCall("len", arg, FieldType.INT)
 
@@ -414,7 +437,7 @@ class _Parser:
 
         if not _types_compatible(lt, rt):
             raise ExpressionError(
-                f"Cannot compare {lt.value} with {rt.value}",
+                f"Cannot compare {_type_name(lt)} with {_type_name(rt)}",
                 op_tok.position,
                 len(op_tok.value),
             )
@@ -422,7 +445,7 @@ class _Parser:
         if op in ("<", "<=", ">", ">="):
             if lt not in _ORDERABLE or rt not in _ORDERABLE:
                 raise ExpressionError(
-                    f"Operator '{op}' not supported for {lt.value}",
+                    f"Operator '{op}' not supported for {_type_name(lt)}",
                     op_tok.position,
                     len(op_tok.value),
                 )
@@ -445,18 +468,17 @@ class _Parser:
             return InOp(left, right, negated)
 
         # T in set[T] (membership)
-        if rt == FieldType.SET:
-            elem_type = _set_element_type(right)
-            if elem_type is not None and not _types_compatible(lt, elem_type):
+        if isinstance(rt, SetType):
+            if not _types_compatible(lt, rt.element_type):
                 raise ExpressionError(
-                    f"Cannot test {lt.value} membership in set of {elem_type.value}",
+                    f"Cannot test {_type_name(lt)} membership in {_type_name(rt)}",
                     op_tok.position,
                     len(op_tok.value),
                 )
             return InOp(left, right, negated)
 
         raise ExpressionError(
-            f"'in' requires str or set on the right side, got {rt.value}",
+            f"'in' requires str or set on the right side, got {_type_name(rt)}",
             op_tok.position,
             len(op_tok.value),
         )
@@ -469,13 +491,13 @@ def _parse_number_literal(tok: Token) -> LiteralValue:
     return LiteralValue(value, FieldType.INT)
 
 
-def _node_type(node: Node) -> FieldType:
+def _node_type(node: Node) -> FieldType | SetType:
     if isinstance(node, FieldRef):
         return node.field_type
     if isinstance(node, LiteralValue):
         return node.field_type
     if isinstance(node, SetLiteral):
-        return FieldType.SET
+        return SetType(node.element_type)
     if isinstance(node, FunctionCall):
         return node.result_type
     # Comparison, IsOp, InOp, LogicalOp, NotOp
@@ -513,9 +535,17 @@ def _resolve_field_or_fail(node: Node, context_tok: Token) -> Node:
 def _resolve_types_binary(left: Node, right: Node, op_tok: Token) -> tuple[Node, Node]:
     """Resolve ambiguous literals based on the field on the other side."""
     if _is_field(left) and _is_literal(right):
-        right = _coerce_literal(right, _node_type(left), op_tok)
+        target = _node_type(left)
+        if isinstance(target, FieldType):
+            right = _coerce_literal(right, target, op_tok)
+        elif isinstance(target, SetType) and isinstance(right, SetLiteral):
+            right = _coerce_set_literal(right, target.element_type, op_tok)
     elif _is_literal(left) and _is_field(right):
-        left = _coerce_literal(left, _node_type(right), op_tok)
+        target = _node_type(right)
+        if isinstance(target, FieldType):
+            left = _coerce_literal(left, target, op_tok)
+        elif isinstance(target, SetType) and isinstance(left, SetLiteral):
+            left = _coerce_set_literal(left, target.element_type, op_tok)
     # field vs field or already resolved — nothing to do
     return left, right
 
@@ -525,31 +555,37 @@ def _resolve_types_in(left: Node, right: Node, op_tok: Token) -> tuple[Node, Nod
     if _is_field(left) and isinstance(right, SetLiteral):
         # field in {literals} — coerce set elements to field type
         ft = _node_type(left)
-        new_elems: list[LiteralValue] = []
-        for e in right.elements:
-            coerced = cast(LiteralValue, _coerce_literal(e, ft, op_tok))
-            if not _types_compatible(coerced.field_type, ft):
-                raise ExpressionError(
-                    f"Cannot coerce {coerced.field_type.value} to"
-                    f" {ft.value} in set literal",
-                    op_tok.position,
-                    len(op_tok.value),
-                )
-            new_elems.append(coerced)
-        right = SetLiteral(tuple(new_elems), ft)
+        target = ft.element_type if isinstance(ft, SetType) else ft
+        assert isinstance(target, FieldType)
+        right = _coerce_set_literal(right, target, op_tok)
     elif _is_literal(left) and _is_field(right):
         rt = _node_type(right)
-        if rt == FieldType.SET:
-            # literal in set_field — we don't know element type at parse time
-            # for set fields, so we leave it as-is
-            pass
-        elif rt == FieldType.STR:
-            left = _coerce_literal(left, FieldType.STR, op_tok)
-        else:
+        if isinstance(rt, SetType):
+            # literal in set_field — coerce literal to element type
+            left = _coerce_literal(left, rt.element_type, op_tok)
+        elif isinstance(rt, FieldType):
             left = _coerce_literal(left, rt, op_tok)
     elif _is_field(left) and _is_field(right):
         pass  # both known
     return left, right
+
+
+def _coerce_set_literal(
+    node: SetLiteral, target: FieldType, op_tok: Token
+) -> SetLiteral:
+    """Coerce all elements of a set literal to the target field type."""
+    new_elems: list[LiteralValue] = []
+    for e in node.elements:
+        coerced = cast(LiteralValue, _coerce_literal(e, target, op_tok))
+        if not _types_compatible(coerced.field_type, target):
+            raise ExpressionError(
+                f"Cannot coerce {coerced.field_type.value} to"
+                f" {_type_name(target)} in set literal",
+                op_tok.position,
+                len(op_tok.value),
+            )
+        new_elems.append(coerced)
+    return SetLiteral(tuple(new_elems), target)
 
 
 def _coerce_literal(node: Node, target: FieldType, _op_tok: Token) -> Node:
@@ -568,12 +604,9 @@ def _coerce_literal(node: Node, target: FieldType, _op_tok: Token) -> Node:
         if target == FieldType.FLOAT:
             return LiteralValue(float(val), FieldType.FLOAT)
         if target == FieldType.DATE:
-            # Interpret as year if it looks like one
-            if _is_date_shaped(str(val)):
-                ts = _date_to_timestamp(str(val))
-                return LiteralValue(ts, FieldType.DATE)
-            # Otherwise treat as raw timestamp
-            return LiteralValue(float(val), FieldType.DATE)
+            # Always interpret as year
+            ts = _date_to_timestamp(str(val))
+            return LiteralValue(ts, FieldType.DATE)
         if target == FieldType.DURATION:
             return LiteralValue(val, FieldType.DURATION)
         if target == FieldType.FILESIZE:
@@ -595,36 +628,36 @@ def _coerce_literal(node: Node, target: FieldType, _op_tok: Token) -> Node:
     return node
 
 
-def _set_element_type(node: Node) -> FieldType | None:
-    if isinstance(node, SetLiteral):
-        return node.element_type
-    if isinstance(node, FieldRef) and node.field_type == FieldType.SET:
-        return None  # element type unknown for set fields
-    return None
-
-
-def _ensure_boolean_operands(left: Node, right: Node, op: str) -> None:
+def _ensure_boolean_operands(left: Node, right: Node, op_tok: Token) -> None:
     """Check that both operands of a logical operator are boolean expressions."""
+    op = op_tok.value.lower()
+    pos = op_tok.position
+    length = len(op_tok.value)
     for node, side in ((left, "left"), (right, "right")):
         if isinstance(node, FieldRef) and node.field_type != FieldType.BOOL:
             raise ExpressionError(
                 f"'{op}' requires boolean operands, but {side} side"
-                f" is field '{node.name}' ({node.field_type.value})",
-                0,
+                f" is field '{node.name}' ({_type_name(node.field_type)})",
+                pos,
+                length,
             )
         if isinstance(node, LiteralValue) and node.field_type != FieldType.BOOL:
             raise ExpressionError(
                 f"'{op}' requires boolean operands, but {side} side"
                 f" is a {node.field_type.value} literal",
-                0,
+                pos,
+                length,
             )
         if isinstance(node, FunctionCall):
             raise ExpressionError(
                 f"'{op}' requires boolean operands, but {side} side"
                 f" is a function call returning {node.result_type.value}",
-                0,
+                pos,
+                length,
             )
         if isinstance(node, SetLiteral):
             raise ExpressionError(
-                f"'{op}' requires boolean operands, but {side} side is a set literal", 0
+                f"'{op}' requires boolean operands, but {side} side is a set literal",
+                pos,
+                length,
             )

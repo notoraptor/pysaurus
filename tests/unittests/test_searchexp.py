@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 from datetime import datetime
 
 import pytest
@@ -19,6 +20,7 @@ from pysaurus.core.searchexp import (
     LogicalOp,
     NotOp,
     SetLiteral,
+    SetType,
     fields_from_class,
 )
 
@@ -42,7 +44,7 @@ def _make_parser(**extra_attrs: FieldType) -> ExpressionParser:
         "length": FieldType.DURATION,
         "date": FieldType.DATE,
         "frame_rate": FieldType.FLOAT,
-        "audio_languages": FieldType.SET,
+        "audio_languages": FieldType.STR.as_set,
         "audio_bit_rate": FieldType.INT,
         "byte_rate": FieldType.FILESIZE,
         **extra_attrs,
@@ -51,32 +53,43 @@ def _make_parser(**extra_attrs: FieldType) -> ExpressionParser:
 
 
 def _make_parser_with_props(
-    props: dict[str, FieldType] | None = None,
+    props: dict[str, FieldType | SetType] | None = None,
 ) -> ExpressionParser:
     attrs = {
         "width": FieldType.INT,
         "found": FieldType.BOOL,
         "title": FieldType.STR,
-        "audio_languages": FieldType.SET,
+        "audio_languages": FieldType.STR.as_set,
     }
     return ExpressionParser(attributes=attrs, properties=props or {})
+
+
+def _safe_timestamp(dt: datetime) -> float:
+    """Convert a naive datetime to local-time timestamp, even for old dates."""
+    try:
+        return dt.timestamp()
+    except (OSError, OverflowError):
+        utc_ts = calendar.timegm(dt.timetuple())
+        local_offset = datetime(2000, 1, 1).timestamp() - calendar.timegm(
+            datetime(2000, 1, 1).timetuple()
+        )
+        return utc_ts + local_offset
 
 
 def _ts(date_str: str) -> float:
     """Convert a date string to local-time timestamp, matching parser behavior."""
     formats = [
-        ("%Y", 4),
-        ("%Y-%m", 7),
-        ("%Y-%m-%d", 10),
-        ("%Y-%m-%dT%H", 13),
-        ("%Y-%m-%dT%H:%M", 16),
         ("%Y-%m-%dT%H:%M:%S", 19),
+        ("%Y-%m-%dT%H:%M", 16),
+        ("%Y-%m-%dT%H", 13),
+        ("%Y-%m-%d", 10),
+        ("%Y-%m", 7),
     ]
     for fmt, expected_len in formats:
         if len(date_str) == expected_len:
-            dt = datetime.strptime(date_str, fmt)
-            return dt.timestamp()
-    raise ValueError(f"Bad date: {date_str}")
+            return _safe_timestamp(datetime.strptime(date_str, fmt))
+    # Year only (any number of digits)
+    return _safe_timestamp(datetime(int(date_str), 1, 1))
 
 
 def _literal(node: Comparison, side: str = "right") -> LiteralValue:
@@ -106,25 +119,32 @@ class TestLiteralInt:
         assert lit.value == 3.14
         assert lit.field_type == FieldType.FLOAT
 
-    def test_multiplier_k(self):
-        p = _make_parser()
-        node = p.parse("audio_bit_rate > 128k")
-        assert _literal(node).value == 128_000
-
-    def test_multiplier_gi(self):
-        p = _make_parser()
-        node = p.parse("size > 1gi")
-        assert _literal(node).value == 1_073_741_824
-
     def test_float_multiplier(self):
         p = _make_parser()
         node = p.parse("size > 1.5gi")
         assert _literal(node).value == 1.5 * 1_073_741_824
 
-    def test_multiplier_case_insensitive(self):
+    @pytest.mark.parametrize(
+        "suffix, expected",
+        [
+            ("k", 128_000),
+            ("m", 128_000_000),
+            ("g", 128_000_000_000),
+            ("t", 128_000_000_000_000),
+            ("ki", 131_072),
+            ("mi", 134_217_728),
+            ("gi", 137_438_953_472),
+            ("ti", 140_737_488_355_328),
+            # Case insensitivity
+            ("K", 128_000),
+            ("MI", 134_217_728),
+            ("GI", 137_438_953_472),
+        ],
+    )
+    def test_multiplier(self, suffix: str, expected: int):
         p = _make_parser()
-        node = p.parse("size > 1GI")
-        assert _literal(node).value == 1_073_741_824
+        node = p.parse(f"size > 128{suffix}")
+        assert _literal(node).value == expected
 
 
 class TestLiteralDuration:
@@ -152,49 +172,42 @@ class TestLiteralDuration:
         )
         assert _literal(node).value == expected
 
-    def test_bad_order_raises(self):
+    def test_case_insensitive(self):
         p = _make_parser()
-        with pytest.raises(ExpressionError, match="decreasing order"):
-            p.parse("length > 5s10min")
+        node = p.parse("length > 5MIN30S")
+        assert _literal(node).value == 5 * 60_000_000 + 30 * 1_000_000
 
-    def test_reverse_order_raises(self):
+    @pytest.mark.parametrize(
+        "expr",
+        ["length > 5s10min", "length > 5min10h"],
+        ids=["s_before_min", "min_before_h"],
+    )
+    def test_bad_order_raises(self, expr: str):
         p = _make_parser()
         with pytest.raises(ExpressionError, match="decreasing order"):
-            p.parse("length > 5min10h")
+            p.parse(expr)
 
 
 class TestLiteralDate:
-    def test_year_only(self):
+    @pytest.mark.parametrize(
+        "date_str",
+        [
+            "2024",
+            "2024-03",
+            "2024-03-15",
+            "2024-03-15T14",
+            "2024-03-15T14:30",
+            "2024-03-15T14:30:00",
+        ],
+        ids=["year", "month", "day", "hour", "minute", "second"],
+    )
+    def test_precision_levels(self, date_str: str):
         p = _make_parser()
-        node = p.parse("date == 2024")
+        op = "==" if len(date_str) == 4 else ">"
+        node = p.parse(f"date {op} {date_str}")
         lit = _literal(node)
-        assert lit.value == _ts("2024")
+        assert lit.value == _ts(date_str)
         assert lit.field_type == FieldType.DATE
-
-    def test_year_month(self):
-        p = _make_parser()
-        node = p.parse("date > 2024-03")
-        assert _literal(node).value == _ts("2024-03")
-
-    def test_year_month_day(self):
-        p = _make_parser()
-        node = p.parse("date > 2024-03-15")
-        assert _literal(node).value == _ts("2024-03-15")
-
-    def test_with_hour(self):
-        p = _make_parser()
-        node = p.parse("date > 2024-03-15T14")
-        assert _literal(node).value == _ts("2024-03-15T14")
-
-    def test_with_minute(self):
-        p = _make_parser()
-        node = p.parse("date > 2024-03-15T14:30")
-        assert _literal(node).value == _ts("2024-03-15T14:30")
-
-    def test_full(self):
-        p = _make_parser()
-        node = p.parse("date > 2024-03-15T14:30:00")
-        assert _literal(node).value == _ts("2024-03-15T14:30:00")
 
 
 class TestLiteralString:
@@ -290,10 +303,22 @@ class TestLiteralMisc:
     def test_multiplier_m_before_identifier(self):
         """5m followed by identifier chars: 5 is a plain number, mfoo is ident."""
         p = _make_parser()
-        # "5mfoo" — m is multiplier candidate but followed by 'f',
-        # and 'mf' is not a known suffix → falls through
         with pytest.raises(ExpressionError):
             p.parse("width > 5mfoo")
+
+    def test_multiplier_m_before_mi_suffix(self):
+        """5mixy: 'mi' suffix skipped (followed by alnum), then 'm' sees 'mi'
+        prefix but not 'min' → skip m too → invalid."""
+        p = _make_parser()
+        with pytest.raises(ExpressionError):
+            p.parse("width > 5mixy")
+
+    def test_multiplier_m_before_min_identifier(self):
+        """5minfoo: duration path fails (trailing 'foo'), number path detects
+        'm' + 'in' prefix → not a multiplier → returns None → invalid."""
+        p = _make_parser()
+        with pytest.raises(ExpressionError):
+            p.parse("width > 5minfoo")
 
 
 # ===========================================================================
@@ -348,29 +373,20 @@ class TestParserBasic:
         assert isinstance(node, NotOp)
         assert isinstance(node.operand, FieldRef)
 
-    def test_is_true(self):
+    @pytest.mark.parametrize(
+        "expr, expected",
+        [
+            ("found is True", True),
+            ("found is False", False),
+            ("found is not True", False),
+            ("found is not False", True),
+        ],
+    )
+    def test_is_operator(self, expr: str, expected: bool):
         p = _make_parser()
-        node = p.parse("found is True")
+        node = p.parse(expr)
         assert isinstance(node, IsOp)
-        assert node.value is True
-
-    def test_is_false(self):
-        p = _make_parser()
-        node = p.parse("found is False")
-        assert isinstance(node, IsOp)
-        assert node.value is False
-
-    def test_is_not_true(self):
-        p = _make_parser()
-        node = p.parse("found is not True")
-        assert isinstance(node, IsOp)
-        assert node.value is False
-
-    def test_is_not_false(self):
-        p = _make_parser()
-        node = p.parse("found is not False")
-        assert isinstance(node, IsOp)
-        assert node.value is True
+        assert node.value is expected
 
     def test_string_in_field(self):
         p = _make_parser()
@@ -399,7 +415,7 @@ class TestParserBasic:
         node = p.parse('"eng" in audio_languages')
         assert isinstance(node, InOp)
         assert isinstance(node.right, FieldRef)
-        assert node.right.field_type == FieldType.SET
+        assert node.right.field_type == FieldType.STR.as_set
 
     def test_len_function(self):
         p = _make_parser()
@@ -434,12 +450,12 @@ class TestParserBasic:
         assert isinstance(node.right, SetLiteral)
         assert len(node.right.elements) == 1
 
-    def test_all_comparison_operators(self):
+    @pytest.mark.parametrize("op", ["==", "!=", "<", "<=", ">", ">="])
+    def test_comparison_operator(self, op: str):
         p = _make_parser()
-        for op in ("==", "!=", "<", "<=", ">", ">="):
-            node = p.parse(f"width {op} 100")
-            assert isinstance(node, Comparison)
-            assert node.op == op
+        node = p.parse(f"width {op} 100")
+        assert isinstance(node, Comparison)
+        assert node.op == op
 
 
 # ===========================================================================
@@ -448,23 +464,19 @@ class TestParserBasic:
 
 
 class TestParserLogical:
-    def test_and(self):
+    @pytest.mark.parametrize(
+        "expr, expected_op",
+        [
+            ("width > 1080 and found", "and"),
+            ("found or watched", "or"),
+            ("found xor watched", "xor"),
+        ],
+    )
+    def test_logical_op(self, expr: str, expected_op: str):
         p = _make_parser()
-        node = p.parse("width > 1080 and found")
+        node = p.parse(expr)
         assert isinstance(node, LogicalOp)
-        assert node.op == "and"
-
-    def test_or(self):
-        p = _make_parser()
-        node = p.parse("found or watched")
-        assert isinstance(node, LogicalOp)
-        assert node.op == "or"
-
-    def test_xor(self):
-        p = _make_parser()
-        node = p.parse("found xor watched")
-        assert isinstance(node, LogicalOp)
-        assert node.op == "xor"
+        assert node.op == expected_op
 
     def test_precedence_and_or(self):
         """and binds tighter than or."""
@@ -506,31 +518,30 @@ class TestParserLogical:
 
 
 class TestParserTypeCoercion:
-    def test_int_coerced_to_date(self):
+    @pytest.mark.parametrize(
+        "expr, expected_type, expected_value",
+        [
+            ("date > 2024", FieldType.DATE, _ts("2024")),
+            ("size > 1000", FieldType.FILESIZE, 1000),
+            ("length > 60000000", FieldType.DURATION, 60_000_000),
+            ("date > 1700000000.0", FieldType.DATE, 1700000000.0),
+        ],
+        ids=["int_to_date", "int_to_filesize", "int_to_duration", "float_to_date"],
+    )
+    def test_literal_coercion(
+        self, expr: str, expected_type: FieldType, expected_value: object
+    ):
         p = _make_parser()
-        node = p.parse("date > 2024")
-        lit = _literal(node)
-        assert lit.field_type == FieldType.DATE
-        assert lit.value == _ts("2024")
+        lit = _literal(p.parse(expr))
+        assert lit.field_type == expected_type
+        assert lit.value == expected_value
 
-    def test_int_coerced_to_filesize(self):
+    def test_bare_number_not_duration(self):
+        """60 is an int, not 60 seconds — must write 60s for duration."""
         p = _make_parser()
-        node = p.parse("size > 1000")
-        lit = _literal(node)
-        assert lit.field_type == FieldType.FILESIZE
-        assert lit.value == 1000
-
-    def test_int_coerced_to_duration(self):
-        p = _make_parser()
-        node = p.parse("length > 60000000")
-        lit = _literal(node)
+        lit = _literal(p.parse("length > 60"))
         assert lit.field_type == FieldType.DURATION
-
-    def test_float_coerced_to_date(self):
-        p = _make_parser()
-        node = p.parse("date > 1700000000.0")
-        lit = _literal(node)
-        assert lit.field_type == FieldType.DATE
+        assert lit.value == 60
 
     def test_set_elements_coerced(self):
         p = _make_parser()
@@ -577,6 +588,25 @@ class TestParserErrors:
         with pytest.raises(ExpressionError, match="Cannot compare"):
             p.parse('width > "hello"')
 
+    @pytest.mark.parametrize(
+        "expr",
+        [
+            "size > 1h",  # FileSize vs Duration
+            "size > 2024-01-01",  # FileSize vs Date
+            "length > 2024-01-01",  # Duration vs Date
+        ],
+        ids=["filesize_duration", "filesize_date", "duration_date"],
+    )
+    def test_cross_type_incompatible(self, expr: str):
+        p = _make_parser()
+        with pytest.raises(ExpressionError, match="Cannot compare"):
+            p.parse(expr)
+
+    def test_ordering_on_set(self):
+        p = _make_parser()
+        with pytest.raises(ExpressionError, match="not supported"):
+            p.parse('audio_languages > {"eng"}')
+
     def test_non_boolean_field_alone(self):
         p = _make_parser()
         with pytest.raises(ExpressionError, match="used as boolean"):
@@ -599,8 +629,10 @@ class TestParserErrors:
 
     def test_logical_op_on_non_boolean(self):
         p = _make_parser()
-        with pytest.raises(ExpressionError, match="boolean operands"):
+        with pytest.raises(ExpressionError, match="boolean operands") as exc_info:
             p.parse("width and found")
+        assert exc_info.value.position == 6
+        assert exc_info.value.length == 3
 
     def test_no_attributes_no_properties(self):
         with pytest.raises(ValueError, match="At least one"):
@@ -667,6 +699,29 @@ class TestParserErrors:
         assert isinstance(node.right, SetLiteral)
         assert node.right.element_type == FieldType.FLOAT
 
+    def test_set_equality_coerces_elements(self):
+        """audio_languages == {"eng"}: set comparison, elements already match."""
+        p = _make_parser()
+        node = p.parse('audio_languages == {"eng", "fra"}')
+        assert isinstance(node, Comparison)
+        assert isinstance(node.right, SetLiteral)
+        assert node.right.element_type == FieldType.STR
+
+    def test_set_equality_coerces_int_to_date(self):
+        """Set of dates field == {2024}: int elements coerced to date timestamps."""
+        p = ExpressionParser(attributes={"dates": FieldType.DATE.as_set})
+        node = p.parse("dates == {2024}")
+        assert isinstance(node, Comparison)
+        assert isinstance(node.right, SetLiteral)
+        assert node.right.element_type == FieldType.DATE
+        assert node.right.elements[0].value == _ts("2024")
+
+    def test_set_equality_incompatible_elements(self):
+        """audio_languages == {42}: int can't coerce to str → error."""
+        p = _make_parser()
+        with pytest.raises(ExpressionError, match="Cannot coerce"):
+            p.parse("audio_languages == {42}")
+
     def test_set_with_date_elements(self):
         p = _make_parser()
         node = p.parse("date in {2024-01-01, 2024-06-15}")
@@ -696,41 +751,45 @@ class TestParserErrors:
 
     def test_logical_op_with_literal(self):
         p = _make_parser()
-        with pytest.raises(ExpressionError, match="boolean operands.*literal"):
+        with pytest.raises(
+            ExpressionError, match="boolean operands.*literal"
+        ) as exc_info:
             p.parse("True and 42")
+        assert exc_info.value.position == 5
+        assert exc_info.value.length == 3
 
     def test_logical_op_with_function_call(self):
         p = _make_parser()
-        with pytest.raises(ExpressionError, match="boolean operands.*function"):
+        with pytest.raises(
+            ExpressionError, match="boolean operands.*function"
+        ) as exc_info:
             p.parse("found and len(title)")
+        assert exc_info.value.position == 6
+        assert exc_info.value.length == 3
 
     def test_logical_op_with_set_literal(self):
         p = _make_parser()
-        with pytest.raises(ExpressionError, match="boolean operands.*set"):
+        with pytest.raises(ExpressionError, match="boolean operands.*set") as exc_info:
             p.parse('found and {"a", "b"}')
+        assert exc_info.value.position == 6
+        assert exc_info.value.length == 3
 
-    def test_float_coerced_to_duration(self):
-        """Pure float (non-integer result) coerced to duration."""
+    @pytest.mark.parametrize(
+        "expr, expected_type, expected_value",
+        [
+            ("length > 1.5", FieldType.DURATION, 1.5),
+            ("size > 1.5", FieldType.FILESIZE, 1.5),
+            ("date > 1700000000.5", FieldType.DATE, 1700000000.5),
+        ],
+        ids=["float_to_duration", "float_to_filesize", "float_to_date"],
+    )
+    def test_float_coercion(
+        self, expr: str, expected_type: FieldType, expected_value: float
+    ):
         p = _make_parser()
-        node = p.parse("length > 1.5")
-        lit = _literal(node)
-        assert lit.field_type == FieldType.DURATION
-        assert lit.value == 1.5
-
-    def test_float_coerced_to_filesize(self):
-        """Pure float (non-integer result) coerced to filesize."""
-        p = _make_parser()
-        node = p.parse("size > 1.5")
-        lit = _literal(node)
-        assert lit.field_type == FieldType.FILESIZE
-        assert lit.value == 1.5
-
-    def test_float_coerced_to_date(self):
-        p = _make_parser()
-        node = p.parse("date > 1700000000.5")
-        lit = _literal(node)
-        assert lit.field_type == FieldType.DATE
-        assert lit.value == 1700000000.5
+        lit = _literal(p.parse(expr))
+        assert lit.field_type == expected_type
+        assert lit.value == expected_value
 
     def test_is_literal_on_left(self):
         """'is' requires a field, not a literal."""
@@ -740,11 +799,9 @@ class TestParserErrors:
 
     def test_in_membership_incompatible_types(self):
         """Literal type incompatible with set field element type."""
-        p = _make_parser_with_props({"tags": FieldType.SET})
-        # int literal in set field — we can't verify element type at parse time
-        # so this should pass (element type unknown for set fields)
-        node = p.parse("42 in `tags`")
-        assert isinstance(node, InOp)
+        p = _make_parser_with_props({"tags": FieldType.STR.as_set})
+        with pytest.raises(ExpressionError, match="Cannot test"):
+            p.parse("42 in `tags`")
 
     def test_in_literal_in_non_str_non_set_field(self):
         """'in' with non-str, non-set right side (e.g. int field)."""
@@ -779,14 +836,59 @@ class TestParserErrors:
         node = p.parse("extension in audio_languages")
         assert isinstance(node, InOp)
 
-    def test_float_to_int_exact(self):
-        """Float value that is exactly an integer gets coerced to int."""
+    def test_float_to_int_exact_with_multiplier(self):
+        """2.0k = 2000.0 — parse_number already converts to int 2000."""
         p = _make_parser()
-        # 2.0k = 2000.0 — should coerce to int 2000 for an int field
         node = p.parse("width > 2.0k")
         lit = _literal(node)
         assert lit.value == 2000
         assert isinstance(lit.value, int)
+
+    def test_float_to_int_exact_plain(self):
+        """2.0 (plain float) coerced to int for an int field."""
+        p = _make_parser()
+        node = p.parse("width > 2.0")
+        lit = _literal(node)
+        assert lit.value == 2
+        assert isinstance(lit.value, int)
+        assert lit.field_type == FieldType.INT
+
+    def test_any_int_coerced_to_year(self):
+        """100 compared to a date field: always interpreted as year 100."""
+        p = _make_parser()
+        node = p.parse("date > 100")
+        lit = _literal(node)
+        assert lit.field_type == FieldType.DATE
+        assert lit.value == _ts("0100")
+
+    def test_scalar_vs_set_field_incompatible(self):
+        """Comparing a scalar field to a set field: type mismatch."""
+        p = _make_parser()
+        with pytest.raises(ExpressionError, match="Cannot compare"):
+            p.parse("width == audio_languages")
+
+    def test_scalar_field_eq_set_literal(self):
+        """width == {1, 2}: scalar field compared to set literal → error."""
+        p = _make_parser()
+        with pytest.raises(ExpressionError, match="Cannot compare"):
+            p.parse("width == {1, 2}")
+
+    def test_set_literal_on_left_eq(self):
+        """{"eng", "fra"} == audio_languages: set literal on left side, coerced."""
+        p = _make_parser()
+        node = p.parse('{"eng", "fra"} == audio_languages')
+        assert isinstance(node, Comparison)
+        assert isinstance(node.left, SetLiteral)
+        assert node.left.element_type == FieldType.STR
+
+    def test_comparison_with_boolean_subexpression(self):
+        """(width > 1080) == True: inner comparison used as operand."""
+        p = _make_parser()
+        node = p.parse("(width > 1080) == True")
+        assert isinstance(node, Comparison)
+        assert isinstance(node.left, Comparison)
+        assert isinstance(node.right, LiteralValue)
+        assert node.right.value is True
 
     def test_node_type_of_boolean_expression(self):
         """Nested boolean expressions should be valid in logical ops."""
@@ -817,7 +919,7 @@ class TestParserProperties:
         assert node.field_type == FieldType.BOOL
 
     def test_property_in_set(self):
-        p = _make_parser_with_props({"category": FieldType.SET})
+        p = _make_parser_with_props({"category": FieldType.STR.as_set})
         node = p.parse('"action" in `category`')
         assert isinstance(node, InOp)
         assert isinstance(node.right, FieldRef)
@@ -835,28 +937,42 @@ class TestParserProperties:
 
 
 class TestParserCaseInsensitivity:
-    def test_and_uppercase(self):
+    @pytest.mark.parametrize(
+        "expr, expected_op",
+        [
+            ("found AND watched", "and"),
+            ("found Or watched", "or"),
+            ("found XOR watched", "xor"),
+        ],
+    )
+    def test_logical_keyword(self, expr: str, expected_op: str):
         p = _make_parser()
-        node = p.parse("found AND watched")
+        node = p.parse(expr)
         assert isinstance(node, LogicalOp)
-        assert node.op == "and"
-
-    def test_or_mixed_case(self):
-        p = _make_parser()
-        node = p.parse("found Or watched")
-        assert isinstance(node, LogicalOp)
-        assert node.op == "or"
+        assert node.op == expected_op
 
     def test_not_uppercase(self):
         p = _make_parser()
         node = p.parse("NOT found")
         assert isinstance(node, NotOp)
 
-    def test_true_false_case(self):
+    def test_is_true_uppercase(self):
         p = _make_parser()
         node = p.parse("found IS TRUE")
         assert isinstance(node, IsOp)
         assert node.value is True
+
+    def test_is_not_uppercase(self):
+        p = _make_parser()
+        node = p.parse("found IS NOT True")
+        assert isinstance(node, IsOp)
+        assert node.value is False
+
+    def test_in_uppercase(self):
+        p = _make_parser()
+        node = p.parse('"eng" IN audio_languages')
+        assert isinstance(node, InOp)
+        assert not node.negated
 
     def test_len_uppercase(self):
         p = _make_parser()
@@ -912,7 +1028,29 @@ class TestFieldsFromClass:
             tags: list[str]
 
         result = fields_from_class(MyObj)
-        assert result["tags"] == FieldType.SET
+        assert result["tags"] == FieldType.STR.as_set
+
+    def test_bare_list_raises(self):
+        """list without type arg cannot determine element type → TypeError."""
+
+        class MyObj:
+            items: list
+
+        with pytest.raises(TypeError, match="Cannot resolve"):
+            fields_from_class(MyObj)
+
+    def test_list_of_unknown_type_raises(self):
+        """list[UnknownType] → element type not resolvable → TypeError."""
+
+        class Custom:
+            pass
+
+        # Build the class without from __future__ import annotations
+        # so get_type_hints resolves the annotation to list[Custom].
+        MyObj = type("MyObj", (), {"__annotations__": {"items": list[Custom]}})
+
+        with pytest.raises(TypeError, match="Cannot resolve"):
+            fields_from_class(MyObj)
 
     def test_unknown_type_raises(self):
         class Unknown:
@@ -947,7 +1085,7 @@ class TestFieldsFromClass:
 
 class TestParserComplex:
     def test_complex_expression(self):
-        p = _make_parser_with_props({"category": FieldType.SET})
+        p = _make_parser_with_props({"category": FieldType.STR.as_set})
         node = p.parse(
             'width > 1080 and "eng" in audio_languages and "action" in `category`'
         )
