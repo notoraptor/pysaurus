@@ -31,7 +31,7 @@ class VideoEntry:
     width: int = 0
     # table columns: runtime frozen data
     mtime: float = 0.0
-    driver_id: int = None
+    driver_id: str = None
     is_file: bool = False
     discarded: float = False
     # related data
@@ -61,6 +61,6 @@ class VideoEntry:
             del output["video_id"]
         if runtime_info:
             output["mtime"] = runtime_info.mtime
-            output["driver_id"] = str(runtime_info.driver_id)
+            output["driver_id"] = runtime_info.driver_id
             output["is_file"] = runtime_info.is_file
         return output

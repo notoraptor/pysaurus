@@ -63,4 +63,4 @@ class VideoFieldQueryParser:
         return FieldQuery("IIF(LENGTH(t.thumbnail), 1, 0)", [int(not value)])
 
     def driver_id(self, value) -> FieldQuery:
-        return self._video_query("driver_id", str(value))
+        return self._video_query("driver_id", value)

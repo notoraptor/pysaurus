@@ -110,7 +110,7 @@ class SqlFieldFactory:
                 ),
                 SqlField.auto(title="length", name="length_seconds"),
                 # Special fields
-                SqlField("disk", ["pysaurus_get_disk(v.filename, v.driver_id)"]),
+                SqlField("disk", ["v.driver_id"]),
                 SqlField("extension", ["pysaurus_get_extension(v.filename)"]),
                 SqlField("file_title", ["pysaurus_get_file_title(v.filename)"]),
                 SemanticField(

@@ -15,7 +15,7 @@
   device_name: dxva2
   discarded: false
   disk: C:\
-  driver_id: 372744161
+  driver_id: C:\
   duration: 12040000
   duration_time_base: 1000000
   errors: []
@@ -116,7 +116,7 @@
   device_name: dxva2
   discarded: false
   disk: C:\
-  driver_id: 372744161
+  driver_id: C:\
   duration: 14833333
   duration_time_base: 1000000
   errors: []

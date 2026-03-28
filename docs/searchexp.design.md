@@ -72,7 +72,7 @@ et un `enumeration` optionnel (ensemble de valeurs autorisées).
 | `frame_rate_den` | `int` | → `frame_rate` |
 | `frame_rate_num` | `int` | → `frame_rate` |
 | `discarded` | `bool` | vidéos ignorées par la db (folders retirés) — la recherche ne porte que sur les vidéos not discarded |
-| `driver_id` | `int` | → `disk` |
+| `driver_id` | `str` | → `disk` |
 | `move_id` | *(non annoté)* | déplacement |
 | `moves` | `list[MoveType]` | déplacements |
 | `mtime` | `float` | → `date` |

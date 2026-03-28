@@ -3,10 +3,6 @@ from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.semantic_text import pad_numbers_in_string
 
 
-def pysaurus_get_disk(filename: str, driver_id: str) -> str:
-    return AbsolutePath(filename).get_drive_name() or driver_id
-
-
 def pysaurus_get_extension(filename: str) -> str:
     return AbsolutePath(filename).extension
 

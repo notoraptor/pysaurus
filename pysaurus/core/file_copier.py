@@ -57,9 +57,9 @@ class FileCopier:
     def move(self):
         try:
             src_stat = FileSystem.stat(self.src.path)
-            src_drive = self.src.get_drive_name()
-            dst_drive = self.dst.get_drive_name()
-            if src_drive and dst_drive and src_drive == dst_drive:
+            src_drive = self.src.get_mount_point()
+            dst_drive = self.dst.get_mount_point()
+            if src_drive == dst_drive:
                 FileSystem.rename(self.src.path, self.dst.path)
                 if self.src.exists():
                     raise FileExistsError(self.src)

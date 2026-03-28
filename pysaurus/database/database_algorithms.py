@@ -141,7 +141,6 @@ class DatabaseAlgorithms:
                     "filename": file_name,
                     "mtime": file_info.mtime,
                     "file_size": file_info.size,
-                    "driver_id": file_info.driver_id,
                 },
             )
         )

@@ -99,7 +99,7 @@ class VideoPattern(ABC):
 
     @property
     @abstractmethod
-    def driver_id(self) -> int:
+    def driver_id(self) -> str:
         raise NotImplementedError()
 
     @property
@@ -334,8 +334,8 @@ class VideoPattern(ABC):
         return self.date.day
 
     @property
-    def disk(self):
-        return self.filename.get_drive_name() or self.driver_id
+    def disk(self) -> str:
+        return self.driver_id
 
     @property
     def filename_length(self) -> int:

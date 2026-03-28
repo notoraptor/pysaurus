@@ -1,5 +1,6 @@
 import argparse
 import inspect
+import os
 import shlex
 import sys
 import traceback
@@ -8,6 +9,7 @@ from pathlib import Path
 import fire
 import yaml
 
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.fs_utils import is_fat_filesystem
 from pysaurus.core.informer import Information
 from pysaurus.core.perf_counter import PerfCounter
@@ -329,10 +331,8 @@ class BenchmarkAPI:
 
         # Files not in DB at all
         db_videos: dict[str, tuple] = {}
-        for v in self._db.get_videos(
-            include=["filename", "file_size", "mtime", "driver_id"]
-        ):
-            db_videos[str(v.filename)] = (v.file_size, v.mtime, v.driver_id)
+        for v in self._db.get_videos(include=["filename", "file_size", "mtime"]):
+            db_videos[str(v.filename)] = (v.file_size, v.mtime)
 
         new_files = []
         modified_files = []
@@ -341,14 +341,12 @@ class BenchmarkAPI:
             if key not in db_videos:
                 new_files.append(key)
             else:
-                db_size, db_mtime, db_driver_id = db_videos[key]
+                db_size, db_mtime = db_videos[key]
                 changed = {}
                 if db_size != file_info.size:
                     changed["size"] = (db_size, file_info.size)
                 if db_mtime != file_info.mtime:
                     changed["mtime"] = (db_mtime, file_info.mtime)
-                if db_driver_id != str(file_info.driver_id):
-                    changed["driver_id"] = (db_driver_id, str(file_info.driver_id))
                 if changed:
                     modified_files.append((key, changed))
 
@@ -359,7 +357,7 @@ class BenchmarkAPI:
         print(f"In DB: {len(db_videos)} video(s)")
         print()
         print(f"New files (not in DB):      {len(new_files)}")
-        print(f"Modified (mtime/size/drv):  {len(modified_files)}")
+        print(f"Modified (mtime/size):      {len(modified_files)}")
         print(f"In DB but not on disk:      {len(not_on_disk)}")
         print(f"Total update would process: {len(new_files) + len(modified_files)}")
 
@@ -446,6 +444,89 @@ class BenchmarkAPI:
             )
             self._db.save()
         print(f"\nUpdated {len(corrections)} mtime(s) ({t.microseconds / 1000:.3f} ms)")
+        return f"{len(corrections)} correction(s) applied"
+
+    def fix_driver_id(self, apply: bool = False, limit: int = 20):
+        """Migrate driver_id from legacy integer (st_dev) to mount point path.
+
+        Scans video folders, computes the mount point for each found file,
+        and updates driver_id in the DB where the stored value differs.
+
+        Args:
+            apply: Actually update the DB. Without this flag, only shows what
+                   would change (dry run).
+            limit: Max number of files to display.
+        """
+        if not isinstance(self._db, PysaurusCollection):
+            return "Only available for SQL backend."
+
+        with PerfCounter() as t:
+            all_files = Videos.get_runtime_info_from_paths(self._db.get_folders())
+        print(
+            f"Scan: {len(all_files)} video(s) on disk ({t.microseconds / 1000:.3f} ms)"
+        )
+
+        # Build map: standard_path -> (db_path, db_driver_id)
+        # standard_path is used for matching with all_files keys,
+        # db_path (with \\?\ prefix) is used in SQL WHERE clause.
+        db_videos: dict[str, tuple[str, str]] = {}
+        for v in self._db.get_videos(include=["filename", "driver_id"]):
+            db_videos[str(v.filename)] = (v.filename.path, v.driver_id)
+
+        # Find driver_ids that need migration
+        corrections: list[tuple[str, str, str, str]] = []
+        matched_keys: set[str] = set()
+        for file_name, file_info in sorted(all_files.items()):
+            key = str(file_name)
+            if key not in db_videos:
+                continue
+            matched_keys.add(key)
+            db_path, db_driver_id = db_videos[key]
+            disk_driver_id = file_info.driver_id
+            if db_driver_id != disk_driver_id:
+                corrections.append((key, db_path, db_driver_id, disk_driver_id))
+
+        # For not-found videos, deduce mount point from filename.
+        # get_mount_point() may fail on Windows for non-existent drives
+        # with Unicode paths, so fall back to drive root extraction.
+        for key, (db_path, db_driver_id) in sorted(db_videos.items()):
+            if key in matched_keys:
+                continue
+            try:
+                mount_point = AbsolutePath(key).get_mount_point()
+            except OSError:
+                drive, _ = os.path.splitdrive(key)
+                mount_point = (drive + os.sep) if drive else key
+            if db_driver_id != mount_point:
+                corrections.append((key, db_path, db_driver_id, mount_point))
+
+        if not corrections:
+            return "No driver_id corrections needed."
+
+        print(f"\n{len(corrections)} video(s) with outdated driver_id:")
+        for display_name, _, old, new in corrections[:limit]:
+            try:
+                print(f"  {display_name}")
+            except UnicodeEncodeError:
+                print(f"  {display_name!a}")
+            print(f"    {old!r} -> {new!r}")
+        if len(corrections) > limit:
+            print(f"  ... ({len(corrections) - limit} more)")
+
+        if not apply:
+            print("\nDry run. Use fix_driver_id --apply to update the database.")
+            return f"{len(corrections)} correction(s) pending"
+
+        with PerfCounter() as t:
+            self._db.db.modify_many(
+                "UPDATE video SET driver_id = ? WHERE filename = ?",
+                ((new, db_path) for _, db_path, _, new in corrections),
+            )
+            self._db.save()
+        print(
+            f"\nUpdated {len(corrections)} driver_id(s) "
+            f"({t.microseconds / 1000:.3f} ms)"
+        )
         return f"{len(corrections)} correction(s) applied"
 
     def repeat(self, command: str = "", n: int = 1):

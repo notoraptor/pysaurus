@@ -131,11 +131,15 @@ class AbsolutePath:
     def get_mtime(self) -> float:
         return os.path.getmtime(self.__path)
 
-    def get_drive_name(self):
-        drive_name = os.path.splitdrive(self.standard_path)[0]
-        if drive_name and not drive_name.endswith(os.path.sep):
-            drive_name = drive_name + os.path.sep
-        return drive_name
+    def get_mount_point(self) -> str:
+        """Return the mount point (disk root path) containing this path."""
+        path = self.__path
+        while not os.path.ismount(path):
+            parent = os.path.dirname(path)
+            if parent == path:
+                break
+            path = parent
+        return AbsolutePath(path).standard_path
 
     def get_size(self) -> int:
         return os.path.getsize(self.__path)

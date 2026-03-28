@@ -21,10 +21,8 @@ def _get_runtime_info(db) -> dict[AbsolutePath, VideoRuntimeInfo]:
     for v in db.get_videos(
         include=["filename", "file_size", "mtime", "driver_id"], where={"found": True}
     ):
-        # driver_id is TEXT in SQL but int in VideoRuntimeInfo, so cast back
-        driver_id = int(v.driver_id) if v.driver_id is not None else None
         result[v.filename] = VideoRuntimeInfo(
-            size=v.file_size, mtime=v.mtime, driver_id=driver_id, is_file=True
+            size=v.file_size, mtime=v.mtime, driver_id=v.driver_id, is_file=True
         )
     return result
 
@@ -100,7 +98,7 @@ class TestFindVideoPathsForUpdate:
         file_paths = _get_runtime_info(db)
         new_path = AbsolutePath("/videos/brand_new_video.mp4")
         file_paths[new_path] = VideoRuntimeInfo(
-            size=999, mtime=99999.0, driver_id=1, is_file=True
+            size=999, mtime=99999.0, driver_id="/videos", is_file=True
         )
 
         result = db.algos._find_video_paths_for_update(file_paths)
@@ -134,6 +132,22 @@ class TestFindVideoPathsForUpdate:
         result = db.algos._find_video_paths_for_update(file_paths)
         assert target in result
 
+    def test_changed_driver_id_not_returned(self, mem_saurus_database):
+        """Changing driver_id alone should not trigger a re-extraction."""
+        db = mem_saurus_database
+        file_paths = _get_runtime_info(db)
+        # Change driver_id for all files
+        for path, info in file_paths.items():
+            file_paths[path] = VideoRuntimeInfo(
+                size=info.size,
+                mtime=info.mtime,
+                driver_id="/different/mount",
+                is_file=True,
+            )
+
+        result = db.algos._find_video_paths_for_update(file_paths)
+        assert result == []
+
     def test_same_result_as_base_class(self, mem_saurus_database):
         """SQL-optimized version produces same results as base class."""
         db = mem_saurus_database
@@ -152,7 +166,7 @@ class TestFindVideoPathsForUpdate:
         # Add a new file
         new_path = AbsolutePath("/videos/new_video.mp4")
         file_paths[new_path] = VideoRuntimeInfo(
-            size=1000, mtime=1.0, driver_id=1, is_file=True
+            size=1000, mtime=1.0, driver_id="/videos", is_file=True
         )
 
         base_result = DatabaseAlgorithms(db)._find_video_paths_for_update(file_paths)
