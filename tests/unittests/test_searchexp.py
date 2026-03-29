@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import calendar
-from datetime import datetime
-
 import pytest
 
 from pysaurus.core.searchexp import (
     Comparison,
+    DateLiteral,
+    DateTimestamp,
     ExpressionError,
     ExpressionParser,
     FieldRef,
@@ -62,34 +61,6 @@ def _make_parser_with_props(
         "audio_languages": FieldType.STR.as_set,
     }
     return ExpressionParser(attributes=attrs, properties=props or {})
-
-
-def _safe_timestamp(dt: datetime) -> float:
-    """Convert a naive datetime to local-time timestamp, even for old dates."""
-    try:
-        return dt.timestamp()
-    except (OSError, OverflowError):
-        utc_ts = calendar.timegm(dt.timetuple())
-        local_offset = datetime(2000, 1, 1).timestamp() - calendar.timegm(
-            datetime(2000, 1, 1).timetuple()
-        )
-        return utc_ts + local_offset
-
-
-def _ts(date_str: str) -> float:
-    """Convert a date string to local-time timestamp, matching parser behavior."""
-    formats = [
-        ("%Y-%m-%dT%H:%M:%S", 19),
-        ("%Y-%m-%dT%H:%M", 16),
-        ("%Y-%m-%dT%H", 13),
-        ("%Y-%m-%d", 10),
-        ("%Y-%m", 7),
-    ]
-    for fmt, expected_len in formats:
-        if len(date_str) == expected_len:
-            return _safe_timestamp(datetime.strptime(date_str, fmt))
-    # Year only (any number of digits)
-    return _safe_timestamp(datetime(int(date_str), 1, 1))
 
 
 def _literal(node: Comparison, side: str = "right") -> LiteralValue:
@@ -190,23 +161,23 @@ class TestLiteralDuration:
 
 class TestLiteralDate:
     @pytest.mark.parametrize(
-        "date_str",
+        "date_str, expected",
         [
-            "2024",
-            "2024-03",
-            "2024-03-15",
-            "2024-03-15T14",
-            "2024-03-15T14:30",
-            "2024-03-15T14:30:00",
+            ("2024", DateLiteral(2024)),
+            ("2024-03", DateLiteral(2024, 3)),
+            ("2024-03-15", DateLiteral(2024, 3, 15)),
+            ("2024-03-15T14", DateLiteral(2024, 3, 15, 14)),
+            ("2024-03-15T14:30", DateLiteral(2024, 3, 15, 14, 30)),
+            ("2024-03-15T14:30:00", DateLiteral(2024, 3, 15, 14, 30, 0)),
         ],
         ids=["year", "month", "day", "hour", "minute", "second"],
     )
-    def test_precision_levels(self, date_str: str):
+    def test_precision_levels(self, date_str: str, expected: DateLiteral):
         p = _make_parser()
         op = "==" if len(date_str) == 4 else ">"
         node = p.parse(f"date {op} {date_str}")
         lit = _literal(node)
-        assert lit.value == _ts(date_str)
+        assert lit.value == expected
         assert lit.field_type == FieldType.DATE
 
 
@@ -352,7 +323,7 @@ class TestParserBasic:
         assert isinstance(node, Comparison)
         lit = _literal(node, side="left")
         assert lit.field_type == FieldType.DATE
-        assert lit.value == _ts("2024")
+        assert lit.value == DateLiteral(2024)
 
     def test_field_vs_field(self):
         p = _make_parser()
@@ -521,10 +492,10 @@ class TestParserTypeCoercion:
     @pytest.mark.parametrize(
         "expr, expected_type, expected_value",
         [
-            ("date > 2024", FieldType.DATE, _ts("2024")),
+            ("date > 2024", FieldType.DATE, DateLiteral(2024)),
             ("size > 1000", FieldType.FILESIZE, 1000),
             ("length > 60000000", FieldType.DURATION, 60_000_000),
-            ("date > 1700000000.0", FieldType.DATE, 1700000000.0),
+            ("date > 1700000000.0", FieldType.DATE, DateTimestamp(1700000000.0)),
         ],
         ids=["int_to_date", "int_to_filesize", "int_to_duration", "float_to_date"],
     )
@@ -714,7 +685,7 @@ class TestParserErrors:
         assert isinstance(node, Comparison)
         assert isinstance(node.right, SetLiteral)
         assert node.right.element_type == FieldType.DATE
-        assert node.right.elements[0].value == _ts("2024")
+        assert node.right.elements[0].value == DateLiteral(2024)
 
     def test_set_equality_incompatible_elements(self):
         """audio_languages == {42}: int can't coerce to str → error."""
@@ -779,12 +750,12 @@ class TestParserErrors:
         [
             ("length > 1.5", FieldType.DURATION, 1.5),
             ("size > 1.5", FieldType.FILESIZE, 1.5),
-            ("date > 1700000000.5", FieldType.DATE, 1700000000.5),
+            ("date > 1700000000.5", FieldType.DATE, DateTimestamp(1700000000.5)),
         ],
         ids=["float_to_duration", "float_to_filesize", "float_to_date"],
     )
     def test_float_coercion(
-        self, expr: str, expected_type: FieldType, expected_value: float
+        self, expr: str, expected_type: FieldType, expected_value: object
     ):
         p = _make_parser()
         lit = _literal(p.parse(expr))
@@ -859,7 +830,7 @@ class TestParserErrors:
         node = p.parse("date > 100")
         lit = _literal(node)
         assert lit.field_type == FieldType.DATE
-        assert lit.value == _ts("0100")
+        assert lit.value == DateLiteral(100)
 
     def test_scalar_vs_set_field_incompatible(self):
         """Comparing a scalar field to a set field: type mismatch."""
@@ -1133,3 +1104,44 @@ class TestParserComplex:
         assert isinstance(node.left, FunctionCall)
         assert isinstance(node.right, LiteralValue)
         assert node.right.value == 0
+
+
+# ===========================================================================
+# ExpressionError.format_message tests
+# ===========================================================================
+
+
+class TestFormatMessage:
+    def test_format_with_source(self):
+        p = _make_parser()
+        with pytest.raises(ExpressionError) as exc_info:
+            p.parse('width > "hello"')
+        err = exc_info.value
+        assert err.source == 'width > "hello"'
+        formatted = err.format_message()
+        lines = formatted.split("\n")
+        assert lines[0] == 'width > "hello"'
+        assert "^" in lines[1]
+        assert str(err) in lines[2]
+
+    def test_format_without_source(self):
+        err = ExpressionError("test error", 5, 3)
+        assert err.source is None
+        assert err.format_message() == "test error"
+
+    def test_format_marker_position(self):
+        p = _make_parser()
+        with pytest.raises(ExpressionError) as exc_info:
+            p.parse("width is True")
+        err = exc_info.value
+        lines = err.format_message().split("\n")
+        marker = lines[1]
+        assert marker.index("^") == err.position
+        assert marker.count("^") == err.length
+
+    def test_source_set_on_tokenizer_error(self):
+        p = _make_parser()
+        with pytest.raises(ExpressionError) as exc_info:
+            p.parse('"unterminated')
+        err = exc_info.value
+        assert err.source == '"unterminated'

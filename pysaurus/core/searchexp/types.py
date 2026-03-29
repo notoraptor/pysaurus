@@ -31,6 +31,25 @@ class SetType:
 
 
 @dataclass(frozen=True, slots=True)
+class DateLiteral:
+    """Date as parsed components, without timezone interpretation."""
+
+    year: int
+    month: int | None = None
+    day: int | None = None
+    hour: int | None = None
+    minute: int | None = None
+    second: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class DateTimestamp:
+    """Date as a raw Unix timestamp (seconds since epoch)."""
+
+    value: float
+
+
+@dataclass(frozen=True, slots=True)
 class FieldRef:
     name: str
     source: Literal["attribute", "property"]
@@ -39,7 +58,7 @@ class FieldRef:
 
 @dataclass(frozen=True, slots=True)
 class LiteralValue:
-    value: bool | int | float | str
+    value: bool | int | float | str | DateLiteral | DateTimestamp
     field_type: FieldType
 
 

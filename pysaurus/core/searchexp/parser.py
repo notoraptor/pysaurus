@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import calendar
-from datetime import datetime
 from typing import cast
 
 from .errors import ExpressionError
@@ -15,6 +13,8 @@ from .tokenizer import (
 from .types import (
     Comparison,
     ComparisonOp,
+    DateLiteral,
+    DateTimestamp,
     FieldRef,
     FieldType,
     FunctionCall,
@@ -70,40 +70,18 @@ def _type_name(t: FieldType | SetType) -> str:
     return t.value
 
 
-def _date_to_timestamp(text: str) -> float:
-    """Convert a date string to a Unix timestamp (local time).
-
-    Uses local time to match ``Date.__str__`` (which displays via
-    ``datetime.fromtimestamp``), so the user sees consistent dates.
-    """
-    formats = [
-        ("%Y-%m-%dT%H:%M:%S", 19),
-        ("%Y-%m-%dT%H:%M", 16),
-        ("%Y-%m-%dT%H", 13),
-        ("%Y-%m-%d", 10),
-        ("%Y-%m", 7),
-    ]
-    for fmt, expected_len in formats:
-        if len(text) == expected_len:
-            dt = datetime.strptime(text, fmt)
-            return _naive_dt_to_timestamp(dt)
-    # Year only (any number of digits)
-    return _naive_dt_to_timestamp(datetime(int(text), 1, 1))
-
-
-def _naive_dt_to_timestamp(dt: datetime) -> float:
-    """Convert a naive datetime to a Unix timestamp (local time).
-
-    Works for dates before 1970 (unlike datetime.timestamp() on Windows).
-    """
-    try:
-        return dt.timestamp()
-    except (OSError, OverflowError):
-        utc_ts = calendar.timegm(dt.timetuple())
-        local_offset = datetime(2000, 1, 1).timestamp() - calendar.timegm(
-            datetime(2000, 1, 1).timetuple()
-        )
-        return utc_ts + local_offset
+def _parse_date_components(text: str) -> DateLiteral:
+    """Parse a date string into a DateLiteral with its components."""
+    parts = text.replace("T", "-").replace(":", "-").split("-")
+    components = [int(p) for p in parts]
+    return DateLiteral(
+        components[0],
+        components[1] if len(components) > 1 else None,
+        components[2] if len(components) > 2 else None,
+        components[3] if len(components) > 3 else None,
+        components[4] if len(components) > 4 else None,
+        components[5] if len(components) > 5 else None,
+    )
 
 
 class ExpressionParser:
@@ -124,12 +102,16 @@ class ExpressionParser:
 
     def parse(self, expression: str) -> Node:
         """Parse and validate an expression, returning an AST."""
-        tokens = tokenize(expression)
-        parser = _Parser(tokens, self._attributes, self._properties)
-        node = parser.parse_expression()
-        parser.expect(TokenType.EOF)
-        _check_boolean_context(node)
-        return node
+        try:
+            tokens = tokenize(expression)
+            parser = _Parser(tokens, self._attributes, self._properties)
+            node = parser.parse_expression()
+            parser.expect(TokenType.EOF)
+            _check_boolean_context(node)
+            return node
+        except ExpressionError as e:
+            e.source = expression
+            raise
 
 
 def _check_boolean_context(node: Node) -> None:
@@ -338,8 +320,7 @@ class _Parser:
 
         if tok.type == TokenType.DATE:
             self._advance()
-            ts = _date_to_timestamp(tok.value)
-            return LiteralValue(ts, FieldType.DATE)
+            return LiteralValue(_parse_date_components(tok.value), FieldType.DATE)
 
         if tok.type == TokenType.DURATION:
             self._advance()
@@ -372,6 +353,9 @@ class _Parser:
     def _parse_set_literal(self) -> Node:
         open_tok = self.expect(TokenType.LBRACE)
         if self._match(TokenType.RBRACE):
+            # Placeholder type: empty sets are always retyped during
+            # coercion (_coerce_set_literal) based on the field context,
+            # so this default is never observable in the final IR.
             return SetLiteral((), FieldType.STR)
 
         elements: list[LiteralValue] = []
@@ -409,8 +393,7 @@ class _Parser:
             return _parse_number_literal(tok)
         if tok.type == TokenType.DATE:
             self._advance()
-            ts = _date_to_timestamp(tok.value)
-            return LiteralValue(ts, FieldType.DATE)
+            return LiteralValue(_parse_date_components(tok.value), FieldType.DATE)
         if tok.type == TokenType.DURATION:
             self._advance()
             us = parse_duration_microseconds(tok.value)
@@ -604,9 +587,7 @@ def _coerce_literal(node: Node, target: FieldType, _op_tok: Token) -> Node:
         if target == FieldType.FLOAT:
             return LiteralValue(float(val), FieldType.FLOAT)
         if target == FieldType.DATE:
-            # Always interpret as year
-            ts = _date_to_timestamp(str(val))
-            return LiteralValue(ts, FieldType.DATE)
+            return LiteralValue(DateLiteral(val), FieldType.DATE)
         if target == FieldType.DURATION:
             return LiteralValue(val, FieldType.DURATION)
         if target == FieldType.FILESIZE:
@@ -618,7 +599,7 @@ def _coerce_literal(node: Node, target: FieldType, _op_tok: Token) -> Node:
             if val == int(val):
                 return LiteralValue(int(val), FieldType.INT)
         if target == FieldType.DATE:
-            return LiteralValue(float(val), FieldType.DATE)
+            return LiteralValue(DateTimestamp(float(val)), FieldType.DATE)
         if target == FieldType.DURATION:
             return LiteralValue(val, FieldType.DURATION)
         if target == FieldType.FILESIZE:

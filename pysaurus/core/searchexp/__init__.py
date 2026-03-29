@@ -4,6 +4,8 @@ from .parser import ExpressionParser  # noqa: F401
 from .types import (  # noqa: F401
     Comparison,
     ComparisonOp,
+    DateLiteral,
+    DateTimestamp,
     FieldRef,
     FieldType,
     FunctionCall,

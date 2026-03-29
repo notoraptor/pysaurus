@@ -83,6 +83,9 @@ def _get_annotations(cls: type, type_map: dict[type, FieldType]) -> dict[str, ty
         for name, ann in raw.items():
             if isinstance(ann, str):
                 try:
+                    # Safe: annotations come from internal classes only,
+                    # and ns is a controlled namespace built from builtins,
+                    # the class's module globals, and the type_map keys.
                     ann = eval(ann, ns)  # noqa: S307
                 except Exception:
                     pass
