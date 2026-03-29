@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Self
 
 
 class Duration:
@@ -57,23 +58,8 @@ class Duration:
             else "00s"
         )
 
-    @classmethod
-    def from_seconds(cls, seconds: int | float):
-        return cls(seconds * 1_000_000)
-
-    @classmethod
-    def from_minutes(cls, minutes: int | float):
-        return cls(minutes * 60_000_000)
-
-    @classmethod
-    def from_timedelta(cls, delta: timedelta):
-        return cls.from_seconds(delta.total_seconds())
-
-
-class ShortDuration(Duration):
-    __slots__ = ()
-
-    def __str__(self):
+    @property
+    def short(self) -> str:
         seconds = round((self.s * 1000000 + self.u) / 1000000)
         view = []
         if self.d:
@@ -82,3 +68,15 @@ class ShortDuration(Duration):
         view.append(f"{self.m:02d}")
         view.append(f"{seconds:02d}")
         return ("-" if self.sign < 0 else "") + ":".join(view)
+
+    @classmethod
+    def from_seconds(cls, seconds: int | float) -> Self:
+        return cls(seconds * 1_000_000)
+
+    @classmethod
+    def from_minutes(cls, minutes: int | float) -> Self:
+        return cls(minutes * 60_000_000)
+
+    @classmethod
+    def from_timedelta(cls, delta: timedelta) -> Self:
+        return cls.from_seconds(delta.total_seconds())

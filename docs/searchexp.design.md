@@ -162,7 +162,7 @@ pour que l'utilisateur puisse écrire des comparaisons naturellement.
 
 - **`__str__`** : composants non-nuls avec suffixes, chacun sur 2 chiffres,
   séparés par un espace — ex. `"05m 30s"`, `"01h 25m 03s"`, `"02d 05h"`, `"00s"`
-- **`ShortDuration.__str__`** : format horloge `HH:MM:SS` ou `DDd:HH:MM:SS`
+- **`Duration.short`** : format horloge `HH:MM:SS` ou `DDd:HH:MM:SS`
 - Composants : `d` (jours), `h` (heures), `m` (minutes), `s` (secondes), `µs` (microsecondes)
 - Stockage interne : microsecondes signées (`.t`)
 - Tous les opérateurs de comparaison supportés

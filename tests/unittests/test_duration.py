@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 
-from pysaurus.core.duration import Duration, ShortDuration
+from pysaurus.core.duration import Duration
 
 
 class TestDurationInitialization:
@@ -371,77 +371,70 @@ class TestDurationStringFormatting:
         assert str(d) == "01h 05s"
 
 
-class TestShortDuration:
-    def test_short_duration_seconds_only(self):
-        d = ShortDuration(45_000_000)
-        assert str(d) == "00:00:45"
+class TestShortProperty:
+    def test_short_seconds_only(self):
+        d = Duration(45_000_000)
+        assert d.short == "00:00:45"
 
-    def test_short_duration_minutes_seconds(self):
-        d = ShortDuration(125_000_000)
-        assert str(d) == "00:02:05"
+    def test_short_minutes_seconds(self):
+        d = Duration(125_000_000)
+        assert d.short == "00:02:05"
 
-    def test_short_duration_hours_minutes_seconds(self):
-        d = ShortDuration(3_665_000_000)
-        assert str(d) == "01:01:05"
+    def test_short_hours_minutes_seconds(self):
+        d = Duration(3_665_000_000)
+        assert d.short == "01:01:05"
 
-    def test_short_duration_with_days(self):
+    def test_short_with_days(self):
         # 1 day, 2 hours, 3 minutes, 4 seconds
         microseconds = (
             86_400_000_000 + 2 * 3_600_000_000 + 3 * 60_000_000 + 4 * 1_000_000
         )
-        d = ShortDuration(microseconds)
-        assert str(d) == "01d:02:03:04"
+        d = Duration(microseconds)
+        assert d.short == "01d:02:03:04"
 
-    def test_short_duration_rounds_microseconds(self):
+    def test_short_rounds_microseconds(self):
         # 30 seconds + 600,000 microseconds = 30.6 seconds -> rounds to 31
-        d = ShortDuration(30_600_000)
-        assert str(d) == "00:00:31"
+        d = Duration(30_600_000)
+        assert d.short == "00:00:31"
 
-    def test_short_duration_rounds_down(self):
+    def test_short_rounds_down(self):
         # 30 seconds + 400,000 microseconds = 30.4 seconds -> rounds to 30
-        d = ShortDuration(30_400_000)
-        assert str(d) == "00:00:30"
+        d = Duration(30_400_000)
+        assert d.short == "00:00:30"
 
-    def test_short_duration_zero(self):
-        d = ShortDuration(0)
-        assert str(d) == "00:00:00"
+    def test_short_zero(self):
+        d = Duration(0)
+        assert d.short == "00:00:00"
 
-    def test_short_duration_inherits_comparison(self):
-        d1 = ShortDuration(1_000_000)
-        d2 = ShortDuration(2_000_000)
-        assert d1 < d2
-        assert d2 > d1
-        assert d1 == ShortDuration(1_000_000)
+    def test_short_factory_methods(self):
+        d1 = Duration.from_seconds(90)
+        assert d1.short == "00:01:30"
 
-    def test_short_duration_factory_methods(self):
-        d1 = ShortDuration.from_seconds(90)
-        assert str(d1) == "00:01:30"
+        d2 = Duration.from_minutes(75)
+        assert d2.short == "01:15:00"
 
-        d2 = ShortDuration.from_minutes(75)
-        assert str(d2) == "01:15:00"
-
-    def test_short_duration_from_timedelta(self):
+    def test_short_from_timedelta(self):
         td = timedelta(hours=1, minutes=30, seconds=45)
-        d = ShortDuration.from_timedelta(td)
-        assert str(d) == "01:30:45"
+        d = Duration.from_timedelta(td)
+        assert d.short == "01:30:45"
 
-    def test_short_duration_from_timedelta_with_days(self):
+    def test_short_from_timedelta_with_days(self):
         td = timedelta(days=2, hours=3, minutes=15, seconds=30)
-        d = ShortDuration.from_timedelta(td)
-        assert str(d) == "02d:03:15:30"
+        d = Duration.from_timedelta(td)
+        assert d.short == "02d:03:15:30"
 
-    def test_short_duration_negative(self):
-        d = ShortDuration(-65_000_000)
+    def test_short_negative(self):
+        d = Duration(-65_000_000)
         assert d.sign == -1
         assert d.m == 1
         assert d.s == 5
-        assert str(d) == "-00:01:05"
+        assert d.short == "-00:01:05"
 
-    def test_short_duration_negative_with_days(self):
+    def test_short_negative_with_days(self):
         microseconds = -(86_400_000_000 + 3_600_000_000 + 60_000_000 + 30_000_000)
-        d = ShortDuration(microseconds)
+        d = Duration(microseconds)
         assert d.sign == -1
-        assert str(d) == "-01d:01:01:30"
+        assert d.short == "-01d:01:01:30"
 
 
 class TestEdgeCases:
