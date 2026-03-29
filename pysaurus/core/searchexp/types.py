@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal
+from typing import Literal, TypeAlias
 
 
 class FieldType(Enum):
@@ -110,7 +110,7 @@ class NotOp:
     operand: Node
 
 
-Node = (
+Node: TypeAlias = (
     FieldRef
     | LiteralValue
     | SetLiteral
