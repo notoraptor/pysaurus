@@ -328,13 +328,25 @@ des années illimitées.
 
 ### Pistes d'amélioration pour UDT
 
-Fonctionnalités présentes dans les alternatives qui pourraient enrichir UDT :
+Fonctionnalités implémentées :
 
-- `strftime()` / `strptime()` pour le formatage personnalisé.
-- `timetuple()` pour la compatibilité avec les APIs standard.
-- `dayofyr` (jour de l'année).
-- `daysinmonth` (nombre de jours dans le mois courant).
-- Sérialisation pickle.
+- `yearday()` — jour de l'année (1–366).
+- `daysinmonth()` — nombre de jours dans le mois courant (28–31).
+- Sérialisation pickle (via `__reduce__`).
+
+Fonctionnalités écartées :
+
+- **`strftime()` / `strptime()`** — `isoformat()` et `fromisoformat()`
+  couvrent le besoin principal. Une implémentation maison serait coûteuse
+  (la stdlib ne gère pas les années négatives) pour un gain marginal.
+- **`timetuple()`** — `time.struct_time` ne supporte ni les années négatives
+  ni les microsecondes. Pour l'interop stdlib, passer par `to_datetime()`.
+- **DST (heure d'été)** — `Timezone` reste un offset UTC fixe. Raisons :
+  (1) `tzinfo.utcoffset(dt)` attend un `datetime`, pas un `UDT`, donc
+  inutilisable pour les années négatives ; (2) résoudre un `ZoneInfo` en
+  offset fixe à la construction perdrait la conscience DST pour les
+  opérations futures. Pour les dates modernes nécessitant le DST, passer
+  par `from_datetime()` / `to_datetime()` avec un `datetime` timezone-aware.
 
 ---
 

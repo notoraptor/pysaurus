@@ -1,3 +1,88 @@
+"""
+[english follows]
+
+FRENCH
+======
+
+Universal DateTime (UDT) — datetime universel en calendrier grégorien proleptique.
+
+Raison d'être
+-------------
+Le ``datetime`` de Python est limité aux années 1–9999 et délègue la gestion
+des fuseaux horaires à des sous-classes ``tzinfo`` externes. UDT lève ces
+restrictions : plage d'années illimitée (y compris négatives), arithmétique
+entière exacte (JDN + microsecondes, zéro erreur d'arrondi), support complet
+des fuseaux horaires via un offset UTC fixe, parsing/formatage ISO 8601
+étendu, le tout en pur Python sans aucune dépendance.
+
+Implémentation
+--------------
+- Stockage interne : Julian Day Number (``__jdn``) + microsecondes UTC
+  (``__utc``), calculés une seule fois à la construction. Les comparaisons
+  et le hachage se font sur ``__utc``, ce qui rend les UDT de fuseaux
+  différents directement comparables.
+- ``Timezone`` est un offset UTC fixe (sous-classe de ``datetime.tzinfo``
+  et de ``Microseconds``). Pas de support DST natif (voir ci-dessous).
+- Pickle supporté via ``__reduce__`` : reconstruction par ``__init__``.
+- Immutabilité assurée par ``__slots__`` et name mangling (``__``).
+
+Décisions de conception
+-----------------------
+- **Pas de DST natif** : ``Timezone`` reste un offset fixe. L'API
+  ``tzinfo.utcoffset(dt)`` attend un ``datetime``, pas un ``UDT``, donc
+  ne fonctionne pas pour les années négatives. Résoudre un ``ZoneInfo`` en
+  offset fixe à la construction perdrait la conscience DST pour les
+  opérations futures. Pour les dates modernes nécessitant le DST, passer
+  par ``from_datetime()`` / ``to_datetime()`` avec un ``datetime``
+  timezone-aware.
+- **Pas de ``timetuple()``** : ``time.struct_time`` ne supporte ni les
+  années négatives ni les microsecondes. Pour l'interop stdlib, utiliser
+  ``to_datetime()``.
+- **Pas de ``strftime()`` / ``strptime()``** : ``isoformat()`` et
+  ``fromisoformat()`` couvrent le besoin principal. La stdlib ne gère pas
+  les années négatives dans ``strftime``, donc une implémentation maison
+  serait coûteuse pour un gain marginal.
+
+ENGLISH
+=======
+
+Universal DateTime (UDT) — universal datetime in the proleptic Gregorian calendar.
+
+Rationale
+---------
+Python's ``datetime`` is limited to years 1–9999 and delegates timezone
+handling to external ``tzinfo`` subclasses. UDT removes these restrictions:
+unlimited year range (including negative), exact integer arithmetic
+(JDN + microseconds, zero rounding errors), full timezone support via fixed
+UTC offsets, extended ISO 8601 parsing/formatting, all in pure Python with
+zero dependencies.
+
+Implementation
+--------------
+- Internal storage: Julian Day Number (``__jdn``) + UTC microseconds
+  (``__utc``), computed once at construction time. Comparisons and hashing
+  use ``__utc``, making UDTs from different timezones directly comparable.
+- ``Timezone`` is a fixed UTC offset (subclass of both ``datetime.tzinfo``
+  and ``Microseconds``). No native DST support (see below).
+- Pickle supported via ``__reduce__``: reconstruction through ``__init__``.
+- Immutability enforced by ``__slots__`` and name mangling (``__``).
+
+Design decisions
+----------------
+- **No native DST**: ``Timezone`` remains a fixed offset. The
+  ``tzinfo.utcoffset(dt)`` API expects a ``datetime``, not a ``UDT``, so
+  it cannot work for negative years. Resolving a ``ZoneInfo`` to a fixed
+  offset at construction time would lose DST awareness for subsequent
+  operations. For modern dates requiring DST, use ``from_datetime()`` /
+  ``to_datetime()`` with a timezone-aware ``datetime``.
+- **No ``timetuple()``**: ``time.struct_time`` supports neither negative
+  years nor microseconds. For stdlib interop, use ``to_datetime()``.
+- **No ``strftime()`` / ``strptime()``**: ``isoformat()`` and
+  ``fromisoformat()`` cover the main use case. The stdlib does not handle
+  negative years in ``strftime``, so a custom implementation would be
+  costly for marginal benefit.
+"""
+
 from __future__ import annotations
 
 import re
@@ -106,7 +191,7 @@ class Timezone(_python_tzinfo, Microseconds):
         minutes, seconds = divmod(remainder, 60)
         return sign, hours, minutes, seconds
 
-    def tzname(self, dt, /):
+    def tzname(self, _dt, /):
         if self._microseconds == 0:
             return "UTC"
         sign, hours, minutes, seconds = self._format_offset()
@@ -114,10 +199,10 @@ class Timezone(_python_tzinfo, Microseconds):
             return f"UTC{sign}{hours:02d}:{minutes:02d}:{seconds:02d}"
         return f"UTC{sign}{hours:02d}:{minutes:02d}"
 
-    def utcoffset(self, dt, /):
+    def utcoffset(self, _dt, /):
         return timedelta(microseconds=self._microseconds)
 
-    def dst(self, dt, /):
+    def dst(self, _dt, /):
         return timedelta(0)
 
     def isoformat(self) -> str:
@@ -524,6 +609,30 @@ class UDT:
     def weekday(self) -> int:
         """Day of the week: 0=Monday, 1=Tuesday, ..., 6=Sunday."""
         return self.__jdn % 7
+
+    def yearday(self) -> int:
+        """Day of the year: 1 for January 1, 365 or 366 for December 31."""
+        return self.__jdn - _date_to_jdn(self.__y, 1, 1) + 1
+
+    def daysinmonth(self) -> int:
+        """Number of days in the current month (28-31)."""
+        return _days_in_month(self.__y, self.__m)
+
+    def __reduce__(self):
+        """Pickle support: reconstruct via __init__, which recalculates __jdn and __utc."""
+        return (
+            UDT,
+            (
+                self.__y,
+                self.__m,
+                self.__d,
+                self.__h,
+                self.__i,
+                self.__s,
+                self.__u,
+                self.__z,
+            ),
+        )
 
     def __hash__(self):
         return hash(self.__utc)
