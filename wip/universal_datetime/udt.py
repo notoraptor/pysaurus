@@ -158,6 +158,27 @@ class Microseconds:
             return NotImplemented
         return self._microseconds >= other._microseconds
 
+    def __str__(self):
+        """String representation. Omits zero units."""
+        sign = "-" if self._microseconds < 0 else ""
+        total = abs(self._microseconds)
+        d = total // D_TO_US
+        h = total % D_TO_US // H_TO_US
+        m = total % H_TO_US // M_TO_US
+        s = total % M_TO_US // S_TO_US
+        u = total % S_TO_US
+        parts = (
+            (f"{d:02d}d" if d else "")
+            + (f" {h:02d}h" if h else "")
+            + (f" {m:02d}m" if m else "")
+            + (f" {s:02d}s" if s else "")
+            + (f" {u:06d}us" if u else "")
+        ).strip()
+        return sign + (parts or "00s")
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self})"
+
     @property
     def microseconds(self) -> int:
         return self._microseconds
@@ -217,6 +238,9 @@ class Timezone(_python_tzinfo, Microseconds):
     def __eq__(self, other):
         return Microseconds.__eq__(self, other)
 
+    def __str__(self):
+        return self.tzname(None)
+
     def __repr__(self):
         return self.tzname(None)
 
@@ -225,24 +249,6 @@ class Timedelta(ArithmeticMicroseconds):
     """Duration, stored as signed microseconds."""
 
     __slots__ = ()
-
-    def __str__(self):
-        """String representation of the timedelta. Omits zero units."""
-        sign = "-" if self._microseconds < 0 else ""
-        total = abs(self._microseconds)
-        d = total // D_TO_US
-        h = total % D_TO_US // H_TO_US
-        m = total % H_TO_US // M_TO_US
-        s = total % M_TO_US // S_TO_US
-        u = total % S_TO_US
-        parts = (
-            (f"{d:02d}d" if d else "")
-            + (f" {h:02d}h" if h else "")
-            + (f" {m:02d}m" if m else "")
-            + (f" {s:02d}s" if s else "")
-            + (f" {u:06d}us" if u else "")
-        ).strip()
-        return sign + (parts or "00s")
 
     @property
     def short(self) -> str:
@@ -269,9 +275,6 @@ class Timedelta(ArithmeticMicroseconds):
 
     def to_timedelta(self) -> timedelta:
         return timedelta(microseconds=self._microseconds)
-
-    def __repr__(self):
-        return f"Timedelta({self})"
 
 
 _DAYS_IN_MONTH = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
