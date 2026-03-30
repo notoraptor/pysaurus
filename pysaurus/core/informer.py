@@ -42,8 +42,8 @@ class Information:
             self._callback = do_nothing
             self._initialized = True
 
-    def _set_callback(self, callback: Callable[[Notification], None]):
-        self._callback = callback or do_nothing
+    def _set_callback(self, callback: Callable[[Notification], None] | None):
+        self._callback = callback if callback is not None else do_nothing
 
     def __enter__(self):
         if self._thread is None:

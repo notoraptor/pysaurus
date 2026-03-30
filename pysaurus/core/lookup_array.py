@@ -1,4 +1,4 @@
-from typing import Any, Callable, Generic, Iterable, Sequence, Type, TypeVar
+from typing import Any, Callable, Generic, Iterable, TypeVar
 
 T = TypeVar("T")
 
@@ -8,15 +8,15 @@ class LookupArray(Generic[T]):
 
     def __init__(
         self,
-        element_type: Type | Sequence[Type],
+        element_type: type[Any] | tuple[type[Any], ...],
         content: Iterable[T] = (),
-        key: Callable[[T], Any] = None,
+        key: Callable[[T], Any] | None = None,
     ):
-        self.__type: Type | Sequence[Type] = element_type
+        self.__type: type[Any] | tuple[type[Any], ...] = element_type
         self.__content: list[T] = []
         self.__table: dict[Any, int] = {}
         self.__key_fn: Callable[[T], Any] = (
-            key if callable(key) else lambda value: value
+            key if key is not None else lambda value: value
         )
         self.extend(content)
 

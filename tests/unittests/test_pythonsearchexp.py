@@ -10,7 +10,6 @@ import pytest
 from pysaurus.core.pythonsearchexp import PythonSearchExp
 from pysaurus.core.searchexp import FieldType, SetType
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

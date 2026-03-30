@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass
-from typing import Self, Iterable
+from typing import Iterable, Self
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions

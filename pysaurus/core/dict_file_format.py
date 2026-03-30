@@ -16,7 +16,7 @@ def dff_dumps(dictionary: dict[str, Any]) -> str:
         return str(writer)
 
 
-def dff_loads(text: str) -> dict:
+def dff_loads(text: str) -> dict[str, str]:
     dictionary = {}
     key = None
     lines = []
@@ -42,11 +42,11 @@ def dff_loads(text: str) -> dict:
     return {key: value.rstrip() for key, value in dictionary.items()}
 
 
-def dff_dump(dictionary: dict, path):
+def dff_dump(dictionary: dict[str, Any], path: Any) -> None:
     with open(str(path), "wb") as file:
         file.write(dff_dumps(dictionary).encode("utf-8"))
 
 
-def dff_load(path) -> dict:
+def dff_load(path) -> dict[str, str]:
     with open(str(path), "rb") as file:
         return dff_loads(file.read().decode("utf-8"))

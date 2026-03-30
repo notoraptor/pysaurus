@@ -18,14 +18,14 @@ class SqlField:
     def get_field(self) -> str:
         return ", ".join(self.definition)
 
-    def get_length(self):
+    def get_length(self) -> str:
         args = ", ',', ".join(self.definition)
         return f"LENGTH(CONCAT({args}))"
 
     def get_where(self) -> str:
         return " AND ".join(f"{column} = ?" for column in self.definition)
 
-    def get_conditions(self, values: list) -> dict:
+    def get_conditions(self, values: list[str]) -> dict[str, str]:
         return {column: value for column, value in zip(self.definition, values)}
 
     def get_sorting(self, reverse=False) -> str:
@@ -146,7 +146,7 @@ class SqlFieldFactory:
     def get_where(self, name) -> str:
         return self.fields[name].get_where()
 
-    def get_conditions(self, name, values: list) -> dict:
+    def get_conditions(self, name, values: list[str]) -> dict[str, str]:
         return self.fields[name].get_conditions(values)
 
     def get_sorting(self, name, reverse) -> str:

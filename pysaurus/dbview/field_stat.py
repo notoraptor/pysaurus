@@ -8,7 +8,7 @@ class FieldStat:
     value: Any
     count: int
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "value": self.value if self.is_property else str(self.value),
             "count": self.count,

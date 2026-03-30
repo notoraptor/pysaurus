@@ -12,7 +12,6 @@ from pysaurus.database.saurus.sql_expression_compiler import (
     properties_to_field_types,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

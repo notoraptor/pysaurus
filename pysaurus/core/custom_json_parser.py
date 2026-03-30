@@ -1,5 +1,5 @@
 import logging
-from typing import Iterator
+from typing import Any, Iterator
 
 import ujson as json
 
@@ -130,7 +130,7 @@ def _start_array(iterable: Iterator[int]):
 
 
 def _start_object(iterable: Iterator[int]):
-    parsed = {}
+    parsed: dict[str, Any] = {}
     key = None
     val = bytearray()
     step = OBJ_STEP_KEY
@@ -219,7 +219,7 @@ def _start_string(iterable: Iterator[int]):
 
 
 def _flush_acc(acc: bytearray):
-    values = []
+    values: list[bool | int | float | None] = []
     if acc:
         string = acc.decode()
         if string == "true":

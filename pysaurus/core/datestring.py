@@ -26,7 +26,7 @@ class Date:
         return self.time >= other.time
 
     @property
-    def day(self):
+    def day(self) -> str:
         return datetime.fromtimestamp(self.time).strftime("%Y-%m-%d")
 
     @property

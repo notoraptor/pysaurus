@@ -2,19 +2,24 @@
 
 import logging
 import multiprocessing
+from typing import Iterable
 
-from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.notifying import DEFAULT_NOTIFIER
-from pysaurus.database.database import BaseDatabase
+from pysaurus.core.absolute_path import AbsolutePath, PathType
+from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
+from pysaurus.database.database import Database
 
 logger = logging.getLogger(__name__)
 
 
-class DebugDatabase(BaseDatabase):
+class DebugDatabase(Database):
     __slots__ = ("_initial_pid",)
 
-    def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
-        # type: (PathType, Iterable[PathType], Notifier) -> None
+    def __init__(
+        self,
+        path: PathType,
+        folders: Iterable[PathType] | None = None,
+        notifier: Notifier = DEFAULT_NOTIFIER,
+    ) -> None:
         path = AbsolutePath.ensure(path)
 
         self._initial_pid = multiprocessing.current_process().pid

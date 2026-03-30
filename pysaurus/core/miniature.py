@@ -69,7 +69,7 @@ class Miniature(AbstractMatrix):
         }
 
     @staticmethod
-    def from_dict(dct: dict):
+    def from_dict(dct: dict[str, Any]) -> "Miniature":
         return Miniature(
             red=base64.b64decode(dct["r"]),
             green=base64.b64decode(dct["g"]),
@@ -93,7 +93,9 @@ class Miniature(AbstractMatrix):
         return Miniature._img_to_mnt(image, dimensions, identifier)
 
     @staticmethod
-    def _img_to_mnt(image, dimensions: tuple[int, int], identifier: Any | None):
+    def _img_to_mnt(
+        image: Any, dimensions: tuple[int, int], identifier: Any | None
+    ) -> "Miniature":
         thumbnail = image.resize(dimensions)
         width, height = dimensions
         size = width * height

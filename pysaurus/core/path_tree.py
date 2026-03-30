@@ -23,7 +23,7 @@ class PathTree(PathTreeNode):
             self.add(folder)
 
     def add(self, path: AbsolutePath):
-        current = self
+        current: PathTreeNode = self
         for piece in path.standard_path.split(os.sep):
             if piece in current.children:
                 node = current.children[piece]

@@ -3,8 +3,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from pysaurus.core.universal_datetime import UDT
-
 from pysaurus.core.searchexp.types import (
     Comparison,
     ComparisonOp,
@@ -20,6 +18,7 @@ from pysaurus.core.searchexp.types import (
     NotOp,
     SetLiteral,
 )
+from pysaurus.core.universal_datetime import UDT
 
 
 class ExpressionEvaluator:

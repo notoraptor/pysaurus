@@ -5,8 +5,6 @@ Dialog for managing property values across all videos.
 from collections import Counter
 
 from PySide6.QtCore import Qt
-
-from pysaurus.properties.properties import PropType
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -20,6 +18,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
+
+from pysaurus.properties.properties import PropType
 
 
 class PropertyValuesDialog(QDialog):

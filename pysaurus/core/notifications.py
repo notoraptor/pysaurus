@@ -1,4 +1,4 @@
-from typing import Self, Sequence
+from typing import Any, Sequence
 
 from pysaurus.core.classes import StringPrinter, ToDict
 from pysaurus.core.functions import camel_case_to_snake_case
@@ -7,7 +7,7 @@ from pysaurus.core.functions import camel_case_to_snake_case
 class Notification(ToDict):
     __slots__ = ()
 
-    def describe(self) -> dict:
+    def describe(self) -> dict[str, Any]:
         return {
             "name": type(self).__name__,
             "notification": self.to_dict(),
@@ -33,7 +33,7 @@ class NbMiniatures(Notification):
 class MissingThumbnails(Notification):
     __slots__ = ("names",)
 
-    def __init__(self, file_names: list):
+    def __init__(self, file_names: list[Any]):
         super().__init__()
         self.names = sorted(str(file_name) for file_name in file_names)
 
@@ -120,7 +120,7 @@ class ProfilingEnd(Notification):
         self.time = str(duration)
         self.inline = inline
 
-    def with_inline(self, inline: bool) -> Self:
+    def with_inline(self, inline: bool) -> "ProfilingEnd":
         return ProfilingEnd(self.name, self.time, inline=inline)
 
     def __str__(self):

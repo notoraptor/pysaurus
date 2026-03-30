@@ -4,8 +4,6 @@ Dialog for batch editing properties of multiple videos.
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
-
-from pysaurus.properties.properties import PropType
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -23,6 +21,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from pysaurus.properties.properties import PropType
 
 
 class NonSubmittingLineEdit(QLineEdit):

@@ -79,7 +79,9 @@ class DbSimilarReencoded:
         )
 
     @staticmethod
-    def _sortable_group(group: set[str], video_map: dict[str, VideoPattern]) -> tuple:
+    def _sortable_group(
+        group: set[str], video_map: dict[str, VideoPattern]
+    ) -> tuple[int, float, str]:
         return (
             len(group),
             -max(video_map[f].date.time for f in group),

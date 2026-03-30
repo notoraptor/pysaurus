@@ -16,7 +16,7 @@ class EnumerationValueError(EnumerationError):
 class Enumeration:
     __slots__ = "values", "type"
 
-    def __init__(self, enum_values: Iterable):
+    def __init__(self, enum_values: Iterable[bool | int | float | str]) -> None:
         self.values = set(enum_values)
         if len(self.values) < 2:
             raise EnumerationError(self.values)
@@ -33,6 +33,6 @@ class Enumeration:
         return value
 
     def __str__(self):
-        return "{" + (", ".join(sorted(self.values))) + "}"
+        return "{" + (", ".join(str(value) for value in sorted(self.values))) + "}"
 
     __repr__ = __str__

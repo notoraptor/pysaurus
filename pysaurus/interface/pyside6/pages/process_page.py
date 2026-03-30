@@ -21,14 +21,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from pysaurus.interface.pyside6.widgets.spinner_widget import SpinnerWidget
-
 from pysaurus.core.job_notifications import (
     JobProgressDisplay,
     JobToDo,
     NotificationCollector,
 )
 from pysaurus.core.notifications import End, Notification, ProfilingEnd
+from pysaurus.interface.pyside6.widgets.spinner_widget import SpinnerWidget
 
 
 class ProcessJobProgress(JobProgressDisplay):

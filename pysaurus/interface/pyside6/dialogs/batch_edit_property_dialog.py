@@ -11,8 +11,6 @@ Bottom of each column has bulk action buttons.
 """
 
 from PySide6.QtCore import Qt
-
-from pysaurus.properties.properties import PropType
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -29,6 +27,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from pysaurus.properties.properties import PropType
 
 _BTN_STYLE = (
     "QPushButton { padding: 1px 5px; min-width: 20px; }"

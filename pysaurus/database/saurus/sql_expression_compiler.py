@@ -13,8 +13,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from pysaurus.core.universal_datetime import UDT
-
 from pysaurus.core.searchexp.types import (
     Comparison,
     ComparisonOp,
@@ -32,6 +30,7 @@ from pysaurus.core.searchexp.types import (
     SetLiteral,
     SetType,
 )
+from pysaurus.core.universal_datetime import UDT
 
 # Type alias for (sql_string, parameters)
 SqlFragment = tuple[str, list[Any]]

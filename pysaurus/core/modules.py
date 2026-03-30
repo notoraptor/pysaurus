@@ -11,7 +11,7 @@ from PIL import Image
 from pysaurus.core import core_exceptions
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 
-ImagePosition = tuple[Any, int, int]
+ImagePosition = tuple[int, int]
 
 
 class HTMLStripper(HTMLParser):
@@ -140,8 +140,8 @@ class ImageUtils:
         return output_image
 
     @staticmethod
-    def open_rgb_image(file_name) -> Image.Image:
-        image = Image.open(file_name)
+    def open_rgb_image(file_name: Any) -> Image.Image:
+        image: Image.Image = Image.open(file_name)
         if image.mode != ImageUtils.IMAGE_RGB_MODE:
             image = image.convert(ImageUtils.IMAGE_RGB_MODE)
         return image
@@ -340,7 +340,7 @@ class _FileSystem:
         return os.stat(path)
 
     @classmethod
-    def utime(cls, path: str, times: tuple):
+    def utime(cls, path: str, times: tuple[float, float]):
         return os.utime(path, times)
 
     @classmethod

@@ -3,7 +3,7 @@ import locale
 from abc import abstractmethod
 from io import StringIO
 from itertools import chain
-from typing import Iterable
+from typing import Any, Iterable
 
 
 class StringPrinter:
@@ -56,7 +56,7 @@ class ToDict:
         )
 
     @classmethod
-    def get_args_from(cls, dictionary: dict):
+    def get_args_from(cls, dictionary: dict[str, Any]):
         return {field: dictionary[field] for field in cls.get_slots()}
 
     def to_dict(self, **extra):
@@ -127,7 +127,7 @@ class AbstractMatrix:
         raise NotImplementedError()
 
 
-class StringedTuple(tuple):
+class StringedTuple(tuple[Any, ...]):
     """A tuple that prints elements with str instead of repr"""
 
     def __str__(self):
@@ -202,7 +202,7 @@ class DecoratingMethod:
 class Selector:
     __slots__ = ("_to_exclude", "_selection")
 
-    def __init__(self, exclude: bool, selection: set):
+    def __init__(self, exclude: bool, selection: set[Any]):
         self._to_exclude = exclude
         self._selection = selection
 
@@ -251,7 +251,7 @@ class Selector:
             total - len(self._selection) if self._to_exclude else len(self._selection)
         )
 
-    def filter(self, data: Iterable) -> list:
+    def filter(self, data: Iterable[Any]) -> list[Any]:
         if self._to_exclude:
             return [element for element in data if element not in self._selection]
         else:
@@ -266,7 +266,7 @@ class Selector:
             query = f"{field} IN ({placeholders})"
         return query, selection
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert selector to dictionary format for backend API."""
         if self._to_exclude:
             return {"all": True, "include": [], "exclude": list(self._selection)}
@@ -274,7 +274,7 @@ class Selector:
             return {"all": False, "include": list(self._selection), "exclude": []}
 
     @classmethod
-    def parse_dict(cls, selector: dict):
+    def parse_dict(cls, selector: dict[str, Any]):
         if selector["all"]:
             to_exclude = True
             selection = set(selector["exclude"])

@@ -17,7 +17,7 @@ class VideoClipping:
         in_stream = input_container.streams.video[0]
         duration = float(in_stream.duration * in_stream.time_base)
 
-        time_end = time_start + clip_seconds
+        time_end: float = time_start + clip_seconds
         if time_start > duration:
             time_start = duration
         if time_end > duration:

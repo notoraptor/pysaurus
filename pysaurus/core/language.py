@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Any
 
 from filelock import SoftFileLock
 
@@ -34,7 +35,7 @@ class Language:
             translation = translation.format(**placeholders)
         return translation
 
-    def set_internal(self, dictionary: dict):
+    def set_internal(self, dictionary: dict[str, Any]):
         dictionary = dictionary or {}
         self.default = dictionary.get("default", self.default)
         self.current = dictionary.get("current", self.current)
