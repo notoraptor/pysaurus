@@ -1,9 +1,7 @@
 from typing import Iterable
 
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.datestring import Date
 from pysaurus.core.functions import generate_temporary_file
-from pysaurus.core.modules import FileSystem
 
 
 def create_xspf_playlist(paths: Iterable[AbsolutePath], output=None) -> AbsolutePath:
@@ -21,12 +19,3 @@ def create_xspf_playlist(paths: Iterable[AbsolutePath], output=None) -> Absolute
     with open(output, "w") as file:
         file.write(file_content)
     return AbsolutePath(output)
-
-
-def collect_file_titles(folder: AbsolutePath, extension: str) -> dict[str, Date]:
-    extension = extension.lower()
-    return {
-        entry.name[: -(len(extension) + 1)]: Date(entry.stat().st_mtime)
-        for entry in FileSystem.scandir(folder.path)
-        if entry.path.lower().endswith(f".{extension}")
-    }

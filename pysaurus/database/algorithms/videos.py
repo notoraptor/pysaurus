@@ -2,6 +2,7 @@ from typing import Iterable
 
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.informer import Information
 from pysaurus.core.language import say
 from pysaurus.core.modules import FNV64
@@ -61,7 +62,7 @@ class Videos:
                     filename,
                     need_info=True,
                     thumb_path=AbsolutePath.compose(
-                        working_directory, hasher(filename.path), "jpg"
+                        working_directory, hasher(filename.path), THUMBNAIL_EXTENSION
                     ).path,
                 )
             )
@@ -71,7 +72,9 @@ class Videos:
                 VideoTask(
                     filename_no_thumb,
                     thumb_path=AbsolutePath.compose(
-                        working_directory, hasher(filename_no_thumb.path), "jpg"
+                        working_directory,
+                        hasher(filename_no_thumb.path),
+                        THUMBNAIL_EXTENSION,
                     ).path,
                 )
             )

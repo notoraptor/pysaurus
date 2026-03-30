@@ -1,4 +1,4 @@
-from pysaurus.core.functions import get_percent
+from wip.tools.functions import get_percent
 from wip.adnoide.adnoide import Life
 from wip.adnoide.birth import ControlledNursery
 from wip.adnoide.dna_errors import DNAError, ProteinArgsError, ProteinError

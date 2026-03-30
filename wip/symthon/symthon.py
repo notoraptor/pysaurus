@@ -2,7 +2,7 @@ import operator
 from abc import ABC, abstractmethod
 from typing import Any, Self, Sequence
 
-from pysaurus.core import functions
+from wip.tools import functions
 
 
 def _assert_str(value) -> str:

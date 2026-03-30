@@ -14,7 +14,3 @@ class NegativeComparator:
 
     def __lt__(self, other):
         return other.value < self.value
-
-
-def to_comparable(value, reverse=False):
-    return NegativeComparator(value) if reverse else value

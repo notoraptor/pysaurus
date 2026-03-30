@@ -1,8 +1,6 @@
-UNDEFINED = object()
-VIDEO_BATCH_SIZE = 250
-PYTHON_ERROR_THUMBNAIL = "PYTHON_ERROR_THUMBNAIL"
-THUMBNAIL_EXTENSION = "png"
 JPEG_EXTENSION = "jpg"
+PNG_EXTENSION = "png"
+THUMBNAIL_EXTENSION = JPEG_EXTENSION
 VIDEO_SUPPORTED_EXTENSIONS = frozenset(
     (
         # "!qB".lower(),  # qbittorrent incomplete downloads. TODO Should not be parsed

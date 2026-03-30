@@ -7,13 +7,13 @@ from abc import ABC, abstractmethod
 from typing import Any, Self, Sequence
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.functions import boolean_and, boolean_or, if_else, map_attribute
 from wip.adnoide.dna_errors import (
     DNATooLongForTranslationError,
     DNATooShortForTranslationError,
     ProteinError,
     ProteinTypeError,
 )
+from wip.tools.functions import boolean_and, boolean_or, if_else, map_attribute
 
 
 class Utils:
