@@ -1107,6 +1107,7 @@ class VideosPage(QWidget):
             if len(text) > 50:
                 text = text[:47] + "..."
             self.sources_info.setText(text)
+            self.sources_info.setToolTip(source_expression)
             return
 
         # Enable/disable clear button based on whether sources differ from default
@@ -1115,6 +1116,7 @@ class VideosPage(QWidget):
 
         if not sources:
             self.sources_info.setText("All sources")
+            self.sources_info.setToolTip("")
             return
 
         # Format sources for display
@@ -1131,10 +1133,12 @@ class VideosPage(QWidget):
                 formatted.append(path[-1].replace("_", " ").capitalize())
 
         # Join with commas, truncate if too long
-        text = ", ".join(formatted)
+        full_text = ", ".join(formatted)
+        text = full_text
         if len(text) > 50:
             text = text[:47] + "..."
         self.sources_info.setText(text)
+        self.sources_info.setToolTip(full_text if full_text != text else "")
 
     def _update_sorting_display(self, sorting: list[str] | None):
         """Update the sorting info label."""

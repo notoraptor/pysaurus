@@ -6,6 +6,7 @@ Two tabs:
 - Advanced: free-text searchexp expression
 """
 
+from PySide6.QtCore import QEvent, Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -151,6 +152,7 @@ class SourcesDialog(QDialog):
             'e.g. width > 1080 and found and "eng" in audio_languages'
         )
         self._expression_edit.setAcceptRichText(False)
+        self._expression_edit.installEventFilter(self)
         if self._current_expression:
             self._expression_edit.setPlainText(self._current_expression)
         layout.addWidget(self._expression_edit)
@@ -200,6 +202,17 @@ class SourcesDialog(QDialog):
         """Select only valid videos (readable, found, with thumbnails)."""
         self._select_none()
         self._checkboxes["readable.found.with_thumbnails"].setChecked(True)
+
+    def eventFilter(self, obj, event):
+        if (
+            obj is self._expression_edit
+            and event.type() == QEvent.Type.KeyPress
+            and event.modifiers() == Qt.KeyboardModifier.ShiftModifier
+            and event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)
+        ):
+            self.accept()
+            return True
+        return super().eventFilter(obj, event)
 
     def is_advanced(self) -> bool:
         """Return True if the advanced tab is selected."""
