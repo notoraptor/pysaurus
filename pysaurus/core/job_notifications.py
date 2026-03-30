@@ -1,6 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
-from typing import Any, Iterable
+from typing import Any, Iterable, Sized
 
 from pysaurus.core.duration import Duration
 from pysaurus.core.functions import camel_case_to_snake_case
@@ -11,7 +11,7 @@ from pysaurus.core.perf_counter import PerfCounter
 class JobToDo(Notification):
     __slots__ = "name", "total", "title"
 
-    def __init__(self, name: str, total: int, title: str = None):
+    def __init__(self, name: str, total: int, title: str | None = None):
         self.name = name
         self.total = total
         self.title = title
@@ -28,7 +28,7 @@ class JobStep(Notification):
         step: int,
         total: int,
         *,
-        title: str = None,
+        title: str | None = None,
     ):
         self.name = name
         self.channel = channel
@@ -80,7 +80,7 @@ class JobProgressDisplay:
         return self.job_to_do.total
 
     @property
-    def title(self) -> str:
+    def title(self) -> str | None:
         return self.job_to_do.title
 
     def update(self, job_step: JobStep):
@@ -174,9 +174,11 @@ class AbstractNotifier(ABC):
             JobStep(_get_job_name(identifier), channel, step, size, title=title)
         )
 
-    def tasks(self, iterable: Iterable, desc: Any, total: int = None, kind="item(s)"):
+    def tasks(
+        self, iterable: Iterable, desc: Any, total: int | None = None, kind="item(s)"
+    ):
         if total is None:
-            if not hasattr(iterable, "__len__"):
+            if not isinstance(iterable, Sized):
                 print("[task_range] converting iterable to list", file=sys.stderr)
                 iterable = list(iterable)
             total = len(iterable)

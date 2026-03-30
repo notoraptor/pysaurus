@@ -39,9 +39,9 @@ uv run ruff check .
 uv run ruff format .
 
 # Type check (full)
-uv run mypy pysaurus/
+uv run ty check
 
-# Run all checks (format + lint + typecheck on searchexp only)
+# Run all checks (format + lint + typecheck)
 uv run poe check
 ```
 

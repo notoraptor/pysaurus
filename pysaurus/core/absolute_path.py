@@ -12,7 +12,7 @@ from pysaurus.core.modules import System
 logger = logging.getLogger(__name__)
 
 
-class AbsolutePath:
+class AbsolutePath(os.PathLike[str]):
     WIN_PREFIX = "\\\\?\\"
     LEN_WIN_PREFIX = len(WIN_PREFIX)
     __slots__ = ("__path",)
@@ -28,7 +28,7 @@ class AbsolutePath:
         self.__path = path
 
     @property
-    def standard_path(self):
+    def standard_path(self) -> str:
         return (
             self.__path[self.LEN_WIN_PREFIX :]
             if self.__path.startswith(self.WIN_PREFIX)
@@ -36,7 +36,7 @@ class AbsolutePath:
         )
 
     @property
-    def best_path(self) -> str:
+    def best_path(self) -> str | None:
         if System.is_windows():
             from pysaurus.core.windows import get_short_path_name
 
@@ -98,10 +98,13 @@ class AbsolutePath:
             isinstance(other, AbsolutePath) and self.standard_path < other.standard_path
         )
 
+    def __fspath__(self) -> str:
+        return self.standard_path
+
     def __len__(self):
         return len(self.__path)
 
-    def __truediv__(self, other) -> Self:
+    def __truediv__(self, other) -> "AbsolutePath":
         return AbsolutePath(os.path.join(self.__path, str(other)))
 
     def exists(self) -> bool:
@@ -122,7 +125,7 @@ class AbsolutePath:
     def get_basename(self) -> str:
         return os.path.basename(self.__path)
 
-    def get_directory(self) -> Self:
+    def get_directory(self) -> "AbsolutePath":
         return AbsolutePath(os.path.dirname(self.__path))
 
     def get_date_modified(self) -> Date:
@@ -168,7 +171,7 @@ class AbsolutePath:
         if not dst.isfile():
             raise FileNotFoundError(dst)
 
-    def new_title(self, title: str) -> Self:
+    def new_title(self, title: str) -> "AbsolutePath":
         new_path = AbsolutePath.compose(self.get_directory(), title, self.extension)
         if new_path.exists():
             raise FileExistsError(new_path)
@@ -200,6 +203,7 @@ class AbsolutePath:
 
     def _locate_file_old(self):
         # NB: Windows: does not work with very long paths in exFAT file systems.
+        command: str | list[str]
         if System.is_windows():
             command = f'explorer /select,"{self.__path}"'
         elif System.is_mac():
@@ -217,8 +221,8 @@ class AbsolutePath:
         if stdout or stderr:
             return OSError(
                 f"""Unable to locate file: {self.__path}
-STDOUT: {stdout.strip()}
-STDERR: {stderr.strip()}"""
+STDOUT: {stdout.decode().strip()}
+STDERR: {stderr.decode().strip()}"""
             )
         return self.get_directory()
 
@@ -251,7 +255,7 @@ STDERR: {stderr.strip()}"""
 
     @classmethod
     def ensure(cls, path: str | Self) -> Self:
-        return path if isinstance(path, AbsolutePath) else AbsolutePath(str(path))
+        return path if isinstance(path, cls) else cls(str(path))
 
     @classmethod
     def map(cls, iterable):

@@ -4,7 +4,7 @@ import platform
 import sys
 from html.parser import HTMLParser
 from io import BytesIO
-from typing import Any, Iterator, Sequence
+from typing import Iterator, Sequence
 
 from PIL import Image
 
@@ -140,7 +140,7 @@ class ImageUtils:
         return output_image
 
     @staticmethod
-    def open_rgb_image(file_name: Any) -> Image.Image:
+    def open_rgb_image(file_name: str | BytesIO) -> Image.Image:
         image: Image.Image = Image.open(file_name)
         if image.mode != ImageUtils.IMAGE_RGB_MODE:
             image = image.convert(ImageUtils.IMAGE_RGB_MODE)

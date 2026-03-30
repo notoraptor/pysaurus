@@ -31,7 +31,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "mypy>=1.19.1",
+    "ty>=0.0.26",
     "poethepoet>=0.42.1",
     "pyfakefs>=5.10.2",
     "pytest>=8.4.1",
@@ -70,19 +70,8 @@ exclude_also = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
-[tool.mypy]
-python_version = "3.13"
-warn_return_any = true
-warn_unused_configs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-disallow_any_generics = true
-# Make strict distinction between T and T | None
-strict_optional = true
-check_untyped_defs = true
-
 [tool.poe.tasks]
 format = "ruff format"
 lint = "ruff check --fix"
-typecheck = "mypy pysaurus/core pysaurus/database pysaurus/dbview pysaurus/imgsimsearch pysaurus/properties pysaurus/video pysaurus/video_raptor"
+typecheck = "ty check --output-format concise"
 check = ["format", "lint", "typecheck"]

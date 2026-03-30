@@ -6,7 +6,7 @@ _GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD
 _GetShortPathNameW.restype = wintypes.DWORD
 
 
-def get_short_path_name(long_name: str):
+def get_short_path_name(long_name: str) -> str | None:
     """
     Gets the short path name of a given long path.
     (2021/07/11) https://stackoverflow.com/a/23598461/200291

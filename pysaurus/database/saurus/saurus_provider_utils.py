@@ -64,7 +64,7 @@ def search_to_sql(search: SearchDef) -> tuple[str, list[str]]:
 class GroupCount:
     __slots__ = ("value", "count")
 
-    def __init__(self, value: tuple, count):
+    def __init__(self, value: tuple | None, count: int):
         self.value = value
         self.count = count
 

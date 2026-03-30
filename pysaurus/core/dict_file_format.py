@@ -1,3 +1,4 @@
+import os
 from typing import Any
 
 from pysaurus.core.classes import StringPrinter
@@ -42,7 +43,7 @@ def dff_loads(text: str) -> dict[str, str]:
     return {key: value.rstrip() for key, value in dictionary.items()}
 
 
-def dff_dump(dictionary: dict[str, Any], path: Any) -> None:
+def dff_dump(dictionary: dict[str, Any], path: str | os.PathLike) -> None:
     with open(str(path), "wb") as file:
         file.write(dff_dumps(dictionary).encode("utf-8"))
 

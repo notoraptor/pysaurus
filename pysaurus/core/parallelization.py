@@ -1,7 +1,7 @@
 import inspect
 import os
 from multiprocessing import Pool
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Sized
 
 from pysaurus.core.job_notifications import AbstractNotifier
 
@@ -9,22 +9,30 @@ from pysaurus.core.job_notifications import AbstractNotifier
 class Job:
     __slots__ = ("batch", "id", "args")
 
-    def __init__(self, batch: list, job_id: str, args: list = None):
+    def __init__(self, batch: list, job_id: str, args: list | None = None):
         self.batch = batch
         self.id = job_id
         self.args = args or ()
 
 
-CPU_COUNT = os.cpu_count()
+CPU_COUNT = os.cpu_count() or 1
 USABLE_CPU_COUNT = max(1, CPU_COUNT - 2)
 
 
-def run_split_batch(function, tasks, *, job_count=CPU_COUNT, extra_args=None):
+def run_split_batch(
+    function: Callable,
+    tasks: list,
+    *,
+    job_count: int = CPU_COUNT,
+    extra_args: list | None = None,
+):
     jobs = _dispatch_tasks(tasks, job_count, extra_args)
     return parallelize(function, jobs, cpu_count=job_count)
 
 
-def _dispatch_tasks(tasks: list, job_count: int, extra_args: list = None) -> list[Job]:
+def _dispatch_tasks(
+    tasks: list, job_count: int, extra_args: list | None = None
+) -> list[Job]:
     """Split <tasks> into <job_count> jobs and associate each one
     with a unique job ID starting from <next_job_id>, so that
     each job could assign a unique ID to each of his task by
@@ -77,7 +85,7 @@ class _NotifiedFunction:
     def __init__(self, function: Callable, notifier: AbstractNotifier):
         self.function = function
         self.notifier = notifier
-        self.__name__ = self.function.__name__
+        self.__name__ = getattr(self.function, "__name__", "")
 
     def __call__(self, enumerated_task: tuple[int, Any]):
         task_id, task = enumerated_task
@@ -123,7 +131,7 @@ def parallelize(
         run = function
 
     if notifier:
-        if hasattr(tasks, "__len__"):
+        if isinstance(tasks, Sized):
             nb_tasks = len(tasks)
         else:
             tasks = list(tasks)

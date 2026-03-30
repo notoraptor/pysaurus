@@ -1,6 +1,6 @@
 import itertools
 import re
-from typing import Iterable
+from typing import Iterable, Self
 
 
 class CharClass:
@@ -36,10 +36,10 @@ class CharClass:
         else:
             cls = self.CLS_ALPHA
             rnk = ord(char)
-        self.char = char
-        self.cls = cls
-        self.rank = rnk
-        self.lower_rank = ord(char.lower()) if cls == self.CLS_ALPHA else 0
+        self.char: str = char
+        self.cls: str = cls
+        self.rank: int = rnk
+        self.lower_rank: int = ord(char.lower()) if cls == self.CLS_ALPHA else 0
 
     def __hash__(self):
         return hash(self.char)
@@ -61,7 +61,7 @@ class DigitAccumulator:
     __slots__ = ("_buffer",)
 
     def __init__(self):
-        self._buffer = []
+        self._buffer: list[CharClass] = []
 
     def append(self, wc: CharClass | None) -> int | None:
         if wc is None or wc.is_alpha():
@@ -82,7 +82,9 @@ class DigitAccumulator:
             return None
 
     def _flush_buffer_to_number(self) -> int:
-        number = sum(wc.rank * 10**i for i, wc in enumerate(reversed(self._buffer)))
+        number: int = sum(
+            wc.rank * 10**i for i, wc in enumerate(reversed(self._buffer))
+        )
         self._buffer.clear()
         return number
 
@@ -101,8 +103,8 @@ def separate_characters_and_numbers(text: str) -> Iterable[str | int]:
         yield number
 
 
-def split_numbers_and_texts(text: str):
-    output = []
+def split_numbers_and_texts(text: str) -> list[str | int]:
+    output: list[str | int] = []
     accumulator = DigitAccumulator()
     seq = ""
     for character in text:
@@ -143,7 +145,7 @@ class SemanticText:
 
     __repr__ = __str__
 
-    def _is_lesser_than(self, other):
+    def _is_lesser_than(self, other: Self) -> bool:
         for e1, e2 in itertools.zip_longest(
             separate_characters_and_numbers(self.value),
             separate_characters_and_numbers(other.value),

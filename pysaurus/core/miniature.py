@@ -1,8 +1,9 @@
 import base64
 from io import BytesIO
-from typing import Any
+from typing import Any, Iterable, cast
 
 import numpy as np
+from PIL import Image
 
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.fraction import Fraction
@@ -94,7 +95,7 @@ class Miniature(AbstractMatrix):
 
     @staticmethod
     def _img_to_mnt(
-        image: Any, dimensions: tuple[int, int], identifier: Any | None
+        image: Image.Image, dimensions: tuple[int, int], identifier: Any | None
     ) -> "Miniature":
         thumbnail = image.resize(dimensions)
         width, height = dimensions
@@ -102,7 +103,7 @@ class Miniature(AbstractMatrix):
         red = bytearray(size)
         green = bytearray(size)
         blue = bytearray(size)
-        for i, (r, g, b) in enumerate(thumbnail.getdata()):
+        for i, (r, g, b) in enumerate(cast(Iterable, thumbnail.getdata())):
             red[i] = r
             green[i] = g
             blue[i] = b

@@ -1,5 +1,6 @@
 from typing import Any, Sequence
 
+from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import StringPrinter, ToDict
 from pysaurus.core.functions import camel_case_to_snake_case
 
@@ -33,7 +34,7 @@ class NbMiniatures(Notification):
 class MissingThumbnails(Notification):
     __slots__ = ("names",)
 
-    def __init__(self, file_names: list[Any]):
+    def __init__(self, file_names: list[AbsolutePath]):
         super().__init__()
         self.names = sorted(str(file_name) for file_name in file_names)
 
