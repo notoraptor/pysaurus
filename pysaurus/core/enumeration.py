@@ -27,7 +27,7 @@ class Enumeration:
         if self.type not in (bool, int, float, str):
             raise EnumerationTypeError(self.type)
 
-    def __call__(self, value):
+    def __call__(self, value: bool | int | float | str) -> bool | int | float | str:
         if value not in self.values:
             raise EnumerationValueError(self, value)
         return value

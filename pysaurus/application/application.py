@@ -119,7 +119,7 @@ class Application:
         return lang
 
     @property
-    def lang(self) -> DefaultLanguage:
+    def lang(self) -> DefaultLanguage | None:
         return self.languages[(self.lang_dir / f"{self.config.language}.txt")]
 
     def get_database_names(self) -> list[str]:
@@ -129,13 +129,16 @@ class Application:
     def open_database_from_name(self, name: str, update=False) -> AbstractDatabase:
         path = self.dbs_dir / name
         assert path in self.databases
-        if not self.databases[path]:
-            self.databases[path] = Database(path, notifier=self.notifier)
+        if self.databases[path] is None:
+            database = Database(path, notifier=self.notifier)
+            self.databases[path] = database
         else:
-            self.databases[path].reopen()
+            database = self.databases[path]
+            assert database is not None
+            database.reopen()
         if update:
-            self.databases[path].algos.refresh()
-        return self.databases[path]
+            database.algos.refresh()
+        return database
 
     @Profiler.profile_method()
     def new_database(self, name, folders: Iterable[AbsolutePath], update=False):
@@ -148,12 +151,11 @@ class Application:
             raise exceptions.DatabaseAlreadyExists(path)
         if path.exists():
             raise exceptions.DatabasePathUnavailable(path)
-        self.databases[path] = Database(
-            path.mkdir(), folders=folders, notifier=self.notifier
-        )
+        database = Database(path.mkdir(), folders=folders, notifier=self.notifier)
+        self.databases[path] = database
         if update:
-            self.databases[path].refresh()
-        return self.databases[path]
+            database.algos.refresh()
+        return database
 
     def delete_database_from_name(self, name: str):
         path = self.dbs_dir / name
@@ -175,7 +177,9 @@ class Application:
         if not self.languages[lang_path]:
             self.languages[lang_path] = self._load_lang(lang_path)
         self.save_config()
-        return self.lang
+        lang = self.lang
+        assert lang is not None
+        return lang
 
     def open_language_from_name(self, name: str) -> DefaultLanguage:
         return self.open_language(self.lang_dir / f"{name}.txt")

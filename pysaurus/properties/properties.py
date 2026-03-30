@@ -1,11 +1,12 @@
-from typing import Collection
+from typing import Collection, Sequence
 
 from pysaurus.application import exceptions
+from pysaurus.application.exceptions import InvalidPropertyDefinition
 from pysaurus.core.enumeration import Enumeration
 
 PropUnitType = bool | int | float | str
-PropRawType = PropUnitType | Collection
-PropValueType = PropUnitType | list
+PropRawType = PropUnitType | Collection[PropUnitType]
+PropValueType = PropUnitType | list[PropUnitType]
 
 
 def _str_to_bool(value: str) -> bool:
@@ -96,35 +97,42 @@ class PropType:
 
     def validate(self, value: PropRawType) -> PropValueType:
         if self.multiple:
-            if not isinstance(value, (list, tuple, set)):
-                raise exceptions.InvalidMultiplePropertyValue(self, value)
-            if not isinstance(value, set):
-                value = set(value)
-            for element in value:
-                if not isinstance(element, self.python_type):
-                    raise exceptions.InvalidPropertyValue(self, element)
-            if self._enum_set:
-                for element in value:
-                    if element not in self._enum_set:
-                        raise exceptions.InvalidPropertyValue(self, element)
-            return sorted(value)
+            return self._validate_on_multiple_prop_type(value)
+        else:
+            return self._validate_on_unique_prop_type(value)
 
+    def _validate_on_multiple_prop_type(self, value: PropRawType) -> list[PropUnitType]:
+        if not isinstance(value, (list, tuple, set)):
+            raise exceptions.InvalidMultiplePropertyValue(self, value)
+        if not isinstance(value, set):
+            value = set(value)
+        for element in value:
+            if not isinstance(element, self.python_type):
+                raise exceptions.InvalidPropertyValue(self, element)
+        if self._enum_set:
+            for element in value:
+                if element not in self._enum_set:
+                    raise exceptions.InvalidPropertyValue(self, element)
+        return sorted(value)
+
+    def _validate_on_unique_prop_type(self, value: PropRawType) -> PropUnitType:
         if self.python_type is float and isinstance(value, int):
             value = float(value)
         if not isinstance(value, self.python_type):
             raise exceptions.InvalidPropertyValue(self, value)
         if self._enum_set and value not in self._enum_set:
             raise exceptions.InvalidPropertyValue(self, value)
+        assert isinstance(value, PropUnitType)
         return value
 
     def instantiate(self, values: Collection[PropUnitType]) -> list[PropUnitType]:
         if not values:
             return []
         if self.multiple:
-            return self.validate(values)
+            return self._validate_on_multiple_prop_type(values)
         else:
             (value,) = values
-            return [self.validate(value)]
+            return [self._validate_on_unique_prop_type(value)]
 
     # =========================================================================
     # Factory
@@ -153,29 +161,32 @@ class PropType:
         if isinstance(prop_type, str):
             prop_type = PROP_UNIT_TYPE_MAP[prop_type]
         assert prop_type in PROP_UNIT_TYPES
-        if prop_type is float:
-            if isinstance(definition, (list, tuple)):
-                definition = [float(element) for element in definition]
-            else:
-                definition = float(definition)
-        elif prop_type is str:
-            if isinstance(definition, (list, tuple)):
-                definition = [element.strip() for element in definition]
-            else:
-                definition = definition.strip()
 
-        if not isinstance(definition, (bool, int, float, str, list, tuple)):
-            raise exceptions.InvalidPropertyDefinition(definition)
+        enumeration: Sequence[PropUnitType] = []
+        default_value: list[PropUnitType]
         if isinstance(definition, (list, tuple)):
-            enum_type = Enumeration(definition)
-            definition = [definition[0]] + sorted(enum_type.values - {definition[0]})
+            enumeration = list(definition)
+            default_value = [enumeration[0]]
+        else:
+            if not isinstance(definition, (str, bool, int, float)):
+                raise InvalidPropertyDefinition(definition)
+            default_value = [definition]
 
-        enumeration = definition if isinstance(definition, list) else None
-        default_value = enumeration[0] if enumeration else definition
+        if prop_type is float:
+            enumeration = [float(element) for element in enumeration]
+            default_value = [float(element) for element in default_value]
+        elif prop_type is str:
+            enumeration = [element.strip() for element in enumeration]
+            default_value = [str(element).strip() for element in default_value]
+
+        if enumeration:
+            enum_type = Enumeration(enumeration)
+            enumeration = [enumeration[0]] + sorted(enum_type.values - {enumeration[0]})
+
         return cls(
             name=name,
             type=prop_type.__name__,
             multiple=multiple,
-            default=[] if multiple else [default_value],
-            enumeration=enumeration,
+            default=[] if multiple else default_value,
+            enumeration=list(enumeration) if enumeration else None,
         )
