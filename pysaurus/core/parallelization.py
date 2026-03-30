@@ -15,7 +15,7 @@ class _Unpacker:
 
     def __init__(self, function):
         self.function = function
-        self.__name__ = function.__name__
+        self.__name__ = getattr(function, "__name__", "")
 
     def __call__(self, task):
         return self.function(*task)
