@@ -368,7 +368,7 @@ Une expression vide ou constituée uniquement d'espaces est rejetée par le
 parser (`ExpressionError`). C'est au code appelant de décider de ne pas
 déclencher de recherche quand l'expression est vide.
 
-#### ~~`is not`~~ (résolu)
+#### `is not`
 
 Supporté. `found is not True` est équivalent à `found is False`, et
 `found is not False` est équivalent à `found is True`.
@@ -521,84 +521,30 @@ complémentaires et coexistent :
 offrant deux modes d'accès (formulaire visuel et saisie directe) au même
 moteur d'évaluation.
 
-### 7. Questions ouvertes (implémentation)
+### 7. Décisions d'implémentation
 
-#### ~~Intégration UI~~ (résolu)
+Les points suivants ont été tranchés lors de la conception et sont
+documentés ici comme référence.
 
-Searchexp est intégré comme filtre **source** alternatif dans `ViewContext`
-(`source_expression: str | None`). Dans PySide6, la boîte de dialogue des
-sources a deux onglets : Simple (checkboxes flags) et Avancé (expression
-texte libre). Raccourci : **Ctrl+E** ouvre directement l'onglet avancé.
-Voir `docs/pysaurus_with_searchexp.md` pour le design complet.
+- **Intégration UI** : searchexp est un filtre **source** alternatif dans
+  `ViewContext` (`source_expression: str | None`). PySide6 : deux onglets
+  (Simple / Avancé) dans `SourcesDialog`, raccourci **Ctrl+E**.
+  Voir `docs/pysaurus_with_searchexp.md`.
+- **Backends** : le parser produit un IR (AST) indépendant. Deux backends :
+  Python (`core/pythonsearchexp/`) et SQL (`database/saurus/sql_expression_compiler.py`).
+- **Coexistence** : `VideoFieldQueryParser` reste en place pour le chemin
+  flags sources. Branchement conditionnel dans `video_mega_group`.
+- **Dates** : séparateur `T` (ISO 8601). Entier → année, float → timestamp
+  Unix, dates composées → parsing ISO en heure locale. Conversion au parsing.
+- **Wrappers** : `Date` → `float`, `Duration` → `int` (µs), `FileSize` →
+  `int` (octets). Les littéraux sont convertis en valeurs brutes dans l'IR.
+- **Erreurs** : toutes remontent au parsing (jamais silencieuses). L'évaluation
+  n'exécute que des expressions déjà validées.
+- **Chaînes** : pas d'échappement en v1. Deux délimiteurs (`"` et `'`).
+- **Opérateurs** : restreints par type (matrice ci-dessous). Combinaisons
+  invalides rejetées au parsing.
 
-#### ~~Stratégie d'évaluation~~ (résolu)
-
-Le parser produit un IR (AST) indépendant de tout backend. Deux backends
-sont implémentés :
-- **Backend Python** (`core/pythonsearchexp/`) : `PythonSearchExp` — évalue
-  l'IR sur des objets Python.
-- **Backend SQL** (`database/saurus/sql_expression_compiler.py`) :
-  `SqlExpressionCompiler` — compile l'IR en clause SQL `WHERE`. Utilisé
-  par `video_mega_group` quand `source_expression` est défini.
-
-#### ~~Code existant : `VideoFieldQueryParser`~~ (résolu)
-
-`VideoFieldQueryParser` reste en place pour le chemin existant (flags
-sources). Searchexp ne le remplace pas — les deux coexistent dans
-`video_mega_group` (branchement conditionnel sur `source_expression`).
-
-#### ~~Format exact des littéraux date~~ (résolu)
-
-Séparateur `T` (ISO 8601) entre date et heure : `2024-03-15T14:30:00`.
-Le format `__str__` de `Date` utilise un espace, mais le langage
-d'expressions utilise `T` pour éviter l'ambiguïté au parsing.
-
-#### ~~Conversion interne des wrappers pour les comparaisons~~ (résolu)
-
-La conversion se fait **au parsing**. Les littéraux typés sont convertis en
-valeurs brutes et stockés dans le nœud `LiteralValue` de l'IR :
-- `Date` → `float` (timestamp Unix, heure locale pour cohérence avec
-  l'affichage `Date.__str__` qui utilise `datetime.fromtimestamp`)
-  - **Entier** comparé à un champ date → toujours interprété comme **année**
-    (`date > 100` = an 100, `date > 2024` = an 2024)
-  - **Float** comparé à un champ date → interprété comme **timestamp brut**
-    (`date > 1700000000.0` = timestamp Unix en secondes)
-  - Dates composées (`2024-03-15`, `2024-03-15T14:30`) → parsing ISO, timestamp
-    en heure locale
-- `Duration` → `int` (microsecondes)
-- `FileSize` → `int` (octets bruts)
-- Nombre avec multiplicateur → `int` ou `float` (résultat de la multiplication)
-
-L'évaluateur n'a qu'à comparer des valeurs brutes.
-
-#### ~~Gestion des erreurs~~ (résolu)
-
-Toutes les erreurs remontent, jamais silencieuses. Toute validation se fait
-au parsing (avant l'évaluation sur les vidéos), à condition d'avoir accès
-à la liste des propriétés custom (noms et types) à ce moment-là.
-
-Erreurs détectées au parsing :
-- Expression syntaxiquement invalide
-- Propriété custom inexistante (`` `nonexistent` ``)
-- Types incompatibles (`width > "hello"`, `found > True`)
-- Opérateur invalide pour le type (`found > True`, `set < set`)
-
-L'évaluation n'exécute que des expressions déjà validées.
-
-#### ~~Chaînes de caractères — séquences d'échappement~~ (résolu)
-
-Pas d'échappement en v1. Les deux délimiteurs (`"` et `'`) couvrent
-les cas pratiques (noms de codecs, extensions, catégories, chemins, langues).
-
-Cas non couvert : une chaîne contenant à la fois `"` et `'`
-(ex. `he said "it's fine"`). Extrêmement rare dans le contexte de Pysaurus.
-À résoudre dans le futur si le besoin se présente (ex. séquences `\"`, `\'`).
-
-#### ~~Opérateurs sur types spécifiques~~ (résolu)
-
-Opérateurs restreints par type. Combinaisons invalides rejetées.
-
-##### Matrice opérateurs × types
+#### Matrice opérateurs × types
 
 | Opérateur | `bool` | `int` | `float` | `str` | `Date` | `Duration` | `FileSize` | `set[T]` |
 |-----------|--------|-------|---------|-------|--------|------------|------------|----------|
@@ -610,25 +556,14 @@ Opérateurs restreints par type. Combinaisons invalides rejetées.
 | `in` (appartenance, droite) | — | — | — | — | — | — | — | oui |
 | `len()` | non | non | non | oui | non | non | non | oui |
 
-Notes sur `in` :
-- Sous-chaîne : `str in str` (`"C:" in filename`)
-- Appartenance : `T in set[T]` — tout type scalaire à gauche, `set` à droite
-  (`height in {720, 1080}`, `"eng" in audio_languages`)
-
-##### Compatibilités croisées entre types
-
-Les types wrappers (`Date`, `Duration`, `FileSize`) sont comparables avec
-les numériques bruts (`int`, `float`) car ils sont stockés en interne comme
-des numériques.
+#### Compatibilités croisées entre types
 
 | Croisement | Autorisé | Valeur interne |
 |-----------|----------|---------------|
 | `int` ↔ `float` | oui | promotion numérique |
-| `FileSize` ↔ `int` | oui | octets bruts |
-| `FileSize` ↔ `float` | oui | octets bruts |
-| `Duration` ↔ `int` | oui | microsecondes |
-| `Duration` ↔ `float` | oui | microsecondes |
-| `Date` ↔ `int` | oui | timestamp Unix |
+| `FileSize` ↔ `int`, `float` | oui | octets bruts |
+| `Duration` ↔ `int`, `float` | oui | microsecondes |
+| `Date` ↔ `int` | oui | entier → année |
 | `Date` ↔ `float` | oui | timestamp Unix |
 | `FileSize` ↔ `Duration` | non | sans rapport |
 | `FileSize` ↔ `Date` | non | sans rapport |

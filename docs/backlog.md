@@ -120,7 +120,7 @@ Ajouter la négation des modes de recherche existants :
 - "not and" : `NOT (a AND b AND ...)`
 - "not or" : `NOT (a OR b OR ...)`
 
-### Recherche par expression
+### Recherche par expression ✅
 
 Mini-langage de requête typé pour des recherches avancées. Exemples :
 ```
@@ -130,18 +130,12 @@ date > 2024-03-15 and watched is False
 audio_bit_rate > 128k and width > height
 ```
 
-**Conception terminée** — voir `docs/searchexp.design.md` (décisions,
-architecture) et `docs/searchexp.spec.md` (grammaire EBNF, règles de typage).
-
-**Résumé** : parser générique (indépendant de Pysaurus) → IR en dataclasses
-→ backend évaluateur. Littéraux : dates (6 précisions, ISO 8601), durées
-(`d`/`h`/`min`/`s`/`u`), multiplicateurs numériques (base 1000/1024).
-Opérateurs : `and`/`or`/`xor`/`not`, comparaisons, `is`, `in`/`not in`,
-`len()`. Propriétés custom via backticks. V1 : évaluation Python.
-
-**Questions ouvertes** :
-- Intégration UI (nouveau mode dans le filtre Search ? champ séparé ?)
-- Code existant `VideoFieldQueryParser` à examiner
+**Implémenté** — parser (`core/searchexp/`), backend Python
+(`core/pythonsearchexp/`), compilateur SQL (`database/saurus/sql_expression_compiler.py`),
+intégration `ViewContext.source_expression`, UI PySide6 (onglet Avancé dans
+`SourcesDialog`, Ctrl+E). Coexiste avec le chemin flags existant
+(`VideoFieldQueryParser`). Voir `docs/searchexp.design.md`,
+`docs/searchexp.spec.md`, `docs/pysaurus_with_searchexp.md`.
 
 ### Plugins en menu contextuel vidéo
 

@@ -296,11 +296,11 @@ Pour chaque feature, ce document identifie :
 | # | Feature | Problème | Statut |
 |---|---------|----------|--------|
 | P1 | `mark_as_watched` / `mark_as_read` | Ne sauvegardaient pas après modification | **Corrigé** — `_notify_fields_modified` ajouté dans `database_operations.py` |
-| P2 | `video_entry_del` | Les deux implémentations appellent déjà `_notify_fields_modified(["move_id"])` | Non-problème |
+| P2 | `video_entry_del` | `_notify_fields_modified(["move_id"])` déjà appelé | Non-problème |
 | P3 | `video_entry_set_tags` (SQL) | Ne sauvegardait pas après modification | **Corrigé** — `_notify_fields_modified` ajouté dans `pysaurus_collection.py` |
 | P4 | `delete_property_values` | `videos_tag_set(action=REMOVE)` sans sauvegarde | **Corrigé** — `_notify_fields_modified` ajouté dans `database_algorithms.py` |
-| P5 | `prop_type_del` | Si groupé par la propriété supprimée, état incohérent | **Corrigé** — `_notify_fields_modified` ajouté dans `json_database.py` et `pysaurus_collection.py` |
-| P6 | `change_video_file_title` | Les deux implémentations de `video_entry_set_filename` appellent déjà `_notify_fields_modified` | Non-problème |
+| P5 | `prop_type_del` | Si groupé par la propriété supprimée, état incohérent | **Corrigé** — `_notify_fields_modified` ajouté dans `pysaurus_collection.py` |
+| P6 | `change_video_file_title` | `video_entry_set_filename` appelle déjà `_notify_fields_modified` | Non-problème |
 
 ### Problèmes UI PySide6
 
