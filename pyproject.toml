@@ -84,5 +84,5 @@ check_untyped_defs = true
 [tool.poe.tasks]
 format = "ruff format"
 lint = "ruff check --fix"
-typecheck = "mypy pysaurus/core/searchexp"
+typecheck = "mypy pysaurus/core/searchexp pysaurus/core/pythonsearchexp pysaurus/core/universal_datetime"
 check = ["format", "lint", "typecheck"]

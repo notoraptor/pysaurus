@@ -84,19 +84,27 @@ et un `enumeration` optionnel (ensemble de valeurs autorisées).
 
 #### Propriétés calculées (concrètes)
 
-| Attribut | Type | Dérivé de |
-|----------|------|-----------|
-| `byte_rate` | `FileSize` | `file_size * duration_time_base / duration` |
-| `date` | `Date` | `Date(mtime)` |
-| `extension` | `str` | `filename.extension` |
-| `file_title` | `str` | `filename.file_title` |
-| `frame_rate` | `float` | `frame_rate_num / frame_rate_den` |
-| `length` | `Duration` | `duration * 1e6 / duration_time_base` |
-| `readable` | `bool` | `not unreadable` |
-| `similarity` | `str` | texte descriptif du similarity_id |
-| `similarity_reencoded` | `str` | idem pour reencoded |
-| `size` | `FileSize` | `FileSize(file_size)` |
-| `title` | `str` | `meta_title or file_title` |
+| Attribut | Type | Dérivé de | Backend SQL |
+|----------|------|-----------|-------------|
+| `byte_rate` | `FileSize` | `file_size * duration_time_base / duration` | ✓ `v.byte_rate` (colonne générée) |
+| `date` | `Date` | `Date(mtime)` | ✓ `v.mtime` |
+| `extension` | `str` | `filename.extension` | ✓ `v.extension` (colonne générée via `_basename`) |
+| `file_title` | `str` | `filename.file_title` | ✓ `v.file_title` (colonne générée via `_basename`) |
+| `frame_rate` | `float` | `frame_rate_num / frame_rate_den` | ✓ `v.frame_rate` (colonne générée) |
+| `length` | `Duration` | `duration * 1e6 / duration_time_base` | ✓ `v.length_microseconds` (colonne générée) |
+| `readable` | `bool` | `not unreadable` | ✓ `v.readable` (colonne générée) |
+| `size` | `FileSize` | `FileSize(file_size)` | ✓ `v.file_size` |
+
+Toutes les propriétés calculées pertinentes sont supportées par le
+compilateur SQL.
+
+#### Propriétés calculées exclues du langage
+
+| Attribut | Type | Raison |
+|----------|------|--------|
+| `similarity` | `str` | Dérivation complexe (texte descriptif), peu utile en filtrage |
+| `similarity_reencoded` | `str` | Idem |
+| `title` | `str` | Redondant : `meta_title` et `file_title` sont disponibles séparément |
 
 #### Propriétés calculées exclues
 
@@ -385,18 +393,27 @@ Suit la priorité Python (du plus prioritaire au moins prioritaire) :
 Expression texte
     → Parser (partagé, unique, indépendant de Pysaurus)
         → IR / AST (représentation intermédiaire)
-            → Backend Python : parcourt l'AST, évalue sur chaque VideoPattern
-            → Backend SQL : parcourt l'AST, génère une clause WHERE
+            → Backend Python : parcourt l'AST, évalue sur chaque objet Python
+            → Backend SQL : parcourt l'AST, génère une clause WHERE + params
 ```
 
-- Le **parser** est unique et partagé : tokenisation, inférence de types,
-  validation, messages d'erreur. Se situe dans le code commun, au même
-  niveau que `AbstractDatabase`.
+- Le **parser** (`core/searchexp/`) est unique et partagé : tokenisation,
+  inférence de types, validation, messages d'erreur. Indépendant de Pysaurus.
 - L'**IR** (AST) est la représentation intermédiaire de l'expression validée.
 - Chaque implémentation de DB n'implémente qu'un **évaluateur d'AST**,
   pas un parser.
-- En v1, seul le backend Python (évaluation sur `VideoPattern`) est nécessaire.
-  Le backend SQL (traduction en `WHERE`) est une optimisation future.
+- **Backend Python** (`core/pythonsearchexp/`) : `PythonSearchExp` — évalue
+  l'IR sur des objets Python via des getters injectables. Implémenté.
+- **Backend SQL** (`database/saurus/sql_expression_compiler.py`) :
+  `SqlExpressionCompiler` — compile l'IR en `(sql_where, params)` pour
+  injection dans les requêtes SQL. Implémenté.
+
+#### Conversion des dates
+
+Les `DateLiteral` de l'IR sont convertis en timestamps Unix (float) via
+`UDT` (`core/universal_datetime/`), qui supporte le calendrier grégorien
+proleptique (année 0, années négatives). Les dates sont interprétées en
+heure locale (cohérent avec `mtime` et l'affichage `Date.__str__`).
 
 #### Indépendance du parser
 
@@ -506,22 +523,29 @@ moteur d'évaluation.
 
 ### 7. Questions ouvertes (implémentation)
 
-#### Intégration UI
+#### ~~Intégration UI~~ (résolu)
 
-Comment ce mode de recherche s'intègre-t-il dans l'interface ?
-Nouveau mode dans le filtre Search existant ? Champ séparé ?
+Searchexp est intégré comme filtre **source** alternatif dans `ViewContext`
+(`source_expression: str | None`). Dans PySide6, la boîte de dialogue des
+sources a deux onglets : Simple (checkboxes flags) et Avancé (expression
+texte libre). Raccourci : **Ctrl+E** ouvre directement l'onglet avancé.
+Voir `docs/pysaurus_with_searchexp.md` pour le design complet.
 
 #### ~~Stratégie d'évaluation~~ (résolu)
 
-Le parser produit un IR (AST) indépendant de tout backend. Chaque backend
-implémente un évaluateur d'AST :
-- V1 : évaluation Python sur les objets `VideoPattern` (à implémenter).
-- Futur : traduction en clause SQL `WHERE` (optimisation si nécessaire).
+Le parser produit un IR (AST) indépendant de tout backend. Deux backends
+sont implémentés :
+- **Backend Python** (`core/pythonsearchexp/`) : `PythonSearchExp` — évalue
+  l'IR sur des objets Python.
+- **Backend SQL** (`database/saurus/sql_expression_compiler.py`) :
+  `SqlExpressionCompiler` — compile l'IR en clause SQL `WHERE`. Utilisé
+  par `video_mega_group` quand `source_expression` est défini.
 
-#### Code existant : `VideoFieldQueryParser`
+#### ~~Code existant : `VideoFieldQueryParser`~~ (résolu)
 
-Le backlog mentionne une "recherche conditionnelle" existante. Vérifier
-s'il y a du code réutilisable ou à remplacer.
+`VideoFieldQueryParser` reste en place pour le chemin existant (flags
+sources). Searchexp ne le remplace pas — les deux coexistent dans
+`video_mega_group` (branchement conditionnel sur `source_expression`).
 
 #### ~~Format exact des littéraux date~~ (résolu)
 

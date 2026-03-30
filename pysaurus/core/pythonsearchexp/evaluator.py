@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime
 from typing import Any
+
+from pysaurus.core.universal_datetime import UDT
 
 from pysaurus.core.searchexp.types import (
     Comparison,
@@ -98,21 +99,21 @@ class ExpressionEvaluator:
 def _compare(left: Any, op: ComparisonOp, right: Any) -> bool:
     match op:
         case "==":
-            return left == right
+            return bool(left == right)
         case "!=":
-            return left != right
+            return bool(left != right)
         case "<":
-            return left < right
+            return bool(left < right)
         case "<=":
-            return left <= right
+            return bool(left <= right)
         case ">":
-            return left > right
+            return bool(left > right)
         case ">=":
-            return left >= right
+            return bool(left >= right)
 
 
 def _default_date_to_timestamp(date: DateLiteral) -> float:
-    return datetime(
+    return UDT(
         date.year,
         date.month or 1,
         date.day or 1,

@@ -79,6 +79,9 @@ class QMockAppContext(QObject):
     def get_database_names(self) -> list[str]:
         return self._database_names
 
+    def get_source_expression(self) -> str | None:
+        return None
+
     def get_prop_types(self, **kwargs) -> list:
         return []
 

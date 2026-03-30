@@ -17,10 +17,19 @@ from pysaurus.dbview.view_utils import parse_sorting, parse_sources
 
 
 class ViewContext:
-    __slots__ = ("sources", "grouping", "classifier", "group", "search", "sorting")
+    __slots__ = (
+        "sources",
+        "source_expression",
+        "grouping",
+        "classifier",
+        "group",
+        "search",
+        "sorting",
+    )
 
     def __init__(self):
         self.sources: list[list[str]] = list(PYTHON_DEFAULT_SOURCES)
+        self.source_expression: str | None = None
         self.grouping: GroupDef = GroupDef()
         self.classifier: list[str] = []
         self.group: int = 0
@@ -29,6 +38,10 @@ class ViewContext:
 
     def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
         self.sources = parse_sources(paths)
+        self.source_expression = None
+
+    def set_source_expression(self, expression: str | None) -> None:
+        self.source_expression = expression.strip() if expression else None
 
     def set_grouping(
         self,

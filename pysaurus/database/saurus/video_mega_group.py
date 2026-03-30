@@ -6,6 +6,7 @@ from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.core.lookup_array import LookupArray
+from pysaurus.core.searchexp import ExpressionParser
 from pysaurus.database.saurus.grouping_utils import SqlFieldFactory
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.saurus_provider_utils import (
@@ -13,6 +14,12 @@ from pysaurus.database.saurus.saurus_provider_utils import (
     ProviderVideoParser,
     convert_dict_to_sql,
     search_to_sql,
+)
+from pysaurus.database.saurus.sql_expression_compiler import (
+    PropertyMeta,
+    SqlExpressionCompiler,
+    VIDEO_SEARCH_ATTRIBUTES,
+    properties_to_field_types,
 )
 from pysaurus.database.saurus.sql_utils import (
     QueryMaker,
@@ -32,6 +39,7 @@ def video_mega_group(
     sql_db: PysaurusConnection,
     *,
     sources: Sequence[list[str]] = (),
+    source_expression: str | None = None,
     grouping: GroupDef = GroupDef(),
     classifier: Sequence[str] = (),
     group=0,
@@ -70,16 +78,21 @@ def video_mega_group(
         return output
 
     field_factory = SqlFieldFactory(sql_db)
-    parser = ProviderVideoParser()
-    source_query_builder = SQLWhereBuilder.combine(
-        [
-            SQLWhereBuilder.build(parser.parse(flag, True) for flag in source)
-            for source in sources
-        ],
-        use_or=True,
-    )
-    source_query = source_query_builder.get_clause()
-    source_params = source_query_builder.get_parameters()
+    if source_expression:
+        source_query, source_params = _compile_source_expression(
+            sql_db, source_expression
+        )
+    else:
+        parser = ProviderVideoParser()
+        source_query_builder = SQLWhereBuilder.combine(
+            [
+                SQLWhereBuilder.build(parser.parse(flag, True) for flag in source)
+                for source in sources
+            ],
+            use_or=True,
+        )
+        source_query = source_query_builder.get_clause()
+        source_params = source_query_builder.get_parameters()
 
     where_group_query = None
     where_group_params = None
@@ -605,3 +618,25 @@ def _get_property_metadata(
         return 0, False, None
     default_value = prop_info[2] if len(prop_info) > 2 else None
     return prop_info[0], prop_info[1], default_value
+
+
+def _compile_source_expression(
+    sql_db: PysaurusConnection, expression: str
+) -> tuple[str, tuple]:
+    """Parse and compile a searchexp expression to a SQL WHERE fragment."""
+    # Load property metadata from the database
+    prop_rows = sql_db.query_all("SELECT name, type, multiple FROM property")
+    properties = {
+        row["name"]: PropertyMeta(type=row["type"], multiple=bool(row["multiple"]))
+        for row in prop_rows
+    }
+    # Parse expression
+    parser = ExpressionParser(
+        attributes=VIDEO_SEARCH_ATTRIBUTES,
+        properties=properties_to_field_types(properties),
+    )
+    ir = parser.parse(expression)
+    # Compile to SQL
+    compiler = SqlExpressionCompiler(properties=properties)
+    sql, params = compiler.compile(ir)
+    return sql, tuple(params)

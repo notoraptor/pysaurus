@@ -206,6 +206,10 @@ class VideosPage(QWidget):
         shortcut_end = QShortcut(QKeySequence(Qt.Key.Key_End), self)
         shortcut_end.activated.connect(self._go_last)
 
+        # Ctrl+E - Sources (advanced/expression)
+        shortcut_expression = QShortcut(QKeySequence("Ctrl+E"), self)
+        shortcut_expression.activated.connect(self._on_edit_source_expression)
+
         # Ctrl+Shift+T - Reset sources
         shortcut_reset_sources = QShortcut(QKeySequence("Ctrl+Shift+T"), self)
         shortcut_reset_sources.activated.connect(self._clear_sources)
@@ -1095,6 +1099,16 @@ class VideosPage(QWidget):
 
     def _update_sources_display(self, sources: list[list[str]] | None):
         """Update the sources info label."""
+        # Check if a source expression is active
+        source_expression = self.ctx.get_source_expression()
+        if source_expression:
+            self.btn_sources_clear.setEnabled(True)
+            text = source_expression
+            if len(text) > 50:
+                text = text[:47] + "..."
+            self.sources_info.setText(text)
+            return
+
         # Enable/disable clear button based on whether sources differ from default
         is_default = sources is None or sources == PYTHON_DEFAULT_SOURCES
         self.btn_sources_clear.setEnabled(not is_default)
@@ -1906,18 +1920,31 @@ class VideosPage(QWidget):
         self.refresh()
 
     def _on_edit_sources(self):
-        """Handle edit sources button."""
-        # Get current sources from provider
+        """Handle edit sources button (simple tab)."""
+        self._open_sources_dialog(start_tab=0)
+
+    def _on_edit_source_expression(self):
+        """Handle edit source expression shortcut (advanced tab)."""
+        self._open_sources_dialog(start_tab=1)
+
+    def _open_sources_dialog(self, start_tab: int = 0):
+        """Open the sources dialog on the given tab."""
         current_sources = None
+        current_expression = None
         state = self.ctx.get_provider_state()
         if state:
             current_sources = state.sources if hasattr(state, "sources") else None
+        current_expression = self.ctx.get_source_expression()
 
-        dialog = SourcesDialog(current_sources, self)
+        dialog = SourcesDialog(
+            current_sources, current_expression, self, start_tab=start_tab
+        )
         if dialog.exec():
-            sources = dialog.get_sources()
             self.page_number = 0
-            self.ctx.set_sources(sources)
+            if dialog.is_advanced():
+                self.ctx.set_source_expression(dialog.get_expression())
+            else:
+                self.ctx.set_sources(dialog.get_sources())
 
     def _on_set_grouping(self):
         """Handle set grouping button."""
@@ -1985,6 +2012,7 @@ class VideosPage(QWidget):
     def _clear_sources(self):
         """Reset sources to default."""
         self.page_number = 0
+        self.ctx.set_source_expression(None)
         self.ctx.set_sources(None)
 
     def _clear_grouping(self):

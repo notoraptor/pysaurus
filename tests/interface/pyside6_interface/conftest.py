@@ -167,6 +167,13 @@ class MockAppContext:
         if self._database:
             self._view.set_sources(sources)
 
+    def get_source_expression(self) -> str | None:
+        return self._view.source_expression
+
+    def set_source_expression(self, expression: str | None) -> None:
+        if self._database:
+            self._view.set_source_expression(expression)
+
     def set_groups(
         self, *, field, is_property, sorting, reverse, allow_singletons
     ) -> None:

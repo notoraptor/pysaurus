@@ -1,5 +1,9 @@
 """
 Dialog for selecting video sources (filters).
+
+Two tabs:
+- Simple: checkbox-based flag selection (existing behavior)
+- Advanced: free-text searchexp expression
 """
 
 from PySide6.QtWidgets import (
@@ -10,7 +14,10 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QTabWidget,
+    QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 # Source tree structure
@@ -27,33 +34,53 @@ class SourcesDialog(QDialog):
     """
     Dialog for selecting video sources.
 
-    The source tree has the structure:
-    - readable
-      - found
-        - with_thumbnails
-        - without_thumbnails
-      - not_found
-        - with_thumbnails
-        - without_thumbnails
-    - unreadable
-      - found
-      - not_found
+    The simple tab has the checkbox-based source tree.
+    The advanced tab allows entering a searchexp expression.
     """
 
-    def __init__(self, current_sources: list[list[str]] | None = None, parent=None):
+    def __init__(
+        self,
+        current_sources: list[list[str]] | None = None,
+        current_expression: str | None = None,
+        parent=None,
+        start_tab: int = 0,
+    ):
         super().__init__(parent)
         self.setWindowTitle("Select Sources")
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(450)
 
         self._checkboxes: dict[str, QCheckBox] = {}
         self._current_sources = current_sources or []
+        self._current_expression = current_expression
 
-        self._setup_ui()
+        self._setup_ui(start_tab)
         self._load_current_sources()
+        if start_tab == 1:
+            self._expression_edit.setFocus()
 
-    def _setup_ui(self):
-        """Set up the UI."""
+    def _setup_ui(self, start_tab: int):
+        """Set up the UI with tabs."""
         layout = QVBoxLayout(self)
+
+        # Tab widget
+        self._tabs = QTabWidget()
+        self._tabs.addTab(self._create_simple_tab(), "Simple")
+        self._tabs.addTab(self._create_advanced_tab(), "Advanced")
+        self._tabs.setCurrentIndex(start_tab)
+        layout.addWidget(self._tabs)
+
+        # Dialog buttons
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+
+    def _create_simple_tab(self) -> QWidget:
+        """Create the simple checkbox-based tab."""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
 
         # Instructions
         layout.addWidget(QLabel("Select which videos to display:"))
@@ -110,14 +137,31 @@ class SourcesDialog(QDialog):
         btn_layout.addWidget(btn_valid)
 
         layout.addLayout(btn_layout)
+        return widget
 
-        # Dialog buttons
-        button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+    def _create_advanced_tab(self) -> QWidget:
+        """Create the advanced expression tab."""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+
+        layout.addWidget(QLabel("Enter a search expression to filter videos:"))
+
+        self._expression_edit = QTextEdit()
+        self._expression_edit.setPlaceholderText(
+            'e.g. width > 1080 and found and "eng" in audio_languages'
         )
-        button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-        layout.addWidget(button_box)
+        self._expression_edit.setAcceptRichText(False)
+        if self._current_expression:
+            self._expression_edit.setPlainText(self._current_expression)
+        layout.addWidget(self._expression_edit)
+
+        self._expression_error = QLabel()
+        self._expression_error.setStyleSheet("color: red;")
+        self._expression_error.setWordWrap(True)
+        self._expression_error.hide()
+        layout.addWidget(self._expression_error)
+
+        return widget
 
     def _add_checkbox(self, layout: QVBoxLayout, key: str, label: str):
         """Add a checkbox to the layout."""
@@ -133,15 +177,11 @@ class SourcesDialog(QDialog):
             return
 
         # Convert source paths to checkbox keys
-        # Sources can be partial paths like ["readable"] which should select
-        # all checkboxes starting with "readable."
         for source_path in self._current_sources:
             prefix = ".".join(source_path)
-            # Check if it's an exact match
             if prefix in self._checkboxes:
                 self._checkboxes[prefix].setChecked(True)
             else:
-                # It's a partial path - select all checkboxes that start with this prefix
                 for key, cb in self._checkboxes.items():
                     if key.startswith(prefix + ".") or key == prefix:
                         cb.setChecked(True)
@@ -161,6 +201,10 @@ class SourcesDialog(QDialog):
         self._select_none()
         self._checkboxes["readable.found.with_thumbnails"].setChecked(True)
 
+    def is_advanced(self) -> bool:
+        """Return True if the advanced tab is selected."""
+        return self._tabs.currentIndex() == 1
+
     def get_sources(self) -> list[list[str]]:
         """Get the selected sources as a list of paths."""
         sources = []
@@ -168,3 +212,8 @@ class SourcesDialog(QDialog):
             if cb.isChecked():
                 sources.append(key.split("."))
         return sources
+
+    def get_expression(self) -> str | None:
+        """Get the expression text, or None if empty."""
+        text = self._expression_edit.toPlainText().strip()
+        return text or None

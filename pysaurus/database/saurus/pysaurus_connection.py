@@ -36,6 +36,24 @@ class PysaurusConnection(Skullite):
             "ALTER TABLE video ADD COLUMN byte_rate DOUBLE GENERATED ALWAYS AS"
             " (IIF(duration = 0, 0, file_size *"
             " COALESCE(NULLIF(duration_time_base, 0), 1) / duration)) VIRTUAL",
+            # Filename-derived virtual columns for searchexp
+            "ALTER TABLE video ADD COLUMN _basename TEXT GENERATED ALWAYS AS"
+            " (IIF("
+            " RTRIM(REPLACE(filename, char(92), '/'), REPLACE(REPLACE(filename, char(92), '/'), '/', '')) = '',"
+            " REPLACE(filename, char(92), '/'),"
+            " SUBSTR(REPLACE(filename, char(92), '/'), LENGTH(RTRIM(REPLACE(filename, char(92), '/'), REPLACE(REPLACE(filename, char(92), '/'), '/', ''))) + 1)"
+            " )) VIRTUAL",
+            "ALTER TABLE video ADD COLUMN extension TEXT GENERATED ALWAYS AS"
+            " (CASE"
+            " WHEN RTRIM(_basename, REPLACE(_basename, '.', '')) = '' OR LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) = 1 THEN ''"
+            " ELSE LOWER(SUBSTR(_basename, LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) + 1))"
+            " END) VIRTUAL",
+            "ALTER TABLE video ADD COLUMN file_title TEXT GENERATED ALWAYS AS"
+            " (CASE"
+            " WHEN RTRIM(_basename, REPLACE(_basename, '.', '')) = '' THEN _basename"
+            " WHEN LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) = 1 THEN SUBSTR(_basename, 2)"
+            " ELSE SUBSTR(_basename, 1, LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) - 1)"
+            " END) VIRTUAL",
         ]
         for sql in migrations:
             try:

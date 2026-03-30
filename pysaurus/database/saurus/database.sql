@@ -61,6 +61,30 @@ CREATE TABLE IF NOT EXISTS video (
 	day TEXT GENERATED ALWAYS AS (strftime('%Y-%m-%d', datetime(mtime, 'unixepoch'))) VIRTUAL,
 	year TEXT GENERATED ALWAYS AS (strftime('%Y', datetime(mtime, 'unixepoch'))) VIRTUAL,
 	frame_rate DOUBLE GENERATED ALWAYS AS (frame_rate_num * 1.0 / COALESCE(NULLIF(frame_rate_den, 0), 1)) VIRTUAL,
+	-- filename-derived virtual columns (_basename is a helper for extension/file_title)
+	_basename TEXT GENERATED ALWAYS AS (
+		IIF(
+			RTRIM(REPLACE(filename, char(92), '/'), REPLACE(REPLACE(filename, char(92), '/'), '/', '')) = '',
+			REPLACE(filename, char(92), '/'),
+			SUBSTR(
+				REPLACE(filename, char(92), '/'),
+				LENGTH(RTRIM(REPLACE(filename, char(92), '/'), REPLACE(REPLACE(filename, char(92), '/'), '/', ''))) + 1
+			)
+		)
+	) VIRTUAL,
+	extension TEXT GENERATED ALWAYS AS (
+		CASE
+			WHEN RTRIM(_basename, REPLACE(_basename, '.', '')) = '' OR LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) = 1 THEN ''
+			ELSE LOWER(SUBSTR(_basename, LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) + 1))
+		END
+	) VIRTUAL,
+	file_title TEXT GENERATED ALWAYS AS (
+		CASE
+			WHEN RTRIM(_basename, REPLACE(_basename, '.', '')) = '' THEN _basename
+			WHEN LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) = 1 THEN SUBSTR(_basename, 2)
+			ELSE SUBSTR(_basename, 1, LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) - 1)
+		END
+	) VIRTUAL,
 	-- constraints
 	CHECK (is_file IN (0, 1)),
 	CHECK (discarded IN (0, 1)),

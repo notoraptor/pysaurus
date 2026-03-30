@@ -521,9 +521,36 @@ class AppContext(QObject):
         return None
 
     def set_sources(self, sources) -> None:
-        """Set the video sources filter."""
+        """Set the video sources filter (flags mode)."""
         if self._database:
             self._api.set_sources(sources)
+            self.state_changed.emit()
+
+    def get_source_expression(self) -> str | None:
+        """Return the current source expression, or None."""
+        return self._view.source_expression
+
+    def set_source_expression(self, expression: str | None) -> None:
+        """Set the source expression filter (searchexp mode).
+
+        Validates the expression before storing it. If invalid,
+        raises PysaurusError (caught by the global except hook)
+        without modifying the view state.
+        """
+        if self._database:
+            text = expression.strip() if expression else None
+            if text:
+                from pysaurus.core.searchexp.errors import ExpressionError
+                from pysaurus.application.exceptions import PysaurusError
+                from pysaurus.database.saurus.video_mega_group import (
+                    _compile_source_expression,
+                )
+
+                try:
+                    _compile_source_expression(self._database.db, text)
+                except ExpressionError as exc:
+                    raise PysaurusError(exc.format_message()) from exc
+            self._view.set_source_expression(text)
             self.state_changed.emit()
 
     def set_groups(

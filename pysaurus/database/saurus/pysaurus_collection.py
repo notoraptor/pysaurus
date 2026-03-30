@@ -62,6 +62,7 @@ class PysaurusCollection(AbstractDatabase):
         output = video_mega_group(
             self.db,
             sources=view.sources,
+            source_expression=view.source_expression,
             grouping=view.grouping,
             classifier=view.classifier,
             group=view.group,
