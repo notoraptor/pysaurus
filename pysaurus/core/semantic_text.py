@@ -1,3 +1,15 @@
+"""Natural sorting for strings with embedded numbers.
+
+Provides two complementary strategies:
+- SemanticText: wraps a string for Python-side comparison (file2 < file10).
+  Also handles Unicode superscript/subscript digits.
+- pad_numbers_in_string: transforms a string for SQL ORDER BY by zero-padding
+  numbers so that alphabetical sort equals natural sort.
+
+Alternative: the `natsort` package (pip install natsort) covers the Python-side
+comparison use case, but does not handle superscript/subscript digits natively.
+"""
+
 import itertools
 import re
 from typing import Iterable, Self
@@ -89,7 +101,7 @@ class DigitAccumulator:
         return number
 
 
-def separate_characters_and_numbers(text: str) -> Iterable[str | int]:
+def separate_characters_and_numbers(text: str) -> Iterable[CharClass | int]:
     accumulator = DigitAccumulator()
     for character in text:
         wrapper = CharClass(character)
@@ -97,32 +109,10 @@ def separate_characters_and_numbers(text: str) -> Iterable[str | int]:
         if number is not None:
             yield number
         if wrapper.is_alpha():
-            yield character
+            yield wrapper
     number = accumulator.append(None)
     if number is not None:
         yield number
-
-
-def split_numbers_and_texts(text: str) -> list[str | int]:
-    output: list[str | int] = []
-    accumulator = DigitAccumulator()
-    seq = ""
-    for character in text:
-        wrapper = CharClass(character)
-        number = accumulator.append(wrapper)
-        if number is not None:
-            output.append(number)
-        if wrapper.is_alpha():
-            seq += character
-        elif seq:
-            output.append(seq)
-            seq = ""
-    number = accumulator.append(None)
-    if number is not None:
-        output.append(number)
-    elif seq:
-        output.append(seq)
-    return output
 
 
 class SemanticText:
