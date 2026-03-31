@@ -1,6 +1,4 @@
-from typing import cast
-
-from win32com.server.util import Collection
+from typing import cast, Collection
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.database.database_algorithms import DatabaseAlgorithms
