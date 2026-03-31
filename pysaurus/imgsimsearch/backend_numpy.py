@@ -168,32 +168,14 @@ def compare_faster(p1: NumpyMiniature, p2: NumpyMiniature, maximum_distance_scor
         shift_bottom_right(p2.r), shift_bottom_right(p2.g), shift_bottom_right(p2.b)
     )
 
-    total_distance = np.sum(
-        np.minimum(
-            np_dst(p1, top_left),
-            np.minimum(
-                np_dst(p1, top),
-                np.minimum(
-                    np_dst(p1, top_right),
-                    np.minimum(
-                        np_dst(p1, left),
-                        np.minimum(
-                            np_dst(p1, center),
-                            np.minimum(
-                                np_dst(p1, right),
-                                np.minimum(
-                                    np_dst(p1, bottom_left),
-                                    np.minimum(
-                                        np_dst(p1, bottom), np_dst(p1, bottom_right)
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                ),
-            ),
+    distances = [
+        np_dst(p1, neighbor)
+        for neighbor in (
+            top_left, top, top_right, left, center, right,
+            bottom_left, bottom, bottom_right,
         )
-    )
+    ]
+    total_distance = np.sum(np.minimum.reduce(distances))
     return (maximum_distance_score - total_distance) / maximum_distance_score
 
 

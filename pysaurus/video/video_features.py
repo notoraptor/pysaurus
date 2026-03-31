@@ -1,11 +1,11 @@
 from difflib import SequenceMatcher
-from typing import Iterable
+from typing import Iterable, Sized
 
 
 class VideoFeatures:
     @staticmethod
     def get_common_fields(videos: Iterable, *, fields: Iterable[str], getfield=getattr):
-        if not hasattr(videos, "__len__"):
+        if not isinstance(videos, Sized):
             videos = list(videos)
         if len(videos) < 2:
             return {}
@@ -37,7 +37,7 @@ class VideoFeatures:
             Dict mapping video_id to list of (start, end) tuples indicating
             character ranges that differ.
         """
-        if not hasattr(videos, "__len__"):
+        if not isinstance(videos, Sized):
             videos = list(videos)
         if len(videos) < 2:
             return {}

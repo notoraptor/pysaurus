@@ -8,7 +8,7 @@ from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 class VideoEntry:
     # table columns: constant data
     filename: str  # vs AbsolutePath
-    video_id: int = None
+    video_id: int | None = None
     file_size: int = 0
     unreadable: bool = False
     audio_bit_rate: int = 0
@@ -31,7 +31,7 @@ class VideoEntry:
     width: int = 0
     # table columns: runtime frozen data
     mtime: float = 0.0
-    driver_id: str = None
+    driver_id: str | None = None
     is_file: bool = False
     discarded: float = False
     # related data
@@ -39,16 +39,16 @@ class VideoEntry:
     audio_languages: Sequence[str] = field(default_factory=list)
     subtitle_languages: Sequence[str] = field(default_factory=list)
     # collection data
-    date_entry_modified: float = None  # as Date(this or mtime if None)
-    date_entry_opened: float = None  # as Date(this or mtime if None)
-    similarity_id: int = None
-    similarity_id_reencoded: int = None
+    date_entry_modified: float | None = None  # as Date(this or mtime if None)
+    date_entry_opened: float | None = None  # as Date(this or mtime if None)
+    similarity_id: int | None = None
+    similarity_id_reencoded: int | None = None
 
     # Missing: `properties`: dict[str, list[PropUnitType]]
     # Missing: `moves`: list of dicts {video_id => int, filename => str}
 
     def to_table(
-        self, for_update=False, runtime_info: VideoRuntimeInfo = None
+        self, for_update=False, runtime_info: VideoRuntimeInfo | None = None
     ) -> dict[str, Any]:
         output = asdict(self)
         del output["errors"]

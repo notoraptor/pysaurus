@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from pysaurus.core.classes import Selector
+from pysaurus.core.constants import VIDEO_DEFAULT_SORTING
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.dbview.field_stat import FieldStat
@@ -13,6 +14,16 @@ from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_sorting import VideoSorting
 
 
+class DefaultList[T]:
+    __slots__ = ("__v",)
+
+    def __init__(self, values: Sequence[T]):
+        self.__v = list(values)
+
+    def __call__(self) -> list[T]:
+        return list(self.__v)
+
+
 @dataclass(slots=True)
 class VideoSearchContext:
     # Initialization
@@ -20,13 +31,13 @@ class VideoSearchContext:
     grouping: GroupDef | None = None
     classifier: Sequence[str] | None = None
     group_id: Any = None
-    search: SearchDef = None
-    sorting: Sequence[str] = None
-    selector: Selector = None
-    page_size: int = None
+    search: SearchDef | None = None
+    sorting: Sequence[str] = field(default_factory=DefaultList(VIDEO_DEFAULT_SORTING))
+    selector: Selector | None = None
+    page_size: int | None = None
     page_number: int = 0
     with_moves: bool = False
-    result: list[VideoPattern] | None = None
+    result: list[VideoPattern] = field(default_factory=list)
     # Post-initialization
     nb_pages: int | None = None
     view_count: int = 0
@@ -48,7 +59,7 @@ class VideoSearchContext:
             self.file_title_diffs = VideoFeatures.get_file_title_diffs(self.result)
 
     def grouped_by_moves(self) -> bool:
-        return self.grouping.field == "move_id"
+        return self.grouping is not None and self.grouping.field == "move_id"
 
     def get_video_sorting(self) -> VideoSorting:
         return VideoSorting(self.sorting)
@@ -63,7 +74,7 @@ class VideoSearchContext:
             if grouping
             else None
         )
-        if self.common_fields:
+        if self.common_fields and group_def is not None:
             group_def["common"] = self.common_fields
 
         with_moves = self.with_moves

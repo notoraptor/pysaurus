@@ -119,46 +119,38 @@ class PythonVideoRaptor:
         )
 
         return VideoEntry(
-            **{
-                "filename": filename,
-                "duration": container.duration,
-                "duration_time_base": av.time_base,
-                "file_size": container.size,
-                "width": video_stream.codec_context.width,
-                "height": video_stream.codec_context.height,
-                "frame_rate_num": average_rate.numerator,
-                "frame_rate_den": average_rate.denominator,
-                "bit_depth": max(
-                    (cmp.bits for cmp in video_stream.format.components), default=0
-                ),
-                "container_format": container.format.long_name,
-                "video_codec": video_stream.codec_context.codec.name,
-                "video_codec_description": video_stream.codec_context.codec.long_name,
-                "audio_languages": [
-                    audio_stream.language
-                    for audio_stream in audio_streams
-                    if audio_stream.language is not None
-                ],
-                "subtitle_languages": [
-                    subtitle_stream.language
-                    for subtitle_stream in subtitle_streams
-                    if subtitle_stream.language is not None
-                ],
-                "meta_title": container.metadata.get("title", ""),
-                "errors": ([] if end_reachable else ["ERROR_SEEK_END_VIDEO"]),
-                **(
-                    {
-                        "channels": acc.channels,
-                        "sample_rate": acc.sample_rate,
-                        "audio_bit_rate": acc.bit_rate or 0,
-                        "audio_codec": acc.codec.name,
-                        "audio_codec_description": acc.codec.long_name,
-                        "audio_bits": audio_streams[0].format.bits,
-                    }
-                    if acc
-                    else {}
-                ),
-            }
+            filename=filename,
+            duration=container.duration,
+            duration_time_base=av.time_base,
+            file_size=container.size,
+            width=video_stream.codec_context.width,
+            height=video_stream.codec_context.height,
+            frame_rate_num=average_rate.numerator,
+            frame_rate_den=average_rate.denominator,
+            bit_depth=max(
+                (cmp.bits for cmp in video_stream.format.components), default=0
+            ),
+            container_format=container.format.long_name,
+            video_codec=video_stream.codec_context.codec.name,
+            video_codec_description=video_stream.codec_context.codec.long_name,
+            audio_languages=[
+                audio_stream.language
+                for audio_stream in audio_streams
+                if audio_stream.language is not None
+            ],
+            subtitle_languages=[
+                subtitle_stream.language
+                for subtitle_stream in subtitle_streams
+                if subtitle_stream.language is not None
+            ],
+            meta_title=container.metadata.get("title", ""),
+            errors=([] if end_reachable else ["ERROR_SEEK_END_VIDEO"]),
+            channels=acc.channels if acc else 0,
+            sample_rate=acc.sample_rate if acc else 0,
+            audio_bit_rate=(acc.bit_rate or 0) if acc else 0,
+            audio_codec=acc.codec.name if acc else "",
+            audio_codec_description=acc.codec.long_name if acc else "",
+            audio_bits=audio_streams[0].format.bits if acc else 0,
         )
 
     @classmethod

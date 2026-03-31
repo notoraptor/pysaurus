@@ -73,5 +73,12 @@ asyncio_default_fixture_loop_scope = "function"
 [tool.poe.tasks]
 format = "ruff format"
 lint = "ruff check --fix"
-typecheck = "ty check --output-format concise pysaurus/application pysaurus/core pysaurus/dbview pysaurus/properties"
+typecheck = """ty check --output-format concise \
+    pysaurus/application \
+    pysaurus/core \
+    pysaurus/dbview \
+    pysaurus/imgsimsearch \
+    pysaurus/properties \
+    pysaurus/video \
+    pysaurus/video_raptor"""
 check = ["format", "lint", "typecheck"]

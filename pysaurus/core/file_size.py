@@ -12,7 +12,7 @@ class FileSize:
 
     __slots__ = ("__raw", "__neg", "__size", "__base")
 
-    def __init__(self, size: int):
+    def __init__(self, size: int | float):
         raw = size
         neg = size < 0
         size = abs(size)

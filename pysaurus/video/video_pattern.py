@@ -219,7 +219,7 @@ class VideoPattern(ABC):
         raise NotImplementedError()
 
     def get_property(
-        self, name: str, default: PropUnitType = None
+        self, name: str, default: PropUnitType | None = None
     ) -> list[PropUnitType]:
         return self.properties.get(name, [] if default is None else [default])
 
@@ -331,7 +331,7 @@ class VideoPattern(ABC):
         return self.date.year
 
     @property
-    def day(self) -> int:
+    def day(self) -> str:
         return self.date.day
 
     @property
