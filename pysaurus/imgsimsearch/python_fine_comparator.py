@@ -1,4 +1,4 @@
-from typing import Any, Sequence
+from typing import Any
 
 from pysaurus.core.graph import Graph
 from pysaurus.core.informer import Information
@@ -9,7 +9,7 @@ from pysaurus.imgsimsearch.common import THUMBNAIL_DIMENSION
 
 def compare_miniatures(
     miniatures_list: list[Miniature],
-    comparisons: dict[Any, Sequence[Any]],
+    comparisons: dict[Any, dict[Any, float]],
     sim_limit: float,
 ) -> list[set[Any]]:
     notifier = Information.notifier()

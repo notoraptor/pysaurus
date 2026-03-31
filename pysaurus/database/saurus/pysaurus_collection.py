@@ -4,6 +4,7 @@ from typing import Any, Collection, Iterable, Sequence
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.classes import Selector
 from pysaurus.core.datestring import Date
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
@@ -48,7 +49,7 @@ class PysaurusCollection(AbstractDatabase):
         self.ways.add_path(DB_SQL_PATH)
         self.db = PysaurusConnection(self.ways.get_path(DB_SQL_PATH).path)
         if folders:
-            self.set_folders(
+            self.ops.set_folders(
                 set(self.get_folders())
                 | {AbsolutePath.ensure(folder) for folder in folders}
             )
@@ -57,7 +58,9 @@ class PysaurusCollection(AbstractDatabase):
         super().rename(new_name)
         self.db = PysaurusConnection(self.ways.get_path(DB_SQL_PATH).path)
 
-    def query_videos(self, view, page_size, page_number, selector=None):
+    def query_videos(
+        self, view, page_size, page_number, selector: Selector | None = None
+    ):
         grouped_by_moves = view.grouping and view.grouping.field == "move_id"
         output = video_mega_group(
             self.db,
@@ -119,7 +122,7 @@ class PysaurusCollection(AbstractDatabase):
         )
 
     def videos_tag_get(
-        self, name: str, indices: list[int] = ()
+        self, name: str, indices: Sequence[int] = ()
     ) -> dict[int, list[PropUnitType]]:
         (pt,) = self.get_prop_types(name=name)
         output = {}
@@ -354,9 +357,9 @@ class PysaurusCollection(AbstractDatabase):
     def get_videos(
         self,
         *,
-        include: Sequence[str] = None,
+        include: Sequence[str] | None = None,
         with_moves: bool = False,
-        where: dict = None,
+        where: dict | None = None,
         # Optimization flags
         count_only: bool = False,
         exists_only: bool = False,

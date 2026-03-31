@@ -45,10 +45,10 @@ def video_mega_group(
     group=0,
     search: SearchDef = SearchDef(),
     sorting: Sequence[str] = (),
-    selector: Selector = None,
-    page_size: int = None,
-    page_number: int = None,
-    include: Sequence[str] = None,
+    selector: Selector | None = None,
+    page_size: int | None = None,
+    page_number: int | None = None,
+    include: Sequence[str] | None = None,
     with_moves=False,
 ) -> VideoSearchContext:
     output_groups = LookupArray[GroupCount](GroupCount, (), GroupCount.keyof)

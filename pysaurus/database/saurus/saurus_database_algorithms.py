@@ -1,4 +1,6 @@
-from typing import Container
+from typing import cast
+
+from win32com.server.util import Collection
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.database.database_algorithms import DatabaseAlgorithms
@@ -8,8 +10,10 @@ from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 class SaurusDatabaseAlgorithms(DatabaseAlgorithms):
     """SQL-optimized database algorithms."""
 
-    def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
-        db = self.db.db
+    def _update_videos_not_found(self, existing_paths: Collection[AbsolutePath]):
+        from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
+
+        db = cast(PysaurusCollection, self.db).db
         db.modify("UPDATE video SET is_file = 0 WHERE is_file != 0")
         if existing_paths:
             db.modify_many(
@@ -20,7 +24,9 @@ class SaurusDatabaseAlgorithms(DatabaseAlgorithms):
     def _find_video_paths_for_update(
         self, file_paths: dict[AbsolutePath, VideoRuntimeInfo]
     ) -> list[AbsolutePath]:
-        db = self.db.db
+        from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
+
+        db = cast(PysaurusCollection, self.db).db
         # Load all (filename, mtime, file_size) from DB in one query.
         with db:
             existing = {

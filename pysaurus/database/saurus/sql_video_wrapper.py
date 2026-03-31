@@ -1,4 +1,5 @@
-from typing import Iterable, Mapping
+import sqlite3
+from typing import Iterable
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.classes import StringedTuple
@@ -74,7 +75,7 @@ class SQLVideoWrapper(VideoPattern):
 
     def __init__(
         self,
-        data: Mapping,
+        data: sqlite3.Row,
         audio_languages=(),
         subtitle_languages=(),
         errors=(),

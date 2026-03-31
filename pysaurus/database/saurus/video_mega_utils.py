@@ -7,7 +7,6 @@ from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.sql_utils import sql_placeholders
 from pysaurus.database.saurus.sql_video_wrapper import SQLVideoWrapper
 from pysaurus.properties.properties import PropType
-from pysaurus.video.video_pattern import VideoPattern
 
 
 def _get_videos(
@@ -17,7 +16,7 @@ def _get_videos(
     *,
     include: Sequence[str] | None = None,
     with_moves: bool = False,
-) -> list[VideoPattern]:
+) -> list[SQLVideoWrapper]:
     with db:
         videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
 
@@ -69,7 +68,7 @@ def _get_videos(
             ):
                 languages[row[0]][row[1]].append(row[2])
     if with_properties:
-        prop_types: dict[int, PropType] = {
+        prop_types: dict[int | None, PropType] = {
             pt.property_id: pt for pt in prop_type_search(db)
         }
         with db:

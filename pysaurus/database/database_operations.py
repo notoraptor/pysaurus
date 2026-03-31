@@ -12,8 +12,8 @@ from typing import Collection
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.datestring import Date
+from pysaurus.properties.properties import PropUnitType
 from pysaurus.properties.property_value_modifier import PropertyValueModifier
-from pysaurus.properties.properties import PropUnitType, PropValueType
 
 
 class DatabaseOperations:
@@ -178,8 +178,8 @@ class DatabaseOperations:
         values_to_remove: list,
     ) -> None:
         """Update property by adding/removing values."""
-        values_to_add = set(self.validate_prop_values(name, values_to_add))
-        values_to_remove = set(self.validate_prop_values(name, values_to_remove))
+        values_to_add: set = set(self.validate_prop_values(name, values_to_add))
+        values_to_remove: set = set(self.validate_prop_values(name, values_to_remove))
         old_props = self.db.videos_tag_get(name, indices=video_indices)
         self.set_property_for_videos(
             name,
@@ -193,7 +193,10 @@ class DatabaseOperations:
         )
 
     def set_property_for_videos(
-        self, name: str, updates: dict[int, Collection[PropUnitType]], merge=False
+        self,
+        name: str,
+        updates: dict[int | None, Collection[PropUnitType]],
+        merge=False,
     ):
         """Set property for many videos and notify."""
         self.db.videos_tag_set(
@@ -203,11 +206,12 @@ class DatabaseOperations:
         )
         self.db._notify_fields_modified([name], is_property=True)
 
-    def validate_prop_values(self, name, values: list) -> list[PropValueType]:
+    def validate_prop_values(self, name, values: list) -> list[PropUnitType]:
         """Validate property values according to property type."""
         (prop_type,) = self.db.get_prop_types(name=name)
+        values: list[PropUnitType]
         if prop_type.multiple:
-            values = prop_type.validate(values)
+            values = prop_type.validate_on_multiple_prop_type(values)
         else:
-            values = [prop_type.validate(value) for value in values]
+            values = [prop_type.validate_on_unique_prop_type(value) for value in values]
         return values

@@ -97,11 +97,11 @@ class PropType:
 
     def validate(self, value: PropRawType) -> PropValueType:
         if self.multiple:
-            return self._validate_on_multiple_prop_type(value)
+            return self.validate_on_multiple_prop_type(value)
         else:
-            return self._validate_on_unique_prop_type(value)
+            return self.validate_on_unique_prop_type(value)
 
-    def _validate_on_multiple_prop_type(self, value: PropRawType) -> list[PropUnitType]:
+    def validate_on_multiple_prop_type(self, value: PropRawType) -> list[PropUnitType]:
         if not isinstance(value, (list, tuple, set)):
             raise exceptions.InvalidMultiplePropertyValue(self, value)
         if not isinstance(value, set):
@@ -115,7 +115,7 @@ class PropType:
                     raise exceptions.InvalidPropertyValue(self, element)
         return sorted(value)
 
-    def _validate_on_unique_prop_type(self, value: PropRawType) -> PropUnitType:
+    def validate_on_unique_prop_type(self, value: PropRawType) -> PropUnitType:
         if self.python_type is float and isinstance(value, int):
             value = float(value)
         if not isinstance(value, self.python_type):
@@ -129,10 +129,10 @@ class PropType:
         if not values:
             return []
         if self.multiple:
-            return self._validate_on_multiple_prop_type(values)
+            return self.validate_on_multiple_prop_type(values)
         else:
             (value,) = values
-            return [self._validate_on_unique_prop_type(value)]
+            return [self.validate_on_unique_prop_type(value)]
 
     # =========================================================================
     # Factory

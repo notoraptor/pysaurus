@@ -76,6 +76,9 @@ lint = "ruff check --fix"
 typecheck = """ty check --output-format concise \
     pysaurus/application \
     pysaurus/core \
+    pysaurus/database/algorithms \
+    pysaurus/database/features \
+    pysaurus/database/*.py \
     pysaurus/dbview \
     pysaurus/imgsimsearch \
     pysaurus/properties \

@@ -36,9 +36,7 @@ def _make_miniature(
 class TestShiftFunctions:
     @pytest.fixture()
     def arr(self):
-        return np.array(
-            [[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=np.float32
-        )
+        return np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=np.float32)
 
     def test_shift_top_left(self, arr):
         result = shift_top_left(arr)
@@ -164,9 +162,7 @@ class TestCompareFaster:
         m1 = _make_miniature(r1, g1, b1)
         m2 = _make_miniature(r2, g2, b2)
         mds = SIMPLE_MAX_PIXEL_DISTANCE * 4 * 4
-        assert compare_faster(m1, m2, mds) == pytest.approx(
-            compare_faster(m1, m2, mds)
-        )
+        assert compare_faster(m1, m2, mds) == pytest.approx(compare_faster(m1, m2, mds))
 
     def test_score_in_0_1_range(self):
         rng = np.random.RandomState(456)
@@ -190,9 +186,7 @@ class TestCompareFaster:
         m_close = _make_miniature(close, close, close)
         m_far = _make_miniature(far, far, far)
         mds = SIMPLE_MAX_PIXEL_DISTANCE * 2 * 2
-        assert compare_faster(m_base, m_close, mds) > compare_faster(
-            m_base, m_far, mds
-        )
+        assert compare_faster(m_base, m_close, mds) > compare_faster(m_base, m_far, mds)
 
 
 class TestSimilarityComparator:

@@ -29,6 +29,7 @@ def convert_dict_series_to_sql(dicts: Iterable[dict]) -> tuple[str, list]:
 
 
 def search_to_sql(search: SearchDef) -> tuple[str, list[str]]:
+    assert search.text is not None
     terms = []
     for piece in functions.string_to_pieces(search.text):
         if piece in ("and", "or"):

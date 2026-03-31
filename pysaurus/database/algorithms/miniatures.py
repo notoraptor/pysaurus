@@ -23,6 +23,7 @@ class Miniatures:
                 raise exceptions.InvalidMiniaturesJSON(miniatures_path)
             for dct in json_array:
                 m = Miniature.from_dict(dct)
+                assert m.identifier is not None
                 miniatures[AbsolutePath(m.identifier)] = m
         return miniatures
 

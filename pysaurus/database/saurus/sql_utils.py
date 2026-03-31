@@ -107,7 +107,7 @@ class JoinDef:
         join_table: TableDef,
         main_table: TableDef,
         join_field: str,
-        main_field: str = None,
+        main_field: str | None = None,
         left_join=False,
     ):
         self.join_table = join_table
@@ -201,9 +201,10 @@ class QueryMaker:
         self,
         join_table: TableDef,
         join_field: str,
-        main_field: str = None,
+        main_field: str | None = None,
         left_join=False,
     ):
+        assert self._main_table is not None
         join_def = JoinDef(
             join_table, self._main_table, join_field, main_field, left_join=left_join
         )

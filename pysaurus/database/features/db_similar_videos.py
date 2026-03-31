@@ -114,7 +114,9 @@ class DbSimilarVideos:
         imp: DbImageProvider,
     ):
         video_indices = [m.video_id for m in miniatures]
-        db.ops.set_similarities({video_id: -1 for video_id in video_indices})
+        db.ops.set_similarities(
+            {video_id: -1 for video_id in video_indices if video_id is not None}
+        )
 
         similarities.sort(key=imp.to_sortable_group)
         db.ops.set_similarities(

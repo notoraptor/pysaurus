@@ -9,7 +9,7 @@ This class contains algorithms that:
 
 import logging
 import tempfile
-from typing import Container
+from typing import Collection, Sequence
 
 import ujson as json
 
@@ -22,6 +22,7 @@ from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
+from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
@@ -63,13 +64,13 @@ class DatabaseAlgorithms:
             needing_thumbs = self._get_collectable_missing_thumbnails()
             new: list[VideoEntry] = []
             expected_thumbs: dict[str, str] = {}
-            thumb_errors: dict[str, list[str]] = {}
+            thumb_errors: dict[str, Sequence[str]] = {}
             with tempfile.TemporaryDirectory() as tmp_dir:
                 for result in Videos.hunt(files_to_update, needing_thumbs, tmp_dir):
                     task = result.task
                     filename = task.filename
                     if task.need_info and task.thumb_path:
-                        if result.info and result.thumbnail:
+                        if result.info is not None and result.thumbnail:
                             # info -> new
                             # thumbnail -> expected_thumbs
                             new.append(result.info)
@@ -119,7 +120,7 @@ class DatabaseAlgorithms:
             if missing_thumbs:
                 self.db.notifier.notify(notifications.MissingThumbnails(missing_thumbs))
 
-    def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
+    def _update_videos_not_found(self, existing_paths: Collection[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
         self.db.videos_set_field(
             "found",
@@ -195,6 +196,7 @@ class DatabaseAlgorithms:
             m.identifier: m
             for source in (valid_miniatures.values(), added_miniatures)
             for m in source
+            if m.identifier is not None
         }
 
         if len(valid_miniatures) != len(prev_miniatures) or len(added_miniatures):
@@ -215,6 +217,7 @@ class DatabaseAlgorithms:
             )
         }
         for m in m_dict.values():
+            assert m.identifier is not None
             m.video_id = filename_to_video_id[AbsolutePath.ensure(m.identifier)]
         return list(m_dict.values())
 
@@ -260,7 +263,7 @@ class DatabaseAlgorithms:
                     include=["video_id"], where={"video_id": to_indices, "found": True}
                 )
             )
-            to_properties: dict[str, dict[int, list]] = {}
+            to_properties: dict[str, dict[int | None, Collection[PropUnitType]]] = {}
             for from_id, to_id in moves:
                 from_props: dict[str, list] = from_map[from_id].properties
                 for prop_name, from_prop_values in from_props.items():
@@ -348,7 +351,7 @@ class DatabaseAlgorithms:
         ops = DatabaseOperations(self.db)
 
         modified = {}
-        old_values = set(ops.validate_prop_values(name, old_values))
+        old_values: set = set(ops.validate_prop_values(name, old_values))
         (new_value,) = ops.validate_prop_values(name, [new_value])
         for video_id, previous_values in self.db.videos_tag_get(name).items():
             previous_values = set(previous_values)
@@ -369,7 +372,7 @@ class DatabaseAlgorithms:
         assert self.db.get_prop_types(name=prop_name, with_type=str, multiple=True)
         old = self.db.videos_tag_get(prop_name)
         terms = self.db.videos_get_terms()
-        modified = {
+        modified: dict[int | None, Collection[PropUnitType]] = {
             video_id: video_terms
             for video_id, video_terms in terms.items()
             if not only_empty or not old.get(video_id)

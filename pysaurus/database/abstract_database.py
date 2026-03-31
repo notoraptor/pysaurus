@@ -1,7 +1,7 @@
 import enum
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Collection, Iterable, Literal, Sequence, overload
+from typing import Any, Iterable, Literal, Sequence, overload, Collection
 
 from pysaurus.application import exceptions
 from pysaurus.core.absolute_path import AbsolutePath, PathType
@@ -115,9 +115,9 @@ class AbstractDatabase(ABC):
     def get_videos(
         self,
         *,
-        include: Sequence[str] = None,
+        include: Sequence[str] | None = None,
         with_moves: bool = False,
-        where: dict = None,
+        where: dict | None = None,
         # Optimization flags
         count_only: Literal[True],
         exists_only: Literal[False] = False,
@@ -127,9 +127,9 @@ class AbstractDatabase(ABC):
     def get_videos(
         self,
         *,
-        include: Sequence[str] = None,
+        include: Sequence[str] | None = None,
         with_moves: bool = False,
-        where: dict = None,
+        where: dict | None = None,
         # Optimization flags
         count_only: Literal[False] = False,
         exists_only: Literal[True],
@@ -139,9 +139,9 @@ class AbstractDatabase(ABC):
     def get_videos(
         self,
         *,
-        include: Sequence[str] = None,
+        include: Sequence[str] | None = None,
         with_moves: bool = False,
-        where: dict = None,
+        where: dict | None = None,
         # Optimization flags
         count_only: Literal[False] = False,
         exists_only: Literal[False] = False,
@@ -151,9 +151,9 @@ class AbstractDatabase(ABC):
     def get_videos(
         self,
         *,
-        include: Sequence[str] = None,
+        include: Sequence[str] | None = None,
         with_moves: bool = False,
-        where: dict = None,
+        where: dict | None = None,
         # Optimization flags
         count_only: bool = False,
         exists_only: bool = False,
@@ -166,7 +166,7 @@ class AbstractDatabase(ABC):
         view: ViewContext,
         page_size: int,
         page_number: int,
-        selector: Selector = None,
+        selector: Selector | None = None,
     ) -> VideoSearchContext:
         """Query videos with full filtering, grouping, and pagination.
 
@@ -224,7 +224,7 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def videos_tag_get(
-        self, name: str, indices: list[int] = ()
+        self, name: str, indices: Sequence[int] = ()
     ) -> dict[int, list[PropUnitType]]:
         """
         Return all values for given property

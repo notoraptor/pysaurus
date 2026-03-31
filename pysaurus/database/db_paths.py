@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass
-from typing import Iterable, Self
+from typing import Iterable
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
@@ -40,7 +40,7 @@ class DatabasePaths:
     def get_path(self, basename: Basename) -> AbsolutePath:
         return self.paths[basename.name]
 
-    def renamed(self, new_name: str) -> Self:
+    def renamed(self, new_name: str) -> "DatabasePaths":
         new_name = new_name.strip()
         if new_name == self.db_folder.title:
             return self
