@@ -17,7 +17,11 @@ from pysaurus.database.saurus.saurus_database_algorithms import SaurusDatabaseAl
 from pysaurus.database.saurus.sql_useful_constants import WRITABLE_FIELDS
 from pysaurus.database.saurus.sql_utils import sql_placeholders
 from pysaurus.database.saurus.video_mega_group import video_mega_group
-from pysaurus.database.saurus.video_mega_search import video_mega_search
+from pysaurus.database.saurus.video_mega_search import (
+    video_mega_count,
+    video_mega_exists,
+    video_mega_search,
+)
 from pysaurus.database.saurus.video_mega_utils import _get_video_moves
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.dbview.view_context import ViewContext
@@ -365,18 +369,16 @@ class PysaurusCollection(AbstractDatabase):
         include: Sequence[str] | None = None,
         with_moves: bool = False,
         where: dict | None = None,
-        # Optimization flags
-        count_only: bool = False,
-        exists_only: bool = False,
-    ) -> list[VideoPattern] | int | bool:
+    ) -> list[VideoPattern]:
         return video_mega_search(
-            self.db,
-            include=include,
-            with_moves=with_moves,
-            where=where,
-            count_only=count_only,
-            exists_only=exists_only,
+            self.db, include=include, with_moves=with_moves, where=where
         )
+
+    def count_videos(self, *, where: dict | None = None) -> int:
+        return video_mega_count(self.db, where=where)
+
+    def has_videos(self, *, where: dict | None = None) -> bool:
+        return video_mega_exists(self.db, where=where)
 
     def videos_get_terms(self) -> dict[int, list[str]]:
         output = {}

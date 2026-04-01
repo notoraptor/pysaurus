@@ -1,7 +1,7 @@
 import enum
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, Literal, Sequence, overload, Collection
+from typing import Any, Collection, Iterable, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core.absolute_path import AbsolutePath, PathType
@@ -111,42 +111,6 @@ class AbstractDatabase(ABC):
     def prop_type_set_multiple(self, name: str, multiple: bool) -> None:
         raise NotImplementedError()
 
-    @overload
-    def get_videos(
-        self,
-        *,
-        include: Sequence[str] | None = None,
-        with_moves: bool = False,
-        where: dict | None = None,
-        # Optimization flags
-        count_only: Literal[True],
-        exists_only: Literal[False] = False,
-    ) -> int: ...
-
-    @overload
-    def get_videos(
-        self,
-        *,
-        include: Sequence[str] | None = None,
-        with_moves: bool = False,
-        where: dict | None = None,
-        # Optimization flags
-        count_only: Literal[False] = False,
-        exists_only: Literal[True],
-    ) -> bool: ...
-
-    @overload
-    def get_videos(
-        self,
-        *,
-        include: Sequence[str] | None = None,
-        with_moves: bool = False,
-        where: dict | None = None,
-        # Optimization flags
-        count_only: Literal[False] = False,
-        exists_only: Literal[False] = False,
-    ) -> list[VideoPattern]: ...
-
     @abstractmethod
     def get_videos(
         self,
@@ -154,10 +118,15 @@ class AbstractDatabase(ABC):
         include: Sequence[str] | None = None,
         with_moves: bool = False,
         where: dict | None = None,
-        # Optimization flags
-        count_only: bool = False,
-        exists_only: bool = False,
-    ) -> list[VideoPattern] | int | bool:
+    ) -> list[VideoPattern]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def count_videos(self, *, where: dict | None = None) -> int:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def has_videos(self, *, where: dict | None = None) -> bool:
         raise NotImplementedError()
 
     @abstractmethod

@@ -1,4 +1,4 @@
-from typing import Literal, Sequence, overload
+from typing import Sequence
 
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.sql_utils import SQLWhereBuilder
@@ -45,132 +45,56 @@ def _needs_thumbnail_join(include: Sequence[str] | None, where: dict | None) -> 
     return False
 
 
-@overload
-def video_mega_search(
-    db: PysaurusConnection,
-    *,
-    include: Sequence[str] | None = None,
-    with_moves: bool = False,
-    where: dict | None = None,
-    # Optimization flags
-    count_only: Literal[False] = False,
-    exists_only: Literal[True],
-    ids_only: Literal[False] = False,
-) -> bool: ...
-
-
-@overload
-def video_mega_search(
-    db: PysaurusConnection,
-    *,
-    include: Sequence[str] | None = None,
-    with_moves: bool = False,
-    where: dict | None = None,
-    # Optimization flags
-    count_only: Literal[True],
-    exists_only: Literal[False] = False,
-    ids_only: Literal[False] = False,
-) -> int: ...
-
-
-@overload
-def video_mega_search(
-    db: PysaurusConnection,
-    *,
-    include: Sequence[str] | None = None,
-    with_moves: bool = False,
-    where: dict | None = None,
-    # Optimization flags
-    count_only: Literal[False] = False,
-    exists_only: Literal[False] = False,
-    ids_only: Literal[True],
-) -> list[int]: ...
-
-
-@overload
-def video_mega_search(
-    db: PysaurusConnection,
-    *,
-    include: Sequence[str] | None = None,
-    with_moves: bool = False,
-    where: dict | None = None,
-    # Optimization flags
-    count_only: Literal[False] = False,
-    exists_only: Literal[False] = False,
-    ids_only: Literal[False] = False,
-) -> list[VideoPattern]: ...
-
-
-def video_mega_search(
-    db: PysaurusConnection,
-    *,
-    include: Sequence[str] | None = None,
-    with_moves: bool = False,
-    where: dict | None = None,
-    # Optimization flags
-    count_only: bool = False,
-    exists_only: bool = False,
-    ids_only: bool = False,
-) -> list[VideoPattern] | int | bool | list[int]:
-    """
-    Search for videos with various optimization modes.
-
-    Args:
-        db: Database connection
-        include: Fields to include in results. None means all fields.
-        with_moves: Whether to include move information
-        where: Filter conditions
-        count_only: If True, return only the count (int)
-        exists_only: If True, return whether any match exists (bool)
-        ids_only: If True, return only video IDs (list[int])
-
-    Returns:
-        Depending on flags:
-        - exists_only=True: bool
-        - count_only=True: int
-        - ids_only=True: list[int]
-        - Otherwise: list[VideoPattern]
-    """
+def video_mega_exists(db: PysaurusConnection, *, where: dict | None = None) -> bool:
+    """Check if any video matches the given filters."""
     where_builder = _build_where_clause(where)
     where_clause = where_builder.get_where_clause()
     params = where_builder.get_parameters()
 
-    # Check if we need thumbnail join for the where clause
-    needs_thumbnail_for_where = _needs_thumbnail_join(None, where)
+    needs_thumbnail = _needs_thumbnail_join(None, where)
+    if needs_thumbnail:
+        query = f"""
+        SELECT 1 FROM video AS v
+        LEFT JOIN video_thumbnail AS t ON v.video_id = t.video_id
+        {where_clause} LIMIT 1
+        """
+    else:
+        query = f"SELECT 1 FROM video AS v {where_clause} LIMIT 1"
+    result = db.query_one(query, params)
+    return result is not None
 
-    # Fast path: exists_only - just check if any row matches
-    if exists_only:
-        if needs_thumbnail_for_where:
-            query = f"""
-            SELECT 1 FROM video AS v
-            LEFT JOIN video_thumbnail AS t ON v.video_id = t.video_id
-            {where_clause} LIMIT 1
-            """
-        else:
-            query = f"SELECT 1 FROM video AS v {where_clause} LIMIT 1"
-        result = db.query_one(query, params)
-        return result is not None
 
-    # Fast path: count_only - just count matching rows
-    if count_only:
-        if needs_thumbnail_for_where:
-            query = f"""
-            SELECT COUNT(v.video_id) FROM video AS v
-            LEFT JOIN video_thumbnail AS t ON v.video_id = t.video_id
-            {where_clause}
-            """
-        else:
-            query = f"SELECT COUNT(v.video_id) FROM video AS v {where_clause}"
-        result = db.query_one(query, params)
-        return result[0] if result else 0
+def video_mega_count(db: PysaurusConnection, *, where: dict | None = None) -> int:
+    """Count videos matching the given filters."""
+    where_builder = _build_where_clause(where)
+    where_clause = where_builder.get_where_clause()
+    params = where_builder.get_parameters()
 
-    # Fast path: ids_only - return just video IDs
-    if ids_only:
-        query = f"SELECT v.video_id FROM video AS v {where_clause}"
-        with db:
-            return [row[0] for row in db.query(query, params)]
+    needs_thumbnail = _needs_thumbnail_join(None, where)
+    if needs_thumbnail:
+        query = f"""
+        SELECT COUNT(v.video_id) FROM video AS v
+        LEFT JOIN video_thumbnail AS t ON v.video_id = t.video_id
+        {where_clause}
+        """
+    else:
+        query = f"SELECT COUNT(v.video_id) FROM video AS v {where_clause}"
+    result = db.query_one(query, params)
+    return result[0] if result else 0
 
-    # Standard path: full video search
+
+def video_mega_search(
+    db: PysaurusConnection,
+    *,
+    include: Sequence[str] | None = None,
+    with_moves: bool = False,
+    where: dict | None = None,
+) -> list[VideoPattern]:
+    """Search for videos, returning full VideoPattern objects."""
+    where_builder = _build_where_clause(where)
+    where_clause = where_builder.get_where_clause()
+    params = where_builder.get_parameters()
+
     needs_thumbnail = _needs_thumbnail_join(include, where)
 
     if needs_thumbnail:

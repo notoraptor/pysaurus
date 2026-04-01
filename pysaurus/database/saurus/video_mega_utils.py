@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, cast
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.database.saurus.prop_type_search import prop_type_search
@@ -7,6 +7,7 @@ from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.sql_utils import sql_placeholders
 from pysaurus.database.saurus.sql_video_wrapper import SQLVideoWrapper
 from pysaurus.properties.properties import PropType
+from pysaurus.video.video_pattern import VideoPattern
 
 
 def _get_videos(
@@ -16,13 +17,13 @@ def _get_videos(
     *,
     include: Sequence[str] | None = None,
     with_moves: bool = False,
-) -> list[SQLVideoWrapper]:
+) -> list[VideoPattern]:
     with db:
         videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
 
     # Early return if no videos or minimal include (no extra data needed)
     if not videos:
-        return videos
+        return cast(list[VideoPattern], videos)
 
     include_set = set(include) if include is not None else None
 
@@ -40,7 +41,7 @@ def _get_videos(
         or with_properties
         or with_moves
     ):
-        return videos
+        return cast(list[VideoPattern], videos)
 
     video_ids = [video.video_id for video in videos]
     placeholders = sql_placeholders(len(video_ids))
@@ -107,7 +108,7 @@ def _get_videos(
         for video in videos:
             video.moves = moves.get(video.video_id, [])
 
-    return videos
+    return cast(list[VideoPattern], videos)
 
 
 def _get_video_moves(db: PysaurusConnection) -> Iterable[tuple[int, list[dict]]]:

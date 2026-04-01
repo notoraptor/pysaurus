@@ -44,13 +44,11 @@ class DatabaseOperations:
         forced_flags.update({flag: True for flag in flags})
         if forced_flags:
             forced_flags.setdefault("discarded", False)
-        return self.db.get_videos(
-            include=["video_id"], where=forced_flags, count_only=True
-        )
+        return self.db.count_videos(where=forced_flags)
 
     def has_video(self, **fields) -> bool:
         """Check if a video exists matching given fields."""
-        return self.db.get_videos(include=(), where=fields, exists_only=True)
+        return self.db.has_videos(where=fields)
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         """Get filename for a video."""
