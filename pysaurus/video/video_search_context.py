@@ -37,7 +37,7 @@ class VideoSearchContext:
     page_size: int | None = None
     page_number: int = 0
     with_moves: bool = False
-    result: list[VideoPattern] = field(default_factory=list)
+    result: Sequence[VideoPattern] = field(default_factory=list)
     # Post-initialization
     nb_pages: int | None = None
     view_count: int = 0

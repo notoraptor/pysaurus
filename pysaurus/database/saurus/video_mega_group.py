@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Sequence
+from typing import Callable, Iterable, Sequence, Any
 
 from pysaurus.core.classes import Selector, StringedTuple
 from pysaurus.core.datestring import Date
@@ -47,7 +47,7 @@ def video_mega_group(
     sorting: Sequence[str] = (),
     selector: Selector | None = None,
     page_size: int | None = None,
-    page_number: int | None = None,
+    page_number: int = 0,
     include: Sequence[str] | None = None,
     with_moves=False,
 ) -> VideoSearchContext:
@@ -72,7 +72,7 @@ def video_mega_group(
     video_thumbnail_table = TableDef("video_thumbnail", "vt")
     query_maker.add_left_join(video_thumbnail_table, "video_id")
 
-    if search and search.cond == "id":
+    if search and search.text is not None and search.cond == "id":
         query_maker.where.append_field(field_video_id, int(search.text))
         _compute_results_and_stats(sql_db, output, query_maker, include=include)
         return output
@@ -96,7 +96,8 @@ def video_mega_group(
 
     where_group_query = None
     where_group_params = None
-    if grouping:
+    prop_meta = None
+    if grouping and grouping.field is not None:
         without_singletons = ""
         if not grouping.allow_singletons:
             without_singletons = "HAVING size > 1"
@@ -146,6 +147,7 @@ def video_mega_group(
         output.group_id = min(max(0, output.group_id), len(output_groups) - 1)
         group = output_groups[output.group_id]
         if grouping.is_property:
+            assert prop_meta is not None
             (field_value,) = group.value
             where_group_query, where_group_params = _filter_by_selected_property_group(
                 grouping, classifier, field_value, prop_meta
@@ -160,6 +162,7 @@ def video_mega_group(
     where_builder.append_query(source_query, *source_params)
 
     if where_group_query:
+        assert where_group_params is not None
         where_builder.append_query(where_group_query, *where_group_params)
 
     if search:
@@ -286,13 +289,13 @@ def _get_property_order_field(grouping: GroupDef, order_direction: str) -> str:
 def _query_property_groups_with_classifier(
     sql_db: PysaurusConnection,
     source_query: str,
-    source_params: list,
+    source_params: Sequence[Any],
     grouping: GroupDef,
     classifier: Sequence[str],
     order_field: str,
     without_singletons: str,
     prop_meta: tuple[int, bool, str | None],
-) -> list[tuple]:
+) -> Sequence[Sequence]:
     prop_id, _, _ = prop_meta
     placeholders = ["?"] * len(classifier)
     vt_join = _thumbnail_join_if_needed(source_query)
@@ -307,7 +310,7 @@ def _query_property_groups_with_classifier(
     GROUP BY v.video_id
     HAVING COUNT(vv.property_value) = ?
     """
-    params = [prop_id] + source_params + classifier + [len(classifier)]
+    params = [prop_id] + list(source_params) + list(classifier) + [len(classifier)]
     nb_classified_videos = len(sql_db.query_all(query, params))
     super_query = f"""
     SELECT xv.property_value AS value, COUNT(x.video_id) AS size
@@ -328,19 +331,19 @@ def _query_property_groups_with_classifier(
     GROUP BY value {without_singletons}
     ORDER BY {order_field}
     """
-    super_params = params + [prop_id] + classifier
+    super_params = params + [prop_id] + list(classifier)
     return [(None, nb_classified_videos)] + sql_db.query_all(super_query, super_params)
 
 
 def _query_property_groups_without_classifier(
     sql_db: PysaurusConnection,
     source_query: str,
-    source_params: list,
+    source_params: Sequence[Any],
     grouping: GroupDef,
     order_field: str,
     without_singletons: str,
     prop_meta: tuple[int, bool, str | None],
-) -> list[Sequence]:
+) -> Sequence[Sequence]:
     prop_id, is_multiple, default_value = prop_meta
     vt_join = _thumbnail_join_if_needed(source_query)
 
@@ -355,7 +358,7 @@ def _query_property_groups_without_classifier(
         GROUP BY value {without_singletons}
         ORDER BY {order_field}
         """
-        params = [prop_id] + source_params
+        params = [prop_id] + list(source_params)
     else:
         query = f"""
         SELECT
@@ -369,17 +372,17 @@ def _query_property_groups_without_classifier(
         GROUP BY value {without_singletons}
         ORDER BY {order_field}
         """
-        params = [default_value, prop_id] + source_params
+        params = [default_value, prop_id] + list(source_params)
     return sql_db.query_all(query, params)
 
 
 def _query_field_groups(
     sql_db: PysaurusConnection,
     source_query: str,
-    source_params: list,
+    source_params: Sequence[Any],
     grouping: GroupDef,
     field_factory: SqlFieldFactory,
-) -> list[Sequence]:
+) -> Sequence[Sequence]:
     order_direction = "DESC" if grouping.reverse else "ASC"
     field = field_factory.get_field(grouping.field)
     if grouping.sorting == grouping.FIELD:
@@ -402,7 +405,11 @@ def _query_field_groups(
 
     if grouping.field == "move_id":
         return _query_move_id_groups(
-            sql_db, source_query, source_params, order_direction, without_singletons
+            sql_db,
+            source_query,
+            list(source_params),
+            order_direction,
+            without_singletons,
         )
 
     return sql_db.query_all(
@@ -422,7 +429,7 @@ def _query_move_id_groups(
     source_params: list,
     order_direction: str,
     without_singletons: str,
-) -> list[Sequence]:
+) -> Sequence[Sequence]:
     """Query move_id groups matching JSON behavior.
 
     Videos with potential moves (same file_size/duration/time_base
@@ -471,7 +478,7 @@ _FIELD_CONVERTERS: dict[str, Callable] = {
 
 def _convert_grouping_rows(
     grouping_field: str,
-    grouping_rows: list[tuple],
+    grouping_rows: Sequence[Sequence],
     prop_value_converter: Callable | None = None,
 ) -> Iterable[GroupCount]:
     if grouping_field in ("size_length", "move_id"):
@@ -573,7 +580,7 @@ def _filter_by_no_moves() -> tuple[str, list]:
 
 def _filter_by_selected_field_group(
     group: GroupCount, grouping: GroupDef, field_factory: SqlFieldFactory
-) -> tuple[str, list]:
+) -> tuple[str, Sequence]:
     if grouping.field == "move_id" and group.value is None:
         # Videos without potential moves
         return _filter_by_no_moves()
@@ -587,7 +594,8 @@ def _filter_by_selected_field_group(
         else:
             return v
 
-    raw_values = tuple(extract_raw(v) for v in group.value)
+    assert group.value is not None
+    raw_values = [extract_raw(v) for v in group.value]
     return convert_dict_to_sql(field_factory.get_conditions(grouping.field, raw_values))
 
 

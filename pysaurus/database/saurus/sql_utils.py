@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Iterable, Self, Sequence
+from typing import Iterable, Self, Sequence, Any
 
 
 def sql_placeholders(count: int) -> str:
@@ -45,7 +45,7 @@ class SQLWhereBuilder:
         self._where.clear()
         self._parameters.clear()
 
-    def append_field(self, name, value):
+    def append_field(self, name: str, value: Any):
         self._where.append(f"{name} = ?")
         self._parameters.append(value)
 

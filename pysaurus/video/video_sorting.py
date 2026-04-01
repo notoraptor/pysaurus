@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Iterator
 
 
 class VideoSorting:
@@ -22,7 +22,9 @@ class VideoSorting:
     def __len__(self):
         return len(self.fields)
 
-    def __iter__(self) -> Iterable[tuple[str, bool]]:
+    def __iter__(self) -> Iterator[tuple[str, bool]]:
+        # NB: We must annotate with Iterator, not Iterable,
+        # so that type checkers detect this class as iterable.
         return iter(zip(self.fields, self.reverse))
 
     def __eq__(self, other):

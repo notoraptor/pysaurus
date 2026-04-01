@@ -20,6 +20,7 @@ from pysaurus.database.saurus.video_mega_group import video_mega_group
 from pysaurus.database.saurus.video_mega_search import video_mega_search
 from pysaurus.database.saurus.video_mega_utils import _get_video_moves
 from pysaurus.dbview.field_stat import FieldStat
+from pysaurus.dbview.view_context import ViewContext
 from pysaurus.properties.properties import PropRawType, PropType, PropUnitType
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_pattern import VideoPattern
@@ -59,7 +60,11 @@ class PysaurusCollection(AbstractDatabase):
         self.db = PysaurusConnection(self.ways.get_path(DB_SQL_PATH).path)
 
     def query_videos(
-        self, view, page_size, page_number, selector: Selector | None = None
+        self,
+        view: ViewContext,
+        page_size: int,
+        page_number: int,
+        selector: Selector | None = None,
     ):
         grouped_by_moves = view.grouping and view.grouping.field == "move_id"
         output = video_mega_group(
