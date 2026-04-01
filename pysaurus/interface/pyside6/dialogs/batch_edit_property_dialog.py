@@ -9,6 +9,7 @@ Three-column layout similar to web interface:
 Each entry has inline action buttons (left of text).
 Bottom of each column has bulk action buttons.
 """
+from typing import Callable
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -37,7 +38,7 @@ _BTN_STYLE = (
 
 
 def _make_entry_widget(
-    label_text: str, value, buttons: list[tuple[str, str, callable]]
+    label_text: str, value, buttons: list[tuple[str, str, Callable]]
 ):
     """Create a row widget with action buttons on the left and a label.
 
@@ -85,8 +86,10 @@ class _EntryList(QScrollArea):
         # Remove all widgets except the trailing stretch
         while self._layout.count() > 1:
             item = self._layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            assert item is not None
+            item_widget = item.widget()
+            if item_widget is not None:
+                item_widget.deleteLater()
         self._count = 0
 
     def add_entry(self, widget: QWidget):

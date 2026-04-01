@@ -253,6 +253,7 @@ class BatchEditDialog(QDialog):
         )
         # Disable auto-default to prevent ENTER from submitting the form
         for button in button_box.buttons():
+            assert isinstance(button, QPushButton)
             button.setAutoDefault(False)
             button.setDefault(False)
         button_box.accepted.connect(self._on_accept)
@@ -347,19 +348,26 @@ class BatchEditDialog(QDialog):
 
             try:
                 if is_multiple:
+                    assert isinstance(widget, MultipleValuesWidget)
                     new_value = widget.get_values()
                 elif enumeration:
+                    assert isinstance(widget, QComboBox)
                     new_value = widget.currentData()
                 elif ptype == "bool":
+                    assert isinstance(widget, QCheckBox)
                     new_value = widget.isChecked()
                 elif ptype == "int":
+                    assert isinstance(widget, QSpinBox)
                     new_value = widget.value()
                 elif ptype == "float":
+                    assert isinstance(widget, QLineEdit)
                     text = widget.text().strip()
                     new_value = float(text) if text else default
                 elif ptype == "str":
+                    assert isinstance(widget, QLineEdit)
                     new_value = widget.text()
                 else:
+                    assert isinstance(widget, QLineEdit)
                     new_value = widget.text()
 
                 changes[name] = new_value
