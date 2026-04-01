@@ -9,8 +9,8 @@ from pysaurus.interface.common.common import (
     GroupPerm,
     Uniconst,
 )
-from pysaurus.interface.using_videre.path_set_view import PathSetView
 from pysaurus.video.video_pattern import VideoPattern
+from wip.pysaurus_interfaces.using_videre.path_set_view import PathSetView
 
 
 def get_prop_info(

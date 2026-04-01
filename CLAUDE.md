@@ -8,16 +8,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Pysaurus is a video collection manager (WIP) written in Python 3.13. It handles video metadata extraction, custom properties, advanced search/filtering, video similarity detection, and supports multiple GUI frontends.
+Pysaurus is a video collection manager (WIP) written in Python 3.13. It handles video metadata extraction, custom properties, advanced search/filtering, video similarity detection, with a PySide6 (Qt) GUI.
 
 ## Commands
 
 All commands must be run with `uv run`:
 
 ```bash
-# Run the application (default GUI: pyside6)
+# Run the application
 uv run -m pysaurus
-uv run -m pysaurus pyside6   # or: flask, flaskview, pywebview, qtwebview
 
 # Run CLI (benchmark/debug console, configured via .pysaurus.yaml)
 uv run -m pysaurus.interface.console.run --db <name>
@@ -45,27 +44,13 @@ uv run ty check
 uv run poe check
 ```
 
-### Web Frontend (React/Babel)
-
-The web frontend lives in `pysaurus/interface/web/`. It uses React 18 + Babel + SystemJS (no bundler like Webpack/Vite).
-
-```bash
-# Watch and auto-compile JSX (from pysaurus/interface/web/)
-npx babel --watch src --out-dir build --presets @babel/preset-react --plugins @babel/plugin-transform-modules-systemjs
-
-# Format frontend code
-npm run format
-```
-
-Edit files in `src/` — the `build/` directory is auto-generated.
-
 ## Architecture
 
 ### High-level Flow
 
 ```
-__main__.py (GUI selector, default: pyside6)
-    → Interface Layer (PySide6 / PyWebView / QtWebView)
+__main__.py
+    → PySide6 GUI
         → GuiAPI / FeatureAPI (proxy-based API)
             ├─ .view → ViewContext (filtering/grouping state)
             └─ → AbstractDatabase
@@ -80,7 +65,7 @@ Single top-level package **`pysaurus/`** containing all application code, includ
 
 ### Entry Point
 
-`pysaurus/__main__.py` — selects GUI at runtime based on CLI argument (`pyside6`, `flask`, `flaskview`, `pywebview`, `qtwebview`). Default: `pyside6`.
+`pysaurus/__main__.py` — launches the PySide6 GUI directly.
 
 ### Database Layer
 
@@ -137,35 +122,11 @@ Proxy subclasses and their targets:
 
 ### Notification System
 
-Python backend sends typed `Notification` objects (`pysaurus/core/notifications.py`) — e.g., `DatabaseReady`, `Done`, `JobToDo`, `JobStep`. These are serialized to dicts and forwarded to the frontend via `window.NOTIFICATION_MANAGER.call(notification)`.
+Python backend sends typed `Notification` objects (`pysaurus/core/notifications.py`) — e.g., `DatabaseReady`, `Done`, `JobToDo`, `JobStep`.
 
-### GUI Frontends
+### GUI
 
-| Name | Module | Mechanism | Status |
-|---|---|---|---|
-| `pyside6` | `pyside6/` | Native Qt widgets (no web) | Default / Primary |
-| `flask` | `flask/` | Flask + Jinja2 server-side rendering, opens in browser | Active (fallback) |
-| `flaskview` | `flask/` | Same as `flask` but in a `pywebview` desktop window | Active (fallback) |
-| `pywebview` | `using_pywebview/` | Flask HTTP server + `webview` JS bridge | Legacy |
-| `qtwebview` | `qtwebview/` | `PySide6.QtWebEngineWidgets` + `QWebChannel` | Legacy |
-
-### Flask Interface (`interface/flask/`)
-
-Lightweight web interface — server-side rendered, minimal JavaScript. Designed as a pure-Python fallback requiring no system dependencies (no Qt, no Node.js). See `docs/flask-design.md` for full design doc.
-
-- **`FlaskContext`** — facade to `Application`/`AbstractDatabase`/`DatabaseOperations`/`DatabaseAlgorithms` (similar role to `AppContext` in PySide6)
-- **Stateless view**: no persistent `ViewContext` — each request rebuilds an ephemeral `ViewContext` from URL query params (`_build_view()`)
-- **Thumbnails**: loaded in a single SQL query per page, embedded as base64 data URIs (no separate `/thumbnail/<id>` route)
-- **Long operations** (update, similarity search): run in a daemon thread, progress polled via JS every second
-- **Does NOT use `FeatureAPI`** — calls `db.*`, `ops.*`, `algos.*` directly (no proxy system)
-- Feature parity tracking: `docs/flask-vs-pyside6.md`
-
-### Web Frontend (`interface/web/`)
-
-- **Stack**: React 18, SystemJS, Babel (JSX transpilation), PropTypes
-- **`BaseComponent`** (`src/BaseComponent.js`): base React component that auto-binds all methods and adds `setStateAsync()`
-- **`Backend`** static class (`src/utils/backend.js`): all Python API calls go through `python_call(name, ...args)` → `window.backend_call(name, args)`. `backend_call` is injected by the runtime (CEF = `window.python.call`, Qt = QWebChannel `backend.call`)
-- **Pages**: `DatabasesPage`, `HomePage`, `VideosPage`, `PropertiesPage`
+PySide6 is the only active GUI. Legacy interfaces (Flask, pywebview, qtwebview, React web frontend) have been moved to `wip/pysaurus_interfaces/` and are no longer part of the active codebase.
 
 ### Expression Search (`core/searchexp/`)
 
@@ -191,7 +152,7 @@ Standalone parser for structured search expressions (e.g. `width > 1080 and "eng
 
 ### PySide6 Conventions (`interface/pyside6/`)
 
-PySide6 is the primary GUI frontend. Unlike web frontends, it does **not** go through `FeatureAPI`. Instead, all calls go through the **`AppContext` facade** — pages and dialogs must never access internal attributes (`_database`, `_ops`, `_algos`, `_view`) directly.
+PySide6 is the only GUI frontend. All calls go through the **`AppContext` facade** — pages and dialogs must never access internal attributes (`_database`, `_ops`, `_algos`, `_view`) directly.
 
 #### Auto-refresh via `state_changed` signal
 
@@ -237,4 +198,3 @@ PySide6 is the primary GUI frontend. Unlike web frontends, it does **not** go th
 - Two test databases in `tests/home_dir_test/.Pysaurus/databases/`: `test_database` (small) and `example_db_in_pysaurus` (90 videos with properties)
 - Qt tests use `QT_QPA_PLATFORM=offscreen` (set in `tests/interface/pyside6_interface/conftest.py`)
 - `pyfakefs` for filesystem mocking, `pytest-qt` for Qt tests, `pytest-xdist` for parallel runs
-- **No test coverage for the Flask interface** — changes to `pysaurus/interface/flask/` are not validated by existing tests

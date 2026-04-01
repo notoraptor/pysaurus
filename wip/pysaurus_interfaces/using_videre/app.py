@@ -9,10 +9,10 @@ from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.constants import VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE
 from pysaurus.core.informer import Information
 from pysaurus.core.notifications import DatabaseReady, End, Notification
-from pysaurus.interface.using_videre.backend import PysaurusBackend
-from pysaurus.interface.using_videre.process_page import ProcessPage
-from pysaurus.interface.using_videre.videos_page import VideosPage
-from pysaurus.interface.using_videre.videre_notifications import (
+from wip.pysaurus_interfaces.using_videre.backend import PysaurusBackend
+from wip.pysaurus_interfaces.using_videre.process_page import ProcessPage
+from wip.pysaurus_interfaces.using_videre.videos_page import VideosPage
+from wip.pysaurus_interfaces.using_videre.videre_notifications import (
     RequestedDatabaseUpdate,
     RequestedHomePage,
 )

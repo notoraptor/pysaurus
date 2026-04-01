@@ -16,7 +16,7 @@
 | **Opérations fichiers** | Renommer, déplacer, supprimer, mettre à la corbeille, ouvrir le dossier, correction mtime FAT/exFAT |
 | **Multi-base** | Collections indépendantes avec métadonnées, propriétés et similarités séparées |
 | **Export** | Playlist XSPF, copie chemins dans le presse-papier |
-| **GUI** | PySide6 (native Qt, principale), Flask (web fallback), FlaskView (desktop), PyWebView et QtWebView (legacy) |
+| **GUI** | PySide6 (native Qt) |
 | **CLI** | Console interactive (Python Fire) : 15+ commandes (update, search, groupby, stats, repair FTS, fix_mtime, etc.) |
 | **Architecture** | SQLite (via skullite), FTS5, colonnes virtuelles, traitement parallèle, profilage intégré |
 | **Licence** | Non publiée (projet personnel) |

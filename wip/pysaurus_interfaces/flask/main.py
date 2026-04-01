@@ -6,8 +6,8 @@ import webbrowser
 
 from pysaurus.application.application import Application
 from pysaurus.core.informer import Information
-from pysaurus.interface.flask.app import create_app
-from pysaurus.interface.flask.context import FlaskContext
+from wip.pysaurus_interfaces.flask.app import create_app
+from wip.pysaurus_interfaces.flask.context import FlaskContext
 
 logger = logging.getLogger(__name__)
 

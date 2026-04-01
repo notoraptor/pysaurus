@@ -12,8 +12,8 @@ __pycache__/
 pysaurus.egg-info
 pytest_cache
 blob_storage/
-pysaurus/interface/web/blob_storage/
-pysaurus/interface/web/webrtc_event_logs/
+wip/pysaurus_interfaces/web/blob_storage/
+wip/pysaurus_interfaces/web/webrtc_event_logs/
 webrtc_event_logs/
 /dist
 /build

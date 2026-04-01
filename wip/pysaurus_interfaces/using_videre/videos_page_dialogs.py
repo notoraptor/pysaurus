@@ -1,7 +1,7 @@
 import videre
 
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.interface.using_videre.path_set_view import PathSetView
+from wip.pysaurus_interfaces.using_videre.path_set_view import PathSetView
 
 
 class DialogRenameDatabase(videre.Column):

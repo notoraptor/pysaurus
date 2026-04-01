@@ -1,7 +1,7 @@
 import logging
 
 from pysaurus.core.informer import Information
-from pysaurus.interface.using_pywebview.webview_server import WebviewServer
+from wip.pysaurus_interfaces.using_pywebview.webview_server import WebviewServer
 
 
 def main():

@@ -11,7 +11,7 @@ from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.dbview.view_context import ViewContext
 from pysaurus.interface.common.common import FIELD_MAP
-from pysaurus.interface.flask.context import FlaskContext
+from wip.pysaurus_interfaces.flask.context import FlaskContext
 
 DEFAULT_PAGE_SIZE = 20
 

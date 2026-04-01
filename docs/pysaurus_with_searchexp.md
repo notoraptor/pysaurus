@@ -150,4 +150,3 @@ générées SQLite dans `database.sql` :
 - Support des 5 attributs calculés manquants (colonnes générées SQLite)
 - Autocomplétion dans le champ de saisie d'expression
 - Construction graphique d'expressions (formulaire visuel)
-- Intégration dans l'interface Flask

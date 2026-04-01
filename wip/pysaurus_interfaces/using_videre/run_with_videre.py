@@ -1,6 +1,6 @@
 import sys
 
-from pysaurus.interface.using_videre.app import App
+from wip.pysaurus_interfaces.using_videre.app import App
 
 
 def main():

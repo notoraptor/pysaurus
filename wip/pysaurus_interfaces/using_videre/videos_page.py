@@ -14,19 +14,19 @@ from pysaurus.interface.common.common import (
     pretty_grouping,
     pretty_quote,
 )
-from pysaurus.interface.using_videre.backend import get_backend
-from pysaurus.interface.using_videre.pagination import Pagination
-from pysaurus.interface.using_videre.video_view import VideoView
-from pysaurus.interface.using_videre.videos_page_dialogs import (
+from pysaurus.video.database_context import DatabaseContext
+from wip.pysaurus_interfaces.using_videre.backend import get_backend
+from wip.pysaurus_interfaces.using_videre.pagination import Pagination
+from wip.pysaurus_interfaces.using_videre.video_view import VideoView
+from wip.pysaurus_interfaces.using_videre.videos_page_dialogs import (
     DialogEditDatabaseFolders,
     DialogRenameDatabase,
 )
-from pysaurus.interface.using_videre.videre_notifications import (
+from wip.pysaurus_interfaces.using_videre.videre_notifications import (
     RequestedDatabaseUpdate,
     RequestedHomePage,
     VideoSelected,
 )
-from pysaurus.video.database_context import DatabaseContext
 
 
 class VideosPage(videre.Column, metaclass=OvldMC):

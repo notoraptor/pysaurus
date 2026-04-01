@@ -5,10 +5,12 @@ import webview
 from flask import Flask, send_from_directory
 
 from pysaurus.core.informer import Information
-from pysaurus.interface.using_pywebview.webview_server import Backend
+from wip.pysaurus_interfaces.using_pywebview.webview_server import Backend
 
 # Define the directory to serve
-DIRECTORY = os.path.join(os.path.dirname(__file__), "..", "web")
+DIRECTORY = os.path.join(
+    os.path.dirname(__file__), "../../../pysaurus/interface", "web"
+)
 assert os.path.isdir(DIRECTORY)
 
 # Create a Flask application

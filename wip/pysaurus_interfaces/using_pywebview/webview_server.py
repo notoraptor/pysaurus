@@ -83,7 +83,7 @@ class WebviewServer:
         """Start the HTTP server in a separate thread"""
         # Get the absolute path to the build directory
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        build_dir = os.path.join(current_dir, "..", "web")
+        build_dir = os.path.join(current_dir, "../../../pysaurus/interface", "web")
         assert os.path.isdir(build_dir), f"Build directory not found: {build_dir}"
 
         # Change to the build directory to serve files from there
