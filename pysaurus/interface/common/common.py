@@ -24,7 +24,7 @@ class FieldInfo:
     def __init__(
         self,
         name: str,
-        title: str = None,
+        title: str | None = None,
         group_permission: GroupPerm = GroupPerm.ALL,
         field_type: FieldType = FieldType.STR,
     ):
@@ -215,6 +215,7 @@ def pretty_quote(text: Any) -> str:
 
 
 def pretty_grouping(grouping: GroupDef) -> str:
+    assert grouping.field is not None
     title = (
         pretty_quote(FIELD_MAP.get_title(grouping.field))
         + " "

@@ -9,7 +9,7 @@ from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.informer import Information
 from pysaurus.core.modules import System
 from pysaurus.interface.api.gui_api import GuiAPI
-from pysaurus.interface.common.qt_saurus_utils import PysaurusQtExceptHook
+from wip.pysaurus_interfaces.qtwebview.qt_saurus_utils import PysaurusQtExceptHook
 
 # This line is placed before PyQt imports to prevent code formatting process
 # from putting them before Pysaurus imports

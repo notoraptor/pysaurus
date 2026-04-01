@@ -62,7 +62,7 @@ def _load_config() -> dict:
 
 
 def _open_database(db_name: str, home: str) -> AbstractDatabase:
-    home = Path(home) if home else Path.home()
+    home: Path = Path(home) if home else Path.home()
     db_path = home / ".Pysaurus" / "databases" / db_name
     if not db_path.is_dir():
         print(f"Database not found: {db_path}", file=sys.stderr)
@@ -196,7 +196,7 @@ class BenchmarkAPI:
         if not results:
             return "Not found"
         vid = results[0]
-        return "\n".join(f" {k}: {val}" for k, val in vid.to_dict().items())
+        return str(vid)
 
     def tag_get(self, name: str = ""):
         """Get tag values for videos."""
@@ -222,7 +222,7 @@ class BenchmarkAPI:
         text = str(text)
         with PerfCounter() as t:
             self._view.set_search(text)
-            result = self._db.query_videos(self._view, None, None)
+            result = self._db.query_videos(self._view, 0, 0)
             indices = [v.video_id for v in result.result]
         print(f"({t.microseconds / 1000:.3f} ms)")
         output = [f"{len(indices)} result(s)"] + [
@@ -278,7 +278,7 @@ class BenchmarkAPI:
         sorting = fields.split(",") if fields else []
         with PerfCounter() as t:
             self._view.set_sort(sorting)
-            result = self._db.query_videos(self._view, None, None)
+            result = self._db.query_videos(self._view, 0, 0)
             indices = [v.video_id for v in result.result]
         print(f"({t.microseconds / 1000:.3f} ms)")
         return f"{len(indices)} result(s)"
@@ -474,7 +474,7 @@ class BenchmarkAPI:
             db_videos[str(v.filename)] = (v.filename.path, v.driver_id)
 
         # Find driver_ids that need migration
-        corrections: list[tuple[str, str, str, str]] = []
+        corrections: list[tuple[str, str, str, str | None]] = []
         matched_keys: set[str] = set()
         for file_name, file_info in sorted(all_files.items()):
             key = str(file_name)

@@ -3,7 +3,8 @@ import logging
 import subprocess
 import threading
 from abc import abstractmethod
-from typing import Callable, Sequence
+from types import FunctionType
+from typing import Sequence
 
 import filedial
 import pyperclip
@@ -73,6 +74,7 @@ class GuiAPI(FeatureAPI):
         )
 
     def open_from_server(self, video_id) -> str:
+        assert self.database is not None
         hostname = self.server.server_thread.hostname
         port = self.server.server_thread.port
         url = f"http://{hostname}:{port}/video/{video_id}"
@@ -83,6 +85,7 @@ class GuiAPI(FeatureAPI):
 
     def cancel_copy(self) -> None:
         # TODO Rethink Move/Copy feature
+        assert self.database is not None
         if self.copy_work is not None and not self.copy_work.terminated:
             self.copy_work.cancel = True
         else:
@@ -92,6 +95,7 @@ class GuiAPI(FeatureAPI):
         self.database = None
 
     def delete_database(self) -> None:
+        assert self.database is not None
         assert self.application.delete_database_from_name(self.database.get_name())
         self.database = None
 
@@ -123,7 +127,11 @@ class GuiAPI(FeatureAPI):
         return launch_thread(function, *args, **kwargs)
 
     def _launch(
-        self, fn: Callable, args: Sequence = None, kwargs: dict = None, finish=True
+        self,
+        fn: FunctionType,
+        args: Sequence | None = None,
+        kwargs: dict | None = None,
+        finish: bool = True,
     ) -> None:
         logger.debug(f"Running {fn.__name__}")
         args = args or ()
@@ -146,6 +154,7 @@ class GuiAPI(FeatureAPI):
         self.launched_thread = self._run_thread(run, *args, **kwargs)
 
     def _finish_loading(self, log_message) -> None:
+        assert self.notifier is not None
         self.notifier.notify(DatabaseReady())
         self.launched_thread = None
         logger.debug(log_message)
@@ -169,6 +178,7 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def update_database(self) -> None:
+        assert self.database is not None
         self.database.algos.refresh()
 
     @process()
@@ -194,7 +204,9 @@ class GuiAPI(FeatureAPI):
         )
 
     @process(finish=False)
-    def move_video_file(self, video_id: int, directory: str) -> None:
+    def move_video_file(self, video_id: int, directory: AbsolutePath | str) -> None:
+        assert self.database is not None
+        assert self.notifier is not None
         try:
             filename: AbsolutePath = self.database.ops.get_video_filename(video_id)
             directory = AbsolutePath.ensure(directory).assert_dir()

@@ -79,6 +79,9 @@ typecheck = """ty check --output-format concise \
     pysaurus/database \
     pysaurus/dbview \
     pysaurus/imgsimsearch \
+    pysaurus/interface/api \
+    pysaurus/interface/common \
+    pysaurus/interface/console \
     pysaurus/properties \
     pysaurus/video \
     pysaurus/video_raptor \

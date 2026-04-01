@@ -1,4 +1,5 @@
 import inspect
+from types import FunctionType
 from typing import Any, Callable
 
 import filedial
@@ -7,7 +8,7 @@ import filedial
 class ProxyFeature:
     __slots__ = ("proxy",)
 
-    def __init__(self, getter: Callable[[], Any], method: Callable, returns=False):
+    def __init__(self, getter: Callable[[], Any], method: FunctionType, returns=False):
         self.proxy = (getter, method, returns)
 
     def __call__(self, *args):

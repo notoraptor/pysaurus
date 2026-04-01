@@ -2,18 +2,22 @@ import logging
 import sys
 import threading
 from abc import abstractmethod
-from typing import Callable, Sequence, Type
+from typing import Callable
 
 from pysaurus.core.functions import identity
 
 logger = logging.getLogger(__name__)
-Types = Type | Sequence[Type]
 
 
 class TypeValidator:
     __slots__ = "__types", "__wrapper", "__parser"
 
-    def __init__(self, types: Types, wrapper: Callable = None, parser: Callable = None):
+    def __init__(
+        self,
+        types: type | tuple[type, ...],
+        wrapper: Callable | None = None,
+        parser: Callable | None = None,
+    ):
         self.__types = types
         self.__wrapper = wrapper
         self.__parser = parser or (

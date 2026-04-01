@@ -1,6 +1,6 @@
 import inspect
 import random
-from typing import Any, Optional
+from typing import Any
 
 from pysaurus.application import exceptions
 from pysaurus.application.application import Application
@@ -47,7 +47,7 @@ class FeatureAPI:
             "PYTHON_LANGUAGE": "english",
         }
         # We must return value for proxy ending with "!"
-        self._proxies: dict[str, str | ProxyFeature] = {
+        self._proxies: dict[str, ProxyFeature] = {
             "apply_on_prop_value": FromOps(self, Ops.apply_on_prop_value),
             "confirm_unique_moves": FromAlgo(self, Algo.confirm_unique_moves, True),
             "convert_prop_multiplicity": FromDb(self, Db.prop_type_set_multiple),
@@ -87,7 +87,7 @@ class FeatureAPI:
                 printer.write(f"\t{feature}")
             return str(printer)
 
-    def __run_feature__(self, name: str, *args) -> Optional:
+    def __run_feature__(self, name: str, *args) -> Any:
         assert "a" <= name[0] <= "z"
         with Profiler(f"ApiCall:{name}", self.notifier):
             if name in self._proxies:
@@ -123,6 +123,7 @@ class FeatureAPI:
         self.view.set_sort(sorting)
 
     def classifier_select_group(self, group_id) -> None:
+        assert self.database is not None
         result = self.database.query_videos(self.view, 1, 0)
         value = result.result_groups[group_id].get_value()
         self.view.classifier_select(value)
@@ -134,6 +135,7 @@ class FeatureAPI:
         return self.view.classifier_reverse()
 
     def classifier_focus_prop_val(self, prop_name, field_value) -> None:
+        assert self.database is not None
         self.view.set_grouping(
             field=prop_name,
             is_property=True,
@@ -147,7 +149,8 @@ class FeatureAPI:
         self.view.classifier_select(value)
 
     def apply_on_view(self, selector, db_fn_name, *db_fn_args):
-        result = self.database.query_videos(self.view, None, None)
+        assert self.database is not None
+        result = self.database.query_videos(self.view, 0, 0)
         view_indices = [v.video_id for v in result.result]
         ops = Ops(self.database)
         callable_methods = {
@@ -159,6 +162,7 @@ class FeatureAPI:
         )
 
     def open_random_video(self, open_video=True) -> str:
+        assert self.database is not None
         video_indices = []
         for path in self.view.sources:
             where = {flag: True for flag in path}
@@ -190,6 +194,7 @@ class FeatureAPI:
     def get_python_backend(
         self, page_size: int, page_number: int, selector: dict | None = None
     ) -> DatabaseContext:
+        assert self.database is not None
         if selector is not None and isinstance(selector, dict):
             selector = Selector.parse_dict(selector)
         context = self.database.query_videos(
@@ -206,6 +211,7 @@ class FeatureAPI:
     def classifier_concatenate_path(self, to_property) -> None:
         path = list(self.view.classifier)
         from_property = self.view.grouping.field
+        assert from_property is not None
         self.view.classifier = []
         self.view.group = 0
         alg = Algo(self.database)
@@ -213,8 +219,9 @@ class FeatureAPI:
 
     def playlist(self) -> str:
         db = self.database
+        assert db is not None
         ops = Ops(db)
-        result = db.query_videos(self.view, None, None)
+        result = db.query_videos(self.view, 0, 0)
         view_indices = [v.video_id for v in result.result]
         return str(
             create_xspf_playlist(map(ops.get_video_filename, view_indices)).open()
