@@ -102,6 +102,9 @@ class PySide6ExceptHook(ExceptHookForQt):
         if isinstance(exception, ApplicationError):
             logger.warning(f"Application error: {exception}")
             QMessageBox.warning(None, "Error", str(exception))
+        elif isinstance(exception, OSError):
+            logger.warning(f"OS error: {exception}")
+            QMessageBox.warning(None, "OS error", str(exception))
         else:
             tb_str = "".join(traceback.format_exception(cls, exception, trace))
             logger.error(f"Fatal error: {exception}")

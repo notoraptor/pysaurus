@@ -9,6 +9,7 @@ Three-column layout similar to web interface:
 Each entry has inline action buttons (left of text).
 Bottom of each column has bulk action buttons.
 """
+
 from typing import Callable
 
 from PySide6.QtCore import Qt
