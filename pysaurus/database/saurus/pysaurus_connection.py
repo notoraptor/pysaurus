@@ -5,6 +5,7 @@ from typing import Iterable
 from skullite import Skullite, SkulliteFunction
 
 from pysaurus.database.saurus import sql_functions
+from pysaurus.database.saurus.migrations import LATEST_VERSION, MIGRATIONS
 
 
 class PysaurusConnection(Skullite):
@@ -16,51 +17,55 @@ class PysaurusConnection(Skullite):
         super().__init__(
             db_path, functions=self.register_pysaurus_functions(), persistent=False
         )
+        self._run_schema_script()
         self._migrate()
+        # Re-run after migrations to recreate triggers/indexes that may
+        # have been lost during table rebuilds.  All statements use
+        # IF NOT EXISTS, so this is a no-op when nothing changed.
+        self._run_schema_script()
+
+    def _run_schema_script(self) -> None:
         with open(self._SCRIPT_PATH, encoding="utf-8") as f:
             script = f.read()
         with self.connect() as connection:
             connection.script(script)
 
-    def _migrate(self):
-        """Apply migrations before the schema script runs.
+    def _migrate(self) -> None:
+        """Apply versioned migrations to bring the database up to date.
 
-        Runs ALTER TABLE statements for columns added after initial release.
-        Must run before database.sql so that CREATE INDEX statements
-        in the script can reference the new columns.
+        Reads the current version from the ``collection`` table, applies
+        each migration in order, and updates the stored version.
+
+        Fresh databases (no collection row) get database.sql's latest
+        schema directly and skip all migrations.
         """
-        migrations = [
-            "ALTER TABLE video ADD COLUMN similarity_id_reencoded INTEGER",
-            # Rename virtual column bit_rate -> byte_rate
-            "ALTER TABLE video DROP COLUMN bit_rate",
-            "ALTER TABLE video ADD COLUMN byte_rate DOUBLE GENERATED ALWAYS AS"
-            " (IIF(duration = 0, 0, file_size *"
-            " COALESCE(NULLIF(duration_time_base, 0), 1) / duration)) VIRTUAL",
-            # Filename-derived virtual columns for searchexp
-            "ALTER TABLE video ADD COLUMN _basename TEXT GENERATED ALWAYS AS"
-            " (IIF("
-            " RTRIM(REPLACE(filename, char(92), '/'), REPLACE(REPLACE(filename, char(92), '/'), '/', '')) = '',"
-            " REPLACE(filename, char(92), '/'),"
-            " SUBSTR(REPLACE(filename, char(92), '/'), LENGTH(RTRIM(REPLACE(filename, char(92), '/'), REPLACE(REPLACE(filename, char(92), '/'), '/', ''))) + 1)"
-            " )) VIRTUAL",
-            "ALTER TABLE video ADD COLUMN extension TEXT GENERATED ALWAYS AS"
-            " (CASE"
-            " WHEN RTRIM(_basename, REPLACE(_basename, '.', '')) = '' OR LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) = 1 THEN ''"
-            " ELSE LOWER(SUBSTR(_basename, LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) + 1))"
-            " END) VIRTUAL",
-            "ALTER TABLE video ADD COLUMN file_title TEXT GENERATED ALWAYS AS"
-            " (CASE"
-            " WHEN RTRIM(_basename, REPLACE(_basename, '.', '')) = '' THEN _basename"
-            " WHEN LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) = 1 THEN SUBSTR(_basename, 2)"
-            " ELSE SUBSTR(_basename, 1, LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) - 1)"
-            " END) VIRTUAL",
-        ]
-        for sql in migrations:
-            try:
-                with self.connect() as connection:
-                    connection.modify(sql)
-            except Exception:
-                pass  # Table doesn't exist yet, or column already exists
+        version = self._get_version()
+        if version is None:
+            # Fresh database: schema is already at latest via database.sql.
+            # Just ensure the collection row exists.
+            self.insert("collection", collection_id=0, name="", version=LATEST_VERSION)
+            return
+        if version >= LATEST_VERSION:
+            return
+        for target in range(version + 1, LATEST_VERSION + 1):
+            MIGRATIONS[target](self)
+        self._set_version(LATEST_VERSION)
+
+    def _get_version(self) -> int | None:
+        """Read the schema version from the collection table.
+
+        Returns ``None`` for a fresh database (no row in collection),
+        or the stored version integer for an existing one.
+        """
+        rows = self.query_all("SELECT version FROM collection WHERE collection_id = 0")
+        if not rows:
+            return None
+        return rows[0]["version"]
+
+    def _set_version(self, version: int) -> None:
+        self.modify(
+            "UPDATE collection SET version = ? WHERE collection_id = 0", [version]
+        )
 
     @classmethod
     def register_pysaurus_functions(cls) -> Iterable[SkulliteFunction]:

@@ -52,7 +52,7 @@ class PysaurusCollection(AbstractDatabase):
     def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
         super().__init__(path, notifier)
         self.ways.add_path(DB_SQL_PATH)
-        self.db = PysaurusConnection(self.ways.get_path(DB_SQL_PATH).path)
+        self._open_db()
         if folders:
             self.ops.set_folders(
                 set(self.get_folders())
@@ -61,7 +61,13 @@ class PysaurusCollection(AbstractDatabase):
 
     def rename(self, new_name: str) -> None:
         super().rename(new_name)
+        self._open_db()
+
+    def _open_db(self) -> None:
         self.db = PysaurusConnection(self.ways.get_path(DB_SQL_PATH).path)
+        self.db.modify(
+            "UPDATE collection SET name = ? WHERE collection_id = 0", [self.get_name()]
+        )
 
     def query_videos(
         self,
