@@ -37,10 +37,13 @@ uv run pytest -n auto
 uv run ruff check .
 uv run ruff format .
 
-# Type check (full)
+# Type check (full project, all packages)
 uv run ty check
 
-# Run all checks (format + lint + typecheck)
+# Type check (subset used by CI — excludes pyside6/)
+uv run poe typecheck
+
+# Run all checks (format + lint + typecheck subset)
 uv run poe check
 ```
 
