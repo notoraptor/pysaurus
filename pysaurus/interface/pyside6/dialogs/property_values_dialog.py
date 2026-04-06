@@ -13,12 +13,12 @@ from PySide6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
-    QMenu,
     QMessageBox,
     QPushButton,
     QVBoxLayout,
 )
 
+from pysaurus.interface.pyside6.widgets.left_click_menu import LeftClickMenu
 from pysaurus.properties.properties import PropType
 
 
@@ -168,7 +168,7 @@ class PropertyValuesDialog(QDialog):
             return
 
         value = item.data(Qt.ItemDataRole.UserRole)
-        menu = QMenu(self)
+        menu = LeftClickMenu(self)
 
         menu.addAction("Delete", lambda: self._delete_values([value]))
         menu.addAction("Rename...", lambda: self._rename_value(value))

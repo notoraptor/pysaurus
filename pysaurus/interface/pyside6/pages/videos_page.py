@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
-    QMenu,
     QMessageBox,
     QPushButton,
     QScrollArea,
@@ -27,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.classes import Selector
+from pysaurus.interface.pyside6.widgets.left_click_menu import LeftClickMenu
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.interface.common.common import format_group_value
@@ -258,7 +258,7 @@ class VideosPage(QWidget):
         count = self._selector.size_from(self._view_count)
         has_selection = count > 0
 
-        menu = QMenu(self)
+        menu = LeftClickMenu(self)
         action_show = menu.addAction("Show Only Selected\tCtrl+Shift+D")
         action_show.setCheckable(True)
         action_show.setChecked(self._show_only_selected)
@@ -1381,7 +1381,7 @@ class VideosPage(QWidget):
 
     def _on_video_context_menu(self, video_id: int, pos):
         """Show context menu for a video."""
-        menu = QMenu(self)
+        menu = LeftClickMenu(self)
 
         menu.addAction("Toggle Watched", lambda: self._toggle_watched(video_id))
         menu.addSeparator()
@@ -1857,7 +1857,7 @@ class VideosPage(QWidget):
             return
 
         # Show menu of properties to choose from
-        menu = QMenu(self)
+        menu = LeftClickMenu(self)
         for prop_type in prop_types:
             prop_name = prop_type.name
             action = menu.addAction(prop_name)
