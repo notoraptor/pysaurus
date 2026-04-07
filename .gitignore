@@ -28,3 +28,4 @@ coverage.json
 
 test_videos
 /.pysaurus.yaml
+!.python-version
