@@ -7,6 +7,7 @@ Two tabs:
 """
 
 from PySide6.QtCore import QEvent, Qt
+from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -204,14 +205,29 @@ class SourcesDialog(QDialog):
         self._checkboxes["readable.found.with_thumbnails"].setChecked(True)
 
     def eventFilter(self, obj, event):
-        if (
-            obj is self._expression_edit
-            and event.type() == QEvent.Type.KeyPress
-            and event.modifiers() == Qt.KeyboardModifier.ShiftModifier
-            and event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)
-        ):
-            self.accept()
-            return True
+        if obj is self._expression_edit and event.type() == QEvent.Type.KeyPress:
+            if (
+                event.modifiers() == Qt.KeyboardModifier.ShiftModifier
+                and event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)
+            ):
+                self.accept()
+                return True
+            if event.modifiers() == Qt.KeyboardModifier.NoModifier and event.key() in (
+                Qt.Key.Key_Up,
+                Qt.Key.Key_Down,
+            ):
+                cursor = self._expression_edit.textCursor()
+                pos_before = cursor.position()
+                if event.key() == Qt.Key.Key_Up:
+                    cursor.movePosition(QTextCursor.MoveOperation.Up)
+                    if cursor.position() == pos_before:
+                        cursor.movePosition(QTextCursor.MoveOperation.Start)
+                else:
+                    cursor.movePosition(QTextCursor.MoveOperation.Down)
+                    if cursor.position() == pos_before:
+                        cursor.movePosition(QTextCursor.MoveOperation.End)
+                self._expression_edit.setTextCursor(cursor)
+                return True
         return super().eventFilter(obj, event)
 
     def is_advanced(self) -> bool:
