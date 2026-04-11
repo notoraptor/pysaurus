@@ -144,7 +144,11 @@ class SemanticText:
                 if e1 == e2:
                     continue
                 else:
-                    return e1 < e2
+                    if isinstance(e1, int) and isinstance(e2, int):
+                        return e1 < e2
+                    else:
+                        assert isinstance(e1, CharClass) and isinstance(e2, CharClass)
+                        return e1 < e2
             elif e1 is None:
                 return True
             elif e2 is None:
