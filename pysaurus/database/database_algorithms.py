@@ -161,14 +161,15 @@ class DatabaseAlgorithms:
         miniatures_path = self.db.get_miniatures_path()
         prev_miniatures = Miniatures.read_miniatures_file(miniatures_path)
 
-        existing_filenames = {
-            row.filename for row in self.db.get_videos(include=["filename"])
+        filename_to_video_id: dict[AbsolutePath, int] = {
+            row.filename: row.video_id
+            for row in self.db.get_videos(include=["video_id", "filename"])
         }
 
         valid_miniatures = {
             filename: miniature
             for filename, miniature in prev_miniatures.items()
-            if filename in existing_filenames
+            if filename in filename_to_video_id
             and ImageUtils.THUMBNAIL_SIZE == (miniature.width, miniature.height)
         }
 
@@ -205,17 +206,6 @@ class DatabaseAlgorithms:
 
         self.db.notifier.notify(notifications.NbMiniatures(len(m_dict)))
 
-        filename_to_video_id = {
-            row.filename: row.video_id
-            for row in self.db.get_videos(
-                include=["video_id", "filename"],
-                where={
-                    "filename": [
-                        AbsolutePath.ensure(m.identifier) for m in m_dict.values()
-                    ]
-                },
-            )
-        }
         for m in m_dict.values():
             assert m.identifier is not None
             m.video_id = filename_to_video_id[AbsolutePath.ensure(m.identifier)]

@@ -37,7 +37,7 @@ class Miniature(AbstractMatrix):
         self.b = blue
         self.i = None
         self.identifier = identifier
-        self.video_id = None
+        self.video_id: int | None = None
 
     size = property(lambda self: self.width * self.height)
     nb_pixels = property(lambda self: len(self.r))
