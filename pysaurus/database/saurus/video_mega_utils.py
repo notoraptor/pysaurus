@@ -9,6 +9,14 @@ from pysaurus.database.saurus.sql_video_wrapper import SQLVideoWrapper
 from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern
 
+# SQLite's SQLITE_LIMIT_VARIABLE_NUMBER is 32766; stay comfortably below.
+_SQL_VAR_CHUNK = 30000
+
+
+def _chunk_ids(ids: Sequence[int]) -> Iterable[Sequence[int]]:
+    for i in range(0, len(ids), _SQL_VAR_CHUNK):
+        yield ids[i : i + _SQL_VAR_CHUNK]
+
 
 def _get_videos(
     db: PysaurusConnection,
@@ -44,7 +52,6 @@ def _get_videos(
         return cast(list[VideoPattern], videos)
 
     video_ids = [video.video_id for video in videos]
-    placeholders = sql_placeholders(len(video_ids))
 
     errors = defaultdict(list)
     languages = {"a": defaultdict(list), "s": defaultdict(list)}
@@ -53,32 +60,36 @@ def _get_videos(
 
     if with_errors:
         with db:
-            for row in db.query(
-                f"SELECT video_id, error FROM video_error "
-                f"WHERE video_id IN ({placeholders})",
-                video_ids,
-            ):
-                errors[row[0]].append(row[1])
+            for chunk in _chunk_ids(video_ids):
+                for row in db.query(
+                    f"SELECT video_id, error FROM video_error "
+                    f"WHERE video_id IN ({sql_placeholders(len(chunk))})",
+                    chunk,
+                ):
+                    errors[row[0]].append(row[1])
     if with_audio_languages or with_subtitle_languages:
         with db:
-            for row in db.query(
-                f"SELECT stream, video_id, lang_code FROM video_language "
-                f"WHERE video_id IN ({placeholders}) "
-                f"ORDER BY stream ASC, video_id ASC, rank ASC",
-                video_ids,
-            ):
-                languages[row[0]][row[1]].append(row[2])
+            for chunk in _chunk_ids(video_ids):
+                for row in db.query(
+                    f"SELECT stream, video_id, lang_code FROM video_language "
+                    f"WHERE video_id IN ({sql_placeholders(len(chunk))}) "
+                    f"ORDER BY stream ASC, video_id ASC, rank ASC",
+                    chunk,
+                ):
+                    languages[row[0]][row[1]].append(row[2])
     if with_properties:
         prop_types: dict[int | None, PropType] = {
             pt.property_id: pt for pt in prop_type_search(db)
         }
         with db:
-            for row in db.query(
-                f"SELECT video_id, property_id, property_value "
-                f"FROM video_property_value WHERE video_id IN ({placeholders})",
-                video_ids,
-            ):
-                properties[row[0]].setdefault(row[1], []).append(row[2])
+            for chunk in _chunk_ids(video_ids):
+                for row in db.query(
+                    f"SELECT video_id, property_id, property_value "
+                    f"FROM video_property_value "
+                    f"WHERE video_id IN ({sql_placeholders(len(chunk))})",
+                    chunk,
+                ):
+                    properties[row[0]].setdefault(row[1], []).append(row[2])
         json_properties = {
             video_id: {
                 prop_types[property_id].name: prop_types[property_id].from_strings(
