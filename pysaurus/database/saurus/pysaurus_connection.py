@@ -17,12 +17,31 @@ class PysaurusConnection(Skullite):
         super().__init__(
             db_path, functions=self.register_pysaurus_functions(), persistent=False
         )
-        self._run_schema_script()
-        self._migrate()
-        # Re-run after migrations to recreate triggers/indexes that may
-        # have been lost during table rebuilds.  All statements use
-        # IF NOT EXISTS, so this is a no-op when nothing changed.
-        self._run_schema_script()
+        if self._is_fresh_db():
+            # Brand new database: schema.sql creates everything at the
+            # latest version, then we record the version.
+            self._run_schema_script()
+            self.insert("collection", collection_id=0, name="", version=LATEST_VERSION)
+        else:
+            # Existing database: migrations bring the schema up to date
+            # first (safe to run before schema.sql because indexes added
+            # in newer versions reference columns added by migrations).
+            # Then re-run schema.sql to recreate triggers/indexes that
+            # may have been lost during table rebuilds.  All statements
+            # use IF NOT EXISTS, so this is a no-op when nothing changed.
+            self._migrate()
+            self._run_schema_script()
+
+    def _is_fresh_db(self) -> bool:
+        """Return True if the database has no video table yet.
+
+        Used to distinguish a brand-new database (schema.sql creates
+        everything) from an existing one (migrations must run first).
+        """
+        rows = self.query_all(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='video'"
+        )
+        return not rows
 
     def _run_schema_script(self) -> None:
         with open(self._SCRIPT_PATH, encoding="utf-8") as f:
@@ -36,15 +55,17 @@ class PysaurusConnection(Skullite):
         Reads the current version from the ``collection`` table, applies
         each migration in order, and updates the stored version.
 
-        Fresh databases (no collection row) get database.sql's latest
-        schema directly and skip all migrations.
+        A pre-versioning database (video table exists but no collection
+        row) is bootstrapped to version 1 and receives every migration
+        from m0002 onward.
         """
         version = self._get_version()
         if version is None:
-            # Fresh database: schema is already at latest via database.sql.
-            # Just ensure the collection row exists.
-            self.insert("collection", collection_id=0, name="", version=LATEST_VERSION)
-            return
+            # Pre-versioning database: seed the collection row so future
+            # runs skip this branch, then fall through to run migrations
+            # starting from m0002.
+            self.insert("collection", collection_id=0, name="", version=1)
+            version = 1
         if version >= LATEST_VERSION:
             return
         for target in range(version + 1, LATEST_VERSION + 1):
@@ -54,8 +75,8 @@ class PysaurusConnection(Skullite):
     def _get_version(self) -> int | None:
         """Read the schema version from the collection table.
 
-        Returns ``None`` for a fresh database (no row in collection),
-        or the stored version integer for an existing one.
+        Returns ``None`` for a pre-versioning database (no row in
+        collection), or the stored version integer for a versioned one.
         """
         rows = self.query_all("SELECT version FROM collection WHERE collection_id = 0")
         if not rows:

@@ -52,11 +52,15 @@ _REAL_COLUMNS = (
 
 
 def _needs_rebuild(db: Skullite) -> bool:
-    """Return True if _basename is a VIRTUAL column (hidden == 2)."""
+    """Return True unless _basename is already a STORED column (hidden == 3).
+
+    Covers three states: missing (None), VIRTUAL (2), and STORED (3).
+    Only STORED means the rebuild already happened.
+    """
     with db.connect() as connection:
         rows = connection.query_all("PRAGMA table_xinfo(video)")
     col_hidden = {row["name"]: row["hidden"] for row in rows}
-    return col_hidden.get("_basename") == 2
+    return col_hidden.get("_basename") != 3
 
 
 def _rebuild_video_table(db: Skullite) -> None:
