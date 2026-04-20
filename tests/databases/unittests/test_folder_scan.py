@@ -9,6 +9,7 @@ import pytest
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.database.algorithms.folder_scan import (
+    EMPTY_FOLDER_EXT,
     FolderScanProgress,
     FolderScanResult,
     FolderScanner,
@@ -97,11 +98,18 @@ class TestFolderScanner:
         scanner = FolderScanner([missing])
         assert scanner.scan() == FolderScanResult()
 
-    def test_empty_folder_yields_empty_result(self, tmp_path):
+    def test_empty_folder_is_reported_as_empty_folder(self, tmp_path):
         empty = tmp_path / "empty"
         empty.mkdir()
         scanner = FolderScanner([AbsolutePath.ensure(str(empty))])
-        assert scanner.scan() == FolderScanResult()
+        result = scanner.scan()
+        # An empty source folder is surfaced under the special
+        # EMPTY_FOLDER_EXT pseudo-extension; nothing else is produced.
+        assert result.videos_indexed == {} and result.videos_unknown == {}
+        assert list(result.others) == [EMPTY_FOLDER_EXT]
+        assert [i.path for i in result.others[EMPTY_FOLDER_EXT]] == [
+            AbsolutePath.ensure(str(empty))
+        ]
 
     def test_multiple_source_folders_are_merged(self, tmp_path):
         a = tmp_path / "a"
@@ -161,6 +169,50 @@ class TestProgressNotifications:
         assert not [
             n for n in notifier.notifications if isinstance(n, FolderScanProgress)
         ]
+
+
+class TestEmptyFolders:
+    def test_empty_subdirectory_is_reported(self, tmp_path):
+        root = tmp_path / "root"
+        root.mkdir()
+        (root / "keep.jpg").write_bytes(b"x")
+        (root / "empty_sub").mkdir()
+        scanner = FolderScanner([AbsolutePath.ensure(str(root))])
+        result = scanner.scan()
+        assert EMPTY_FOLDER_EXT in result.others
+        (info,) = result.others[EMPTY_FOLDER_EXT]
+        assert info.path == AbsolutePath.ensure(str(root / "empty_sub"))
+        assert info.size == 0
+
+    def test_empty_root_is_reported(self, tmp_path):
+        root = tmp_path / "nothing"
+        root.mkdir()
+        scanner = FolderScanner([AbsolutePath.ensure(str(root))])
+        result = scanner.scan()
+        assert EMPTY_FOLDER_EXT in result.others
+        (info,) = result.others[EMPTY_FOLDER_EXT]
+        assert info.path == AbsolutePath.ensure(str(root))
+
+    def test_folder_with_only_subdirs_is_not_empty(self, tmp_path):
+        root = tmp_path / "parent"
+        root.mkdir()
+        (root / "child").mkdir()
+        (root / "child" / "leaf.txt").write_bytes(b"x")
+        scanner = FolderScanner([AbsolutePath.ensure(str(root))])
+        result = scanner.scan()
+        # `root` has a subdir so it is not empty. `child` has `leaf.txt`, also
+        # not empty. So no empty folder is recorded.
+        assert EMPTY_FOLDER_EXT not in result.others
+
+    def test_empty_folder_is_not_confused_with_video_or_indexed(self, tmp_path):
+        root = tmp_path / "root"
+        root.mkdir()
+        (root / "empty").mkdir()
+        scanner = FolderScanner([AbsolutePath.ensure(str(root))])
+        result = scanner.scan()
+        assert EMPTY_FOLDER_EXT in result.others
+        assert not result.videos_indexed
+        assert not result.videos_unknown
 
 
 class TestGroupByMount:

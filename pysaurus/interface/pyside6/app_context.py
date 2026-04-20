@@ -213,6 +213,49 @@ class AppContext(QObject):
         """Find re-encoded videos (threaded). Emits database_ready when done."""
         self._api.find_similar_videos_reencoded()
 
+    def scan_folders(self) -> None:
+        """Scan DB folders for video and non-video files (threaded)."""
+        self._api.scan_folders()
+
+    def get_last_scan_result(self):
+        """Return the last FolderScanResult, or None if no scan has been run."""
+        return self._api.get_last_scan_result()
+
+    def trash_files(self, paths: list) -> tuple[int, list[tuple[str, str]]]:
+        """Send files/folders to system trash. Returns (ok_count, errors).
+
+        Uses a single batched send2trash call. On Windows this maps to one
+        IFileOperation::PerformOperations for all items, instead of N separate
+        Shell calls (which stress Explorer and freeze the UI for large N).
+        We then post-check with os.path.exists() to identify any individual
+        failures, since the batch call does not report per-item status.
+        """
+        import os
+
+        from send2trash import send2trash
+
+        str_paths = [str(p) for p in paths]
+        if not str_paths:
+            return 0, []
+
+        catastrophic_error: str | None = None
+        try:
+            send2trash(str_paths)
+        except OSError:
+            # Partial failure inside the batch; identify survivors below.
+            pass
+        except Exception as exc:
+            catastrophic_error = f"{type(exc).__name__}: {exc}"
+
+        ok = 0
+        errors: list[tuple[str, str]] = []
+        for p in str_paths:
+            if os.path.exists(p):
+                errors.append((p, catastrophic_error or "Failed to send to trash"))
+            else:
+                ok += 1
+        return ok, errors
+
     def move_video_file(self, video_id: int, directory: str) -> None:
         """Move a video file (threaded). Emits done/cancelled/ended."""
         self._api.move_video_file(video_id, directory)

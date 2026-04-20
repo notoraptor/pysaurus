@@ -38,7 +38,13 @@ process = Runnable("_launch")
 
 
 class GuiAPI(FeatureAPI):
-    __slots__ = ("launched_thread", "copy_work", "server", "_closed")
+    __slots__ = (
+        "launched_thread",
+        "copy_work",
+        "server",
+        "_closed",
+        "_last_scan_result",
+    )
 
     def __init__(self):
         """
@@ -53,6 +59,7 @@ class GuiAPI(FeatureAPI):
         self.copy_work: FileCopier | None = None
         self.server = ServerLauncher(lambda: self.database)
         self._closed = False
+        self._last_scan_result = None
 
         Information.handle_with(self._notification_callback)
 
@@ -93,11 +100,13 @@ class GuiAPI(FeatureAPI):
 
     def close_database(self) -> None:
         self.database = None
+        self._last_scan_result = None
 
     def delete_database(self) -> None:
         assert self.database is not None
         assert self.application.delete_database_from_name(self.database.get_name())
         self.database = None
+        self._last_scan_result = None
 
     def close_app(self) -> None:
         logger.debug("Closing app ...")
@@ -171,10 +180,20 @@ class GuiAPI(FeatureAPI):
     @process()
     def create_database(self, name: str, folders: Sequence[str], update: bool) -> None:
         self.database = self.application.new_database(name, folders, update)
+        self._last_scan_result = None
 
     @process()
     def open_database(self, name: str, update: bool) -> None:
         self.database = self.application.open_database_from_name(name, update)
+        self._last_scan_result = None
+
+    @process()
+    def scan_folders(self) -> None:
+        assert self.database is not None
+        self._last_scan_result = self.database.algos.scan_folders()
+
+    def get_last_scan_result(self):
+        return self._last_scan_result
 
     @process()
     def update_database(self) -> None:

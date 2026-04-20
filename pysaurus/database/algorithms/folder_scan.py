@@ -29,6 +29,10 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 
 logger = logging.getLogger(__name__)
 
+# Pseudo-extension used to report empty directories. Chosen with angle
+# brackets so it cannot collide with any real filename extension (lowercased).
+EMPTY_FOLDER_EXT = "<empty folder>"
+
 
 @dataclass(slots=True, frozen=True)
 class FileInfo:
@@ -128,10 +132,13 @@ class FolderScanner:
         while stack:
             current = stack.pop()
             local_done += 1
+            had_entry = False
+            access_ok = True
             try:
                 # Use os.scandir as context manager to make sure OS folder handler is closed at end of iteration.
                 with os.scandir(current.path) as iterator:
                     for entry in iterator:
+                        had_entry = True
                         try:
                             if entry.is_dir(follow_symlinks=False):
                                 stack.append(AbsolutePath(entry.path))
@@ -148,6 +155,14 @@ class FolderScanner:
                             logger.debug("Skipping entry %s: %s", entry.path, exc)
             except OSError as exc:
                 logger.debug("Skipping folder %s: %s", current, exc)
+                access_ok = False
+            # Report an accessible directory with no entry (neither files nor
+            # subdirs) as an empty folder. Useful for bulk cleanup: a physically
+            # empty folder is a typical leftover after files were removed.
+            if access_ok and not had_entry:
+                by_ext.setdefault(EMPTY_FOLDER_EXT, []).append(
+                    FileInfo(current, EMPTY_FOLDER_EXT, 0)
+                )
             if local_done + local_discovered + local_files >= self.COUNTER_BATCH:
                 counters.update(
                     done=local_done, discovered=local_discovered, files=local_files

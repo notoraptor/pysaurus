@@ -27,6 +27,7 @@ from pysaurus.core.job_notifications import (
     NotificationCollector,
 )
 from pysaurus.core.notifications import End, Notification, ProfilingEnd
+from pysaurus.database.algorithms.folder_scan import FolderScanProgress
 from pysaurus.interface.pyside6.widgets.spinner_widget import SpinnerWidget
 
 
@@ -189,6 +190,14 @@ class ProcessPage(QWidget):
         spinner_layout.addStretch()
         layout.addLayout(spinner_layout)
 
+        # Folder-scan progress bar. Hidden until a FolderScanProgress is seen.
+        # Shown as "value / max", where max grows as subfolders are discovered.
+        self.scan_progress_bar = QProgressBar()
+        self.scan_progress_bar.setTextVisible(True)
+        self.scan_progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.scan_progress_bar.setVisible(False)
+        layout.addWidget(self.scan_progress_bar)
+
         # Jobs container (scroll area for multiple progress bars)
         jobs_group = QFrame()
         jobs_group.setFrameStyle(QFrame.Shape.StyledPanel)
@@ -264,6 +273,13 @@ class ProcessPage(QWidget):
         This method should be called for each notification received.
         It delegates to the collector for proper handling.
         """
+        # Folder-scan progress: unknown total, so feed the dedicated progress
+        # bar (value = folders done, max = folders discovered so far).
+        # Keep it out of the scrolling log to avoid flooding at ~5 Hz.
+        if isinstance(notification, FolderScanProgress):
+            self._update_scan_progress(notification)
+            return
+
         # Collect the notification (handles jobs, profiling, etc.)
         self.collector.collect(notification)
 
@@ -274,6 +290,16 @@ class ProcessPage(QWidget):
             self.add_log_entry(
                 f"✓ {notification.name} ({notification.time})", bold=True
             )
+
+    def _update_scan_progress(self, notification: FolderScanProgress) -> None:
+        if not self.scan_progress_bar.isVisible():
+            self.scan_progress_bar.setVisible(True)
+        # Maximum grows as subfolders are discovered during the walk.
+        self.scan_progress_bar.setMaximum(max(1, notification.folders_discovered))
+        self.scan_progress_bar.setValue(notification.folders_done)
+        self.scan_progress_bar.setFormat(
+            f"%v / %m folders — {notification.files_found} files"
+        )
 
     def _on_end(self, notification: End):
         """Handle end notification - auto-continue or show Continue button."""

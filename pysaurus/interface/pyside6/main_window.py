@@ -28,7 +28,12 @@ from PySide6.QtWidgets import (
 from pysaurus.core.notifications import End
 from pysaurus.interface.pyside6.app_context import AppContext
 from pysaurus.interface.pyside6.dialogs import EditFoldersDialog, RenameDialog
-from pysaurus.interface.pyside6.pages import DatabasesPage, PropertiesPage, VideosPage
+from pysaurus.interface.pyside6.pages import (
+    DatabasesPage,
+    FilesPage,
+    PropertiesPage,
+    VideosPage,
+)
 from pysaurus.interface.pyside6.pages.process_page import ProcessPage
 
 
@@ -64,6 +69,7 @@ class MainWindow(QMainWindow):
     PAGE_DATABASES = 0
     PAGE_VIDEOS = 1
     PAGE_PROPERTIES = 2
+    PAGE_FILES = 3
 
     def __init__(self):
         super().__init__()
@@ -91,11 +97,13 @@ class MainWindow(QMainWindow):
         self.databases_page = DatabasesPage(self.ctx, self)
         self.videos_page = VideosPage(self.ctx, self)
         self.properties_page = PropertiesPage(self.ctx, self)
+        self.files_page = FilesPage(self.ctx, self)
 
         # Add pages to stack
         self.stack.addWidget(self.databases_page)  # Index 0
         self.stack.addWidget(self.videos_page)  # Index 1
         self.stack.addWidget(self.properties_page)  # Index 2
+        self.stack.addWidget(self.files_page)  # Index 3
 
         # Status bar (click to clear message)
         self.status_bar = QStatusBar()
@@ -161,11 +169,14 @@ class MainWindow(QMainWindow):
         page_layout.setSpacing(8)
         self._radio_videos = QRadioButton("Videos")
         self._radio_properties = QRadioButton("Properties")
+        self._radio_files = QRadioButton("Files")
         self._page_button_group = QButtonGroup(self)
         self._page_button_group.addButton(self._radio_videos, self.PAGE_VIDEOS)
         self._page_button_group.addButton(self._radio_properties, self.PAGE_PROPERTIES)
+        self._page_button_group.addButton(self._radio_files, self.PAGE_FILES)
         page_layout.addWidget(self._radio_videos)
         page_layout.addWidget(self._radio_properties)
+        page_layout.addWidget(self._radio_files)
         self._page_button_group.idClicked.connect(self._on_page_radio_clicked)
         menu_bar.setCornerWidget(self._page_selector, Qt.Corner.TopRightCorner)
 
@@ -242,6 +253,9 @@ class MainWindow(QMainWindow):
         self.videos_page.move_video_requested.connect(self._on_move_video)
         self.videos_page.status_message_requested.connect(self._on_status_message)
 
+        # Files page signals
+        self.files_page.scan_requested.connect(self._on_scan_folders)
+
         # Context signals
         self.ctx.notification_received.connect(self._on_notification)
         self.ctx.state_changed.connect(self._on_state_changed)
@@ -306,6 +320,19 @@ class MainWindow(QMainWindow):
         self._cleanup_process_page()
         self.show_videos_page()
 
+    def _on_scan_folders(self):
+        """Handle scan folders request from the files page."""
+        self._run_process(
+            title="Scanning Folders",
+            operation=lambda: self.ctx.scan_folders(),
+            on_end=self._on_scan_folders_end,
+        )
+
+    def _on_scan_folders_end(self, end_notification: End):
+        """Handle scan folders completion."""
+        self._cleanup_process_page()
+        self.show_files_page()
+
     def _on_notification(self, notification):
         """Handle generic notifications (logged separately, not displayed in status bar)."""
         pass
@@ -319,6 +346,8 @@ class MainWindow(QMainWindow):
             self.properties_page.refresh()
         elif current == self.PAGE_DATABASES:
             self.databases_page.refresh()
+        elif current == self.PAGE_FILES:
+            self.files_page.refresh()
 
     def _on_status_message(self, message: str, timeout: int = 0):
         """Handle status message requests from pages (timeout=0 means persistent)."""
@@ -474,7 +503,11 @@ class MainWindow(QMainWindow):
 
         # Page selector radio buttons: hidden during processing
         self._page_selector.setVisible(has_db)
-        if has_db and current_page in (self.PAGE_VIDEOS, self.PAGE_PROPERTIES):
+        if has_db and current_page in (
+            self.PAGE_VIDEOS,
+            self.PAGE_PROPERTIES,
+            self.PAGE_FILES,
+        ):
             self._page_button_group.blockSignals(True)
             self._page_button_group.button(current_page).setChecked(True)
             self._page_button_group.blockSignals(False)
@@ -578,6 +611,8 @@ class MainWindow(QMainWindow):
             self.show_videos_page()
         elif page_id == self.PAGE_PROPERTIES:
             self.show_properties_page()
+        elif page_id == self.PAGE_FILES:
+            self.show_files_page()
 
     def show_databases_page(self):
         """Navigate to databases page."""
@@ -603,6 +638,16 @@ class MainWindow(QMainWindow):
                 f"Pysaurus - Properties - {self.ctx.get_database_name()}"
             )
             self.properties_page.refresh()
+            self._update_menu_state()
+        else:
+            self.show_databases_page()
+
+    def show_files_page(self):
+        """Navigate to the files page (DB file inventory)."""
+        if self.ctx.has_database():
+            self.stack.setCurrentIndex(self.PAGE_FILES)
+            self.setWindowTitle(f"Pysaurus - Files - {self.ctx.get_database_name()}")
+            self.files_page.refresh()
             self._update_menu_state()
         else:
             self.show_databases_page()
