@@ -49,8 +49,15 @@ class PysaurusCollection(AbstractDatabase):
     def algos(self) -> SaurusDatabaseAlgorithms:
         return SaurusDatabaseAlgorithms(self)
 
-    def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
-        super().__init__(path, notifier)
+    def __init__(
+        self,
+        path,
+        folders=None,
+        notifier=DEFAULT_NOTIFIER,
+        *,
+        app_dir: AbsolutePath | None = None,
+    ):
+        super().__init__(path, notifier, app_dir=app_dir)
         self.ways.add_path(DB_SQL_PATH)
         self._open_db()
         if folders:

@@ -57,14 +57,21 @@ class AbstractDatabase(ABC):
     - Subclass optimizations still work via delegation
     """
 
-    __slots__ = ("ways", "notifier", "in_save_context")
+    __slots__ = ("ways", "notifier", "in_save_context", "app_dir")
     action = Change
 
-    def __init__(self, db_folder: PathType, notifier=DEFAULT_NOTIFIER):
+    def __init__(
+        self,
+        db_folder: PathType,
+        notifier=DEFAULT_NOTIFIER,
+        *,
+        app_dir: AbsolutePath | None = None,
+    ):
         db_folder = AbsolutePath.ensure(db_folder).assert_dir()
         self.ways = DatabasePaths(db_folder, (DB_LOG_PATH, DB_MINIATURES_PATH))
         self.notifier = notifier
         self.in_save_context = False
+        self.app_dir = app_dir
 
     def get_database_folder(self) -> AbsolutePath:
         return self.ways.db_folder

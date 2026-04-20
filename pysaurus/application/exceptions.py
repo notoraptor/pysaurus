@@ -93,5 +93,9 @@ class ForbiddenVideoFolder(PysaurusError):
     pass
 
 
+class ForbiddenSourceFolder(PysaurusError):
+    pass
+
+
 class CysaurusUnavailable(PysaurusError):
     pass

@@ -10,8 +10,10 @@ subclasses (like PysaurusCollection) to override them with optimized implementat
 
 from typing import Collection
 
+from pysaurus.application import exceptions
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.datestring import Date
+from pysaurus.core.path_tree import PathTree
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.properties.property_value_modifier import PropertyValueModifier
 
@@ -33,8 +35,22 @@ class DatabaseOperations:
         self.db: AbstractDatabase = db
 
     def set_folders(self, folders) -> None:
-        """Set database folders, saving if they changed."""
+        """Set database folders, saving if they changed.
+
+        Refuses folders located inside the Pysaurus application directory
+        (when known), to prevent indexing internal files as video sources.
+        """
         folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
+        app_dir = self.db.app_dir
+        if app_dir is not None:
+            app_tree = PathTree([app_dir])
+            for folder in folders:
+                if app_tree.in_folders(folder):
+                    raise exceptions.ForbiddenSourceFolder(
+                        f"Cannot use a folder inside the Pysaurus application "
+                        f"directory as a video source: {folder} "
+                        f"(application directory: {app_dir})"
+                    )
         if folders != sorted(self.db.get_folders()):
             self.db._set_folders(folders)
             self.db.save()

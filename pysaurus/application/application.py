@@ -130,7 +130,7 @@ class Application:
         path = self.dbs_dir / name
         assert path in self.databases
         if self.databases[path] is None:
-            database = Database(path, notifier=self.notifier)
+            database = Database(path, notifier=self.notifier, app_dir=self.app_dir)
             self.databases[path] = database
         else:
             database = self.databases[path]
@@ -151,7 +151,12 @@ class Application:
             raise exceptions.DatabaseAlreadyExists(path)
         if path.exists():
             raise exceptions.DatabasePathUnavailable(path)
-        database = Database(path.mkdir(), folders=folders, notifier=self.notifier)
+        database = Database(
+            path.mkdir(),
+            folders=folders,
+            notifier=self.notifier,
+            app_dir=self.app_dir,
+        )
         self.databases[path] = database
         if update:
             database.algos.refresh()
