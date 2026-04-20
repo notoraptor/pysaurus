@@ -71,6 +71,7 @@ Deux panneaux:
 Ainsi donc, le panneau à gauche permet la gestion en 1 coup de tous les fichiers d'une extension, tandis que le panneau
 à droite permet la gestiun fine, fichier par fichier.
 """
+
 import os
 import sys
 from collections import defaultdict
@@ -99,7 +100,6 @@ def main():
     extension_size: dict[str, int] = defaultdict(int)
     todo: list[AbsolutePath] = [folder for folder in folders if folder.exists()]
     nb_done = 0
-    nb_todo = len(todo)
     with tqdm("folders") as pbar:
         while todo:
             path = todo.pop()
@@ -113,11 +113,11 @@ def main():
                 todo.extend(AbsolutePath(entry.path) for entry in os.scandir(path.path))
             else:
                 path_string = str(path)
-                index_of_pint = path_string.rfind('.')
+                index_of_pint = path_string.rfind(".")
                 if index_of_pint < 0:
                     extension = ""
                 else:
-                    extension = path_string[index_of_pint + 1:]
+                    extension = path_string[index_of_pint + 1 :]
                 extension = extension.lower()
                 file_size = path.get_size()
                 extension_count[extension] += 1
@@ -125,8 +125,12 @@ def main():
 
     report_videos = []
     report_others = []
-    for extension, size in sorted(extension_size.items(), key=lambda item: (-item[1], item[0])):
-        report = dict(extension=extension, count=extension_count[extension], size=FileSize(size))
+    for extension, size in sorted(
+        extension_size.items(), key=lambda item: (-item[1], item[0])
+    ):
+        report = dict(
+            extension=extension, count=extension_count[extension], size=FileSize(size)
+        )
         if extension in VIDEO_SUPPORTED_EXTENSIONS:
             report_videos.append(report)
         else:
@@ -139,5 +143,5 @@ def main():
         print(strarr(report_others))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
