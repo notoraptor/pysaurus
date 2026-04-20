@@ -20,6 +20,7 @@ from pysaurus.core.language import say
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
+from pysaurus.database.algorithms.folder_scan import FolderScanner, FolderScanResult
 from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
 from pysaurus.properties.properties import PropUnitType
@@ -52,6 +53,14 @@ class DatabaseAlgorithms:
     def refresh(self) -> None:
         """Update database."""
         self.update()
+
+    @Profiler.profile_method()
+    def scan_folders(self) -> FolderScanResult:
+        """Scan all files (videos and non-videos) in database source folders."""
+        folders = list(self.db.get_folders())
+        indexed = {row.filename for row in self.db.get_videos(include=["filename"])}
+        scanner = FolderScanner(folders, indexed, notifier=self.db.notifier)
+        return scanner.scan()
 
     @Profiler.profile_method()
     def update(self) -> None:

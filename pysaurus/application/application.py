@@ -152,10 +152,7 @@ class Application:
         if path.exists():
             raise exceptions.DatabasePathUnavailable(path)
         database = Database(
-            path.mkdir(),
-            folders=folders,
-            notifier=self.notifier,
-            app_dir=self.app_dir,
+            path.mkdir(), folders=folders, notifier=self.notifier, app_dir=self.app_dir
         )
         self.databases[path] = database
         if update:
