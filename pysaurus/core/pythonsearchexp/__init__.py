@@ -1,7 +1,7 @@
 from typing import Any, Callable, Self
 
 from pysaurus.core.pythonsearchexp.evaluator import ExpressionEvaluator
-from pysaurus.core.searchexp import (
+from searchexp import (
     FieldType,
     SetType,
     ExpressionParser,

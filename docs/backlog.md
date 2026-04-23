@@ -130,12 +130,13 @@ date > 2024-03-15 and watched is False
 audio_bit_rate > 128k and width > height
 ```
 
-**Implémenté** — parser (`core/searchexp/`), backend Python
-(`core/pythonsearchexp/`), compilateur SQL (`database/saurus/sql_expression_compiler.py`),
-intégration `ViewContext.source_expression`, UI PySide6 (onglet Avancé dans
+**Implémenté** — parser (package externe `searchexp`, à `../searchexp`),
+backend Python (`core/pythonsearchexp/`), compilateur SQL
+(`database/saurus/sql_expression_compiler.py`), intégration
+`ViewContext.source_expression`, UI PySide6 (onglet Avancé dans
 `SourcesDialog`, Ctrl+E). Coexiste avec le chemin flags existant
-(`VideoFieldQueryParser`). Voir `docs/searchexp.design.md`,
-`docs/searchexp.spec.md`, `docs/pysaurus_with_searchexp.md`.
+(`VideoFieldQueryParser`). Voir `docs/pysaurus_with_searchexp.md`
+(côté Pysaurus) et `../searchexp/docs/` (langage et grammaire).
 
 ### Plugins en menu contextuel vidéo
 

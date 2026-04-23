@@ -23,6 +23,7 @@ dependencies = [
     "filelock>=3.19.1",
     "matplotlib>=3.10.6",
     "skullite",
+    "searchexp",
     "send2trash>=1.8.3",
     "fire>=0.7.0",
     "pyyaml>=6.0.2",
@@ -47,6 +48,7 @@ dev = [
 [tool.uv.sources]
 videre = { path = "../videre", editable = true }
 skullite = { path = "../skullite", editable = true }
+searchexp = { path = "../searchexp", editable = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -131,14 +131,14 @@ Python backend sends typed `Notification` objects (`pysaurus/core/notifications.
 
 PySide6 is the only active GUI. Legacy interfaces (Flask, pywebview, qtwebview, React web frontend) have been moved to `wip/pysaurus_interfaces/` and are no longer part of the active codebase.
 
-### Expression Search (`core/searchexp/`)
+### Expression Search (external `searchexp` package, at `../searchexp`)
 
-Standalone parser for structured search expressions (e.g. `width > 1080 and "eng" in audio_languages`). Independent of Pysaurus — no references to `VideoPattern` or database internals.
+Standalone parser for structured search expressions (e.g. `width > 1080 and "eng" in audio_languages`). Lives in its own repo (`../searchexp`, editable dep) — no references to `VideoPattern` or database internals.
 
 - **`ExpressionParser`** — receives `attributes` and/or `properties` dicts (`{name: FieldType}`), parses an expression string into an IR (AST)
 - **`fields_from_class()`** — helper to introspect a class's annotations into a `dict[str, FieldType]`
 - **IR nodes** — frozen dataclasses: `FieldRef`, `LiteralValue`, `Comparison`, `IsOp`, `InOp`, `LogicalOp`, `NotOp`, `FunctionCall`, `SetLiteral`
-- Design: `docs/searchexp.design.md` — Spec: `docs/searchexp.spec.md`
+- Pysaurus-side integration notes: `docs/pysaurus_with_searchexp.md`. Language design/spec lives with the package (`../searchexp/docs/`).
 
 ### Properties System
 

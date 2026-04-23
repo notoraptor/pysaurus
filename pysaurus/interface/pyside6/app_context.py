@@ -583,7 +583,7 @@ class AppContext(QObject):
         if self._database:
             text = expression.strip() if expression else None
             if text:
-                from pysaurus.core.searchexp.errors import ExpressionError
+                from searchexp.errors import ExpressionError
                 from pysaurus.application.exceptions import PysaurusError
                 from pysaurus.database.saurus.video_mega_group import (
                     _compile_source_expression,

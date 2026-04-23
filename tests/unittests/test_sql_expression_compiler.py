@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from pysaurus.core.searchexp import ExpressionParser, FieldType
+from searchexp import ExpressionParser, FieldType
 from pysaurus.database.saurus.sql_expression_compiler import (
     PropertyMeta,
     SqlExpressionCompiler,

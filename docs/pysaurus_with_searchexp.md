@@ -17,7 +17,7 @@ UI (onglet simple / onglet avancé)
     ↓
 Expression string (ou flags sources)
     ↓
-ExpressionParser.parse()                     (core/searchexp/)
+ExpressionParser.parse()                     (package externe `searchexp`)
     ↓
 IR (AST)
     ↓

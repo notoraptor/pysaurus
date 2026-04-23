@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from pysaurus.core.searchexp.types import (
+from searchexp.types import (
     Comparison,
     ComparisonOp,
     DateLiteral,

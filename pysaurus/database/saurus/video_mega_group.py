@@ -6,7 +6,7 @@ from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.core.lookup_array import LookupArray
-from pysaurus.core.searchexp import ExpressionParser
+from searchexp import ExpressionParser
 from pysaurus.database.saurus.grouping_utils import SqlFieldFactory
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.saurus_provider_utils import (
