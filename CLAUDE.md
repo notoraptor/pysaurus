@@ -73,7 +73,7 @@ Single top-level package **`pysaurus/`** containing all application code, includ
 ### Database Layer
 
 Layered separation of concerns:
-- **`database/abstract_database.py`** — minimal abstract interface (~20 methods)
+- **`database/abstract_database.py`** — abstract interface (~35 methods)
 - **`database/database_operations.py`** — high-level CRUD operations (accessed via `db.ops`)
 - **`database/database_algorithms.py`** — batch processing: update, miniatures, moves (accessed via `db.algos`)
 
@@ -94,7 +94,7 @@ Key schema notes (`database/saurus/database.sql`):
 ### View Layer (`dbview/`)
 
 - **`view_context.py`** — `ViewContext`: pure state holder for view parameters (sources, grouping, classifier, group, search, sorting). Owned by the API/interface layer, passed to `db.query_videos()`.
-- **`view_tools.py`** — `GroupDef`, `SearchDef`, `LookupArray`, etc.
+- **`view_tools.py`** — `GroupDef`, `SearchDef`
 - **`view_utils.py`** — `parse_sources()`, `parse_sorting()`
 - **`field_stat.py`** — statistics for field groups
 
@@ -123,9 +123,14 @@ Proxy subclasses and their targets:
 - **`FeatureAPI`** — base API class exposing 50+ features via these proxies. Owns a `ViewContext` (`self.view`) for view state management, with explicit view methods (set_sources, set_search, set_sort, set_groups, etc.).
 - **`GuiAPI`** — extends `FeatureAPI` with Flask video server (`ServerLauncher`), thread management, VLC integration, and an abstract `_notify()` method each frontend implements.
 
+### Shared UI-side helpers (`interface/common/`)
+
+- **`common.py`** — `FieldInfo`, `FieldType`, `GroupPerm` enums used by GUI code to describe video fields (sortability, grouping permissions).
+- **`qt_utils.py`** — small Qt helpers shared by PySide6 pages/dialogs.
+
 ### Notification System
 
-Python backend sends typed `Notification` objects (`pysaurus/core/notifications.py`) — e.g., `DatabaseReady`, `Done`, `JobToDo`, `JobStep`.
+Python backend sends typed `Notification` objects — `DatabaseReady`, `Done`, etc. in `pysaurus/core/notifications.py`; `JobToDo`, `JobStep` in `pysaurus/core/job_notifications.py`.
 
 ### GUI
 
@@ -193,11 +198,11 @@ PySide6 is the only GUI frontend. All calls go through the **`AppContext` facade
 ## Testing
 
 - pytest with `asyncio_mode = "auto"`
-- Test fixtures provide three tiers:
-  - **Fast mock**: `mock_database` / `mock_database_readonly` — pure in-memory, no I/O (data from `tests/mocks/test_data.json`)
-  - **Writable copies**: `mem_old_database`, `mem_saurus_database`, `example_*_memory` — `shutil.copytree` to `tmp_path`
-  - **Read-only on-disk**: `fake_old_database`, `fake_saurus_database`, `example_json_database`, `example_saurus_database`
-- SQL fixtures use `PysaurusConnection(None)` + `copy_from()` to create writable in-memory copies without `tmp_path`
+- Test fixtures (all defined in `tests/conftest.py`):
+  - **Fast mock**: `mock_database` — pure in-memory mock, no I/O (data from `tests/mocks/test_data.json`)
+  - **Saurus SQL, test_database** (small): `fake_saurus_database` and `mem_saurus_database` — both in-memory copies via `PysaurusConnection(None)` + `copy_from()`; identical for SQL since every fixture is an in-memory copy, so there is no separate read-only/writable pair
+  - **Saurus SQL, example_db_in_pysaurus** (90 videos with properties): `example_saurus_database` (read-only, on-disk) and `example_saurus_database_memory` (in-memory copy for writes)
+- SQL fixtures do not need `tmp_path` — in-memory SQLite is used directly
 - Two test databases in `tests/home_dir_test/.Pysaurus/databases/`: `test_database` (small) and `example_db_in_pysaurus` (90 videos with properties)
 - Qt tests use `QT_QPA_PLATFORM=offscreen` (set in `tests/interface/pyside6_interface/conftest.py`)
 - `pyfakefs` for filesystem mocking, `pytest-qt` for Qt tests, `pytest-xdist` for parallel runs
