@@ -2,7 +2,7 @@
 Videos page for browsing and managing videos.
 """
 
-from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QPushButton,
     QScrollArea,
@@ -801,22 +802,34 @@ class VideosPage(QWidget):
         self.scroll_area.setWidget(self.video_container)
         self.view_stack.addWidget(self.scroll_area)
 
-        # List view (index 1) - simple QWidget with layout inside scroll area
-        self.list_scroll_area = QScrollArea()
-        self.list_scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        self.list_scroll_area.setWidgetResizable(True)
-        self.list_scroll_area.setHorizontalScrollBarPolicy(
+        # List view (index 1) - QListWidget hosts VideoListItem widgets via
+        # setItemWidget(). It manages its own scroll natively; mutations via
+        # takeItem/insertItem/setItemWidget preserve the scroll position
+        # (no clear+rebuild during state_changed).
+        self.list_widget = QListWidget()
+        self.list_widget.setFrameShape(QFrame.Shape.NoFrame)
+        self.list_widget.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
-        self.list_container = QWidget()
-        self.list_layout = QVBoxLayout(self.list_container)
-        self.list_layout.setSpacing(5)
-        # No top margin to align with sidebar top
-        self.list_layout.setContentsMargins(3, 0, 3, 3)
-        self.list_layout.addStretch()  # Push items to top, absorb extra space
-        self.list_scroll_area.setWidget(self.list_container)
+        self.list_widget.setVerticalScrollMode(
+            QAbstractItemView.ScrollMode.ScrollPerPixel
+        )
+        self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        # Don't auto-scroll to make the clicked/current item fully visible —
+        # that's jarring when right-clicking a partially-visible item.
+        self.list_widget.setAutoScroll(False)
+        self.list_widget.setSpacing(2)
+        self.list_widget.setContentsMargins(3, 0, 3, 3)
+        # Transparent stylesheet so VideoListItem widgets paint their own background
+        self.list_widget.setStyleSheet(
+            "QListWidget { background: transparent; border: none; }"
+            "QListWidget::item { background: transparent; }"
+        )
+        # Without this, Qt sets singleStep based on item height, so the wheel
+        # jumps a full item per notch (one viewport-worth for tall items).
+        self.list_widget.verticalScrollBar().setSingleStep(20)
 
-        self.view_stack.addWidget(self.list_scroll_area)
+        self.view_stack.addWidget(self.list_widget)
 
         # Set initial view
         self.view_stack.setCurrentIndex(self._current_view)
@@ -1281,7 +1294,7 @@ class VideosPage(QWidget):
         if self._current_view == self.VIEW_GRID:
             self.scroll_area.verticalScrollBar().setValue(0)
         else:
-            self.list_scroll_area.verticalScrollBar().setValue(0)
+            self.list_widget.verticalScrollBar().setValue(0)
 
     def _display_grid_view(self, videos: list[VideoPattern]):
         """Display videos in grid view."""
@@ -1300,40 +1313,93 @@ class VideosPage(QWidget):
             self._video_cards.append(card)
 
     def _display_list_view(self, videos: list[VideoPattern]):
-        """Display videos in list view with VideoListItem widgets."""
-        # Clear existing list items
-        self._clear_list_items()
+        """Display videos in list view with VideoListItem widgets.
 
-        # Use diff_fields from context.common_fields (computed for similarity groups)
+        Updates the QListWidget slot-by-slot: existing slots get a new widget
+        (via setItemWidget which auto-destroys the previous one), missing
+        slots are appended, extra slots are taken away. The QListWidget never
+        goes through an empty state, so its scroll position is preserved
+        natively across refreshes — including when the window is in
+        background.
+        """
         diff_fields = self._diff_fields if self._diff_fields else None
 
-        # Add video list items (insert before the stretch at the end)
-        for i, video in enumerate(videos):
-            # Get file title diff ranges for this video (if any)
-            title_diffs = self._file_title_diffs.get(video.video_id)
-            item = VideoListItem(
-                video, diff_fields=diff_fields, file_title_diffs=title_diffs
-            )
-            item.clicked.connect(self._on_video_clicked)
-            item.double_clicked.connect(self._on_video_double_clicked)
-            item.open_requested.connect(self._open_video)
-            item.context_menu_requested.connect(self._on_video_context_menu)
-            item.selection_changed.connect(self._on_video_selection_changed)
-            item.property_value_clicked.connect(self._on_property_value_clicked)
+        n_old = self.list_widget.count()
+        n_new = len(videos)
 
-            # Set selection state
-            item.selected = self._selector.contains(video.video_id)
+        # Replace existing slots: new widget on existing QListWidgetItem
+        for i in range(min(n_old, n_new)):
+            new_widget = self._make_video_list_item(videos[i], diff_fields)
+            list_item = self.list_widget.item(i)
+            self.list_widget.setItemWidget(list_item, new_widget)
+            self._set_size_hint(list_item, new_widget)
+            self._video_list_items[i] = new_widget
 
-            # Insert before the stretch (which is at the end)
-            self.list_layout.insertWidget(i, item)
-            self._video_list_items.append(item)
+        # Append new slots if the page grew
+        for i in range(n_old, n_new):
+            new_widget = self._make_video_list_item(videos[i], diff_fields)
+            list_item = QListWidgetItem()
+            self.list_widget.addItem(list_item)
+            self.list_widget.setItemWidget(list_item, new_widget)
+            self._set_size_hint(list_item, new_widget)
+            self._video_list_items.append(new_widget)
 
-    def _clear_list_items(self):
-        """Clear all video list items."""
-        for item in self._video_list_items:
-            self.list_layout.removeWidget(item)
-            item.deleteLater()
-        self._video_list_items.clear()
+        # Drop extra slots if the page shrank
+        while self.list_widget.count() > n_new:
+            self.list_widget.takeItem(n_new)
+        del self._video_list_items[n_new:]
+
+    def _set_size_hint(self, list_item: QListWidgetItem, widget: QWidget):
+        """Set the QListWidgetItem size hint based on the widget's height for
+        the actual viewport width.
+
+        VideoListItem contains WrappingLabels whose sizeHint is plafonned at
+        400px wide. Used as-is in a wider viewport, that yields too tall a
+        cell (text wrapped on more lines than necessary). Computing
+        heightForWidth at the real viewport width gives the right cell size.
+        """
+        viewport_width = self.list_widget.viewport().width()
+        sb = self.list_widget.verticalScrollBar()
+        if sb.isVisible():
+            viewport_width -= sb.width()
+        if viewport_width > 50:
+            h = widget.heightForWidth(viewport_width)
+            if h > 0:
+                list_item.setSizeHint(QSize(viewport_width, h))
+                return
+        list_item.setSizeHint(widget.sizeHint())
+
+    def resizeEvent(self, event):
+        """Recompute list item size hints when the page is resized.
+
+        Without this, the cells keep the height computed for the viewport
+        width at refresh time, even after the user resizes the window.
+        """
+        super().resizeEvent(event)
+        if self._current_view != self.VIEW_LIST:
+            return
+        for i in range(self.list_widget.count()):
+            list_item = self.list_widget.item(i)
+            widget = self.list_widget.itemWidget(list_item)
+            if widget is not None:
+                self._set_size_hint(list_item, widget)
+
+    def _make_video_list_item(
+        self, video: VideoPattern, diff_fields: set[str] | None
+    ) -> VideoListItem:
+        """Build a VideoListItem with all its signals wired and selection set."""
+        title_diffs = self._file_title_diffs.get(video.video_id)
+        item = VideoListItem(
+            video, diff_fields=diff_fields, file_title_diffs=title_diffs
+        )
+        item.clicked.connect(self._on_video_clicked)
+        item.double_clicked.connect(self._on_video_double_clicked)
+        item.open_requested.connect(self._open_video)
+        item.context_menu_requested.connect(self._on_video_context_menu)
+        item.selection_changed.connect(self._on_video_selection_changed)
+        item.property_value_clicked.connect(self._on_property_value_clicked)
+        item.selected = self._selector.contains(video.video_id)
+        return item
 
     def _clear_video_cards(self):
         """Clear all video cards from the grid."""

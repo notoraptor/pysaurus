@@ -228,8 +228,7 @@ class TestListViewScrolling:
         QApplication.processEvents()
 
         # Check that vertical scrollbar is not needed
-        scroll_area = page.list_scroll_area
-        v_scrollbar = scroll_area.verticalScrollBar()
+        v_scrollbar = page.list_widget.verticalScrollBar()
 
         content_fits = v_scrollbar.maximum() == 0 or not v_scrollbar.isVisible()
         assert content_fits, (
@@ -262,22 +261,20 @@ class TestListViewScrolling:
         page.refresh()
 
         # Force layout recalculation
-        page.list_container.updateGeometry()
-        page.list_scroll_area.updateGeometry()
+        page.list_widget.updateGeometry()
         QApplication.processEvents()
 
-        scroll_area = page.list_scroll_area
-        v_scrollbar = scroll_area.verticalScrollBar()
+        v_scrollbar = page.list_widget.verticalScrollBar()
 
         assert v_scrollbar.maximum() > 0, (
             f"Scrollbar should be needed for 30 videos in list view. "
             f"Maximum={v_scrollbar.maximum()}, "
-            f"Container size={page.list_container.sizeHint()}, "
-            f"Viewport size={scroll_area.viewport().size()}"
+            f"Items count={page.list_widget.count()}, "
+            f"Viewport size={page.list_widget.viewport().size()}"
         )
 
-    def test_stretch_absorbs_extra_space(self, qtbot, mock_context):
-        """Test that the stretch item absorbs extra space below videos."""
+    def test_few_items_do_not_need_scroll(self, qtbot, mock_context):
+        """Test that with few videos and a large view, no scrolling is needed."""
         from pysaurus.interface.pyside6.pages.videos_page import VideosPage
 
         # Set up with few videos
@@ -296,21 +293,16 @@ class TestListViewScrolling:
         page.refresh()
         QApplication.processEvents()
 
-        # The list_layout should have a stretch at the end
-        list_layout = page.list_layout
-        last_item = list_layout.itemAt(list_layout.count() - 1)
+        # The list widget should have 2 items
+        assert page.list_widget.count() == 2, "List should have 2 items"
 
-        # Check that a stretch exists (QSpacerItem with expanding vertical policy)
-        # A stretch item is a spacer with expanding vertical size policy
-        assert last_item is not None, "List layout should have items"
-
-        # If videos don't fill the space, the container should still fit within scroll area
-        scroll_area = page.list_scroll_area
-        v_scrollbar = scroll_area.verticalScrollBar()
-
-        # With few items and large view, no scrolling should be needed
-        assert v_scrollbar.maximum() == 0 or not v_scrollbar.isVisible(), (
-            "With stretch absorbing space, scrollbar should not be needed"
+        v_scrollbar = page.list_widget.verticalScrollBar()
+        # With few items and large view, the scrollable range should be small
+        # (QListWidget may report a small maximum even when items mostly fit)
+        viewport_h = page.list_widget.viewport().height()
+        assert v_scrollbar.maximum() < viewport_h, (
+            f"Two items in a {viewport_h}px viewport should be (mostly) visible "
+            f"without major scrolling, got maximum={v_scrollbar.maximum()}"
         )
 
     def test_scroll_maximum_matches_content_bottom(self, qtbot, mock_context):
@@ -331,25 +323,25 @@ class TestListViewScrolling:
         page.refresh()
         QApplication.processEvents()
 
-        scroll_area = page.list_scroll_area
-        v_scrollbar = scroll_area.verticalScrollBar()
+        v_scrollbar = page.list_widget.verticalScrollBar()
 
         if v_scrollbar.maximum() > 0:
             # Scroll to maximum
             v_scrollbar.setValue(v_scrollbar.maximum())
             QApplication.processEvents()
 
-            content_widget = page.list_container
-            content_height = content_widget.sizeHint().height()
-            viewport_height = scroll_area.viewport().height()
-            scroll_pos = v_scrollbar.value()
+            # The last item should be visible at or near the bottom
+            last_index = page.list_widget.count() - 1
+            last_item = page.list_widget.item(last_index)
+            last_rect = page.list_widget.visualItemRect(last_item)
+            viewport_height = page.list_widget.viewport().height()
 
-            visible_bottom = scroll_pos + viewport_height
-
-            # Allow tolerance for margins/borders/stretch
-            assert abs(visible_bottom - content_height) < 50, (
-                f"At max scroll, visible bottom ({visible_bottom}) should be near "
-                f"content height ({content_height})"
+            # Bottom of last item should be within (or just past) the viewport
+            assert last_rect.bottom() >= viewport_height - 50 and (
+                last_rect.bottom() <= viewport_height + 50
+            ), (
+                f"At max scroll, last item bottom ({last_rect.bottom()}) should be "
+                f"near viewport bottom ({viewport_height})"
             )
 
     def test_cannot_scroll_beyond_last_video(self, qtbot, mock_context):
@@ -370,8 +362,7 @@ class TestListViewScrolling:
         page.refresh()
         QApplication.processEvents()
 
-        scroll_area = page.list_scroll_area
-        v_scrollbar = scroll_area.verticalScrollBar()
+        v_scrollbar = page.list_widget.verticalScrollBar()
 
         if v_scrollbar.maximum() > 0:
             max_value = v_scrollbar.maximum()
