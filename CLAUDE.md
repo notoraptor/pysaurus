@@ -134,7 +134,7 @@ Python backend sends typed `Notification` objects — `DatabaseReady`, `Done`, e
 
 ### GUI
 
-PySide6 is the only active GUI. Legacy interfaces (Flask, pywebview, qtwebview, React web frontend) have been moved to `wip/pysaurus_interfaces/` and are no longer part of the active codebase.
+PySide6 is the only active GUI, and within it only the **list view** is active. Legacy interfaces (Flask, pywebview, qtwebview, React web frontend) and the legacy PySide6 grid view (`VideoCard` thumbnails) have been moved to `wip/pysaurus_interfaces/` and are no longer part of the active codebase.
 
 ### Expression Search (external `searchexp` package, at `../searchexp`)
 
@@ -188,6 +188,10 @@ PySide6 is the only GUI frontend. All calls go through the **`AppContext` facade
 #### Batch operations
 
 - When performing multiple write operations in a loop (e.g., deleting N videos), wrap them in `with db.to_save():` to batch saves into a single operation, and emit `state_changed` once after the loop.
+
+#### Video list rendering
+
+- The video list uses a **`QListWidget` + `setItemWidget`** pattern (`videos_page.py::_display_list_view`), not a `QVBoxLayout` inside a `QScrollArea`. Refresh runs as a slot-by-slot diff (replace existing slots, append new, take extras) so the list never goes through an empty-content state — the scroll position is preserved natively by Qt across refreshes, including when the window is in background (e.g. an external player has just stolen focus). Cell heights are set via `_set_size_hint()` using `heightForWidth(viewport_width)` because `WrappingLabel.sizeHint()` is plafonned at 400px wide.
 
 ## Code Style
 
