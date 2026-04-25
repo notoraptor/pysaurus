@@ -48,161 +48,6 @@ def make_video_dicts(count: int) -> list[dict]:
     return videos
 
 
-class TestGridViewScrolling:
-    """Tests for grid view scrolling behavior."""
-
-    def test_scrollbar_hidden_when_content_fits(self, qtbot, mock_context):
-        """Test that vertical scrollbar is hidden when all videos fit in view."""
-        from pysaurus.interface.pyside6.pages.videos_page import VideosPage
-
-        # Set up with just 2 videos - should fit in a reasonable view
-        mock_context._database._videos = make_video_dicts(2)
-
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-
-        # Set view to grid mode
-        page._current_view = 0
-        page.view_stack.setCurrentIndex(0)
-
-        # Make the page large enough to fit 2 videos
-        page.resize(1200, 800)
-        page.show()
-        QApplication.processEvents()
-
-        page.refresh()
-        QApplication.processEvents()
-
-        # Check that vertical scrollbar is not needed
-        scroll_area = page.scroll_area
-        v_scrollbar = scroll_area.verticalScrollBar()
-
-        # When content fits, scrollbar maximum should be 0 or scrollbar should be hidden
-        content_fits = v_scrollbar.maximum() == 0 or not v_scrollbar.isVisible()
-        assert content_fits, (
-            f"Scrollbar should not be needed for 2 videos. "
-            f"Maximum={v_scrollbar.maximum()}, Visible={v_scrollbar.isVisible()}"
-        )
-
-    def test_scrollbar_visible_when_content_exceeds_view(self, qtbot, mock_context):
-        """Test that vertical scrollbar appears when videos exceed view height."""
-        from pysaurus.interface.pyside6.pages.videos_page import VideosPage
-
-        # Set up with many videos
-        mock_context._database._videos = make_video_dicts(50)
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-
-        # Set view to grid mode
-        page._current_view = 0
-        page.view_stack.setCurrentIndex(0)
-
-        # Increase page_size to show all videos on one page
-        page.page_size = 100
-
-        # Make the page small to force scrolling
-        page.resize(400, 300)
-        page.show()
-
-        # Wait for widget to be exposed
-        qtbot.waitExposed(page)
-
-        page.refresh()
-
-        # Force layout recalculation
-        page.video_container.updateGeometry()
-        page.scroll_area.updateGeometry()
-        QApplication.processEvents()
-
-        # Check that vertical scrollbar is needed
-        scroll_area = page.scroll_area
-        v_scrollbar = scroll_area.verticalScrollBar()
-
-        # When content overflows, scrollbar maximum should be > 0
-        assert v_scrollbar.maximum() > 0, (
-            f"Scrollbar should be needed for 50 videos in a small view. "
-            f"Maximum={v_scrollbar.maximum()}, "
-            f"Container size={page.video_container.sizeHint()}, "
-            f"Viewport size={scroll_area.viewport().size()}"
-        )
-
-    def test_scroll_maximum_matches_content_bottom(self, qtbot, mock_context):
-        """Test that scrollbar maximum allows reaching exactly the last video."""
-        from pysaurus.interface.pyside6.pages.videos_page import VideosPage
-
-        # Set up with enough videos to require scrolling
-        mock_context._database._videos = make_video_dicts(20)
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-
-        # Set view to grid mode
-        page._current_view = 0
-        page.view_stack.setCurrentIndex(0)
-
-        page.resize(600, 400)
-        page.show()
-        QApplication.processEvents()
-
-        page.refresh()
-        QApplication.processEvents()
-
-        scroll_area = page.scroll_area
-        v_scrollbar = scroll_area.verticalScrollBar()
-
-        if v_scrollbar.maximum() > 0:
-            # Scroll to maximum
-            v_scrollbar.setValue(v_scrollbar.maximum())
-            QApplication.processEvents()
-
-            # The content widget's bottom should be visible at scroll maximum
-            content_widget = page.video_container
-            content_height = content_widget.sizeHint().height()
-            viewport_height = scroll_area.viewport().height()
-            scroll_pos = v_scrollbar.value()
-
-            # At maximum scroll, the visible area should end at content bottom
-            visible_bottom = scroll_pos + viewport_height
-
-            # Allow small tolerance for margins/borders
-            assert abs(visible_bottom - content_height) < 20, (
-                f"At max scroll, visible bottom ({visible_bottom}) should match "
-                f"content height ({content_height})"
-            )
-
-    def test_cannot_scroll_beyond_last_video(self, qtbot, mock_context):
-        """Test that scrolling beyond content is not possible."""
-        from pysaurus.interface.pyside6.pages.videos_page import VideosPage
-
-        mock_context._database._videos = make_video_dicts(15)
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-
-        page._current_view = 0
-        page.view_stack.setCurrentIndex(0)
-
-        page.resize(600, 400)
-        page.show()
-        QApplication.processEvents()
-
-        page.refresh()
-        QApplication.processEvents()
-
-        scroll_area = page.scroll_area
-        v_scrollbar = scroll_area.verticalScrollBar()
-
-        if v_scrollbar.maximum() > 0:
-            # Try to scroll beyond maximum
-            max_value = v_scrollbar.maximum()
-            v_scrollbar.setValue(max_value + 1000)
-            QApplication.processEvents()
-
-            # Value should be clamped to maximum
-            assert v_scrollbar.value() == max_value, (
-                f"Scroll value should be clamped to {max_value}, "
-                f"but is {v_scrollbar.value()}"
-            )
-
-
 class TestListViewScrolling:
     """Tests for list view scrolling behavior."""
 
@@ -214,10 +59,6 @@ class TestListViewScrolling:
         mock_context._database._videos = make_video_dicts(1)
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
-
-        # Set view to list mode
-        page._current_view = 1
-        page.view_stack.setCurrentIndex(1)
 
         # Make the page large enough
         page.resize(1200, 800)
@@ -244,10 +85,6 @@ class TestListViewScrolling:
         mock_context._database._videos = make_video_dicts(30)
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
-
-        # Set view to list mode
-        page._current_view = 1
-        page.view_stack.setCurrentIndex(1)
 
         # Increase page_size to show all videos on one page
         page.page_size = 100
@@ -282,10 +119,6 @@ class TestListViewScrolling:
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
 
-        # Set view to list mode
-        page._current_view = 1
-        page.view_stack.setCurrentIndex(1)
-
         page.resize(1200, 800)
         page.show()
         QApplication.processEvents()
@@ -312,9 +145,6 @@ class TestListViewScrolling:
         mock_context._database._videos = make_video_dicts(20)
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
-
-        page._current_view = 1
-        page.view_stack.setCurrentIndex(1)
 
         page.resize(800, 400)
         page.show()
@@ -351,9 +181,6 @@ class TestListViewScrolling:
         mock_context._database._videos = make_video_dicts(15)
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
-
-        page._current_view = 1
-        page.view_stack.setCurrentIndex(1)
 
         page.resize(800, 400)
         page.show()
@@ -522,95 +349,4 @@ class TestListViewWrapping:
         h_policy = item.sizePolicy().horizontalPolicy()
         assert h_policy == QSizePolicy.Policy.Expanding, (
             f"VideoListItem should have Expanding horizontal policy, got {h_policy}"
-        )
-
-
-class TestGridViewFlowLayout:
-    """Tests for FlowLayout wrapping behavior in grid view."""
-
-    def test_flow_layout_wraps_items(self, qtbot):
-        """Test that FlowLayout wraps items to next row."""
-        from pysaurus.interface.pyside6.widgets.flow_layout import FlowLayout
-        from PySide6.QtWidgets import QWidget, QPushButton
-
-        container = QWidget()
-        layout = FlowLayout(container, h_spacing=10, v_spacing=10)
-
-        # Add items
-        buttons = []
-        for i in range(10):
-            btn = QPushButton(f"Button {i}")
-            btn.setFixedSize(100, 50)
-            layout.addWidget(btn)
-            buttons.append(btn)
-
-        qtbot.addWidget(container)
-
-        # Set narrow width - should force wrapping
-        container.setFixedWidth(350)  # Fits ~3 buttons per row
-        container.show()
-        QApplication.processEvents()
-
-        # Calculate height needed - should be multiple rows
-        height = layout.heightForWidth(350)
-
-        # Single row would be ~50px, multiple rows should be > 100px
-        assert height > 100, f"FlowLayout should wrap to multiple rows, height={height}"
-
-    def test_flow_layout_height_increases_with_narrow_width(self, qtbot):
-        """Test that FlowLayout reports greater height for narrower width."""
-        from pysaurus.interface.pyside6.widgets.flow_layout import FlowLayout
-        from PySide6.QtWidgets import QWidget, QPushButton
-
-        container = QWidget()
-        layout = FlowLayout(container, h_spacing=10, v_spacing=10)
-
-        for i in range(8):
-            btn = QPushButton(f"Btn{i}")
-            btn.setFixedSize(80, 40)
-            layout.addWidget(btn)
-
-        qtbot.addWidget(container)
-        container.show()
-        QApplication.processEvents()
-
-        # Get height for different widths
-        wide_height = layout.heightForWidth(800)
-        narrow_height = layout.heightForWidth(200)
-
-        assert narrow_height > wide_height, (
-            f"Narrow width ({narrow_height}px) should produce taller layout "
-            f"than wide width ({wide_height}px)"
-        )
-
-    def test_video_cards_wrap_in_grid_view(self, qtbot, mock_context):
-        """Test that video cards wrap properly in grid view."""
-        from pysaurus.interface.pyside6.pages.videos_page import VideosPage
-
-        mock_context._database._videos = make_video_dicts(10)
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-
-        page._current_view = 0
-        page.view_stack.setCurrentIndex(0)
-
-        page.show()
-        QApplication.processEvents()
-
-        page.refresh()
-        QApplication.processEvents()
-
-        # Get content height for different page widths
-        page.resize(1200, 600)
-        QApplication.processEvents()
-        wide_height = page.video_container.sizeHint().height()
-
-        page.resize(400, 600)
-        QApplication.processEvents()
-        narrow_height = page.video_container.sizeHint().height()
-
-        # With narrower width, cards should wrap to more rows = taller
-        assert narrow_height >= wide_height, (
-            f"Narrow view ({narrow_height}px) should be at least as tall as "
-            f"wide view ({wide_height}px) due to card wrapping"
         )

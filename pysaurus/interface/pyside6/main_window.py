@@ -184,20 +184,6 @@ class MainWindow(QMainWindow):
         self.options_menu = QMenu("&Options", self)
         menu_bar.addMenu(self.options_menu)
 
-        # View mode submenu
-        self.view_mode_menu = self.options_menu.addMenu("&View Mode")
-        self._view_mode_group = QActionGroup(self)
-        self._view_mode_group.setExclusive(True)
-        for index, label in enumerate(["Grid", "List"]):
-            action = QAction(label, self)
-            action.setCheckable(True)
-            action.setData(index)
-            if index == self.videos_page._current_view:
-                action.setChecked(True)
-            self._view_mode_group.addAction(action)
-            self.view_mode_menu.addAction(action)
-        self._view_mode_group.triggered.connect(self._on_view_mode_action)
-
         # Page size submenu
         self.page_size_menu = self.options_menu.addMenu("&Page Size")
         self._page_size_group = QActionGroup(self)
@@ -498,7 +484,6 @@ class MainWindow(QMainWindow):
 
         # Options menu: only relevant when a database is open
         self.options_menu.setEnabled(has_db)
-        self.view_mode_menu.setEnabled(on_videos_page)
         self.page_size_menu.setEnabled(on_videos_page)
 
         # Page selector radio buttons: hidden during processing
@@ -655,10 +640,6 @@ class MainWindow(QMainWindow):
     # =========================================================================
     # Options menu actions
     # =========================================================================
-
-    def _on_view_mode_action(self, action: QAction):
-        """Handle view mode selection from menu."""
-        self.videos_page._on_view_changed(action.data())
 
     def _on_page_size_action(self, action: QAction):
         """Handle page size selection from menu."""

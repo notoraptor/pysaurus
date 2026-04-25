@@ -19,9 +19,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMessageBox,
     QPushButton,
-    QScrollArea,
     QSplitter,
-    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -41,8 +39,6 @@ from pysaurus.interface.pyside6.dialogs import (
     VideoPropertiesDialog,
 )
 from pysaurus.interface.pyside6.dialogs.video_confirm_dialog import VideoConfirmDialog
-from pysaurus.interface.pyside6.widgets.flow_layout import FlowLayout
-from pysaurus.interface.pyside6.widgets.video_card import VideoCard
 from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
 from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern
@@ -66,21 +62,16 @@ class VideosPage(QWidget):
     move_video_requested = Signal(int, str)  # video_id, directory
     status_message_requested = Signal(str, int)  # message, timeout
 
-    VIEW_GRID = 0
-    VIEW_LIST = 1
-
     def __init__(self, ctx: AppContext, parent=None):
         super().__init__(parent)
         self.ctx = ctx
         self.page_size = 20
         self.page_number = 0
-        self._video_cards: list[VideoCard] = []
         self._video_list_items: list[VideoListItem] = []
         self._videos: list[VideoPattern] = []  # Current videos for list view
         self._selected_video_id: int | None = None
         self._group_stats: list[FieldStat] = []
         self._current_group_index: int = -1
-        self._current_view = self.VIEW_LIST
         self._selected_video_ids: set[int] = set()  # For multiple selection
         self._last_clicked_index: int = -1  # For Shift+Click range selection
         self._diff_fields: set[str] = set()  # Fields that differ in similarity group
@@ -309,13 +300,8 @@ class VideosPage(QWidget):
             v.video_id for v in self._videos if self._selector.contains(v.video_id)
         }
 
-        if self._current_view == self.VIEW_GRID:
-            for card in self._video_cards:
-                card.selected = self._selector.contains(card.video.video_id)
-        else:
-            # Update list item selection
-            for item in self._video_list_items:
-                item.selected = self._selector.contains(item.video.video_id)
+        for item in self._video_list_items:
+            item.selected = self._selector.contains(item.video.video_id)
 
         # Update selection indicator and batch action buttons
         # Use selector size for total selection count
@@ -784,28 +770,10 @@ class VideosPage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Stacked widget for grid/list views
-        self.view_stack = QStackedWidget()
-        layout.addWidget(self.view_stack)
-
-        # Grid view (index 0)
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
-        self.video_container = QWidget()
-        self.video_flow = FlowLayout(self.video_container, h_spacing=10, v_spacing=10)
-        # No top margin to align with sidebar top
-        self.video_flow.setContentsMargins(3, 0, 3, 3)
-        self.scroll_area.setWidget(self.video_container)
-        self.view_stack.addWidget(self.scroll_area)
-
-        # List view (index 1) - QListWidget hosts VideoListItem widgets via
-        # setItemWidget(). It manages its own scroll natively; mutations via
-        # takeItem/insertItem/setItemWidget preserve the scroll position
-        # (no clear+rebuild during state_changed).
+        # QListWidget hosts VideoListItem widgets via setItemWidget(). It
+        # manages its own scroll natively; mutations via setItemWidget /
+        # takeItem preserve the scroll position (no clear+rebuild during
+        # state_changed).
         self.list_widget = QListWidget()
         self.list_widget.setFrameShape(QFrame.Shape.NoFrame)
         self.list_widget.setHorizontalScrollBarPolicy(
@@ -828,11 +796,7 @@ class VideosPage(QWidget):
         # Without this, Qt sets singleStep based on item height, so the wheel
         # jumps a full item per notch (one viewport-worth for tall items).
         self.list_widget.verticalScrollBar().setSingleStep(20)
-
-        self.view_stack.addWidget(self.list_widget)
-
-        # Set initial view
-        self.view_stack.setCurrentIndex(self._current_view)
+        layout.addWidget(self.list_widget)
 
         # Stats bar (at bottom)
         self.stats_label = QLabel("0 videos | 0 B | 0:00:00")
@@ -1283,34 +1247,11 @@ class VideosPage(QWidget):
     def _display_videos(self, videos: list[VideoPattern]):
         """Display the videos in the content area."""
         self._videos = videos
-
-        if self._current_view == self.VIEW_GRID:
-            self._display_grid_view(videos)
-        else:
-            self._display_list_view(videos)
+        self._display_list_view(videos)
 
     def _reset_scroll_to_top(self):
         """Reset the scroll position to the top."""
-        if self._current_view == self.VIEW_GRID:
-            self.scroll_area.verticalScrollBar().setValue(0)
-        else:
-            self.list_widget.verticalScrollBar().setValue(0)
-
-    def _display_grid_view(self, videos: list[VideoPattern]):
-        """Display videos in grid view."""
-        # Clear existing video cards
-        self._clear_video_cards()
-
-        # Add video cards - FlowLayout handles positioning automatically
-        for video in videos:
-            card = VideoCard(video)
-            card.clicked.connect(self._on_video_clicked)
-            card.double_clicked.connect(self._on_video_double_clicked)
-            card.context_menu_requested.connect(self._on_video_context_menu)
-            card.selection_changed.connect(self._on_video_selection_changed)
-            card.selected = self._selector.contains(video.video_id)
-            self.video_flow.addWidget(card)
-            self._video_cards.append(card)
+        self.list_widget.verticalScrollBar().setValue(0)
 
     def _display_list_view(self, videos: list[VideoPattern]):
         """Display videos in list view with VideoListItem widgets.
@@ -1376,8 +1317,6 @@ class VideosPage(QWidget):
         width at refresh time, even after the user resizes the window.
         """
         super().resizeEvent(event)
-        if self._current_view != self.VIEW_LIST:
-            return
         for i in range(self.list_widget.count()):
             list_item = self.list_widget.item(i)
             widget = self.list_widget.itemWidget(list_item)
@@ -1401,12 +1340,6 @@ class VideosPage(QWidget):
         item.selected = self._selector.contains(video.video_id)
         return item
 
-    def _clear_video_cards(self):
-        """Clear all video cards from the grid."""
-        for card in self._video_cards:
-            self.video_flow.removeWidget(card)
-            card.deleteLater()
-        self._video_cards.clear()
         self._selected_video_id = None
 
     def _on_video_clicked(self, video_id: int, modifiers=None):
@@ -1974,14 +1907,6 @@ class VideosPage(QWidget):
                     to_add,
                     to_remove,
                 )
-
-    def _on_view_changed(self, index: int):
-        """Handle view mode change."""
-        self._current_view = index
-        self.view_stack.setCurrentIndex(index)
-        # Re-display current videos in new view
-        if self._videos:
-            self._display_videos(self._videos)
 
     def _on_page_size_changed(self, text: str):
         """Handle page size change."""

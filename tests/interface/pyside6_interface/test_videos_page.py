@@ -296,45 +296,6 @@ class TestVideosPageSelector:
         assert 1 not in page._selector._selection
 
 
-class TestVideosPageViewMode:
-    """Tests for view mode switching (grid/list)."""
-
-    def test_initial_view_is_list(self, qtbot, mock_context):
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-
-        assert page._current_view == VideosPage.VIEW_LIST
-
-    def test_switch_to_grid_view(self, qtbot, mock_context):
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-        page.refresh()
-
-        page._on_view_changed(VideosPage.VIEW_GRID)
-
-        assert page._current_view == VideosPage.VIEW_GRID
-        assert page.view_stack.currentIndex() == VideosPage.VIEW_GRID
-
-    def test_switch_to_list_view(self, qtbot, mock_context):
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-        page.refresh()
-
-        page._on_view_changed(VideosPage.VIEW_GRID)
-        page._on_view_changed(VideosPage.VIEW_LIST)
-
-        assert page._current_view == VideosPage.VIEW_LIST
-
-    def test_view_change_via_method(self, qtbot, mock_context):
-        page = VideosPage(mock_context)
-        qtbot.addWidget(page)
-        page.refresh()
-
-        page._on_view_changed(VideosPage.VIEW_GRID)
-
-        assert page._current_view == VideosPage.VIEW_GRID
-
-
 class TestVideosPagePageSize:
     """Tests for page size changes."""
 
