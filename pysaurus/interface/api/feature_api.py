@@ -39,7 +39,7 @@ class FeatureAPI:
         self.application = Application(self.notifier)
         self.database: Db | None = None
         self.view = ViewContext()
-        self._constants = {
+        self._constants: dict[str, Any] = {
             "PYTHON_DEFAULT_SOURCES": PYTHON_DEFAULT_SOURCES,
             "PYTHON_APP_NAME": self.application.app_name,
             "PYTHON_FEATURE_COMPARISON": True,
