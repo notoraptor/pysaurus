@@ -1,4 +1,4 @@
-from pysaurus.core.semantic_text import DigitAccumulator, CharClass
+from pysaurus.core.semantic_text import CharClass, DigitAccumulator
 
 
 def split_numbers_and_texts(text: str) -> list[str | int]:

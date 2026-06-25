@@ -5,7 +5,6 @@ from typing import Any, Callable, Iterable, Sized
 
 from pysaurus.core.job_notifications import AbstractNotifier
 
-
 CPU_COUNT = os.cpu_count() or 1
 USABLE_CPU_COUNT = max(1, CPU_COUNT - 2)
 

@@ -1,4 +1,4 @@
-from typing import cast, Collection
+from typing import Collection, cast
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.database.database_algorithms import DatabaseAlgorithms

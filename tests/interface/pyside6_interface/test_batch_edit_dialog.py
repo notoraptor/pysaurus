@@ -12,7 +12,6 @@ from PySide6.QtGui import QKeyEvent
 
 from pysaurus.properties.properties import PropType
 
-
 # -- Fixtures --
 
 

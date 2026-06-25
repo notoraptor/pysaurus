@@ -14,7 +14,6 @@ import pytest
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================

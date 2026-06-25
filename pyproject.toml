@@ -61,6 +61,13 @@ build-backend = "hatchling.build"
 [tool.ruff.format]
 # Collapse lines even if they contain commas
 skip-magic-trailing-comma = true
+line-ending = "cr-lf"
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
 
 [tool.coverage.report]
 exclude_also = [

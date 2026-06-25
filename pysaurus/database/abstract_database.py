@@ -10,8 +10,7 @@ from pysaurus.core.datestring import Date
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database_algorithms import DatabaseAlgorithms
 from pysaurus.database.database_operations import DatabaseOperations
-from pysaurus.database.db_paths import Basename
-from pysaurus.database.db_paths import DatabasePaths
+from pysaurus.database.db_paths import Basename, DatabasePaths
 from pysaurus.database.db_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.dbview.view_context import ViewContext
 from pysaurus.properties.properties import PropRawType, PropType, PropUnitType

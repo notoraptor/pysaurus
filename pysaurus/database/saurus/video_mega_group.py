@@ -1,4 +1,6 @@
-from typing import Callable, Iterable, Sequence, Any
+from typing import Any, Callable, Iterable, Sequence
+
+from searchexp import ExpressionParser
 
 from pysaurus.core.classes import Selector, StringedTuple
 from pysaurus.core.datestring import Date
@@ -6,7 +8,6 @@ from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.core.lookup_array import LookupArray
-from searchexp import ExpressionParser
 from pysaurus.database.saurus.grouping_utils import SqlFieldFactory
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.saurus_provider_utils import (
@@ -16,9 +17,9 @@ from pysaurus.database.saurus.saurus_provider_utils import (
     search_to_sql,
 )
 from pysaurus.database.saurus.sql_expression_compiler import (
+    VIDEO_SEARCH_ATTRIBUTES,
     PropertyMeta,
     SqlExpressionCompiler,
-    VIDEO_SEARCH_ATTRIBUTES,
     properties_to_field_types,
 )
 from pysaurus.database.saurus.sql_utils import (

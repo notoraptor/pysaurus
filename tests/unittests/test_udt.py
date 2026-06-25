@@ -4,7 +4,7 @@ from datetime import timezone as dt_timezone
 
 import pytest
 
-from pysaurus.core.universal_datetime import Timedelta, Timezone, UDT
+from pysaurus.core.universal_datetime import UDT, Timedelta, Timezone
 
 UTC = Timezone()
 

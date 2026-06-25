@@ -1,9 +1,9 @@
-from wip.tools.functions import get_percent
 from wip.adnoide.adnoide import Life
 from wip.adnoide.birth import ControlledNursery
 from wip.adnoide.dna_errors import DNAError, ProteinArgsError, ProteinError
 from wip.adnoide.mutation import Individual, Mutagenesis
 from wip.adnoide.selection import NaturalSelection, Survival
+from wip.tools.functions import get_percent
 
 
 def create_population(life: Life, count: int, nb_args: int = None) -> list[Individual]:

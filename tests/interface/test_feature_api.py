@@ -28,8 +28,9 @@ def feature_api_with_db(feature_api, tmp_path):
     """Create FeatureAPI with an opened test database."""
     # Copy test database to temp directory
     import shutil
-    from tests.utils import TEST_HOME_DIR
+
     from pysaurus.application.application import Application
+    from tests.utils import TEST_HOME_DIR
 
     temp_home = tmp_path / "home_dir_test"
     shutil.copytree(TEST_HOME_DIR, temp_home)

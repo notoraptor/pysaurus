@@ -1,7 +1,8 @@
 import logging
 import sys
 import traceback
-from dataclasses import dataclass, field as dataclass_field
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 
 import av
 from PIL import Image

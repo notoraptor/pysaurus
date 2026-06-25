@@ -157,8 +157,9 @@ class TestDatabasesPageSignals:
 
     def test_database_creating_signal(self, qtbot, mock_context, monkeypatch):
         """Test that creating a database emits signal."""
-        from pysaurus.interface.pyside6.pages.databases_page import DatabasesPage
         from PySide6.QtWidgets import QMessageBox
+
+        from pysaurus.interface.pyside6.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)
@@ -193,8 +194,9 @@ class TestDatabasesPageValidation:
 
     def test_create_without_name_shows_warning(self, qtbot, mock_context, monkeypatch):
         """Test that creating without name shows warning."""
-        from pysaurus.interface.pyside6.pages.databases_page import DatabasesPage
         from PySide6.QtWidgets import QMessageBox
+
+        from pysaurus.interface.pyside6.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)
@@ -214,8 +216,9 @@ class TestDatabasesPageValidation:
         self, qtbot, mock_context, monkeypatch
     ):
         """Test that creating without sources shows warning."""
-        from pysaurus.interface.pyside6.pages.databases_page import DatabasesPage
         from PySide6.QtWidgets import QMessageBox
+
+        from pysaurus.interface.pyside6.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)

@@ -1,14 +1,15 @@
 from typing import Any, Callable, Self
 
-from pysaurus.core.pythonsearchexp.evaluator import ExpressionEvaluator
 from searchexp import (
-    FieldType,
-    SetType,
-    ExpressionParser,
-    fields_from_class,
-    Node,
     DateLiteral,
+    ExpressionParser,
+    FieldType,
+    Node,
+    SetType,
+    fields_from_class,
 )
+
+from pysaurus.core.pythonsearchexp.evaluator import ExpressionEvaluator
 
 
 class PythonSearchExp:

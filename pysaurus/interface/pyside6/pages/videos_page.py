@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.classes import Selector
-from pysaurus.interface.pyside6.widgets.left_click_menu import LeftClickMenu
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.interface.common.common import format_group_value
@@ -39,6 +38,7 @@ from pysaurus.interface.pyside6.dialogs import (
     VideoPropertiesDialog,
 )
 from pysaurus.interface.pyside6.dialogs.video_confirm_dialog import VideoConfirmDialog
+from pysaurus.interface.pyside6.widgets.left_click_menu import LeftClickMenu
 from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
 from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern

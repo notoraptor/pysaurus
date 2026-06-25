@@ -6,9 +6,9 @@ from datetime import datetime
 from types import SimpleNamespace
 
 import pytest
+from searchexp import FieldType, SetType
 
 from pysaurus.core.pythonsearchexp import PythonSearchExp
-from searchexp import FieldType, SetType
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -259,7 +259,6 @@ class TestProcessPage:
 class TestProcessNotificationCollector:
     def test_display_notification_adds_log(self, qtbot):
         from pysaurus.core.notifications import Message
-
         from pysaurus.interface.pyside6.pages.process_page import ProcessPage
 
         page = ProcessPage("Test")

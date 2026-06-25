@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
-
 from searchexp import ExpressionParser, FieldType
+
 from pysaurus.database.saurus.sql_expression_compiler import (
+    VIDEO_SEARCH_ATTRIBUTES,
     PropertyMeta,
     SqlExpressionCompiler,
-    VIDEO_SEARCH_ATTRIBUTES,
     properties_to_field_types,
 )
 

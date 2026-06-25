@@ -86,7 +86,8 @@ Design decisions
 from __future__ import annotations
 
 import re
-from datetime import datetime, timedelta, tzinfo as _python_tzinfo
+from datetime import datetime, timedelta
+from datetime import tzinfo as _python_tzinfo
 from typing import Self, overload
 
 S_TO_US = 1_000_000

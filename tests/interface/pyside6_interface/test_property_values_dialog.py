@@ -63,10 +63,10 @@ class TestPropertyValuesDialogCreation:
 
     def test_dialog_shows_modifier_buttons(self, qtbot, mock_context):
         """Test that dialog shows buttons for all available modifiers."""
-        from pysaurus.properties.property_value_modifier import PropertyValueModifier
         from pysaurus.interface.pyside6.dialogs.property_values_dialog import (
             PropertyValuesDialog,
         )
+        from pysaurus.properties.property_value_modifier import PropertyValueModifier
 
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
@@ -293,10 +293,11 @@ class TestPropertyValuesDialogRename:
 
     def test_rename_value(self, qtbot, mock_context, monkeypatch):
         """Test renaming a value updates the database and dialog."""
+        from PySide6.QtWidgets import QInputDialog
+
         from pysaurus.interface.pyside6.dialogs.property_values_dialog import (
             PropertyValuesDialog,
         )
-        from PySide6.QtWidgets import QInputDialog
 
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
@@ -327,10 +328,11 @@ class TestPropertyValuesDialogRename:
 
     def test_rename_to_existing_merges(self, qtbot, mock_context, monkeypatch):
         """Test renaming to an existing value merges them."""
+        from PySide6.QtWidgets import QInputDialog
+
         from pysaurus.interface.pyside6.dialogs.property_values_dialog import (
             PropertyValuesDialog,
         )
-        from PySide6.QtWidgets import QInputDialog
 
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")

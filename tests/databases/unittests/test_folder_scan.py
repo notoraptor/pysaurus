@@ -10,9 +10,9 @@ from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.database.algorithms.folder_scan import (
     EMPTY_FOLDER_EXT,
+    FolderScanner,
     FolderScanProgress,
     FolderScanResult,
-    FolderScanner,
 )
 
 

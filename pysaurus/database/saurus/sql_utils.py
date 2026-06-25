@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Iterable, Self, Sequence, Any
+from typing import Any, Iterable, Self, Sequence
 
 
 def sql_placeholders(count: int) -> str:

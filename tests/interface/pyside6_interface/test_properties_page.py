@@ -158,8 +158,9 @@ class TestPropertiesPageCreate:
         self, qtbot, mock_context, monkeypatch
     ):
         """Test that creating without name shows warning."""
-        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
         from PySide6.QtWidgets import QMessageBox
+
+        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -176,8 +177,9 @@ class TestPropertiesPageCreate:
 
     def test_create_property_success(self, qtbot, mock_context, monkeypatch):
         """Test successful property creation."""
-        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
         from PySide6.QtWidgets import QMessageBox
+
+        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -209,8 +211,9 @@ class TestPropertiesPageActions:
 
     def test_delete_property(self, qtbot, mock_context, monkeypatch):
         """Test deleting a property."""
-        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
         from PySide6.QtWidgets import QMessageBox
+
+        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -232,8 +235,9 @@ class TestPropertiesPageActions:
 
     def test_rename_property(self, qtbot, mock_context, monkeypatch):
         """Test renaming a property."""
-        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
         from PySide6.QtWidgets import QInputDialog, QMessageBox
+
+        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -256,8 +260,9 @@ class TestPropertiesPageActions:
 
     def test_convert_property_multiplicity(self, qtbot, mock_context, monkeypatch):
         """Test converting property between single and multiple."""
-        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
         from PySide6.QtWidgets import QMessageBox
+
+        from pysaurus.interface.pyside6.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)

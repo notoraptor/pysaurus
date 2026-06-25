@@ -309,8 +309,9 @@ class TestListViewWrapping:
 
     def test_list_item_expands_horizontally(self, qtbot):
         """Test that VideoListItem expands to fill available width."""
-        from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
         from PySide6.QtWidgets import QSizePolicy
+
+        from pysaurus.interface.pyside6.widgets.video_list_item import VideoListItem
 
         video = MockVideoPattern(
             {
