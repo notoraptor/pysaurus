@@ -13,6 +13,7 @@ from typing import Collection, Sequence
 
 import ujson as json
 
+from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.datestring import Date
@@ -238,30 +239,36 @@ class DatabaseAlgorithms:
         """Move multiple video entries from not-found to found videos."""
         if not moves:
             return
-        with self.db.to_save():
-            from_indices = [move[0] for move in moves]
-            to_indices = [move[1] for move in moves]
-            from_map = {
-                row.video_id: row
-                for row in self.db.get_videos(
-                    include=(
-                        "video_id",
-                        "similarity_id",
-                        "similarity_id_reencoded",
-                        "date_entry_modified",
-                        "date_entry_opened",
-                        "properties",
-                    ),
-                    where={"video_id": from_indices, "found": False},
-                )
-            }
-            assert all(from_id in from_map for from_id in from_indices)
-            assert set(to_indices) == set(
-                row.video_id
-                for row in self.db.get_videos(
-                    include=["video_id"], where={"video_id": to_indices, "found": True}
-                )
+        from_indices = [move[0] for move in moves]
+        to_indices = [move[1] for move in moves]
+        from_map = {
+            row.video_id: row
+            for row in self.db.get_videos(
+                include=(
+                    "video_id",
+                    "similarity_id",
+                    "similarity_id_reencoded",
+                    "date_entry_modified",
+                    "date_entry_opened",
+                    "properties",
+                ),
+                where={"video_id": from_indices, "found": False},
             )
+        }
+        assert all(from_id in from_map for from_id in from_indices)
+        assert set(to_indices) == set(
+            row.video_id
+            for row in self.db.get_videos(
+                include=["video_id"], where={"video_id": to_indices, "found": True}
+            )
+        )
+        # Refuse merges that would corrupt a unique property: carrying the source
+        # value onto a destination that already holds a *different* value for a
+        # multiple=False property would stack two values on it (and crash on the
+        # next read). Validate before opening the save context so a refused move
+        # writes nothing.
+        self._refuse_unique_property_conflicts(moves, from_map)
+        with self.db.to_save():
             to_properties: dict[str, dict[int | None, Collection[PropUnitType]]] = {}
             for from_id, to_id in moves:
                 from_props: dict[str, list] = from_map[from_id].properties
@@ -298,6 +305,43 @@ class DatabaseAlgorithms:
             )
             for from_id in from_indices:
                 self.db.video_entry_del(from_id)
+
+    def _refuse_unique_property_conflicts(
+        self, moves: list[tuple[int, int]], from_map: dict
+    ) -> None:
+        """Raise if any move would put two different values on a unique property.
+
+        Merging copies the source entry's property values onto the destination
+        (via ADD). For a multiple=False property held with *different* values by
+        both source and destination, that would stack two values on a unique
+        property and corrupt it. Collect every such conflict and refuse the whole
+        operation, so the caller resolves it instead of the merge silently
+        picking a value.
+        """
+        unique_props = {pt.name for pt in self.db.get_prop_types() if not pt.multiple}
+        if not unique_props:
+            return
+        to_indices = [to_id for _, to_id in moves]
+        dst_props = {
+            row.video_id: row.properties
+            for row in self.db.get_videos(
+                include=("video_id", "properties"),
+                where={"video_id": to_indices, "found": True},
+            )
+        }
+        conflicts = []
+        for from_id, to_id in moves:
+            src = from_map[from_id].properties
+            dst = dst_props.get(to_id, {})
+            for name in unique_props:
+                src_values = set(src.get(name, ()))
+                dst_values = set(dst.get(name, ()))
+                if src_values and dst_values and src_values != dst_values:
+                    conflicts.append(
+                        (from_id, to_id, name, sorted(dst_values), sorted(src_values))
+                    )
+        if conflicts:
+            raise exceptions.UniquePropertyMergeConflict(conflicts)
 
     def move_property_values(
         self, values: list, from_name: str, to_name: str, *, concatenate=False

@@ -81,6 +81,18 @@ class InvalidUniquePropertyValue(PysaurusError):
     pass
 
 
+class UniquePropertyMergeConflict(PysaurusError):
+    """A moved-video merge would put two different values on a unique property.
+
+    Merging carries the source entry's property values onto the destination; for
+    a multiple=False property this cannot union two divergent values without
+    corrupting it, so the move is refused. Args: a list of
+    (from_id, to_id, property_name, dst_values, src_values) tuples.
+    """
+
+    pass
+
+
 class InvalidPropertyValue(PysaurusError):
     pass
 
