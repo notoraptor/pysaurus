@@ -1,0 +1,588 @@
+"""Videos page — video cards + filters sidebar.
+
+Phase 3: display + pagination. Phase 4a: Search + Sorting. Phase 4b: Grouping +
+Groups panel + classifier. Phase 4c (Sources) and selection/actions (phase 5)
+come next.
+"""
+
+from __future__ import annotations
+
+import pyperclip
+import videre
+from videre.widgets.widget import Widget
+
+from pysaurus.core.constants import (
+    VIDEO_DEFAULT_PAGE_NUMBER,
+    VIDEO_DEFAULT_PAGE_SIZE,
+    VIDEO_DEFAULT_SORTING,
+)
+from pysaurus.interface.common.common import FIELD_MAP, format_group_value
+from pysaurus.interface.videroid.dialogs.grouping_dialog import GroupingDialog
+from pysaurus.interface.videroid.dialogs.sorting_dialog import SortingDialog
+from pysaurus.interface.videroid.dialogs.sources_dialog import SourcesDialog
+from pysaurus.interface.videroid.pages.base_page import Page
+from pysaurus.interface.videroid.widgets.video_card import VideoCard
+
+_SELECTED_BG = "#e3f2fd"
+_BADGE_BG = videre.parse_color((230, 230, 230))
+
+
+class VideosPage(Page):
+    title = "Videos"
+
+    def __init__(self, app):
+        super().__init__(app)
+        self._page_size = VIDEO_DEFAULT_PAGE_SIZE
+        self._page_number = VIDEO_DEFAULT_PAGE_NUMBER
+        self._context = None
+        # Content widgets.
+        self._status = videre.Text("")
+        self._cards = videre.Column([], space=0)
+        self._page_label = videre.Text("")
+        # Sidebar widgets.
+        self._sources_display = videre.Text("All readable")
+        self._search_input = videre.TextInput()
+        self._search_status = videre.Text("(no search)", italic=True)
+        self._sorting_display = videre.Text("")
+        self._grouping_display = videre.Text("No grouping")
+        self._groups_column = videre.Column([], space=2)
+        self._group_nav_label = videre.Text("")
+        self._add_classifier_holder = videre.Container()
+        self._classifier_column = videre.Column([], space=2)
+        # Section + sidebar containers (built once in build()).
+        self._sidebar_column = videre.Column([], space=8)
+        self._sec_sources = None
+        self._sec_search = None
+        self._sec_sorting = None
+        self._sec_grouping = None
+        self._sec_groups = None
+        self._sec_classifier = None
+
+    # --- build --------------------------------------------------------------
+
+    def build(self) -> Widget:
+        self._sec_sources = self._sources_section()
+        self._sec_search = self._search_section()
+        self._sec_sorting = self._sorting_section()
+        self._sec_grouping = self._grouping_section()
+        self._sec_groups = self._groups_section()
+        self._sec_classifier = self._classifier_section()
+        sidebar = videre.Container(
+            videre.ScrollView(self._sidebar_column, wrap_horizontal=True),
+            width=240,
+            border=videre.Border.all(1, videre.Colors.lightgray),
+            padding=videre.Padding.all(6),
+        )
+        pagination = videre.Row(
+            [
+                videre.Button("<<", on_click=self._first),
+                videre.Button("<", on_click=self._prev),
+                self._page_label,
+                videre.Button(">", on_click=self._next),
+                videre.Button(">>", on_click=self._last),
+            ],
+            space=5,
+            vertical_alignment=videre.Alignment.CENTER,
+        )
+        content = videre.Column(
+            [
+                videre.Container(self._status, padding=videre.Padding.all(4)),
+                videre.ScrollView(self._cards, wrap_horizontal=True, weight=1),
+                videre.Container(
+                    pagination,
+                    horizontal_alignment=videre.Alignment.CENTER,
+                    padding=videre.Padding.all(4),
+                ),
+            ],
+            weight=1,
+        )
+        widget = videre.Row([sidebar, content], space=6)
+        self._reload()
+        return widget
+
+    def _section(self, title: str, header_buttons, body) -> Widget:
+        return videre.Container(
+            videre.Column(
+                [
+                    videre.Row(
+                        [videre.Text(title, strong=True, weight=1), *header_buttons],
+                        space=2,
+                        vertical_alignment=videre.Alignment.CENTER,
+                    ),
+                    body,
+                ],
+                space=4,
+            ),
+            border=videre.Border.all(1, videre.Colors.lightgray),
+            padding=videre.Padding.all(6),
+        )
+
+    def _sources_section(self) -> Widget:
+        return self._section(
+            "Sources",
+            [
+                videre.Button("⚙", on_click=self._open_sources),
+                videre.Button("✕", on_click=self._clear_sources),
+            ],
+            self._sources_display,
+        )
+
+    def _search_section(self) -> Widget:
+        return self._section(
+            "Search",
+            [videre.Button("✕", on_click=self._clear_search)],
+            videre.Column(
+                [
+                    self._search_input,
+                    videre.Row(
+                        [
+                            videre.Button("AND", data="and", on_click=self._on_mode),
+                            videre.Button("OR", data="or", on_click=self._on_mode),
+                            videre.Button(
+                                "Exact", data="exact", on_click=self._on_mode
+                            ),
+                            videre.Button("ID", data="id", on_click=self._on_mode),
+                        ],
+                        space=2,
+                    ),
+                    self._search_status,
+                ],
+                space=4,
+            ),
+        )
+
+    def _sorting_section(self) -> Widget:
+        return self._section(
+            "Sorting",
+            [
+                videre.Button("⚙", on_click=self._open_sorting),
+                videre.Button("✕", on_click=self._clear_sorting),
+            ],
+            self._sorting_display,
+        )
+
+    def _grouping_section(self) -> Widget:
+        return self._section(
+            "Grouping",
+            [
+                videre.Button("⚙", on_click=self._open_grouping),
+                videre.Button("✕", on_click=self._clear_grouping),
+            ],
+            self._grouping_display,
+        )
+
+    def _groups_section(self) -> Widget:
+        nav = videre.Row(
+            [
+                videre.Button("|<", on_click=self._group_first),
+                videre.Button("<", on_click=self._group_prev),
+                self._group_nav_label,
+                videre.Button(">", on_click=self._group_next),
+                videre.Button(">|", on_click=self._group_last),
+            ],
+            space=2,
+            vertical_alignment=videre.Alignment.CENTER,
+        )
+        body = videre.Column(
+            [
+                nav,
+                videre.Container(
+                    videre.ScrollView(self._groups_column, wrap_horizontal=True),
+                    height=220,
+                    border=videre.Border.all(1, videre.Colors.lightgray),
+                    padding=videre.Padding.all(4),
+                ),
+                self._add_classifier_holder,
+            ],
+            space=4,
+        )
+        return self._section("Groups", [], body)
+
+    def _classifier_section(self) -> Widget:
+        body = videre.Column(
+            [
+                self._classifier_column,
+                videre.Button("Reverse", on_click=self._classifier_reverse),
+            ],
+            space=4,
+        )
+        return self._section("Classifier path", [], body)
+
+    def on_show(self) -> None:
+        self._page_number = VIDEO_DEFAULT_PAGE_NUMBER
+        self._reload()
+
+    # --- data ---------------------------------------------------------------
+
+    def _reload(self) -> None:
+        self._context = self.context.get_videos(self._page_size, self._page_number)
+        ctx = self._context
+        if ctx is None:
+            self._cards.controls = [videre.Text("No database open.", italic=True)]
+            self._status.text = ""
+            self._page_label.text = ""
+            self._sidebar_column.controls = [
+                self._sec_sources,
+                self._sec_search,
+                self._sec_sorting,
+                self._sec_grouping,
+            ]
+            return
+        self._cards.controls = [
+            VideoCard(video, index, self) for index, video in enumerate(ctx.result)
+        ] or [videre.Text("(no video on this page)", italic=True)]
+        self._status.text = (
+            f"{ctx.selection_count} videos | "
+            f"{ctx.selection_file_size} | {ctx.selection_duration}"
+        )
+        self._page_label.text = f"Page {ctx.page_number + 1} / {ctx.nb_pages or 1}"
+        self._update_sources(ctx)
+        self._update_search(ctx)
+        self._update_sorting(ctx)
+        self._update_grouping(ctx)
+
+        sections = [
+            self._sec_sources,
+            self._sec_search,
+            self._sec_sorting,
+            self._sec_grouping,
+        ]
+        if ctx.grouping is not None and ctx.grouping.field is not None:
+            self._populate_groups(ctx)
+            sections.append(self._sec_groups)
+        if ctx.classifier:
+            self._populate_classifier(ctx)
+            sections.append(self._sec_classifier)
+        self._sidebar_column.controls = sections
+
+    def _update_search(self, ctx) -> None:
+        search = ctx.search
+        if search is not None and getattr(search, "text", ""):
+            self._search_status.text = f"'{search.text}' ({search.cond})"
+        else:
+            self._search_status.text = "(no search)"
+
+    def _update_sources(self, ctx) -> None:
+        expr = self.context.get_source_expression()
+        if expr:
+            self._sources_display.text = f"expr: {expr}"
+        elif list(ctx.sources) == [["readable"]]:
+            self._sources_display.text = "All readable"
+        else:
+            self._sources_display.text = (
+                " ; ".join("/".join(path) for path in ctx.sources) or "(none)"
+            )
+
+    def _update_sorting(self, ctx) -> None:
+        parts = []
+        for item in ctx.sorting:
+            reverse = item.startswith("-")
+            field = item[1:] if item[:1] in "+-" else item
+            info = FIELD_MAP.fields.get(field)
+            parts.append(f"{info.title if info else field} {'▼' if reverse else '▲'}")
+        self._sorting_display.text = ", ".join(parts) or "Default"
+
+    def _update_grouping(self, ctx) -> None:
+        # Own formatter: pysaurus' pretty_grouping crashes on property fields
+        # (FIELD_MAP.get_title raises KeyError for a non-attribute name).
+        grouping = ctx.grouping
+        if grouping is None or grouping.field is None:
+            self._grouping_display.text = "No grouping"
+            return
+        if grouping.is_property:
+            title = grouping.field
+        else:
+            info = FIELD_MAP.fields.get(grouping.field)
+            title = info.title if info else grouping.field
+        label = f"{title} {'▼' if grouping.reverse else '▲'}"
+        if grouping.is_property:
+            label = f"property: {label}"
+        if grouping.sorting == "count":
+            label = f"# {label}"
+        elif grouping.sorting == "length":
+            label = f"|| {label} ||"
+        if grouping.allow_singletons:
+            label = f"many {label}"
+        self._grouping_display.text = label
+
+    def _populate_groups(self, ctx) -> None:
+        field = ctx.grouping.field
+        stats = ctx.classifier_stats or []
+        items = []
+        for index, stat in enumerate(stats):
+            label = f"{format_group_value(field, stat.value)} ({stat.count})"
+            selected = index == (ctx.group_id or 0)
+            items.append(
+                videre.Div(
+                    videre.Text(label, strong=selected, wrap=videre.TextWrap.WORD),
+                    style={
+                        "default": {
+                            "background_color": videre.parse_color(_SELECTED_BG)
+                            if selected
+                            else None
+                        }
+                    },
+                    data=index,
+                    on_click=self._on_group_click,
+                )
+            )
+        self._groups_column.controls = items or [videre.Text("(no group)", italic=True)]
+        current = (ctx.group_id or 0) + 1 if stats else 0
+        self._group_nav_label.text = f"{current} / {len(stats)}"
+
+        is_multiple = False
+        if ctx.grouping.is_property:
+            is_multiple = (
+                len(self.context.get_prop_types(name=field, multiple=True)) > 0
+            )
+        self._add_classifier_holder.control = (
+            videre.Button("✙ Add to classifier", on_click=self._on_add_classifier)
+            if is_multiple
+            else None
+        )
+
+    def _populate_classifier(self, ctx) -> None:
+        path = list(ctx.classifier)
+        badges = []
+        for index, value in enumerate(path):
+            row = [videre.Text(str(value))]
+            if index == len(path) - 1:
+                row.append(videre.Button("✕", on_click=self._classifier_unstack))
+            badges.append(
+                videre.Container(
+                    videre.Row(
+                        row, space=2, vertical_alignment=videre.Alignment.CENTER
+                    ),
+                    background_color=_BADGE_BG,
+                    padding=videre.Padding.axis(vertical=2, horizontal=6),
+                )
+            )
+        self._classifier_column.controls = badges
+
+    # --- search -------------------------------------------------------------
+
+    def _on_mode(self, widget) -> None:
+        self.context.set_search(self._search_input.value, widget.data)
+        self._reset_and_reload()
+
+    def _clear_search(self, widget) -> None:
+        self._search_input.value = ""
+        self.context.set_search("", "and")
+        self._reset_and_reload()
+
+    # --- sorting ------------------------------------------------------------
+
+    def _open_sorting(self, widget) -> None:
+        sorting = list(self._context.sorting) if self._context else []
+        dialog = SortingDialog(sorting)
+        self.app.window.set_fancybox(
+            dialog,
+            title="Set Sorting",
+            buttons=[
+                videre.FancyCloseButton(
+                    "Apply", data=dialog, on_click=self._apply_sorting
+                ),
+                videre.FancyCloseButton("Cancel"),
+            ],
+        )
+
+    def _apply_sorting(self, widget) -> None:
+        self.context.set_sorting(widget.data.get_result())
+        self._reset_and_reload()
+
+    def _clear_sorting(self, widget) -> None:
+        self.context.set_sorting(list(VIDEO_DEFAULT_SORTING))
+        self._reset_and_reload()
+
+    # --- sources ------------------------------------------------------------
+
+    def _open_sources(self, widget) -> None:
+        current = list(self._context.sources) if self._context else []
+        dialog = SourcesDialog(current, self.context.get_source_expression())
+        self.app.window.set_fancybox(
+            dialog,
+            title="Select Sources",
+            buttons=[
+                videre.FancyCloseButton(
+                    "Apply", data=dialog, on_click=self._apply_sources
+                ),
+                videre.FancyCloseButton("Cancel"),
+            ],
+        )
+
+    def _apply_sources(self, widget) -> None:
+        dialog = widget.data
+        if dialog.is_advanced():
+            self.context.set_source_expression(dialog.get_expression())
+        else:
+            self.context.set_sources(dialog.get_sources())
+        self._reset_and_reload()
+
+    def _clear_sources(self, widget) -> None:
+        self.context.set_sources([])
+        self._reset_and_reload()
+
+    # --- grouping -----------------------------------------------------------
+
+    def _open_grouping(self, widget) -> None:
+        property_names = [prop.name for prop in self.context.get_prop_types()]
+        current = self._context.grouping if self._context else None
+        dialog = GroupingDialog(property_names, current)
+        self.app.window.set_fancybox(
+            dialog,
+            title="Set Grouping",
+            buttons=[
+                videre.FancyCloseButton(
+                    "Apply", data=dialog, on_click=self._apply_grouping
+                ),
+                videre.FancyCloseButton("Clear", on_click=self._clear_grouping),
+                videre.FancyCloseButton("Cancel"),
+            ],
+        )
+
+    def _apply_grouping(self, widget) -> None:
+        result = widget.data.get_result()
+        self.context.set_groups(
+            result["field"],
+            result["is_property"],
+            result["sorting"],
+            result["reverse"],
+            result["allow_singletons"],
+        )
+        self._reset_and_reload()
+
+    def _clear_grouping(self, widget) -> None:
+        self.context.clear_groups()
+        self._reset_and_reload()
+
+    # --- groups & classifier ------------------------------------------------
+
+    def _on_group_click(self, widget) -> None:
+        self._select_group(widget.data)
+
+    def _select_group(self, index: int) -> None:
+        stats = self._context.classifier_stats if self._context else []
+        if stats and 0 <= index < len(stats):
+            self.context.set_group(index)
+            self._reset_and_reload()
+
+    def _group_first(self, widget) -> None:
+        self._select_group(0)
+
+    def _group_prev(self, widget) -> None:
+        self._select_group((self._context.group_id or 0) - 1 if self._context else 0)
+
+    def _group_next(self, widget) -> None:
+        self._select_group((self._context.group_id or 0) + 1 if self._context else 0)
+
+    def _group_last(self, widget) -> None:
+        stats = self._context.classifier_stats if self._context else []
+        self._select_group(len(stats) - 1)
+
+    def _on_add_classifier(self, widget) -> None:
+        if self._context:
+            self.context.classifier_select_group(self._context.group_id or 0)
+            self._reset_and_reload()
+
+    def _classifier_unstack(self, widget) -> None:
+        self.context.classifier_back()
+        self._reset_and_reload()
+
+    def _classifier_reverse(self, widget) -> None:
+        self.context.classifier_reverse()
+        self._reset_and_reload()
+
+    # --- video actions (phase 5a) -------------------------------------------
+
+    def video_toggle_watched(self, video) -> None:
+        self.context.toggle_watched(video.video_id)
+        self._reload()
+
+    def video_open(self, video) -> None:
+        self.context.open_video(video.video_id)
+
+    def video_open_folder(self, video) -> None:
+        self.context.open_containing_folder(video.video_id)
+
+    def video_copy(self, video, field: str) -> None:
+        pyperclip.copy(str(getattr(video, field)))
+
+    def video_rename(self, video) -> None:
+        entry = videre.TextInput(str(video.file_title))
+        self.app.window.set_fancybox(
+            videre.Column(
+                [videre.Text(str(video.filename), wrap=videre.TextWrap.CHAR), entry],
+                space=8,
+            ),
+            title="Rename video",
+            buttons=[
+                videre.FancyCloseButton(
+                    "Rename", on_click=lambda w: self._do_rename(video, entry)
+                ),
+                videre.FancyCloseButton("Cancel"),
+            ],
+        )
+
+    def _do_rename(self, video, entry) -> None:
+        self.context.rename_video(video.video_id, entry.value)
+        self._reload()
+
+    def video_delete_entry(self, video) -> None:
+        self._confirm_video(
+            f"Delete '{video.filename}' from database?",
+            "Delete from database",
+            self.context.delete_video_entry,
+            video,
+        )
+
+    def video_trash(self, video) -> None:
+        self._confirm_video(
+            f"Move '{video.filename}' to trash?",
+            "Move to Trash",
+            self.context.trash_video,
+            video,
+        )
+
+    def video_delete_file(self, video) -> None:
+        self._confirm_video(
+            f"Permanently delete '{video.filename}'?",
+            "Delete permanently",
+            self.context.delete_video_file,
+            video,
+        )
+
+    def _confirm_video(self, message, title, action, video) -> None:
+        self.app.window.confirm(
+            message, title, on_confirm=lambda: self._run_video_action(action, video)
+        )
+
+    def _run_video_action(self, action, video) -> None:
+        action(video.video_id)
+        self._reload()
+
+    # --- pagination ---------------------------------------------------------
+
+    def _nb_pages(self) -> int:
+        return (self._context.nb_pages or 1) if self._context else 1
+
+    def _reset_and_reload(self) -> None:
+        self._page_number = VIDEO_DEFAULT_PAGE_NUMBER
+        self._reload()
+
+    def _goto(self, page: int) -> None:
+        page = max(0, min(page, self._nb_pages() - 1))
+        if page != self._page_number:
+            self._page_number = page
+            self._reload()
+
+    def _first(self, widget) -> None:
+        self._goto(0)
+
+    def _prev(self, widget) -> None:
+        self._goto(self._page_number - 1)
+
+    def _next(self, widget) -> None:
+        self._goto(self._page_number + 1)
+
+    def _last(self, widget) -> None:
+        self._goto(self._nb_pages() - 1)
