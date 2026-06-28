@@ -262,6 +262,44 @@ class VideroidContext:
         if self._ops is not None:
             self._ops.apply_on_prop_value(prop_name, modifier)
 
+    # --- files (scan / trash) -----------------------------------------------
+
+    def scan_folders(self) -> None:
+        """Scan the DB folders for video and non-video files (threaded op)."""
+        self._api.scan_folders()
+
+    def get_last_scan_result(self):
+        """Return the last FolderScanResult, or None if no scan has run."""
+        return self._api.get_last_scan_result()
+
+    def trash_files(self, paths: list) -> tuple[int, list[tuple[str, str]]]:
+        """Send files/folders to the system trash → (ok_count, errors).
+
+        Batched send2trash + per-path existence recheck (the batch call gives no
+        per-item status). Ported from the Qt app_context."""
+        import os
+
+        from send2trash import send2trash
+
+        str_paths = [str(path) for path in paths]
+        if not str_paths:
+            return 0, []
+        catastrophic: str | None = None
+        try:
+            send2trash(str_paths)
+        except OSError:
+            pass
+        except Exception as exc:
+            catastrophic = f"{type(exc).__name__}: {exc}"
+        ok = 0
+        errors: list[tuple[str, str]] = []
+        for path in str_paths:
+            if os.path.exists(path):
+                errors.append((path, catastrophic or "Failed to send to trash"))
+            else:
+                ok += 1
+        return ok, errors
+
     # --- lifecycle ----------------------------------------------------------
 
     def close_app(self) -> None:
