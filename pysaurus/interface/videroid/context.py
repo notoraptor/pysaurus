@@ -205,6 +205,63 @@ class VideroidContext:
             return None
         return self._api.apply_on_view(selector_dict, operation, *args)
 
+    # --- property types -----------------------------------------------------
+
+    @property
+    def _algos(self):
+        db = self._api.database
+        return db.algos if db is not None else None
+
+    def create_prop_type(self, name, prop_type, definition, multiple) -> None:
+        db = self._api.database
+        if db is not None:
+            db.prop_type_add(name, prop_type, definition, multiple)
+
+    def rename_prop_type(self, name, new_name) -> None:
+        db = self._api.database
+        if db is not None:
+            db.prop_type_set_name(name, new_name)
+
+    def delete_prop_type(self, name) -> None:
+        db = self._api.database
+        if db is not None:
+            db.prop_type_del(name)
+
+    def set_prop_type_multiple(self, name, multiple) -> None:
+        db = self._api.database
+        if db is not None:
+            db.prop_type_set_multiple(name, multiple)
+
+    # --- property values ----------------------------------------------------
+
+    def get_property_values(self, prop_name) -> dict:
+        db = self._api.database
+        return db.videos_tag_get(prop_name) if db is not None else {}
+
+    def delete_property_values(self, prop_name, values) -> None:
+        if self._algos is not None:
+            self._algos.delete_property_values(prop_name, values)
+
+    def replace_property_values(self, prop_name, old_values, new_value) -> bool:
+        if self._algos is not None:
+            return self._algos.replace_property_values(prop_name, old_values, new_value)
+        return False
+
+    def move_property_values(self, values, from_name, to_name, *, concatenate) -> int:
+        if self._algos is not None:
+            return self._algos.move_property_values(
+                values, from_name, to_name, concatenate=concatenate
+            )
+        return 0
+
+    def fill_property_with_terms(self, prop_name, *, only_empty) -> None:
+        if self._algos is not None:
+            self._algos.fill_property_with_terms(prop_name, only_empty=only_empty)
+
+    def apply_on_prop_value(self, prop_name, modifier) -> None:
+        if self._ops is not None:
+            self._ops.apply_on_prop_value(prop_name, modifier)
+
     # --- lifecycle ----------------------------------------------------------
 
     def close_app(self) -> None:

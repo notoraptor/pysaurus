@@ -44,3 +44,28 @@ tests videre.
 la souris (menu ⚙ de sélection, boutons de dialog). Le hook clavier videre est une
 **tâche dédiée** à traiter ensuite (changement de sémantique d'événements →
 design soigné + gated par les tests videre).
+
+---
+
+## G-MODAL — Un seul slot de fancybox (pas de modals empilés)
+
+*Rencontré en Phase 6.4 (Manage values), 2026-06-28.*
+
+**Constat (vérifié)** : `Window.set_fancybox` / `confirm` / `alert` partagent **un
+seul** slot (`WindowLayout._fancybox`) — en ouvrir un second remplace le premier.
+Et `FancyCloseButton.click()` exécute `on_click()` **puis** `clear_fancybox()` →
+ouvrir un sous-modal depuis un bouton de dialog le ferait fermer aussitôt.
+
+**Impacte** : tout dialog voulant une confirmation / une saisie
+(`PropertyValuesDialog` : delete / rename / modifier ; tout « OK puis confirm »).
+
+**Contournement videroid** : confirmations / saisies **inline** dans le dialog
+(une ligne-prompt Yes/No ou TextInput, au lieu d'un sous-fancybox). Les dialogs
+**passifs** (Move / Fill) évitent le problème : leur `FancyCloseButton` ferme le
+dialog et l'action n'ouvre pas de sous-modal (la confirmation de Fill est omise en
+v1).
+
+**Piste videre** : pile de fancyboxes (modals empilés) ou une primitive de
+confirmation indépendante du slot principal.
+
+**Décision** : contourné (inline). Pile de modals = piste videre ultérieure.
