@@ -15,6 +15,7 @@ from videre.widgets.widget import Widget
 from pysaurus.video.video_pattern import VideoPattern
 
 _EVEN_BG = videre.parse_color((245, 245, 245))
+_SELECTED_BG = videre.parse_color((227, 242, 253))
 _BADGE_BG = videre.parse_color((240, 240, 240))
 _THUMB_BOX = (180, 100)
 
@@ -57,13 +58,16 @@ def _menu(video: VideoPattern, page) -> Widget:
     return videre.ContextButton("⚙", actions=actions, square=True)
 
 
-def _attributes(video: VideoPattern, menu: Widget | None = None) -> Widget:
+def _attributes(
+    video: VideoPattern, menu: Widget | None = None, checkbox: Widget | None = None
+) -> Widget:
     title = videre.Text(
         str(video.title), strong=True, wrap=videre.TextWrap.WORD, weight=1
     )
-    if menu is not None:
+    leading = [w for w in (menu, checkbox) if w is not None]
+    if leading:
         first = videre.Row(
-            [menu, title], space=5, vertical_alignment=videre.Alignment.CENTER
+            [*leading, title], space=5, vertical_alignment=videre.Alignment.CENTER
         )
     else:
         first = title
@@ -166,10 +170,23 @@ class VideoCard(videre.Container):
     __wprops__ = {}
     __slots__ = ()
 
-    def __init__(self, video: VideoPattern, index: int = 0, page=None):
+    def __init__(
+        self, video: VideoPattern, index: int = 0, page=None, selected: bool = False
+    ):
         menu = _menu(video, page) if page is not None else None
+        checkbox = (
+            videre.Checkbox(
+                checked=selected, data=video.video_id, on_change=page._on_card_check
+            )
+            if page is not None
+            else None
+        )
         super().__init__(
-            videre.Row([_thumbnail(video), _attributes(video, menu)], space=6),
+            videre.Row(
+                [_thumbnail(video), _attributes(video, menu, checkbox)], space=6
+            ),
             padding=videre.Padding.axis(vertical=8, horizontal=4),
-            background_color=(_EVEN_BG if index % 2 == 1 else None),
+            background_color=(
+                _SELECTED_BG if selected else (_EVEN_BG if index % 2 == 1 else None)
+            ),
         )

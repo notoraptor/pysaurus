@@ -175,6 +175,36 @@ class VideroidContext:
         if self._ops is not None:
             self._ops.delete_video(video_id)
 
+    # --- selection / batch actions ------------------------------------------
+
+    def toggle_watched_many(self, video_ids) -> None:
+        """Toggle the watched flag on several videos in one batch."""
+        if self._ops is not None:
+            self._ops.toggle_watched_many(video_ids)
+
+    def delete_video_entries(self, video_ids) -> None:
+        """Delete several video entries in a single transaction (files kept)."""
+        db = self._api.database
+        if db is not None:
+            with db.to_save():
+                for video_id in video_ids:
+                    db.video_entry_del(video_id)
+
+    def query_on_view(self, selector_dict: dict, operation: str, *args):
+        """Read selected videos of the current view without mutating anything."""
+        if self._api.database is None:
+            return None
+        return self._api.apply_on_view(selector_dict, operation, *args)
+
+    def apply_on_view(self, selector_dict: dict, operation: str, *args):
+        """Apply an operation on the current view's selected videos.
+
+        The caller reloads the page afterwards: videroid has no ``state_changed``
+        signal — refreshes are imperative (unlike the Qt ``app_context``)."""
+        if self._api.database is None:
+            return None
+        return self._api.apply_on_view(selector_dict, operation, *args)
+
     # --- lifecycle ----------------------------------------------------------
 
     def close_app(self) -> None:

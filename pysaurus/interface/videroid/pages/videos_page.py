@@ -11,12 +11,16 @@ import pyperclip
 import videre
 from videre.widgets.widget import Widget
 
+from pysaurus.core.classes import Selector
 from pysaurus.core.constants import (
     VIDEO_DEFAULT_PAGE_NUMBER,
     VIDEO_DEFAULT_PAGE_SIZE,
     VIDEO_DEFAULT_SORTING,
 )
 from pysaurus.interface.common.common import FIELD_MAP, format_group_value
+from pysaurus.interface.videroid.dialogs.batch_edit_property_dialog import (
+    BatchEditPropertyDialog,
+)
 from pysaurus.interface.videroid.dialogs.grouping_dialog import GroupingDialog
 from pysaurus.interface.videroid.dialogs.sorting_dialog import SortingDialog
 from pysaurus.interface.videroid.dialogs.sources_dialog import SourcesDialog
@@ -35,6 +39,12 @@ class VideosPage(Page):
         self._page_size = VIDEO_DEFAULT_PAGE_SIZE
         self._page_number = VIDEO_DEFAULT_PAGE_NUMBER
         self._context = None
+        # Selection (phase 5b): persists across reloads/pages until cleared.
+        self._selector = Selector(False, set())
+        self._view_count = 0
+        self._show_only_selected = False
+        self._selection_label = videre.Text("no selection", italic=True)
+        self._selection_menu = None
         # Content widgets.
         self._status = videre.Text("")
         self._cards = videre.Column([], space=0)
@@ -57,6 +67,7 @@ class VideosPage(Page):
         self._sec_grouping = None
         self._sec_groups = None
         self._sec_classifier = None
+        self._sec_selection = None
 
     # --- build --------------------------------------------------------------
 
@@ -67,6 +78,7 @@ class VideosPage(Page):
         self._sec_grouping = self._grouping_section()
         self._sec_groups = self._groups_section()
         self._sec_classifier = self._classifier_section()
+        self._sec_selection = self._selection_section()
         sidebar = videre.Container(
             videre.ScrollView(self._sidebar_column, wrap_horizontal=True),
             width=240,
@@ -208,6 +220,26 @@ class VideosPage(Page):
         )
         return self._section("Classifier path", [], body)
 
+    def _selection_section(self) -> Widget:
+        self._selection_menu = videre.ContextButton("⚙", actions=[], square=True)
+        return self._section(
+            "Selection",
+            [self._selection_menu, videre.Button("✕", on_click=self._clear_selection)],
+            videre.Column(
+                [
+                    self._selection_label,
+                    videre.Row(
+                        [
+                            videre.Button("Page", on_click=self._select_page),
+                            videre.Button("All", on_click=self._select_all_in_view),
+                        ],
+                        space=4,
+                    ),
+                ],
+                space=4,
+            ),
+        )
+
     def on_show(self) -> None:
         self._page_number = VIDEO_DEFAULT_PAGE_NUMBER
         self._reload()
@@ -215,7 +247,10 @@ class VideosPage(Page):
     # --- data ---------------------------------------------------------------
 
     def _reload(self) -> None:
-        self._context = self.context.get_videos(self._page_size, self._page_number)
+        selector = self._selector if self._show_only_selected else None
+        self._context = self.context.get_videos(
+            self._page_size, self._page_number, selector
+        )
         ctx = self._context
         if ctx is None:
             self._cards.controls = [videre.Text("No database open.", italic=True)]
@@ -229,8 +264,12 @@ class VideosPage(Page):
             ]
             return
         self._cards.controls = [
-            VideoCard(video, index, self) for index, video in enumerate(ctx.result)
+            VideoCard(video, index, self, self._selector.contains(video.video_id))
+            for index, video in enumerate(ctx.result)
         ] or [videre.Text("(no video on this page)", italic=True)]
+        self._view_count = ctx.selection_count
+        self._update_selection_counter()
+        self._refresh_selection_menu()
         self._status.text = (
             f"{ctx.selection_count} videos | "
             f"{ctx.selection_file_size} | {ctx.selection_duration}"
@@ -246,6 +285,7 @@ class VideosPage(Page):
             self._sec_search,
             self._sec_sorting,
             self._sec_grouping,
+            self._sec_selection,
         ]
         if ctx.grouping is not None and ctx.grouping.field is not None:
             self._populate_groups(ctx)
@@ -491,6 +531,132 @@ class VideosPage(Page):
     def _classifier_reverse(self, widget) -> None:
         self.context.classifier_reverse()
         self._reset_and_reload()
+
+    # --- selection (phase 5b) -----------------------------------------------
+
+    def _update_selection_counter(self) -> None:
+        count = self._selector.size_from(self._view_count)
+        self._selection_label.text = f"{count} selected" if count else "no selection"
+
+    def _on_card_check(self, checkbox) -> None:
+        video_id = checkbox.data
+        if checkbox.checked:
+            self._selector.include(video_id)
+        else:
+            self._selector.exclude(video_id)
+        self._update_selection_counter()
+
+    def _select_page(self, widget) -> None:
+        if self._context:
+            for video in self._context.result:
+                self._selector.include(video.video_id)
+            self._reload()
+
+    def _select_all_in_view(self, widget) -> None:
+        self._selector.select_all()
+        self._reload()
+
+    def _clear_selection(self, widget=None) -> None:
+        self._selector.deselect_all()
+        was_show_only = self._show_only_selected
+        self._show_only_selected = False
+        if was_show_only:
+            self._reset_and_reload()
+        else:
+            self._reload()
+
+    def _selected_ids(self) -> set:
+        """Explicit selected video ids. In 'All' (exclude) mode we can only
+        enumerate the current page reliably — a noted v1 limitation."""
+        selection = self._selector.to_dict()
+        if not selection["all"]:
+            return set(selection["include"])
+        return {
+            video.video_id
+            for video in (self._context.result if self._context else [])
+            if self._selector.contains(video.video_id)
+        }
+
+    def _refresh_selection_menu(self) -> None:
+        if self._selection_menu is None:
+            return
+        check = "☑" if self._show_only_selected else "☐"
+        actions = [
+            (f"{check} Show only selected", self._toggle_show_only_selected),
+            ("Toggle watched on selection", self._selection_toggle_watched),
+            ("Delete selection from database", self._delete_selected),
+        ]
+        for prop in self.context.get_prop_types():
+            actions.append(
+                (
+                    f"Edit property: {prop.name}",
+                    lambda p=prop: self._edit_property_for_selection(p),
+                )
+            )
+        self._selection_menu.actions = actions
+
+    def _toggle_show_only_selected(self) -> None:
+        if (
+            not self._show_only_selected
+            and self._selector.size_from(self._view_count) == 0
+        ):
+            return
+        self._show_only_selected = not self._show_only_selected
+        self._reset_and_reload()
+
+    def _selection_toggle_watched(self) -> None:
+        ids = self._selected_ids()
+        if ids:
+            self.context.toggle_watched_many(ids)
+            self._reload()
+
+    def _delete_selected(self) -> None:
+        ids = self._selected_ids()
+        if not ids:
+            return
+        self.app.window.confirm(
+            f"Delete {len(ids)} video(s) from the database? "
+            "(Files are NOT deleted from disk)",
+            "Delete selection",
+            on_confirm=lambda: self._do_delete_selected(ids),
+        )
+
+    def _do_delete_selected(self, ids) -> None:
+        self.context.delete_video_entries(ids)
+        self._clear_selection()
+
+    def _edit_property_for_selection(self, prop) -> None:
+        selector_dict = self._selector.to_dict()
+        count = self._selector.size_from(self._view_count)
+        values_and_counts = (
+            self.context.query_on_view(
+                selector_dict, "count_property_values", prop.name
+            )
+            or []
+        )
+        dialog = BatchEditPropertyDialog(prop, count, values_and_counts)
+        prop_name = prop.name
+        self.app.window.set_fancybox(
+            dialog,
+            title=f"Edit property: {prop_name}",
+            buttons=[
+                videre.FancyCloseButton(
+                    "Apply",
+                    on_click=lambda w: self._apply_batch_edit(
+                        prop_name, selector_dict, dialog
+                    ),
+                ),
+                videre.FancyCloseButton("Cancel"),
+            ],
+        )
+
+    def _apply_batch_edit(self, prop_name, selector_dict, dialog) -> None:
+        to_add, to_remove = dialog.get_changes()
+        if to_add or to_remove:
+            self.context.apply_on_view(
+                selector_dict, "edit_property_for_videos", prop_name, to_add, to_remove
+            )
+            self._reload()
 
     # --- video actions (phase 5a) -------------------------------------------
 
