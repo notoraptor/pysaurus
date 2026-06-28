@@ -300,6 +300,40 @@ class VideroidContext:
                 ok += 1
         return ok, errors
 
+    # --- database lifecycle -------------------------------------------------
+
+    def update_database(self) -> None:
+        """Refresh the current database (threaded op)."""
+        self._api.update_database()
+
+    def close_database(self) -> None:
+        """Close the current database and reset the view."""
+        self._api.close_database()
+        self._api.view.reset()
+
+    def rename_database(self, new_name: str) -> None:
+        """Rename the current database and update the application registry."""
+        db = self._api.database
+        if db is None:
+            return
+        old_path = db.get_database_folder()
+        db.rename(new_name)
+        new_path = db.get_database_folder()
+        application = self._api.application
+        if old_path in application.databases:
+            del application.databases[old_path]
+            application.databases[new_path] = db
+
+    def get_database_folders(self) -> list[str]:
+        """Return the database source folders as strings."""
+        db = self._api.database
+        return [str(folder) for folder in db.get_folders()] if db is not None else []
+
+    def set_database_folders(self, folders: list[str]) -> None:
+        """Replace the database source folders."""
+        if self._ops is not None:
+            self._ops.set_folders(folders)
+
     # --- lifecycle ----------------------------------------------------------
 
     def close_app(self) -> None:

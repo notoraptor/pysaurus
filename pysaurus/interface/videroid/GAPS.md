@@ -69,3 +69,21 @@ v1).
 confirmation indépendante du slot principal.
 
 **Décision** : contourné (inline). Pile de modals = piste videre ultérieure.
+
+---
+
+## G-TITLE / G-DPI — Coquille applicative
+
+*Rencontrés en Phase 8, 2026-06-28.*
+
+- **G-TITLE** : `Window.title` n'a qu'un getter (pas de setter) → titre OS figé.
+  Contournement : un **label de titre in-app** mis à jour à la navigation.
+- **G-DPI** : videre n'expose pas le device-pixel-ratio ; `Window(font_size=…)`
+  existe mais pas de mise à l'échelle auto par densité d'écran (la version Qt
+  scalait la police). Reporté ; police par défaut conservée.
+
+À l'inverse, la **gestion d'exceptions EST fournie** par videre :
+`Window(alert_on_exceptions=(…,))` affiche un dialog d'erreur au lieu de crasher
+(utilisé en 8.3). La distinction fine warning/fatal de la version Qt est reportée.
+
+**Piste videre** : setter de titre ; accès DPR + police mise à l'échelle.
