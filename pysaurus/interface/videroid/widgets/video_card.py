@@ -12,11 +12,9 @@ import videre
 from PIL import Image
 from videre.widgets.widget import Widget
 
+from pysaurus.interface.videroid import theme
 from pysaurus.video.video_pattern import VideoPattern
 
-_EVEN_BG = videre.parse_color((245, 245, 245))
-_SELECTED_BG = videre.parse_color((227, 242, 253))
-_BADGE_BG = videre.parse_color((240, 240, 240))
 _THUMB_BOX = (180, 100)
 
 
@@ -153,7 +151,7 @@ def _attributes(
                     + [
                         videre.Container(
                             videre.Text(str(value), italic=True),
-                            background_color=_BADGE_BG,
+                            background_color=theme.BADGE_BG,
                             padding=videre.Padding.axis(vertical=2, horizontal=10),
                         )
                         for value in values
@@ -187,6 +185,8 @@ class VideoCard(videre.Container):
             ),
             padding=videre.Padding.axis(vertical=8, horizontal=4),
             background_color=(
-                _SELECTED_BG if selected else (_EVEN_BG if index % 2 == 1 else None)
+                theme.SELECTED_BG
+                if selected
+                else (theme.EVEN_BG if index % 2 == 1 else None)
             ),
         )

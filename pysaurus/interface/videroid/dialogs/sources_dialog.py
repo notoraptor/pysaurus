@@ -9,6 +9,8 @@ from __future__ import annotations
 import videre
 from videre.widgets.widget import Widget
 
+from pysaurus.interface.videroid.widgets.tabs import Tabs
+
 # (source-path key, human label) — keys mirror PySide6 SOURCE_TREE leaves.
 _SOURCES = [
     ("readable.found.with_thumbnails", "Readable / Found / With thumbnails"),
@@ -26,29 +28,16 @@ _VALID = "readable.found.with_thumbnails"
 
 class SourcesDialog(videre.Column):
     __wprops__ = {}
-    __slots__ = ("_checkboxes", "_expression", "_holder", "_advanced")
+    __slots__ = ("_checkboxes", "_expression", "_tabs")
 
     def __init__(self, current_sources=None, current_expression=None):
         self._checkboxes = {key: videre.Checkbox() for key, _ in _SOURCES}
         self._expression = videre.TextInput(str(current_expression or ""))
-        self._advanced = False
-        self._holder = videre.Container()
         self._load_current(current_sources or [])
-        super().__init__(
-            [
-                videre.Row(
-                    [
-                        videre.Button("Simple", on_click=self._show_simple),
-                        videre.Button("Advanced", on_click=self._show_advanced),
-                    ],
-                    space=5,
-                ),
-                self._holder,
-            ],
-            space=8,
-            expand_horizontal=True,
+        self._tabs = Tabs(
+            [("Simple", self._simple_content), ("Advanced", self._advanced_content)]
         )
-        self._show_simple(None)
+        super().__init__([self._tabs], space=8, expand_horizontal=True)
 
     def _load_current(self, current_sources) -> None:
         if not current_sources:
@@ -93,14 +82,6 @@ class SourcesDialog(videre.Column):
             space=4,
         )
 
-    def _show_simple(self, widget) -> None:
-        self._advanced = False
-        self._holder.control = self._simple_content()
-
-    def _show_advanced(self, widget) -> None:
-        self._advanced = True
-        self._holder.control = self._advanced_content()
-
     def _select_all(self, widget) -> None:
         for checkbox in self._checkboxes.values():
             checkbox.checked = True
@@ -114,7 +95,7 @@ class SourcesDialog(videre.Column):
         self._checkboxes[_VALID].checked = True
 
     def is_advanced(self) -> bool:
-        return self._advanced
+        return self._tabs.active_index == 1
 
     def get_sources(self) -> list[list[str]]:
         return [key.split(".") for key, cb in self._checkboxes.items() if cb.checked]

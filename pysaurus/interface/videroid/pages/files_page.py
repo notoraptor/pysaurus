@@ -16,10 +16,11 @@ import videre
 from videre.widgets.widget import Widget
 
 from pysaurus.database.algorithms.folder_scan import EMPTY_FOLDER_EXT
+from pysaurus.interface.videroid import theme
 from pysaurus.interface.videroid.pages.base_page import Page
+from pysaurus.interface.videroid.widgets import table
+from pysaurus.interface.videroid.widgets.tabs import Tabs
 
-_HEADER_BG = videre.parse_color((225, 225, 225))
-_SELECTED_BG = videre.parse_color((227, 242, 253))
 _BULK_THRESHOLD = 500
 
 
@@ -44,11 +45,10 @@ class FilesPage(Page):
     def __init__(self, app):
         super().__init__(app)
         self._holder = videre.Container(weight=1)  # empty | scanned
-        self._tab_holder = videre.Container(weight=1)  # Others | Video stats
+        self._tabs: Tabs | None = None  # Others | Video stats (built once scanned)
         self._summary = videre.Text("")
         self._filter = videre.TextInput()
         self._result = None
-        self._active_tab = "others"
         self._sel_ext = None
         self._selected_files: set = set()
 
@@ -95,7 +95,14 @@ class FilesPage(Page):
 
     def _scanned_state(self) -> Widget:
         self._update_summary()
-        column = videre.Column(
+        if self._tabs is None:
+            self._tabs = Tabs(
+                [("Others", self._others_tab), ("Video stats", self._stats_tab)],
+                fill=True,
+            )
+        else:
+            self._tabs.refresh()
+        return videre.Column(
             [
                 videre.Row(
                     [
@@ -105,22 +112,11 @@ class FilesPage(Page):
                     space=10,
                     vertical_alignment=videre.Alignment.CENTER,
                 ),
-                videre.Row(
-                    [
-                        videre.Button("Others", data="others", on_click=self._on_tab),
-                        videre.Button(
-                            "Video stats", data="stats", on_click=self._on_tab
-                        ),
-                    ],
-                    space=4,
-                ),
-                self._tab_holder,
+                self._tabs,
             ],
             space=8,
             weight=1,
         )
-        self._show_tab()
-        return column
 
     def _update_summary(self) -> None:
         result = self._result
@@ -131,30 +127,6 @@ class FilesPage(Page):
         self._summary.text = (
             f"{n_others} other files ({_human_size(size_others)}) · "
             f"{n_indexed} indexed videos · {n_unknown} unknown videos"
-        )
-
-    def _on_tab(self, widget) -> None:
-        self._active_tab = widget.data
-        self._show_tab()
-
-    def _show_tab(self) -> None:
-        self._tab_holder.control = (
-            self._others_tab() if self._active_tab == "others" else self._stats_tab()
-        )
-
-    # --- "table" helpers ----------------------------------------------------
-
-    def _cell(self, text, weight: int = 1, strong: bool = False) -> Widget:
-        return videre.Container(
-            videre.Text(str(text), strong=strong, wrap=videre.TextWrap.WORD),
-            weight=weight,
-            padding=videre.Padding.axis(vertical=3, horizontal=6),
-        )
-
-    def _header(self, columns) -> Widget:
-        return videre.Container(
-            videre.Row([self._cell(t, w, strong=True) for t, w in columns], space=0),
-            background_color=_HEADER_BG,
         )
 
     # --- Others tab ---------------------------------------------------------
@@ -185,7 +157,7 @@ class FilesPage(Page):
         if self._sel_ext is None and items:
             self._sel_ext = items[0][0]
         rows = [
-            self._header([("Extension", 2), ("Count", 1), ("Total size", 2), ("", 1)])
+            table.header([("Extension", 2), ("Count", 1), ("Total size", 2), ("", 1)])
         ]
         for ext, files in items:
             total = sum(f.size for f in files)
@@ -199,8 +171,8 @@ class FilesPage(Page):
                                 on_click=self._select_ext,
                                 weight=2,
                             ),
-                            self._cell(len(files), 1),
-                            self._cell(_human_size(total), 2),
+                            table.cell(len(files), 1),
+                            table.cell(_human_size(total), 2),
                             videre.Container(
                                 videre.Button(
                                     "Trash all", data=ext, on_click=self._trash_all
@@ -211,7 +183,9 @@ class FilesPage(Page):
                         space=0,
                         vertical_alignment=videre.Alignment.CENTER,
                     ),
-                    background_color=_SELECTED_BG if ext == self._sel_ext else None,
+                    background_color=theme.SELECTED_BG
+                    if ext == self._sel_ext
+                    else None,
                 )
             )
         return videre.ScrollView(videre.Column(rows, space=0), wrap_horizontal=True)
@@ -219,7 +193,7 @@ class FilesPage(Page):
     def _select_ext(self, widget) -> None:
         self._sel_ext = widget.data
         self._selected_files.clear()
-        self._show_tab()
+        self._tabs.refresh()
 
     def _files_panel(self) -> Widget:
         files = self._result.others.get(self._sel_ext, []) if self._sel_ext else []
@@ -262,7 +236,7 @@ class FilesPage(Page):
                     [
                         videre.Text("Filter:"),
                         self._filter,
-                        videre.Button("Apply", on_click=lambda w: self._show_tab()),
+                        videre.Button("Apply", on_click=lambda w: self._tabs.refresh()),
                     ],
                     space=5,
                     vertical_alignment=videre.Alignment.CENTER,
@@ -299,7 +273,7 @@ class FilesPage(Page):
             return indexed + unknown
 
         rows = [
-            self._header(
+            table.header(
                 [
                     ("Extension", 2),
                     ("Indexed", 1),
@@ -315,11 +289,11 @@ class FilesPage(Page):
             rows.append(
                 videre.Row(
                     [
-                        self._cell(_ext_label(ext), 2),
-                        self._cell(len(indexed), 1),
-                        self._cell(_human_size(sum(f.size for f in indexed)), 2),
-                        self._cell(len(unknown), 1),
-                        self._cell(_human_size(sum(f.size for f in unknown)), 2),
+                        table.cell(_ext_label(ext), 2),
+                        table.cell(len(indexed), 1),
+                        table.cell(_human_size(sum(f.size for f in indexed)), 2),
+                        table.cell(len(unknown), 1),
+                        table.cell(_human_size(sum(f.size for f in unknown)), 2),
                     ],
                     space=0,
                 )

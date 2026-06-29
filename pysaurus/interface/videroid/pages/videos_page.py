@@ -18,6 +18,7 @@ from pysaurus.core.constants import (
     VIDEO_DEFAULT_SORTING,
 )
 from pysaurus.interface.common.common import FIELD_MAP, format_group_value
+from pysaurus.interface.videroid import theme
 from pysaurus.interface.videroid.dialogs.batch_edit_property_dialog import (
     BatchEditPropertyDialog,
 )
@@ -26,9 +27,6 @@ from pysaurus.interface.videroid.dialogs.sorting_dialog import SortingDialog
 from pysaurus.interface.videroid.dialogs.sources_dialog import SourcesDialog
 from pysaurus.interface.videroid.pages.base_page import Page
 from pysaurus.interface.videroid.widgets.video_card import VideoCard
-
-_SELECTED_BG = "#e3f2fd"
-_BADGE_BG = videre.parse_color((230, 230, 230))
 
 
 class VideosPage(Page):
@@ -378,9 +376,7 @@ class VideosPage(Page):
                     videre.Text(label, strong=selected, wrap=videre.TextWrap.WORD),
                     style={
                         "default": {
-                            "background_color": videre.parse_color(_SELECTED_BG)
-                            if selected
-                            else None
+                            "background_color": theme.SELECTED_BG if selected else None
                         }
                     },
                     data=index,
@@ -414,7 +410,7 @@ class VideosPage(Page):
                     videre.Row(
                         row, space=2, vertical_alignment=videre.Alignment.CENTER
                     ),
-                    background_color=_BADGE_BG,
+                    background_color=theme.BADGE_BG,
                     padding=videre.Padding.axis(vertical=2, horizontal=6),
                 )
             )
@@ -650,9 +646,7 @@ class VideosPage(Page):
         selector_dict = self._selector.to_dict()
         count = self._selector.size_from(self._view_count)
         values_and_counts = (
-            self.context.call_on_view(
-                selector_dict, "count_property_values", prop.name
-            )
+            self.context.call_on_view(selector_dict, "count_property_values", prop.name)
             or []
         )
         dialog = BatchEditPropertyDialog(prop, count, values_and_counts)

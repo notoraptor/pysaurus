@@ -11,12 +11,14 @@ from __future__ import annotations
 import videre
 from videre.widgets.widget import Widget
 
+from pysaurus.interface.videroid import theme
 from pysaurus.interface.videroid.dialogs.fill_property_dialog import FillPropertyDialog
 from pysaurus.interface.videroid.dialogs.move_values_dialog import MoveValuesDialog
 from pysaurus.interface.videroid.dialogs.property_values_dialog import (
     PropertyValuesDialog,
 )
 from pysaurus.interface.videroid.pages.base_page import Page
+from pysaurus.interface.videroid.widgets import table
 
 _TYPES = ["str", "int", "float", "bool"]
 # (title, layout weight) — shared by the header and the data rows so columns line up.
@@ -28,8 +30,6 @@ _COLS = [
     ("Enum", 3),
     ("Actions", 1),
 ]
-_HEADER_BG = videre.parse_color((225, 225, 225))
-_EVEN_BG = videre.parse_color((245, 245, 245))
 
 
 class PropertiesPage(Page):
@@ -78,22 +78,6 @@ class PropertiesPage(Page):
 
     # --- table --------------------------------------------------------------
 
-    def _cell(self, text, weight: int = 1, strong: bool = False) -> Widget:
-        return videre.Container(
-            videre.Text(str(text), strong=strong, wrap=videre.TextWrap.WORD),
-            weight=weight,
-            padding=videre.Padding.axis(vertical=4, horizontal=6),
-        )
-
-    def _header_row(self) -> Widget:
-        return videre.Container(
-            videre.Row(
-                [self._cell(title, weight, strong=True) for title, weight in _COLS],
-                space=0,
-            ),
-            background_color=_HEADER_BG,
-        )
-
     def _prop_row(self, prop, index: int) -> Widget:
         enum = prop.enumeration
         if not enum:
@@ -106,20 +90,21 @@ class PropertiesPage(Page):
             "⚙", actions=self._prop_actions(prop), square=True
         )
         cells = [
-            self._cell(prop.name, 2),
-            self._cell(prop.type, 1),
-            self._cell(default, 2),
-            self._cell("Yes" if prop.multiple else "No", 1),
-            self._cell(enum_text, 3),
+            table.cell(prop.name, 2),
+            table.cell(prop.type, 1),
+            table.cell(default, 2),
+            table.cell("Yes" if prop.multiple else "No", 1),
+            table.cell(enum_text, 3),
             videre.Container(actions, weight=1, padding=videre.Padding.all(2)),
         ]
         return videre.Container(
-            videre.Row(cells, space=0), background_color=_EVEN_BG if index % 2 else None
+            videre.Row(cells, space=0),
+            background_color=theme.EVEN_BG if index % 2 else None,
         )
 
     def _reload(self) -> None:
         props = self.context.get_prop_types()
-        rows: list[Widget] = [self._header_row()]
+        rows: list[Widget] = [table.header(_COLS)]
         rows += [self._prop_row(prop, index) for index, prop in enumerate(props)]
         if not props:
             rows.append(

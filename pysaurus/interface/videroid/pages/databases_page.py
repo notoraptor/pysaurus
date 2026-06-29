@@ -8,10 +8,10 @@ import videre
 from videre.widgets.widget import Widget
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
+from pysaurus.interface.videroid import theme
 from pysaurus.interface.videroid.pages.base_page import Page
 
-# Item colors, matching the PySide6 reference.
-_EXPANDED_BG = "#e3f2fd"
+# Item colors, matching the PySide6 reference (expanded bg = theme.SELECTED_BG).
 _EXPANDED_BORDER = "#1976d2"
 _COLLAPSED_BG = "#f5f5f5"
 _COLLAPSED_BORDER = "#dddddd"
@@ -95,13 +95,13 @@ class DatabasesPage(Page):
 
     def _db_item(self, name: str) -> Widget:
         expanded = self._expanded == name
-        bg = _EXPANDED_BG if expanded else _COLLAPSED_BG
+        bg = theme.SELECTED_BG if expanded else videre.parse_color(_COLLAPSED_BG)
         border = _EXPANDED_BORDER if expanded else _COLLAPSED_BORDER
         header = videre.Div(
             videre.Text(name, strong=True),
             style={
                 "default": {
-                    "background_color": videre.parse_color(bg),
+                    "background_color": bg,
                     "border": videre.Border.all(1, videre.parse_color(border)),
                 }
             },
