@@ -81,6 +81,17 @@ class VideroidContext:
         self._api.view.group = result.group_id
         return result
 
+    def get_all_view_ids(self) -> list:
+        """All video ids of the current view (every page), for whole-view
+        selection actions. Mirrors how the backend resolves a selector over the
+        view: query_videos with page_size=0 returns the whole view (no paging,
+        and no view.group side effect — we only want the ids)."""
+        db = self._api.database
+        if db is None:
+            return []
+        result = db.query_videos(self._api.view, 0, 0)
+        return [video.video_id for video in result.result]
+
     # --- actions (long ops are threaded by GuiAPI; they emit DatabaseReady) --
 
     def open_database(self, name: str, update: bool = False) -> None:

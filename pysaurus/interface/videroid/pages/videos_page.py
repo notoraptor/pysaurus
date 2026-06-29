@@ -584,15 +584,15 @@ class VideosPage(Page):
             self._reload()
 
     def _selected_ids(self) -> set:
-        """Explicit selected video ids. In 'All' (exclude) mode we can only
-        enumerate the current page reliably — a noted v1 limitation."""
+        """Selected video ids across the whole view. In 'All' (exclude) mode we
+        enumerate every page of the view, not just the current one."""
         selection = self._selector.to_dict()
         if not selection["all"]:
             return set(selection["include"])
         return {
-            video.video_id
-            for video in (self._context.result if self._context else [])
-            if self._selector.contains(video.video_id)
+            vid
+            for vid in self.context.get_all_view_ids()
+            if self._selector.contains(vid)
         }
 
     def _refresh_selection_menu(self) -> None:
