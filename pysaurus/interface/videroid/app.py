@@ -170,7 +170,7 @@ class VideroidApp:
         return [("Refresh View", self._refresh_view)]
 
     def _menu_options(self):
-        page_size = self._pages["videos"]._page_size
+        page_size = self._pages["videos"].page_size
         actions = [
             (
                 f"{'● ' if page_size == size else '○ '}Page size {size}",
@@ -178,7 +178,7 @@ class VideroidApp:
             )
             for size in _PAGE_SIZES
         ]
-        mark = "☑ " if self._pages["videos"]._confirm_not_found_deletion else "☐ "
+        mark = "☑ " if self._pages["videos"].confirm_not_found_deletion else "☐ "
         actions.append(
             (f"{mark}Confirm deletion of missing entries", self._toggle_confirm_del)
         )
@@ -259,19 +259,18 @@ class VideroidApp:
         self.window.windowing.stop()
 
     def _refresh_view(self) -> None:
-        self._pages["videos"]._reload()
+        self._pages["videos"].refresh()
         self._set_status("View refreshed.")
 
     def _set_page_size(self, size: int) -> None:
         videos = self._pages["videos"]
-        videos._page_size = size
-        videos._reset_and_reload()
+        videos.page_size = size  # setter resets to page 0 and reloads
         self._refresh_shell()
         self._set_status(f"Page size: {size}.")
 
     def _toggle_confirm_del(self) -> None:
         videos = self._pages["videos"]
-        videos._confirm_not_found_deletion = not videos._confirm_not_found_deletion
+        videos.confirm_not_found_deletion = not videos.confirm_not_found_deletion
         self._refresh_shell()
 
     def _about(self) -> None:

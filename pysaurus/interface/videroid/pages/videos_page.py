@@ -38,10 +38,10 @@ class VideosPage(Page):
         super().__init__(app)
         self._page_size = VIDEO_DEFAULT_PAGE_SIZE
         self._page_number = VIDEO_DEFAULT_PAGE_NUMBER
-        # Options-menu flag, driven by the app shell like _page_size. Mirrors
-        # pyside6: when disabled, deleting a "not found" entry (file gone from
-        # disk) skips the confirmation dialog.
-        self._confirm_not_found_deletion = True
+        # Options-menu flag, driven by the app shell like page_size. Public to
+        # match pyside6 (videos_page.confirm_not_found_deletion). When disabled,
+        # deleting a "not found" entry (file gone from disk) skips confirmation.
+        self.confirm_not_found_deletion = True
         self._context = None
         # Selection (phase 5b): persists across reloads/pages until cleared.
         self._selector = Selector(False, set())
@@ -246,6 +246,23 @@ class VideosPage(Page):
 
     def on_show(self) -> None:
         self._page_number = VIDEO_DEFAULT_PAGE_NUMBER
+        self._reload()
+
+    # --- public API (driven by the app shell) -------------------------------
+
+    @property
+    def page_size(self) -> int:
+        return self._page_size
+
+    @page_size.setter
+    def page_size(self, size: int) -> None:
+        # The setter owns the "resize => reset to page 0 + reload" rule, so the
+        # app shell doesn't have to know it.
+        self._page_size = size
+        self._reset_and_reload()
+
+    def refresh(self) -> None:
+        """Reload the current view (used by the View > Refresh menu)."""
         self._reload()
 
     # --- data ---------------------------------------------------------------
@@ -700,7 +717,7 @@ class VideosPage(Page):
     def video_delete_entry(self, video) -> None:
         # Mirror pyside6: a "not found" entry (file gone from disk) is removed
         # without confirmation when the option is disabled.
-        if not video.found and not self._confirm_not_found_deletion:
+        if not video.found and not self.confirm_not_found_deletion:
             self._run_video_action(self.context.delete_video_entry, video)
             return
         self._confirm_video(
