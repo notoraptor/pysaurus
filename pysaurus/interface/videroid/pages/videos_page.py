@@ -629,7 +629,7 @@ class VideosPage(Page):
         selector_dict = self._selector.to_dict()
         count = self._selector.size_from(self._view_count)
         values_and_counts = (
-            self.context.query_on_view(
+            self.context.call_on_view(
                 selector_dict, "count_property_values", prop.name
             )
             or []
@@ -653,7 +653,7 @@ class VideosPage(Page):
     def _apply_batch_edit(self, prop_name, selector_dict, dialog) -> None:
         to_add, to_remove = dialog.get_changes()
         if to_add or to_remove:
-            self.context.apply_on_view(
+            self.context.call_on_view(
                 selector_dict, "edit_property_for_videos", prop_name, to_add, to_remove
             )
             self._reload()

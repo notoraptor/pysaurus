@@ -190,17 +190,14 @@ class VideroidContext:
                 for video_id in video_ids:
                     db.video_entry_del(video_id)
 
-    def query_on_view(self, selector_dict: dict, operation: str, *args):
-        """Read selected videos of the current view without mutating anything."""
-        if self._api.database is None:
-            return None
-        return self._api.apply_on_view(selector_dict, operation, *args)
+    def call_on_view(self, selector_dict: dict, operation: str, *args):
+        """Run a backend ``operation`` on the current view's selected videos.
 
-    def apply_on_view(self, selector_dict: dict, operation: str, *args):
-        """Apply an operation on the current view's selected videos.
-
-        The caller reloads the page afterwards: videroid has no ``state_changed``
-        signal — refreshes are imperative (unlike the Qt ``app_context``)."""
+        ``operation`` is dispatched by the backend (``FeatureAPI.apply_on_view``):
+        some operations only read (e.g. ``count_property_values``), others mutate
+        (e.g. ``edit_property_for_videos``). After a mutating call the caller must
+        reload the page — videroid has no ``state_changed`` signal, so refreshes
+        are imperative (unlike the Qt ``app_context``)."""
         if self._api.database is None:
             return None
         return self._api.apply_on_view(selector_dict, operation, *args)
