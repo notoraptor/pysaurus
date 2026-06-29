@@ -1,7 +1,7 @@
 """Video card widget — one video: thumbnail, metadata and an actions menu.
 
-Phase 3: display. Phase 5a: a per-video actions menu (ContextButton) wired to
-methods on the page. The selection checkbox comes in phase 5b.
+Shows the thumbnail, metadata, a per-video actions menu (ContextButton) wired to
+methods on the page, and a selection checkbox.
 """
 
 from __future__ import annotations

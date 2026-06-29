@@ -196,7 +196,7 @@ class PropertiesPage(Page):
         self.context.delete_prop_type(prop.name)
         self._reload()
 
-    # --- dialogs (phase 6.4 / 6.5) — stubbed for now ------------------------
+    # --- dialogs ------------------------------------------------------------
 
     def _manage_values(self, prop) -> None:
         dialog = PropertyValuesDialog(self.context, prop.name)

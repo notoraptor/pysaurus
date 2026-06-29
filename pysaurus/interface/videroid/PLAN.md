@@ -1,6 +1,7 @@
 # Plan — Interface videre pour Pysaurus (`videroid`)
 
-> Statut : **brouillon de cadrage** (à discuter/valider avant implémentation).
+> Statut : **implémenté** (phases 0–8 ; cf. §0). Ce document reste la référence
+> de cadrage et la grille de parité.
 > Objectif : réimplémenter l'interface de Pysaurus avec le framework **videre**,
 > en reprenant **au moins toutes** les fonctionnalités de l'interface PySide6
 > actuelle (`pysaurus/interface/pyside6/`), qui reste la **référence**.
@@ -10,24 +11,26 @@
 
 ---
 
-## 0. État d'avancement (2026-06-25)
+## 0. État d'avancement (2026-06-29)
 
-**Fait & vérifié (smoke-tests headless + screenshots) :**
+**Phases 0–8 faites et committées — parité de cœur avec pyside6 :**
 - **Phase 0** Fondations (`app.py`, `context.py`, `pages/base_page.py`, `run_with_videroid.py`) — Window, navigation, pont de notifications.
 - **Phase 1** Page **Databases** (liste expand/collapse, Open/Update/Delete, création + sélecteur de fichiers natif `videre.Dialog`).
 - **Phase 2** Page **Process** (`pages/process_page.py`) — spinner, barres de jobs, log, Continue.
 - **Phase 3** Page **Videos — affichage** (`pages/videos_page.py`, `widgets/video_card.py`) — cartes (~20 champs, vignette PIL), pagination, status bar.
-- **Phase 4** **Filtres** (sidebar) : 4a Search + Sorting (`dialogs/sorting_dialog.py`), 4b Grouping + Groups + classifier (`dialogs/grouping_dialog.py`), 4c Sources (`dialogs/sources_dialog.py`).
-- **Phase 5a** **Menu d'actions par vidéo** (⚙ `ContextButton` : watched/open/dossier/copier/renommer/supprimer×3).
+- **Phase 4** **Filtres** (sidebar) : Search + Sorting (`dialogs/sorting_dialog.py`), Grouping + Groups + classifier (`dialogs/grouping_dialog.py`), Sources (`dialogs/sources_dialog.py`).
+- **Phase 5** **Sélection + actions** — multi-sélection (cases à cocher + menu ⚙) ; menus contextuels via `Window.set_context` ; actions par vidéo (watched/open/dossier/copier/renommer/supprimer×3) ; `dialogs/batch_edit_property_dialog.py`.
+- **Phase 6** Page **Properties** + dialogs (`property_values`, `move_values`, `fill_property`, `batch_edit_property`).
+- **Phase 7** Page **Files** (scan, 2 onglets, corbeille).
+- **Phase 8** **Coquille** (barre de menus composée de `ContextButton`, titre in-app, status bar, page-size, `Window(alert_on_exceptions=…)`) + dialogs Rename DB / Edit Folders.
 
 **Reste à faire :**
-- **5b** — sélection multiple (cases à cocher + Ctrl+A/Shift+A/Échap + actions groupées).
-- **6** — page **Properties** + dialogs propriétés (video_properties, batch_edit(_property), fill_property, move_values, property_values).
-- **7** — page **Files** (scan, 2 onglets, corbeille).
-- **8** — **coquille** (barre de menus, session log, titre dynamique, mise à l'échelle DPI) + polish.
-- **Différés** : actions vidéo *similarity* / *move* + dialog de confirmation avec vignette ; classifier *concat* ; surlignage du mode de recherche actif.
+- **Raccourcis clavier** (G-KBD) — manque videre de fond : le dispatch keydown est mono-cible, sans bubbling ; à traiter au niveau `Window`/`WindowLayout`. Cf. `GAPS.md`.
+- **video_properties_dialog** — édition des propriétés *par vidéo* depuis le ⚙ de la carte (différé en Phase 6).
+- **Niche** : Find Similar / Re-encoded, Random / Generate Playlist, Session Log ; classifier *concat* ; titre OS dynamique (G-TITLE) + mise à l'échelle DPI (G-DPI).
+- **Enrichir videre** : bâtir les vrais widgets (Table, Tabs, MenuBar, virtualisation…) maintenant que les besoins sont éprouvés (cf. §4.2 + `GAPS.md`).
 
-**Perf (à analyser — 2026-06-25) :** ralentissements au **survol** signalés — (a) la liste des groupes (mode groupé) ; (b) le menu contextuel ⚙ de chaque vidéo (sans groupe). Hypothèse : coût du re-rendu videre au changement de hover sur un grand arbre (90 cartes / 110 groupes ; `ScrollView` non virtualisé = G9). À profiler avant d'optimiser.
+**Perf (verdict 2026-06-28) :** le premier rendu d'une page de cartes est ~72 % « shaping » de texte (CPU 100 %) contre ~0,2 % rasterisation → un backend GPU n'accélérerait **pas** le texte. Seul levier d'ordre de grandeur : **virtualiser le build** (ne pas shaper les cartes hors écran ; G9). Bench durables : `wip/videroid_perf/` (cf. §6).
 
 ## 1. Contexte & principes
 

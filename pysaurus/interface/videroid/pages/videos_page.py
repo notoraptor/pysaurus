@@ -1,8 +1,8 @@
 """Videos page — video cards + filters sidebar.
 
-Phase 3: display + pagination. Phase 4a: Search + Sorting. Phase 4b: Grouping +
-Groups panel + classifier. Phase 4c (Sources) and selection/actions (phase 5)
-come next.
+Covers display + pagination, the filters sidebar (Sources, Search, Sorting,
+Grouping, Groups panel, classifier), multi-selection, and per-video / batch
+actions.
 """
 
 from __future__ import annotations

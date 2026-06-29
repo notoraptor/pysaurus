@@ -86,8 +86,7 @@ def main() -> None:
                     firsts, shapes, paints, rasters, others = [], [], [], [], []
                     n = 0
                     for _ in range(COLD_REPS):
-                        vp._page_size = size
-                        vp._reset_and_reload()
+                        vp.page_size = size  # setter resets page + reloads (cold rebuild)
                         stats.clear()
                         t0 = time.perf_counter()
                         win.render()
