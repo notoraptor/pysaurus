@@ -44,7 +44,6 @@ class VideroidApp:
         self._current = "databases"
         self._active_process: ProcessPage | None = None
         self._process_title = ""
-        self._confirm_not_found = True
 
         # Shell widgets (persistent; rebuilt in place on navigation/state).
         self._title_label = videre.Text("Pysaurus", strong=True)
@@ -179,7 +178,7 @@ class VideroidApp:
             )
             for size in _PAGE_SIZES
         ]
-        mark = "☑ " if self._confirm_not_found else "☐ "
+        mark = "☑ " if self._pages["videos"]._confirm_not_found_deletion else "☐ "
         actions.append(
             (f"{mark}Confirm deletion of missing entries", self._toggle_confirm_del)
         )
@@ -271,7 +270,8 @@ class VideroidApp:
         self._set_status(f"Page size: {size}.")
 
     def _toggle_confirm_del(self) -> None:
-        self._confirm_not_found = not self._confirm_not_found
+        videos = self._pages["videos"]
+        videos._confirm_not_found_deletion = not videos._confirm_not_found_deletion
         self._refresh_shell()
 
     def _about(self) -> None:
