@@ -342,8 +342,9 @@ class VideosPage(Page):
         self._sorting_display.text = ", ".join(parts) or "Default"
 
     def _update_grouping(self, ctx) -> None:
-        # Own formatter: pysaurus' pretty_grouping crashes on property fields
-        # (FIELD_MAP.get_title raises KeyError for a non-attribute name).
+        # Own formatter, autonomous on purpose: a different display style from
+        # pysaurus' pretty_grouping (which is also barely used elsewhere). Its
+        # old crash on property fields has since been fixed in common.py.
         grouping = ctx.grouping
         if grouping is None or grouping.field is None:
             self._grouping_display.text = "No grouping"
