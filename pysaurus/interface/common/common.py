@@ -216,8 +216,13 @@ def pretty_quote(text: Any) -> str:
 
 def pretty_grouping(grouping: GroupDef) -> str:
     assert grouping.field is not None
+    # A property's field name is its own title; only attribute fields live in
+    # FIELD_MAP, so get_title() would raise KeyError on a property name.
+    raw_title = (
+        grouping.field if grouping.is_property else FIELD_MAP.get_title(grouping.field)
+    )
     title = (
-        pretty_quote(FIELD_MAP.get_title(grouping.field))
+        pretty_quote(raw_title)
         + " "
         + (Uniconst.ARROW_DOWN if grouping.reverse else Uniconst.ARROW_UP)
     )
