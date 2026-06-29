@@ -269,6 +269,24 @@ class VideroidContext:
         """Return the last FolderScanResult, or None if no scan has run."""
         return self._api.get_last_scan_result()
 
+    def drop_scanned_paths(self, paths) -> None:
+        """Remove ``paths`` from the last scan result's "other files".
+
+        Called after trashing files so the Files view reflects the deletion
+        without a full rescan. The page used to mutate the FolderScanResult
+        directly; centralizing it in the ViewModel keeps that backend-owned
+        object out of the page's hands."""
+        result = self._api.get_last_scan_result()
+        if result is None:
+            return
+        trashed = set(paths)
+        for ext in list(result.others):
+            kept = [f for f in result.others[ext] if str(f.path) not in trashed]
+            if kept:
+                result.others[ext] = kept
+            else:
+                del result.others[ext]
+
     def trash_files(self, paths: list) -> tuple[int, list[tuple[str, str]]]:
         """Send files/folders to the system trash → (ok_count, errors).
 

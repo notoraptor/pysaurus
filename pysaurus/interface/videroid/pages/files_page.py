@@ -335,23 +335,15 @@ class FilesPage(Page):
     def _do_trash(self, paths) -> None:
         ok, errors = self.context.trash_files(paths)
         trashed = set(paths) - {path for path, _ in errors}
-        self._drop_paths(trashed)
+        self.context.drop_scanned_paths(trashed)
+        if self._sel_ext not in self._result.others:
+            self._sel_ext = None
         self._selected_files.clear()
         self._holder.control = self._scanned_state()
         if errors:
             self.app.window.alert(
                 f"{ok} file(s) trashed, {len(errors)} failed.", "Send to trash"
             )
-
-    def _drop_paths(self, trashed: set) -> None:
-        for ext in list(self._result.others.keys()):
-            kept = [f for f in self._result.others[ext] if str(f.path) not in trashed]
-            if kept:
-                self._result.others[ext] = kept
-            else:
-                del self._result.others[ext]
-                if self._sel_ext == ext:
-                    self._sel_ext = None
 
     def _open_folder(self, widget) -> None:
         if not self._selected_files:
