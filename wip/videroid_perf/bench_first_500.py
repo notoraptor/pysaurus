@@ -44,7 +44,9 @@ def main() -> None:
                 firsts = []
                 n = 0
                 for _ in range(COLD_REPS):
-                    vp.page_size = SIZE  # setter rebuilds widgets -> cold per-widget docs
+                    vp.page_size = (
+                        SIZE  # setter rebuilds widgets -> cold per-widget docs
+                    )
                     t0 = time.perf_counter()
                     win.render()  # FIRST render of `SIZE` cards
                     firsts.append((time.perf_counter() - t0) * 1000)

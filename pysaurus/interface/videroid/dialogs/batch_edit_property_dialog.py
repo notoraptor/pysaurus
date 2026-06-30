@@ -216,7 +216,15 @@ class BatchEditPropertyDialog(videre.Column):
             self._render()
             return
         if value in self._to_remove:
+            # Re-promoting a previously-removed value RESTORES it to current
+            # (mirror pyside6), instead of force-adding it to every selected
+            # video. The "→ Add" buttons only target current rows, so this
+            # branch is reached only by re-typing a removed value.
             self._to_remove.remove(value)
+            if value not in self._current:
+                self._current.append(value)
+            self._render()
+            return
         if value in self._current:
             self._current.remove(value)
         if value not in self._to_add:

@@ -18,7 +18,8 @@ class FillPropertyDialog(videre.Column):
         ]
         labels = [prop.name for prop in self._eligible] or ["(no eligible property)"]
         self._combo = videre.Dropdown(labels)
-        self._only_empty = videre.Checkbox(checked=True)
+        # Default unchecked, mirroring pyside6 (fill all videos by default).
+        self._only_empty = videre.Checkbox()
         children = [
             videre.Row(
                 [videre.Text("Property:"), self._combo],

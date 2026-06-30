@@ -146,7 +146,27 @@ class VideroidContext:
         self._api.set_sources(sources)
 
     def set_source_expression(self, expression) -> None:
-        self._api.view.set_source_expression(expression)
+        # Mirror pyside6 (app_context.set_source_expression): validate the
+        # expression before storing it, so an invalid one is rejected up front
+        # (raising PysaurusError -> caught by the window's alert hook) instead of
+        # being stored silently and crashing every later query_videos.
+        db = self._api.database
+        if db is None:
+            return
+        text = expression.strip() if expression else None
+        if text:
+            from searchexp.errors import ExpressionError
+
+            from pysaurus.application.exceptions import PysaurusError
+            from pysaurus.database.saurus.video_mega_group import (
+                _compile_source_expression,
+            )
+
+            try:
+                _compile_source_expression(db.db, text)
+            except ExpressionError as exc:
+                raise PysaurusError(exc.format_message()) from exc
+        self._api.view.set_source_expression(text)
 
     def get_source_expression(self):
         return self._api.view.source_expression
