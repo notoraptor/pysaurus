@@ -93,7 +93,7 @@ class TestBatchEditTransitions:
         d = _batch(dict(multiple=True), [["a", 1]])
         d._remove(_evt(data="a"))  # "a" moved to 'To remove'
         d._editor.value = "a"
-        d._on_add_new(None)  # re-typing restores it to current (== pyside6)...
+        d._on_add_new(None)  # re-typing restores it to current (== kyuti)...
         assert d.get_changes() == ([], [])  # ...not a force-add to every video
         assert "a" in d._current
 

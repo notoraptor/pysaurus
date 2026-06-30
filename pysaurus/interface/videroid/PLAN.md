@@ -3,8 +3,8 @@
 > Statut : **implémenté** (phases 0–8 ; cf. §0). Ce document reste la référence
 > de cadrage et la grille de parité.
 > Objectif : réimplémenter l'interface de Pysaurus avec le framework **videre**,
-> en reprenant **au moins toutes** les fonctionnalités de l'interface PySide6
-> actuelle (`pysaurus/interface/pyside6/`), qui reste la **référence**.
+> en reprenant **au moins toutes** les fonctionnalités de l'interface kyuti
+> actuelle (`pysaurus/interface/kyuti/`), qui reste la **référence**.
 > Bénéfice secondaire assumé : **éprouver videre en conditions réelles**
 > (backend de rendu, moteur de texte, performances sur grosse UI) et
 > **débusquer les insuffisances** de ses widgets.
@@ -13,7 +13,7 @@
 
 ## 0. État d'avancement (2026-06-29)
 
-**Phases 0–8 faites et committées — parité de cœur avec pyside6 :**
+**Phases 0–8 faites et committées — parité de cœur avec kyuti :**
 - **Phase 0** Fondations (`app.py`, `context.py`, `pages/base_page.py`, `run_with_videroid.py`) — Window, navigation, pont de notifications.
 - **Phase 1** Page **Databases** (liste expand/collapse, Open/Update/Delete, création + sélecteur de fichiers natif `videre.Dialog`).
 - **Phase 2** Page **Process** (`pages/process_page.py`) — spinner, barres de jobs, log, Continue.
@@ -34,13 +34,13 @@
 
 ## 1. Contexte & principes
 
-- **Référence** : `pysaurus/interface/pyside6/` (27 modules, ~10 000 LOC, 5 pages
+- **Référence** : `pysaurus/interface/kyuti/` (27 modules, ~10 000 LOC, 5 pages
   + 1 page dynamique, 13 dialogs, 4 widgets custom). La parité se mesure contre elle.
 - **Le backend est partagé et agnostique du frontend.** La couche API est en 3
-  niveaux : `FeatureAPI` → `GuiAPI` → `PySide6API`. Seul le dernier est lié à Qt.
+  niveaux : `FeatureAPI` → `GuiAPI` → `KyutiAPI`. Seul le dernier est lié à Qt.
   Une interface videre réutilise `GuiAPI` **tel quel**.
 - **Pas de `__run_feature__`.** Ce dispatcher générique (hérité de l'ère web/JSON)
-  n'a plus aucun appelant. pyside6 fait des **appels Python directs** :
+  n'a plus aucun appelant. kyuti fait des **appels Python directs** :
   - opérations longues → méthodes de `GuiAPI` (threadées via `@process`) ;
   - opérations synchrones → accès **direct** à `api.database` / `.ops`
     (`DatabaseOperations`) / `.algos` (`DatabaseAlgorithms`) / `.view`
@@ -64,7 +64,7 @@
 ```
 videroid/
   __init__.py
-  run_with_videroid.py        # point d'entrée (équivalent de pyside6/main.py)
+  run_with_videroid.py        # point d'entrée (équivalent de kyuti/main.py)
   app.py                      # Application : Window videre + navigation entre pages
   context.py                  # ViewModel = réplique d'AppContext (sans Qt)
   notifications.py            # pont notifications backend -> rafraîchissements UI
@@ -85,7 +85,7 @@ videroid/
 ```
 
 **Couture backend (`context.py`)** : tient une instance de `GuiAPI`
-(sous-classée pour brancher `_notify` sur videre, comme `PySide6API` le fait pour
+(sous-classée pour brancher `_notify` sur videre, comme `KyutiAPI` le fait pour
 Qt). Expose les actions par appels directs ; branche un callback de notifications.
 
 **Boucle / navigation (`app.py`)** : une `Window` videre dont les `controls`
@@ -103,7 +103,7 @@ fait avec les `QueuedConnection`).
 
 ## 3. Inventaire exhaustif des fonctionnalités à reprendre
 
-> Source de vérité : les fichiers `pysaurus/interface/pyside6/**`. Référence le
+> Source de vérité : les fichiers `pysaurus/interface/kyuti/**`. Référence le
 > fichier par section ; voir le code pour le détail ligne à ligne.
 
 ### 3.1 Coquille applicative & navigation
@@ -358,7 +358,7 @@ seulement sur OK.
 
 ## 5. Découpage en phases
 
-Chaque phase est **exécutable et testable** (ouvrir l'appli, comparer à pyside6),
+Chaque phase est **exécutable et testable** (ouvrir l'appli, comparer à kyuti),
 et éprouve un aspect précis de videre.
 
 - **Phase 0 — Fondations.** `context.py` (façade `GuiAPI` ; pont backend→UI via
@@ -398,7 +398,7 @@ et éprouve un aspect précis de videre.
 
 ## 6. Stratégie de test & validation
 
-- **Test manuel comparatif** : lancer `videroid` et `pyside6` sur la **même base
+- **Test manuel comparatif** : lancer `videroid` et `kyuti` sur la **même base
   réelle**, comparer écran par écran et action par action (la checklist du §3 sert
   de grille de parité).
 - **Journal des insuffisances videre** : tenir un fichier (p. ex.
@@ -430,7 +430,7 @@ et éprouve un aspect précis de videre.
 4. **Virtualisation (G9)** — **confirmé non virtualisé** (`ScrollView`/`Column`/
    `Row` rendent tous les enfants). La pagination suffit en v1 ; axe perf majeur
    ensuite (et c'est l'objet de l'étude perf initiale).
-5. **i18n** — pyside6 est **tout en anglais en dur** (pas d'i18n actif), alors que
+5. **i18n** — kyuti est **tout en anglais en dur** (pas d'i18n actif), alors que
    le core a un système de langue (`set_language`, english/français). Hors parité
    stricte ; à considérer comme amélioration possible.
 6. **Récupération de `using_videre`** — décider quels fichiers cannibaliser

@@ -1,6 +1,6 @@
 """Files page — database file inventory (scan + Others / Video-stats tabs).
 
-Reference: pyside6/pages/files_page.py. videre gaps worked around: no Tabs (G2)
+Reference: kyuti/pages/files_page.py. videre gaps worked around: no Tabs (G2)
 → a button toggle + content holder; no Table (G1) → a `Column` of weighted
 `Row`s. Trash confirmation uses `window.confirm` (a page-level modal is fine —
 unlike inside a dialog, cf. G-MODAL). The scan is a long op via `run_process`.

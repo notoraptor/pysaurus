@@ -1,6 +1,6 @@
 """Fill property dialog — pick a (str, multiple) property to fill with terms
 extracted from filenames. Passive: returns (prop_type, only_empty) on OK.
-Reference: pyside6/dialogs/fill_property_dialog.py.
+Reference: kyuti/dialogs/fill_property_dialog.py.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ class FillPropertyDialog(videre.Column):
         ]
         labels = [prop.name for prop in self._eligible] or ["(no eligible property)"]
         self._combo = videre.Dropdown(labels)
-        # Default unchecked, mirroring pyside6 (fill all videos by default).
+        # Default unchecked, mirroring kyuti (fill all videos by default).
         self._only_empty = videre.Checkbox()
         children = [
             videre.Row(

@@ -40,7 +40,7 @@ uv run ruff format .
 # Type check (full project, all packages)
 uv run ty check
 
-# Type check (subset used by CI — excludes pyside6/)
+# Type check (subset used by CI — excludes kyuti/)
 uv run poe typecheck
 
 # Run all checks (format + lint + typecheck subset)
@@ -158,9 +158,11 @@ Standalone parser for structured search expressions (e.g. `width > 1080 and "eng
 - `videre` (at `../videre`) — video extraction
 - `skullite` (at `../skullite`) — SQLite wrapper (`PysaurusConnection(None)` = in-memory DB; `copy_from()` = bulk copy)
 
-### PySide6 Conventions (`interface/pyside6/`)
+### Kyuti (PySide6/Qt) Conventions (`interface/kyuti/`)
 
-PySide6 is the only GUI frontend. All calls go through the **`AppContext` facade** — pages and dialogs must never access internal attributes (`_database`, `_ops`, `_algos`, `_view`) directly.
+> **Kyuti** = "cutie" → **Qt**, the framework it is built on. Named so the interface no longer collides with the `PySide6` package name (its sibling experimental frontend is `videroid`, built on `videre`).
+
+Kyuti is the mature PySide6/Qt GUI frontend. All calls go through the **`AppContext` facade** — pages and dialogs must never access internal attributes (`_database`, `_ops`, `_algos`, `_view`) directly.
 
 #### Auto-refresh via `state_changed` signal
 
@@ -208,5 +210,5 @@ PySide6 is the only GUI frontend. All calls go through the **`AppContext` facade
   - **Saurus SQL, example_db_in_pysaurus** (90 videos with properties): `example_saurus_database` (read-only, on-disk) and `example_saurus_database_memory` (in-memory copy for writes)
 - SQL fixtures do not need `tmp_path` — in-memory SQLite is used directly
 - Two test databases in `tests/home_dir_test/.Pysaurus/databases/`: `test_database` (small) and `example_db_in_pysaurus` (90 videos with properties)
-- Qt tests use `QT_QPA_PLATFORM=offscreen` (set in `tests/interface/pyside6_interface/conftest.py`)
+- Qt tests use `QT_QPA_PLATFORM=offscreen` (set in `tests/interface/kyuti_interface/conftest.py`)
 - `pyfakefs` for filesystem mocking, `pytest-qt` for Qt tests, `pytest-xdist` for parallel runs

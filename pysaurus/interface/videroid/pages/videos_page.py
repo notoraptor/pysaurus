@@ -37,7 +37,7 @@ class VideosPage(Page):
         self._page_size = VIDEO_DEFAULT_PAGE_SIZE
         self._page_number = VIDEO_DEFAULT_PAGE_NUMBER
         # Options-menu flag, driven by the app shell like page_size. Public to
-        # match pyside6 (videos_page.confirm_not_found_deletion). When disabled,
+        # match kyuti (videos_page.confirm_not_found_deletion). When disabled,
         # deleting a "not found" entry (file gone from disk) skips confirmation.
         self.confirm_not_found_deletion = True
         self._context = None
@@ -710,7 +710,7 @@ class VideosPage(Page):
         self._reload()
 
     def video_delete_entry(self, video) -> None:
-        # Mirror pyside6: a "not found" entry (file gone from disk) is removed
+        # Mirror kyuti: a "not found" entry (file gone from disk) is removed
         # without confirmation when the option is disabled.
         if not video.found and not self.confirm_not_found_deletion:
             self._run_video_action(self.context.delete_video_entry, video)

@@ -1,7 +1,7 @@
 """
 Application ViewModel for the videre interface.
 
-Mirrors the role of ``pysaurus/interface/pyside6/app_context.py``: it owns the
+Mirrors the role of ``pysaurus/interface/kyuti/app_context.py``: it owns the
 backend API (:class:`GuiAPI`) and exposes UI-facing actions/accessors. The only
 difference with the Qt version is the notification bridge — backend
 notifications are routed through videre's notification bus instead of Qt signals.
@@ -146,7 +146,7 @@ class VideroidContext:
         self._api.set_sources(sources)
 
     def set_source_expression(self, expression) -> None:
-        # Mirror pyside6 (app_context.set_source_expression): validate the
+        # Mirror kyuti (app_context.set_source_expression): validate the
         # expression before storing it, so an invalid one is rejected up front
         # (raising PysaurusError -> caught by the window's alert hook) instead of
         # being stored silently and crashing every later query_videos.

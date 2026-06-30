@@ -3,7 +3,7 @@
 videroid is driven headless with videre's `StepWindow` / `FakeUser` (no Qt).
 The backend (`GuiAPI`) is wired SYNCHRONOUSLY: we patch the Flask server
 (`ServerLauncher`) and the home-dir-scanning `Application` (exactly like
-`pyside6_interface/test_app_context.py`), build the real `VideroidContext`, then
+`kyuti_interface/test_app_context.py`), build the real `VideroidContext`, then
 inject an in-memory SQL database. So we exercise the REAL videroid code, not a
 mock context.
 

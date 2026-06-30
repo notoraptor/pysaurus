@@ -26,7 +26,7 @@ class GroupingDialog(videre.Column):
         self._field = videre.Dropdown([label for label, _, _ in self._options])
         self._sort = videre.Dropdown(list(_SORT_LABELS))
         self._reverse = videre.Checkbox()
-        # Default unchecked, mirroring pyside6 (singletons hidden by default).
+        # Default unchecked, mirroring kyuti (singletons hidden by default).
         self._singletons = videre.Checkbox()
 
         if current is not None and getattr(current, "field", None):

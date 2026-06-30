@@ -1,6 +1,6 @@
 """Move values dialog — move selected values from a str-multiple property to
 another str property. Passive: returns (values, target_prop, concatenate) on OK.
-Reference: pyside6/dialogs/move_values_dialog.py.
+Reference: kyuti/dialogs/move_values_dialog.py.
 """
 
 from __future__ import annotations

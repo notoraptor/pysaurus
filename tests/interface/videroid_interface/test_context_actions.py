@@ -122,7 +122,7 @@ class TestViewFilters:
         mock_ctx._api.set_sources.assert_called_once_with([["readable"]])
 
     # set_source_expression / get_source_expression now validate against the real
-    # database (mirroring pyside6), so they are tested for real in
+    # database (mirroring kyuti), so they are tested for real in
     # test_context.py::TestSourceExpression rather than against a mock.
 
 

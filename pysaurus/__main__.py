@@ -1,4 +1,4 @@
 if __name__ == "__main__":
-    from pysaurus.interface.pyside6.main import main
+    from pysaurus.interface.kyuti.main import main
 
     main()

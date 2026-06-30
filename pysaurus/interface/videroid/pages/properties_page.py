@@ -1,6 +1,6 @@
 """Properties page — manage custom property types.
 
-Reference: pyside6/pages/properties_page.py. videre gaps worked around: no Table
+Reference: kyuti/pages/properties_page.py. videre gaps worked around: no Table
 (G1) → a `Column` of weighted `Row`s; no rich menu (G10) → an Actions ⚙
 `ContextButton` per row. Manage Values / Move Values / Fill open dialogs
 (phases 6.4 / 6.5); the rest (create, rename, convert, delete) is wired here.

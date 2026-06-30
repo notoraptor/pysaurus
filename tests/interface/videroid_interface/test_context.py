@@ -91,7 +91,7 @@ class TestFilters:
 
 
 class TestSourceExpression:
-    """set_source_expression validates against the real DB (mirrors pyside6)."""
+    """set_source_expression validates against the real DB (mirrors kyuti)."""
 
     def test_valid_expression_roundtrips(self, videroid_context):
         videroid_context.set_source_expression("  width > 0  ")

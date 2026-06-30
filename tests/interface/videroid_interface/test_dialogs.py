@@ -113,7 +113,7 @@ class TestGroupingDialog:
         assert result["is_property"] is False
         assert result["sorting"] == "field"
         assert result["reverse"] is False
-        assert result["allow_singletons"] is False  # default unchecked (== pyside6)
+        assert result["allow_singletons"] is False  # default unchecked (== kyuti)
 
     def test_select_property_option(self):
         d = GroupingDialog(["category"])
@@ -150,7 +150,7 @@ class TestFillPropertyDialog:
         d = FillPropertyDialog([_prop("n", type="int"), eligible])
         prop, only_empty = d.get_result()
         assert prop.name == "keywords"
-        assert only_empty is False  # default unchecked (== pyside6)
+        assert only_empty is False  # default unchecked (== kyuti)
         d._only_empty.checked = True
         assert d.get_result()[1] is True  # the checkbox value is actually read
 

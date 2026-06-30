@@ -2,7 +2,7 @@
 
 Passive: returns the folder list on OK. Reuses the databases-page pattern
 (`videre.Dialog` native picker + add/dedup/remove). Reference:
-pyside6/dialogs/edit_folders_dialog.py.
+kyuti/dialogs/edit_folders_dialog.py.
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 """Property values dialog — manage all values of one property (immediate actions).
 
-Reference: pyside6/dialogs/property_values_dialog.py. Actions apply right away
+Reference: kyuti/dialogs/property_values_dialog.py. Actions apply right away
 (Close-only dialog). videre gap G-MODAL (single fancybox, no stacked modals):
 confirmations/rename happen INLINE in a prompt row instead of nested fancyboxes.
 """
