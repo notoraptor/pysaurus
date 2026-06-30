@@ -31,6 +31,16 @@ l'amélioration qui remplacerait le contournement).
 | G12 | placeholder | contourné | label adjacent / gris manuel | placeholder natif |
 | G13 | `Picture` resize | contourné | PIL en amont | `width`/`height`/fit |
 | G14 | `ProgressBar` libellé % | contourné | `Text` à côté | label intégré |
+| G15 | `Dropdown` sans scroll | **manque, non contourné** | aucun (la liste déborde) | ScrollView borné dans le popup d'options |
+| G16 | pas de layout « flow »/wrap | **manque** | `Row` (pas de retour à la ligne) | layout flow (chips/badges qui s'enroulent) |
+| G17 | `Text` mono-couleur + pas de monospace | **manque** | 1 `Text` = 1 couleur ; décomposer en `Row` de `Text` (lourd) ; pas de monospace | rich-text inline (spans colorés) + famille de police (monospace) |
+| G18 | **pas de `border-radius`** | **manque** | coins carrés | `Border`/`Style` n'ont aucun rayon (`border.py` = arêtes droites). Impacte cartes (r6), sections sidebar (r3), badges (r3), vignettes (r2), items DB (r4), tous les cadres |
+| G19 | `Button` n'expose ni taille ni gras/italique du label | **manque** | `Button` ne stylise que la couleur (via `Div`) | `AbstractButton` crée `Text(height_delta=0)` sans `size`/`strong` (`abstract_button.py:19,55`). Bloque boutons sidebar 0.8× (G-DPI), mode de recherche actif en gras, lien pagination souligné, Delete rouge/Create gras |
+| G20 | `ScrollView` sans scroll-to ni pas molette | **manque** | aucun (l'enfant courant peut être hors écran) | pas d'API « défiler vers l'enfant » + `_SCROLL_STEP=120` fixe. Bloque auto-scroll de la liste de groupes, reset-au-top sur saut de page, pas molette de 20 |
+| G21 | `Dropdown` sans `on_change` + `Checkbox`/`Button` sans `disabled` | **manque** | gating à la soumission seulement | impossible d'activer/désactiver des champs selon un autre (form Properties : multiple/enum/OK selon type ou validité) |
+| G22 | pas d'événement double-clic | **manque** | bouton/clic explicite | double-clic (ouvrir une base d'un double-clic — kyuti databases) |
+| G23 | pas de forme de curseur par widget | **manque** | aucun | curseur « main » sur les éléments cliquables |
+| G24 | `TextInput` sans `on_change` | **manque** | bouton « Apply » (pas de live) | event de saisie → filtre/recherche **live** (Files, Search). Voir aussi G12 (placeholder) |
 | G-KBD | raccourcis clavier | **bloquant, différé** | aucun (tout à la souris) | hook clavier fall-through |
 | G-MODAL | modals empilés | contourné | prompts **inline** | pile de fancybox |
 | G-TITLE | titre OS | contourné | titre **in-app** | setter `Window.title` |
@@ -122,6 +132,24 @@ l'amélioration qui remplacerait le contournement).
 - **Impacte** : la page **Process** (barres de jobs).
 - **Contournement videroid** : un `Text` « titre (X %) » à côté de la barre (`pages/process_page.py::_display`).
 - **Piste videre** : un libellé % optionnel intégré au `ProgressBar`.
+
+### G15 — `Dropdown` sans scroll sur liste longue *(découvert à la revue de parité, 2026-06-30)*
+- **Constat (vérifié)** : `videre.Dropdown._open_context` (`videre/widgets/dropdown.py:104-110`) construit un `_PlainColumn` avec **tous** les `_OptionWidget`, **sans `ScrollView`** → une liste longue déborde la fenêtre (options du bas inaccessibles). kyuti (`QComboBox`) scrolle nativement (`maxVisibleItems=10` + auto-scroll vers la valeur courante).
+- **Impacte** : combo de **groupement** (34 champs) et de **tri** (33 champs) ; tout `Dropdown` à options nombreuses.
+- **Contournement videroid** : **aucun** (le popup est interne à `Dropdown` ; pas contournable proprement côté videroid). C'est le manque que l'utilisateur a signalé et que la première passe avait raté.
+- **Piste videre** : envelopper `_PlainColumn` dans un `ScrollView` à hauteur **bornée** (≤ hauteur fenêtre), avec auto-scroll vers l'option sélectionnée à l'ouverture.
+
+### G16 — Pas de layout « flow » / wrap *(découvert à la revue de parité, 2026-06-30)*
+- **Constat (vérifié)** : videre n'a pas de layout qui passe à la ligne (`videre/layouts/` n'a ni `Flow` ni `Wrap` ; `Row` aligne sur une seule ligne, `ScrollView.wrap_horizontal` = scroll, pas flow). kyuti utilise un `FlowLayout` maison pour les badges de propriété (`video_list_item.py:418`).
+- **Impacte** : badges de propriété de la **carte vidéo** (et tout ensemble de chips de largeur variable).
+- **Contournement videroid** : `Row` simple → les badges **débordent** horizontalement au lieu de s'enrouler (non équivalent).
+- **Piste videre** : un layout `Flow`/`Wrap` (place les enfants de gauche à droite, passe à la ligne quand la largeur est dépassée).
+
+### G17 — `Text` mono-couleur + pas de police monospace *(découvert à la revue de parité, 2026-06-30)*
+- **Constat (vérifié)** : `videre.Text` n'a qu'**un seul `color`** (`widgets/text.py:49`) → pas de spans colorés inline ; et **aucun paramètre de famille de police** (le shaper utilise les polices groupées) → pas de monospace par `Text`. kyuti compose ses lignes en **rich text HTML** (durée `#0066cc`, largeur/hauteur `#006600`, badges `#333`, codecs `#666` dans UNE ligne ; nom de fichier & dates en `<code>` monospace).
+- **Impacte** : lignes de specs / format / dates / langues de la **carte vidéo** ; nom de fichier monospace ; chemins monospace (`video_confirm`).
+- **Contournement videroid** : actuel = une seule couleur par ligne (les couleurs inline sont **perdues**) ; possible mais lourd = décomposer chaque ligne en `Row` de plusieurs `Text` colorés (et le monospace reste impossible).
+- **Piste videre** : rich-text inline (segments colorés dans un `Text`) + sélection de famille de police (au moins une monospace groupée).
 
 ---
 
