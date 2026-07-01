@@ -46,7 +46,7 @@ class TestNotificationRouting:
         app, _ = videroid_app
         app.run_process("T", lambda: None, lambda e: None)
         app.on_notification(Message("y"))  # -> active process
-        assert "y" in _texts(app._active_process._view)  # shown in the process view
+        assert "y" in _texts(app._active_process._log)  # shown in the activity log
 
 
 class TestNavigationAndTitle:
@@ -106,15 +106,22 @@ class TestMenuActions:
         assert app._current == "databases"
 
     def test_quit(self, videroid_app, monkeypatch):
-        app, _ = videroid_app
-        closed, stopped = [], []
+        import pygame
+
+        app, window = videroid_app
+        closed = []
         monkeypatch.setattr(app.context, "close_app", lambda: closed.append(1))
-        monkeypatch.setattr(
-            type(app.window.windowing), "stop", lambda self: stopped.append(1)
-        )
+        assert window.windowing.running  # loop is "running" by default
         app._quit()  # confirm
         app._do_quit()
-        assert closed == [1] and stopped == [1]  # app closed + event loop stopped
+        # App closed and the loop is asked to stop by CLEARING `running` — not by
+        # calling stop()/pygame.quit() mid-step (which crashed the real app with
+        # "video system not initialized"). run()'s finally does the pygame.quit().
+        assert closed == [1]
+        assert window.windowing.running is False
+        # Regression guard: pygame must still be initialized (the old code called
+        # windowing.stop() = pygame.quit() here, tearing it down mid-frame).
+        assert pygame.display.get_init()
 
     def test_refresh_view(self, videroid_app):
         app, _ = videroid_app

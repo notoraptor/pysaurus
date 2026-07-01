@@ -67,8 +67,9 @@ class PropertiesPage(Page):
                 videre.Button("Fill with Terms…", on_click=self._on_fill),
             ],
             space=8,
-            weight=1,
+            weight=2,
         )
+        # 2:1 left/right, matching kyuti's QSplitter setSizes([600, 300]).
         widget = videre.Row([left, self._create_form()], space=10)
         self._reload()
         return widget
@@ -277,7 +278,7 @@ class PropertiesPage(Page):
                 ],
                 space=8,
             ),
-            width=300,
+            weight=1,
             border=videre.Border.all(1, videre.Colors.lightgray),
             padding=videre.Padding.all(8),
         )

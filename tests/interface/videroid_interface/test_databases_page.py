@@ -36,9 +36,10 @@ class TestDatabaseList:
     def test_open(self, db_page, monkeypatch):
         app, _, page = page_and(db_page)
         calls = []
-        monkeypatch.setattr(app, "run_process", lambda *a: calls.append(a))
+        monkeypatch.setattr(app, "run_process", lambda *a, **k: calls.append((a, k)))
         page._on_open(_evt(data="db2"))
-        assert calls and calls[0][0] == "Opening 'db2'"  # right process title
+        assert calls[0][0][0] == "Opening 'db2'"  # right process title
+        assert calls[0][1]["autocontinue"] is True  # open-without-update auto-proceeds
 
     def test_update_confirms(self, db_page):
         app, _, page = page_and(db_page)

@@ -22,7 +22,7 @@ from pysaurus.interface.videroid.dialogs.grouping_dialog import GroupingDialog
 from pysaurus.interface.videroid.dialogs.sorting_dialog import SortingDialog
 from pysaurus.interface.videroid.dialogs.sources_dialog import SourcesDialog
 from pysaurus.interface.videroid.pages.base_page import Page
-from pysaurus.interface.videroid.widgets.video_card import VideoCard
+from pysaurus.interface.videroid.widgets.video_card import VideoCard, _thumbnail
 
 
 class VideosPage(Page):
@@ -129,6 +129,11 @@ class VideosPage(Page):
         )
 
     @staticmethod
+    def _centered(widget: Widget) -> Widget:
+        """Center a section's info text (kyuti centers sources/grouping/sorting info)."""
+        return videre.Container(widget, horizontal_alignment=videre.Alignment.CENTER)
+
+    @staticmethod
     def _with_section_backgrounds(sections: list[Widget]) -> list[Widget]:
         """Alternate the section backgrounds (kyuti color_light/lighter zebra).
 
@@ -148,7 +153,7 @@ class VideosPage(Page):
                 videre.Button("⚙", on_click=self._open_sources),
                 videre.Button("✕", on_click=self._clear_sources),
             ],
-            self._sources_display,
+            self._centered(self._sources_display),
         )
 
     def _search_section(self) -> Widget:
@@ -182,7 +187,7 @@ class VideosPage(Page):
                 videre.Button("⚙", on_click=self._open_sorting),
                 videre.Button("✕", on_click=self._clear_sorting),
             ],
-            self._sorting_display,
+            self._centered(self._sorting_display),
         )
 
     def _grouping_section(self) -> Widget:
@@ -192,7 +197,7 @@ class VideosPage(Page):
                 videre.Button("⚙", on_click=self._open_grouping),
                 videre.Button("✕", on_click=self._clear_grouping),
             ],
-            self._grouping_display,
+            self._centered(self._grouping_display),
         )
 
     def _groups_section(self) -> Widget:
@@ -758,8 +763,18 @@ class VideosPage(Page):
         )
 
     def _confirm_video(self, message, title, action, video) -> None:
+        # Show the video's thumbnail above the message (kyuti's video_confirm
+        # dialog uses a fixed 160x90 preview).
+        content = videre.Column(
+            [
+                _thumbnail(video, (160, 90)),
+                videre.Text(message, wrap=videre.TextWrap.WORD),
+            ],
+            space=8,
+            horizontal_alignment=videre.Alignment.CENTER,
+        )
         self.app.window.confirm(
-            message, title, on_confirm=lambda: self._run_video_action(action, video)
+            content, title, on_confirm=lambda: self._run_video_action(action, video)
         )
 
     def _run_video_action(self, action, video) -> None:

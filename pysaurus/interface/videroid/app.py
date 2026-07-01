@@ -22,6 +22,20 @@ _PAGE_SIZES = (10, 20, 50, 100)
 # in-app label (the OS caption stays "Pysaurus"). G3: the menu bar is composed
 # from ContextButtons (one flat menu each) rather than a native MenuBar.
 
+# Status bar: a passive strip (kyuti's QStatusBar). A Div is used only so a click
+# can CLEAR the message (kyuti clearMessage); every state (default/hover/click)
+# shares the same look, so it never highlights or reads as a button (unlike a
+# plain Div, whose default is a centered, bordered, hover-highlighting box).
+_STATUS_STYLE = {
+    _state: {
+        "background_color": "#f0f0f0",
+        "border": videre.Border(top=(1, videre.Colors.lightgray)),
+        "horizontal_alignment": videre.Alignment.START,
+        "padding": videre.Padding.axis(horizontal=6, vertical=4),
+    }
+    for _state in ("default", "hover", "click")
+}
+
 
 class VideroidApp:
     """Top-level controller: owns the window, the pages and the app shell."""
@@ -59,15 +73,12 @@ class VideroidApp:
                     ),
                     self._menu_holder,
                     self._content,
-                    # Status bar: a passive strip (like kyuti's QStatusBar), NOT a
-                    # button. A `Div` here would render as a bordered, centered,
-                    # hover-highlighting box — indistinguishable from a button.
-                    videre.Container(
+                    # Status bar: passive-looking strip that clears on click
+                    # (kyuti). _STATUS_STYLE neutralizes the Div button chrome.
+                    videre.Div(
                         self._status,
-                        background_color="#f0f0f0",
-                        border=videre.Border(top=(1, videre.Colors.lightgray)),
-                        padding=videre.Padding.axis(horizontal=6, vertical=4),
-                        horizontal_alignment=videre.Alignment.START,
+                        style=_STATUS_STYLE,
+                        on_click=lambda w: self._set_status(""),
                     ),
                 ],
                 space=0,
@@ -96,7 +107,7 @@ class VideroidApp:
         page.on_show()
         self._refresh_shell()
 
-    def run_process(self, title, procedure, on_end) -> None:
+    def run_process(self, title, procedure, on_end, autocontinue=False) -> None:
         """Show a transient process page, then start a (threaded) backend op."""
 
         def finished(end) -> None:
@@ -105,7 +116,7 @@ class VideroidApp:
             self._refresh_shell()
 
         self._process_title = title
-        self._active_process = ProcessPage(title, finished)
+        self._active_process = ProcessPage(title, finished, autocontinue=autocontinue)
         self._content.control = self._active_process.get_widget()
         self._refresh_shell()
         # Defer so the process page is shown before the op starts.
@@ -123,9 +134,10 @@ class VideroidApp:
         has_db = self.context.has_database() and self._active_process is None
         on_videos = self._current == "videos"
         menus = [
-            videre.ContextButton(
-                "Database", actions=self._menu_database(), disabled=not has_db
-            ),
+            # Database menu stays enabled even without a DB so Quit is always
+            # reachable (kyuti keeps Quit active). videre can't grey individual
+            # flat-menu items (G10), so without a DB we show only Quit.
+            videre.ContextButton("Database", actions=self._menu_database(has_db)),
             videre.ContextButton(
                 "View", actions=self._menu_view(), disabled=not (has_db and on_videos)
             ),
@@ -164,11 +176,16 @@ class VideroidApp:
 
     # --- menus --------------------------------------------------------------
 
-    def _menu_database(self):
+    def _menu_database(self, has_db: bool = True):
+        # Quit is always available (kyuti). Order mirrors kyuti (Rename, Edit,
+        # Update, Close, Quit); Find Similar/Re-encoded and Session Log are
+        # deferred features (not yet ported).
+        if not has_db:
+            return [("Quit", self._quit)]
         return [
-            ("Update Database", self._update_db),
             ("Rename Database…", self._rename_db),
             ("Edit Folders…", self._edit_folders),
+            ("Update Database", self._update_db),
             ("Close Database", self._close_db),
             ("Quit", self._quit),
         ]
@@ -263,7 +280,11 @@ class VideroidApp:
 
     def _do_quit(self) -> None:
         self.context.close_app()
-        self.window.windowing.stop()
+        # Ask the event loop to exit by clearing `running`; run()'s `finally`
+        # then calls stop() (pygame.quit()) ONCE, after the frame. Calling
+        # windowing.stop() directly here tears pygame down mid-step, so the
+        # rest of the current _step crashes ("video system not initialized").
+        self.window.windowing.running = False
 
     def _refresh_view(self) -> None:
         self._pages["videos"].refresh()
@@ -281,8 +302,11 @@ class VideroidApp:
         self._refresh_shell()
 
     def _about(self) -> None:
+        # Two lines, mirroring kyuti's About (main_window.py:461-463).
         self.window.alert(
-            "Pysaurus — Video Collection Manager (videre interface).", "About"
+            "Pysaurus - Video Collection Manager\n\n"
+            "A desktop interface for managing video collections (videre).",
+            "About",
         )
 
     # --- notifications (UI thread) ------------------------------------------

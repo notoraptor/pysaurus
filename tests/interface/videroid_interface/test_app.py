@@ -39,18 +39,34 @@ class TestShell:
 
     def test_menus_have_expected_actions(self, videroid_app):
         app, _ = videroid_app
-        assert [label for label, _ in app._menu_database()] == [
-            "Update Database",
+        # With a database: full menu in kyuti order (Rename, Edit, Update, Close, Quit).
+        assert [label for label, _ in app._menu_database(True)] == [
             "Rename Database…",
             "Edit Folders…",
+            "Update Database",
             "Close Database",
             "Quit",
         ]
+        # Without a database: only Quit stays reachable (kyuti keeps Quit active).
+        assert [label for label, _ in app._menu_database(False)] == ["Quit"]
         assert [label for label, _ in app._menu_view()] == ["Refresh View"]
         assert [label for label, _ in app._menu_help()] == ["About"]
         options = [label for label, _ in app._menu_options()]
         assert any("Page size" in label for label in options)
         assert any("Confirm deletion" in label for label in options)
+
+    def test_database_menu_stays_enabled_without_db(self, videroid_app, monkeypatch):
+        # Quit must stay reachable with no DB, so the Database menu is not disabled.
+        import videre
+
+        from tests.interface.videroid_interface._widget_tree import find as _find
+
+        app, _ = videroid_app
+        monkeypatch.setattr(app.context, "has_database", lambda: False)
+        app._refresh_shell()
+        menus = _find(app._menu_holder.control, videre.ContextButton)
+        db_menu = next(m for m in menus if m.text == "Database")
+        assert not db_menu.disabled
 
     def test_page_size_option(self, videroid_app):
         app, _ = videroid_app
@@ -68,3 +84,24 @@ class TestShell:
         app, _ = videroid_app
         app._set_status("Hello")
         assert app._status.text == "Hello"
+
+    def test_status_bar_passive_and_clears_on_click(self, videroid_app):
+        import videre
+
+        from pysaurus.interface.videroid.app import _STATUS_STYLE
+        from tests.interface.videroid_interface._widget_tree import find as _find
+
+        app, _ = videroid_app
+        # Passive look: default/hover/click share one background → no button flash.
+        bgs = {
+            _STATUS_STYLE[s]["background_color"] for s in ("default", "hover", "click")
+        }
+        assert bgs == {"#f0f0f0"}
+        # Wired to clear the message on click (kyuti clearMessage → empty).
+        app._set_status("hello")
+        shell = app.window.controls[0]
+        status_div = next(
+            d for d in _find(shell, videre.Div) if app._status in _find(d, videre.Text)
+        )
+        status_div.click()  # mounted → runs on_click via call_now
+        assert app._status.text == ""

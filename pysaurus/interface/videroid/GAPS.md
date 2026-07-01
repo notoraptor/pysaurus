@@ -41,6 +41,7 @@ l'amélioration qui remplacerait le contournement).
 | G22 | pas d'événement double-clic | **manque** | bouton/clic explicite | double-clic (ouvrir une base d'un double-clic — kyuti databases) |
 | G23 | pas de forme de curseur par widget | **manque** | aucun | curseur « main » sur les éléments cliquables |
 | G24 | `TextInput` sans `on_change` | **manque** | bouton « Apply » (pas de live) | event de saisie → filtre/recherche **live** (Files, Search). Voir aussi G12 (placeholder) |
+| G25 | pas de **scheduling temporisé** (timer/délai) | **manque** | aucun (statut persistant) | `Window.call_later` = tick suivant (**pas de délai**), `TaskManager` sans timer → pas de « rappeler dans N s ». Bloque les **toasts** de statut auto-effacés (3 s), et sous-tend G6 (tooltip = délai de survol) + debounce (recherche live) |
 | G-KBD | raccourcis clavier | **bloquant, différé** | aucun (tout à la souris) | hook clavier fall-through |
 | G-MODAL | modals empilés | contourné | prompts **inline** | pile de fancybox |
 | G-TITLE | titre OS | contourné | titre **in-app** | setter `Window.title` |
@@ -156,6 +157,12 @@ l'amélioration qui remplacerait le contournement).
 - **Impacte** : tous les boutons colorés de kyuti — sidebar `#settingsBtn` (⚙ bleu `#1976d2`), `#clearBtn` (✕ rouge `#cc3333`), `#classifierBtn` (✙ vert `#4CAF50`) ; **Delete** rouge (Databases) ; **Trash all** rouge (Files) ; **Continue** vert (Process) ; **Create** / mode de recherche actif en gras ; lien pagination souligné ; boutons sidebar à 0.8× (cf. G-DPI).
 - **Contournement videroid** : possible mais imparfait = remplacer le `Button` par un `videre.Div(Text(color=…), style={…}, on_click=…)` (le chemin qui marche). Mais on perd les sémantiques natives de `Button` (`disabled`, focus) et, pour le ⚙ de sélection qui est un **`ContextButton`** (ouvre un menu), il faudrait réimplémenter l'ouverture du menu → non trivial. **Non contourné à ce jour** (boutons laissés non colorés).
 - **Piste videre** : faire accepter à `AbstractButton`/`ContextButton` un `style=` appelant et le **fusionner** avec le style interne (`StyleDef.merged_with` existe déjà), plus exposer `size`/`strong`/`italic` du label. ~Quelques lignes, général, à *gater* par les tests videre.
+
+### G25 — Pas de scheduling temporisé (timer / délai) *(découvert en portant status+process, 2026-07-01)*
+- **Constat (vérifié)** : `Window.call_later(fn, *args)` poste juste un `CallbackTask` exécuté au **tick suivant** (`tasks.py::TaskManager.manage_tasks`), **sans notion de délai** ; aucun « rappeler dans N secondes ». Pas de timer/horloge exposé côté app.
+- **Impacte** : les **toasts** de barre de statut (kyuti `showMessage(msg, 3000)` s'auto-efface après 3 s) ; sous-tend aussi **G6** (tooltip = popup après un délai de survol) et tout **debounce** (recherche/filtre live sans marteler le backend à chaque frappe).
+- **Contournement videroid** : aucun propre. Le seul détour serait `call_async` + `time.sleep(3)` + `call_later` (un **thread par toast** — moche, non retenu). Statut laissé **persistant** (pas de toast).
+- **Piste videre** : une API de callback différé (`call_after(delay, fn)` / timer), s'appuyant sur l'horloge de la boucle (`_clock`/`framing.py`).
 
 ---
 

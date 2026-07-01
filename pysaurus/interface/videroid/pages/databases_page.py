@@ -44,7 +44,10 @@ class DatabasesPage(Page):
     def build(self) -> Widget:
         left = videre.Column(
             [
-                videre.Text("Existing Databases", strong=True, size=20),
+                videre.Container(
+                    videre.Text("Existing Databases", strong=True, size=20),
+                    horizontal_alignment=videre.Alignment.CENTER,
+                ),
                 videre.Container(
                     videre.ScrollView(self._db_column),
                     border=videre.Border.all(1, videre.Colors.lightgray),
@@ -57,7 +60,10 @@ class DatabasesPage(Page):
         )
         right = videre.Column(
             [
-                videre.Text("Create New Database", strong=True, size=20),
+                videre.Container(
+                    videre.Text("Create New Database", strong=True, size=20),
+                    horizontal_alignment=videre.Alignment.CENTER,
+                ),
                 videre.Row(
                     [videre.Text("Name:"), self._name_input],
                     space=5,
@@ -166,6 +172,9 @@ class DatabasesPage(Page):
             title,
             videre.Procedure(self.context.open_database, name, update),
             self._after_database_ready,
+            # Opening without an update just proceeds to the videos page (kyuti);
+            # an update shows Continue so the user sees the scan result.
+            autocontinue=not update,
         )
 
     def _after_database_ready(self, end) -> None:

@@ -18,15 +18,16 @@ from pysaurus.video.video_pattern import VideoPattern
 _THUMB_BOX = (180, 100)
 
 
-def _thumb_frame(content: Widget) -> Widget:
+def _thumb_frame(content: Widget, box: tuple[int, int] = _THUMB_BOX) -> Widget:
     # Fixed-size centered frame (matches kyuti's QLabel.setFixedSize(180,100) +
     # AlignCenter): every card's thumbnail occupies the same box and the left
     # column aligns regardless of the video's aspect ratio. No border-radius
-    # (videre gap G18).
+    # (videre gap G18). `box` is parameterized so the delete-confirm can reuse
+    # this at 160x90 (kyuti's video_confirm thumbnail).
     return videre.Container(
         content,
-        width=_THUMB_BOX[0],
-        height=_THUMB_BOX[1],
+        width=box[0],
+        height=box[1],
         horizontal_alignment=videre.Alignment.CENTER,
         vertical_alignment=videre.Alignment.CENTER,
         background_color="#e0e0e0",
@@ -34,22 +35,22 @@ def _thumb_frame(content: Widget) -> Widget:
     )
 
 
-def _thumbnail(video: VideoPattern) -> Widget:
+def _thumbnail(video: VideoPattern, box: tuple[int, int] = _THUMB_BOX) -> Widget:
     data = video.thumbnail
     if not data:
         return _thumb_frame(
-            videre.Text("(no thumbnail)", italic=True, color=videre.Colors.gray)
+            videre.Text("(no thumbnail)", italic=True, color=videre.Colors.gray), box
         )
     try:
         # Picture does not resize (videre gap G13): scale the JPEG via PIL first.
         image = Image.open(io.BytesIO(data))
-        image.thumbnail(_THUMB_BOX)
+        image.thumbnail(box)
         buffer = io.BytesIO()
         image.save(buffer, "PNG")
         picture = videre.Picture(buffer.getvalue())
     except Exception:
         picture = videre.Picture(data, alt="(thumbnail error)")
-    return _thumb_frame(picture)
+    return _thumb_frame(picture, box)
 
 
 def _menu(video: VideoPattern, page) -> Widget:

@@ -29,8 +29,8 @@ videre). Source de vérité = le **code kyuti** ; cette grille (héritée de l'a
 | **Scaling DPI police** (≥11pt + `pt/9`) | police **fixe 14px**, pas d'accès DPR | ❌ | **manque videre (G-DPI)** |
 | **Sélecteur radio natif top-right** (spacing 8, margins 0,0,4,0), caché sans base/process | `Button`s `● Videos/○ …` (glyphe), poussés à droite (`space=6`), cachés sans base/process | 🟡 | **manque videre (G10)** (radio simulé) + oubli mineur (espacement 6≠8) ; **caché correctement ✅** |
 | **Barre de statut « Ready »** | `Text("Ready")` | ✅ | — |
-| Statut : `QStatusBar` **passif**, clic = **vider** | barre = **`Container` passif** ✅ (était un `Div` = **bouton bizarre**, corrigé 2026-06-30) ; **clic retiré** (n'était pas kyuti : il « réinitialisait à Ready ») | 🟡 | bug d'apparence **corrigé** ; clic-pour-vider (kyuti `clearMessage`) à rajouter (mineur) |
-| Statut : **toasts 3 s/5 s** auto-effacés | message **persistant**, aucun timer | ❌ | **oubli videroid** (faisable via `call_later`) |
+| Statut : `QStatusBar` **passif**, clic = **vider** | barre = **`Div` stylé passif** ✅ (3 états identiques → aucun effet bouton ; était un Div-bouton bizarre, corrigé) + **clic = vider** ✅ (kyuti `clearMessage`) | ✅ | apparence + clic conformes |
+| Statut : **toasts 3 s/5 s** auto-effacés | message **persistant**, aucun timer | ❌ | **manque videre (G25)** : pas de scheduling temporisé (`call_later` = tick suivant, sans délai) |
 | **Journal de session** (fichier + `SessionLogDialog` 700×500) | **totalement absent** | ❌ | **oubli videroid** (différé ; faisable) |
 | Exceptions : **warning (non fatal) vs fatal (`exit(1)`) + traceback détaillé** | `alert_on_exceptions` → **tout** en alerte non fatale, **sans** distinction ni traceback | 🟡 | **oubli videroid** (atténuable) + format `error()` fixe |
 | **0 stylesheet global → chrome Qt natif** | videre **dessine** tous ses widgets | ✅ acté | **inhérent** (différence de framework, non corrigeable) |
@@ -224,10 +224,20 @@ Comparaison KYUTI_REFERENCE ↔ videroid sur **toutes** les zones (carte §4a + 
 
 **Reste — oublis videroid (sans toucher videre)** :
 8b. **Carte (interaction)** : survol de carte (events `mouse_enter/exit`, 6 états) ; **clic-toggle** titre ; **clic-filtrer** chips ; **clic-ouvrir** + survol-souligné du nom de fichier. *(monospace = G17 ; enroulement chips = G16 ; Re-encoded `#9900cc` = feature absente.)*
-9. **Centrages** (titres de pages, rangées de boutons) un peu partout ; **Properties** ratio largeur 2:1.
-10. **Menus** : items manquants (Find Similar/Re-encoded, Random, Playlist, Session Log), libellés (`(Ctrl+R)`, About 2 lignes), ordre (Update en 1er), Quit toujours actif.
-11. ✅ **Statut** : barre rendue **passive** (bug du « bouton Ready » — un `Div` bordé/centré/surligné — corrigé). Reste : clic-pour-vider (kyuti `clearMessage`) + **toasts** auto-effacés (`call_later`).
-12. **video_confirm** : ajouter la **vignette** (Container fixe + PIL).
-13. **Process** : zones jobs/log **séparées**, **Clear** log, autocontinue, Continue **désactivé** avant fin (`Button.disabled` existe).
+**Lot 4 — menus + centrages FAIT (2026-06-30, 265 tests verts, 100 % ; vérifié visuellement)** :
+9a. ✅ **Menus** : ordre kyuti (Rename, Edit Folders, Update, Close, Quit) ; **Quit toujours accessible** (menu Database jamais désactivé — sans base il ne montre que Quit, car videre ne grise pas les items d'un menu plat, G10) ; **About sur 2 lignes**.
+9b. ✅ **Centrages** : titres Databases (« Existing Databases » / « Create New Database ») ; infos de section sidebar (Sources/Sorting/Grouping) centrées.
+
+**Lot 5 — FAIT (2026-07-01, 265 tests verts, 100 % ; vérifié visuellement)** :
+9c. ✅ **Properties ratio 2:1** (table `weight=2` / formulaire `weight=1`, = kyuti `setSizes([600,300])`).
+9d. ✅ **video_confirm avec vignette** : le confirm de suppression vidéo (delete-entry / trash / delete-file) montre la **vignette 160×90** (helper `video_card._thumbnail(video, box)` paramétré + réutilisé) au-dessus du message.
+
+**Reste — oublis videroid (sans toucher videre)** :
+10. **Carte (interaction)** — voir 8b. **Centrages restants** : rangée de boutons des items Databases (bloqué : items non pleine-largeur dans le `ScrollView` de videre — layout à creuser). Labels de raccourcis (`(Ctrl+R)` etc.) **volontairement omis** (promettraient un raccourci non fonctionnel — G-KBD). Items de menu **Find Similar/Re-encoded, Random, Playlist, Session Log** = features absentes (à porter, pas de simples libellés). *Polish : champs du formulaire Properties étroits (content-sized) — leur donner un `weight`.*
+**Lot 6 — status + process FAIT (2026-07-01, 268 tests verts, 100 % ; vérifié visuellement)** :
+11a. ✅ **Statut** : barre passive **+ clic = vider** (`Div` stylé, 3 états identiques → pas d'effet bouton ; `on_click` = `_set_status("")`). *Toasts auto-effacés = **manque videre G25** (pas de scheduling temporisé) — non faisable proprement.*
+11b. ✅ **Process** : zones **jobs / log séparées** (jobs encadrés à hauteur bornée, log scrollable) ; bouton **Clear** log ; **Continue désactivé** jusqu'à la fin (`Button.disabled`) ; **autocontinue** (ouvrir une base sans update → enchaîne direct, kyuti). *(Continue vert = G19 ; spinner circulaire = ~G14 — non faits.)*
+
+**Reste — oublis videroid** : voir 8b (carte interaction) et 10 (centrages restants / Properties inputs). Le gros du reste = **features absentes** (backend) + **manques videre** (G-KBD, G25, etc.).
 
 > **Cap suggéré** : finir les « oublis videroid » ci-dessus (gros gain visuel, zéro dépendance) ; puis trancher quels manques videre enrichir en priorité — les plus structurants pour le visuel sont **G18 (radius)**, **G19 (style des boutons)** et **G-DPI**, et pour l'UX **G-KBD** et **G15**.
