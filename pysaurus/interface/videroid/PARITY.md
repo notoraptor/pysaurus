@@ -29,7 +29,7 @@ videre). Source de vérité = le **code kyuti** ; cette grille (héritée de l'a
 | **Scaling DPI police** (≥11pt + `pt/9`) | police **fixe 14px**, pas d'accès DPR | ❌ | **manque videre (G-DPI)** |
 | **Sélecteur radio natif top-right** (spacing 8, margins 0,0,4,0), caché sans base/process | `Button`s `● Videos/○ …` (glyphe), poussés à droite (`space=6`), cachés sans base/process | 🟡 | **manque videre (G10)** (radio simulé) + oubli mineur (espacement 6≠8) ; **caché correctement ✅** |
 | **Barre de statut « Ready »** | `Text("Ready")` | ✅ | — |
-| Statut : **clic = vider** | clic = **réinitialise à "Ready"** (pas vide) | 🟡 | **oubli videroid** |
+| Statut : `QStatusBar` **passif**, clic = **vider** | barre = **`Container` passif** ✅ (était un `Div` = **bouton bizarre**, corrigé 2026-06-30) ; **clic retiré** (n'était pas kyuti : il « réinitialisait à Ready ») | 🟡 | bug d'apparence **corrigé** ; clic-pour-vider (kyuti `clearMessage`) à rajouter (mineur) |
 | Statut : **toasts 3 s/5 s** auto-effacés | message **persistant**, aucun timer | ❌ | **oubli videroid** (faisable via `call_later`) |
 | **Journal de session** (fichier + `SessionLogDialog` 700×500) | **totalement absent** | ❌ | **oubli videroid** (différé ; faisable) |
 | Exceptions : **warning (non fatal) vs fatal (`exit(1)`) + traceback détaillé** | `alert_on_exceptions` → **tout** en alerte non fatale, **sans** distinction ni traceback | 🟡 | **oubli videroid** (atténuable) + format `error()` fixe |
@@ -226,7 +226,7 @@ Comparaison KYUTI_REFERENCE ↔ videroid sur **toutes** les zones (carte §4a + 
 8b. **Carte (interaction)** : survol de carte (events `mouse_enter/exit`, 6 états) ; **clic-toggle** titre ; **clic-filtrer** chips ; **clic-ouvrir** + survol-souligné du nom de fichier. *(monospace = G17 ; enroulement chips = G16 ; Re-encoded `#9900cc` = feature absente.)*
 9. **Centrages** (titres de pages, rangées de boutons) un peu partout ; **Properties** ratio largeur 2:1.
 10. **Menus** : items manquants (Find Similar/Re-encoded, Random, Playlist, Session Log), libellés (`(Ctrl+R)`, About 2 lignes), ordre (Update en 1er), Quit toujours actif.
-11. **Statut** : clic = **vider** (pas "Ready") ; **toasts** auto-effacés (`call_later`).
+11. ✅ **Statut** : barre rendue **passive** (bug du « bouton Ready » — un `Div` bordé/centré/surligné — corrigé). Reste : clic-pour-vider (kyuti `clearMessage`) + **toasts** auto-effacés (`call_later`).
 12. **video_confirm** : ajouter la **vignette** (Container fixe + PIL).
 13. **Process** : zones jobs/log **séparées**, **Clear** log, autocontinue, Continue **désactivé** avant fin (`Button.disabled` existe).
 

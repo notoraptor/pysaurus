@@ -59,8 +59,15 @@ class VideroidApp:
                     ),
                     self._menu_holder,
                     self._content,
-                    videre.Div(
-                        self._status, on_click=lambda w: self._set_status("Ready")
+                    # Status bar: a passive strip (like kyuti's QStatusBar), NOT a
+                    # button. A `Div` here would render as a bordered, centered,
+                    # hover-highlighting box — indistinguishable from a button.
+                    videre.Container(
+                        self._status,
+                        background_color="#f0f0f0",
+                        border=videre.Border(top=(1, videre.Colors.lightgray)),
+                        padding=videre.Padding.axis(horizontal=6, vertical=4),
+                        horizontal_alignment=videre.Alignment.START,
                     ),
                 ],
                 space=0,
