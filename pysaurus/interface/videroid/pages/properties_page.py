@@ -93,7 +93,9 @@ class PropertiesPage(Page):
             table.cell(prop.name, 2),
             table.cell(prop.type, 1),
             table.cell(default, 2),
-            table.cell("Yes" if prop.multiple else "No", 1),
+            table.cell("Yes", 1, color="#006400")
+            if prop.multiple
+            else table.cell("No", 1),
             table.cell(enum_text, 3),
             videre.Container(actions, weight=1, padding=videre.Padding.all(2)),
         ]

@@ -11,10 +11,15 @@ from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 from pysaurus.interface.videroid import theme
 from pysaurus.interface.videroid.pages.base_page import Page
 
-# Item colors, matching the PySide6 reference (expanded bg = theme.SELECTED_BG).
+# Item colors, matching the kyuti reference (databases_page.py:90-107).
+# Expanded = blue (no hover change → stays blue). Collapsed = light gray that
+# darkens on hover. Explicit hover/click are required, else videre's default
+# Div hover (Colors.lightgray) would override the item's own background.
 _EXPANDED_BORDER = "#1976d2"
 _COLLAPSED_BG = "#f5f5f5"
 _COLLAPSED_BORDER = "#dddddd"
+_HOVER_BG = "#e8e8e8"
+_HOVER_BORDER = "#bbbbbb"
 
 _FOLDER = "\U0001f4c1"  # 📁
 _FILE = "\U0001f4c4"  # 📄
@@ -95,15 +100,31 @@ class DatabasesPage(Page):
 
     def _db_item(self, name: str) -> Widget:
         expanded = self._expanded == name
-        bg = theme.SELECTED_BG if expanded else videre.parse_color(_COLLAPSED_BG)
-        border = _EXPANDED_BORDER if expanded else _COLLAPSED_BORDER
+        if expanded:
+            # Stays blue on hover (kyuti has no :hover rule for expanded items).
+            bg = theme.SELECTED_BG
+            border_color = _EXPANDED_BORDER
+            hover_bg, hover_border = bg, border_color
+        else:
+            bg = videre.parse_color(_COLLAPSED_BG)
+            border_color = _COLLAPSED_BORDER
+            hover_bg = videre.parse_color(_HOVER_BG)
+            hover_border = _HOVER_BORDER
+        default_style = {
+            "background_color": bg,
+            "border": videre.Border.all(1, videre.parse_color(border_color)),
+        }
+        hover_style = {
+            "background_color": hover_bg,
+            "border": videre.Border.all(1, videre.parse_color(hover_border)),
+        }
         header = videre.Div(
             videre.Text(name, strong=True),
+            # Explicit hover + click, else videre's default gray Div hover wins.
             style={
-                "default": {
-                    "background_color": bg,
-                    "border": videre.Border.all(1, videre.parse_color(border)),
-                }
+                "default": default_style,
+                "hover": hover_style,
+                "click": hover_style,
             },
             data=name,
             on_click=self._on_toggle,

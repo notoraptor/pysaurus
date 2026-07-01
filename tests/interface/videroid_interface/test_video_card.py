@@ -56,7 +56,20 @@ class TestVideoCardStates:
         assert any("1920 x 1080" in t for t in texts)  # resolution line
 
     def test_not_found_status(self):
-        assert "NOT FOUND" in _texts(VideoCard(_video(found=False), 0))
+        card = VideoCard(_video(found=False), 0)
+        assert "NOT FOUND" in _texts(card)
+        # Not-found rows get the pale-yellow background (matches kyuti #fffde7).
+        assert card.background_color == videre.Gradient.parse("#fffde7")
+        # Exact status color (kyuti #cc0000), not videre's named red.
+        nf = next(t for t in _find(card, videre.Text) if t.text == "NOT FOUND")
+        assert nf.color == videre.parse_color("#cc0000")
+
+    def test_title_is_bold_and_underlined(self):
+        # Only the title is both bold and underlined (kyuti title <b><u>); chips
+        # are underlined-not-bold, the filename bold-not-underlined.
+        card = VideoCard(_video(found=True), 0)
+        both = [t for t in _find(card, videre.Text) if t.underline and t.strong]
+        assert both
 
     def test_unreadable_status_skips_specs(self):
         texts = _texts(VideoCard(_video(found=True, unreadable=True), 0))
@@ -74,6 +87,8 @@ class TestVideoCardStates:
     def test_similarity_shown(self):
         card = VideoCard(_video(found=True, similarity_id=3, similarity=42), 0)
         assert "Similarity: 42" in _texts(card)
+        sim = next(t for t in _find(card, videre.Text) if "Similarity" in t.text)
+        assert sim.color == videre.parse_color("#0066cc")  # kyuti similarity color
 
     def test_invalid_thumbnail_falls_back_to_picture(self):
         card = VideoCard(_BadThumbVideo(dict(_READABLE, found=True)), 0)

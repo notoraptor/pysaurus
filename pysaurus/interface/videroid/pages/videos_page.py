@@ -12,11 +12,7 @@ import videre
 from videre.widgets.widget import Widget
 
 from pysaurus.core.classes import Selector
-from pysaurus.core.constants import (
-    VIDEO_DEFAULT_PAGE_NUMBER,
-    VIDEO_DEFAULT_PAGE_SIZE,
-    VIDEO_DEFAULT_SORTING,
-)
+from pysaurus.core.constants import VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_SORTING
 from pysaurus.interface.common.common import FIELD_MAP, format_group_value
 from pysaurus.interface.videroid import theme
 from pysaurus.interface.videroid.dialogs.batch_edit_property_dialog import (
@@ -34,7 +30,8 @@ class VideosPage(Page):
 
     def __init__(self, app):
         super().__init__(app)
-        self._page_size = VIDEO_DEFAULT_PAGE_SIZE
+        # Default 20, matching kyuti (the core VIDEO_DEFAULT_PAGE_SIZE is the max, 100).
+        self._page_size = 20
         self._page_number = VIDEO_DEFAULT_PAGE_NUMBER
         # Options-menu flag, driven by the app shell like page_size. Public to
         # match kyuti (videos_page.confirm_not_found_deletion). When disabled,
@@ -130,6 +127,19 @@ class VideosPage(Page):
             border=videre.Border.all(1, videre.Colors.lightgray),
             padding=videre.Padding.all(6),
         )
+
+    @staticmethod
+    def _with_section_backgrounds(sections: list[Widget]) -> list[Widget]:
+        """Alternate the section backgrounds (kyuti color_light/lighter zebra).
+
+        Applied at populate time, by visual position, so the stripes stay
+        consistent as sections appear/disappear (Groups/Classifier).
+        """
+        for index, section in enumerate(sections):
+            section.background_color = (
+                theme.SECTION_BG_A if index % 2 == 0 else theme.SECTION_BG_B
+            )
+        return sections
 
     def _sources_section(self) -> Widget:
         return self._section(
@@ -275,12 +285,14 @@ class VideosPage(Page):
             self._cards.controls = [videre.Text("No database open.", italic=True)]
             self._status.text = ""
             self._page_label.text = ""
-            self._sidebar_column.controls = [
-                self._sec_sources,
-                self._sec_search,
-                self._sec_sorting,
-                self._sec_grouping,
-            ]
+            self._sidebar_column.controls = self._with_section_backgrounds(
+                [
+                    self._sec_sources,
+                    self._sec_search,
+                    self._sec_sorting,
+                    self._sec_grouping,
+                ]
+            )
             return
         self._cards.controls = [
             VideoCard(video, index, self, self._selector.contains(video.video_id))
@@ -312,7 +324,7 @@ class VideosPage(Page):
         if ctx.classifier:
             self._populate_classifier(ctx)
             sections.append(self._sec_classifier)
-        self._sidebar_column.controls = sections
+        self._sidebar_column.controls = self._with_section_backgrounds(sections)
 
     def _update_search(self, ctx) -> None:
         search = ctx.search
@@ -554,7 +566,14 @@ class VideosPage(Page):
 
     def _update_selection_counter(self) -> None:
         count = self._selector.size_from(self._view_count)
-        self._selection_label.text = f"{count} selected" if count else "no selection"
+        label = self._selection_label
+        label.color = "#0078d4"  # kyuti accent blue
+        if count:
+            label.text = f"{count} selected"
+            label.strong, label.italic = True, False  # selected -> bold
+        else:
+            label.text = "no selection"
+            label.strong, label.italic = False, True  # none -> italic
 
     def _on_card_check(self, checkbox) -> None:
         video_id = checkbox.data

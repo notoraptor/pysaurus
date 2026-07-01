@@ -18,15 +18,27 @@ from pysaurus.video.video_pattern import VideoPattern
 _THUMB_BOX = (180, 100)
 
 
+def _thumb_frame(content: Widget) -> Widget:
+    # Fixed-size centered frame (matches kyuti's QLabel.setFixedSize(180,100) +
+    # AlignCenter): every card's thumbnail occupies the same box and the left
+    # column aligns regardless of the video's aspect ratio. No border-radius
+    # (videre gap G18).
+    return videre.Container(
+        content,
+        width=_THUMB_BOX[0],
+        height=_THUMB_BOX[1],
+        horizontal_alignment=videre.Alignment.CENTER,
+        vertical_alignment=videre.Alignment.CENTER,
+        background_color="#e0e0e0",
+        border=videre.Border.all(1, "#cccccc"),
+    )
+
+
 def _thumbnail(video: VideoPattern) -> Widget:
     data = video.thumbnail
     if not data:
-        return videre.Container(
-            videre.Text("(no thumbnail)", italic=True),
-            width=_THUMB_BOX[0],
-            height=_THUMB_BOX[1],
-            horizontal_alignment=videre.Alignment.CENTER,
-            vertical_alignment=videre.Alignment.CENTER,
+        return _thumb_frame(
+            videre.Text("(no thumbnail)", italic=True, color=videre.Colors.gray)
         )
     try:
         # Picture does not resize (videre gap G13): scale the JPEG via PIL first.
@@ -37,7 +49,7 @@ def _thumbnail(video: VideoPattern) -> Widget:
         picture = videre.Picture(buffer.getvalue())
     except Exception:
         picture = videre.Picture(data, alt="(thumbnail error)")
-    return videre.Container(picture, horizontal_alignment=videre.Alignment.CENTER)
+    return _thumb_frame(picture)
 
 
 def _menu(video: VideoPattern, page) -> Widget:
@@ -59,8 +71,13 @@ def _menu(video: VideoPattern, page) -> Widget:
 def _attributes(
     video: VideoPattern, menu: Widget | None = None, checkbox: Widget | None = None
 ) -> Widget:
+    # Bold + underlined, black (kyuti title_label: color #000000 with <b><u>).
     title = videre.Text(
-        str(video.title), strong=True, wrap=videre.TextWrap.WORD, weight=1
+        str(video.title),
+        strong=True,
+        underline=True,
+        wrap=videre.TextWrap.WORD,
+        weight=1,
     )
     leading = [w for w in (menu, checkbox) if w is not None]
     if leading:
@@ -72,16 +89,22 @@ def _attributes(
     rows: list[Widget] = [first]
 
     if video.meta_title:
-        rows.append(
-            videre.Text(str(video.file_title), italic=True, color=videre.Colors.gray)
-        )
+        rows.append(videre.Text(str(video.file_title), italic=True, color="#666666"))
+    # Filename in a colored box, two states (kyuti video_list_item.py:195-203).
+    # Monospace is a videre gap (G17). Click-to-open / hover-underline deferred.
+    watched = video.watched
     rows.append(
-        videre.Text(
-            str(video.filename),
-            wrap=videre.TextWrap.CHAR,
-            color=videre.Colors.gray if video.watched else videre.Colors.blueviolet,
-            italic=video.watched,
-            strong=not video.watched,
+        videre.Container(
+            videre.Text(
+                str(video.filename),
+                wrap=videre.TextWrap.CHAR,
+                color="#a0a0a0" if watched else "#8c8cfa",
+                italic=watched,
+                strong=not watched,
+            ),
+            background_color="#f8f8f8" if watched else "#fafafa",
+            border=None if watched else videre.Border.all(1, "#f0f0fa"),
+            padding=videre.Padding.all(2),
         )
     )
 
@@ -119,15 +142,13 @@ def _attributes(
 
     status: list[Widget] = []
     if not video.found:
-        status.append(videre.Text("NOT FOUND", color=videre.Colors.red, strong=True))
+        status.append(videre.Text("NOT FOUND", color="#cc0000", strong=True))
     elif video.unreadable:
-        status.append(
-            videre.Text("Unreadable", color=videre.Colors.darkorange, strong=True)
-        )
+        status.append(videre.Text("Unreadable", color="#cc6600", strong=True))
     if video.watched:
-        status.append(videre.Text("Watched", color=videre.Colors.green))
+        status.append(videre.Text("Watched", color="#008800"))
     if video.similarity_id is not None:
-        status.append(videre.Text(f"Similarity: {video.similarity}"))
+        status.append(videre.Text(f"Similarity: {video.similarity}", color="#0066cc"))
     if status:
         rows.append(
             videre.Row(status, space=10, vertical_alignment=videre.Alignment.CENTER)
@@ -137,7 +158,7 @@ def _attributes(
         rows.append(
             videre.Text(
                 "Errors: " + "; ".join(video.errors),
-                color=videre.Colors.red,
+                color="#cc0000",
                 wrap=videre.TextWrap.WORD,
             )
         )
@@ -147,12 +168,14 @@ def _attributes(
         for name, values in video.properties.items():
             rows.append(
                 videre.Row(
-                    [videre.Text(f"{name}:", strong=True)]
+                    [videre.Text(f"{name}:", strong=True, color="#666666")]
                     + [
+                        # Value chip: #1976d2 underlined on #e3f2fd (kyuti:442-446).
+                        # Click-to-filter deferred; wrapping (FlowLayout) is gap G16.
                         videre.Container(
-                            videre.Text(str(value), italic=True),
-                            background_color=theme.BADGE_BG,
-                            padding=videre.Padding.axis(vertical=2, horizontal=10),
+                            videre.Text(str(value), color="#1976d2", underline=True),
+                            background_color=theme.SELECTED_BG,
+                            padding=videre.Padding.axis(vertical=1, horizontal=4),
                         )
                         for value in values
                     ],
@@ -161,7 +184,7 @@ def _attributes(
                 )
             )
 
-    return videre.Column(rows, space=2, weight=1)
+    return videre.Column(rows, space=3, weight=1)
 
 
 class VideoCard(videre.Container):
@@ -179,14 +202,21 @@ class VideoCard(videre.Container):
             if page is not None
             else None
         )
+        # Per-state background + border, mirroring kyuti's VideoListItem styles
+        # (no zebra striping — kyuti uses plain white for normal rows). Hover
+        # states are deferred (need manual mouse_enter/exit tracking); border
+        # radius is a videre gap (G18).
+        if selected:
+            bg, border = theme.SELECTED_BG, videre.Border.all(2, "#1976d2")
+        elif not video.found:
+            bg, border = "#fffde7", videre.Border.all(1, "#ffe082")
+        else:
+            bg, border = "#ffffff", videre.Border.all(1, "#dddddd")
         super().__init__(
             videre.Row(
-                [_thumbnail(video), _attributes(video, menu, checkbox)], space=6
+                [_thumbnail(video), _attributes(video, menu, checkbox)], space=12
             ),
-            padding=videre.Padding.axis(vertical=8, horizontal=4),
-            background_color=(
-                theme.SELECTED_BG
-                if selected
-                else (theme.EVEN_BG if index % 2 == 1 else None)
-            ),
+            padding=videre.Padding.all(8),
+            background_color=bg,
+            border=border,
         )

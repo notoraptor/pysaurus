@@ -48,6 +48,12 @@ class TestTableHelpers:
         assert all(t.strong for t in _find(header, videre.Text))  # header is bold
         _render(header)  # also paints without error
 
+    def test_cell_align_defaults_left_and_can_right_align(self):
+        # Numeric columns (Files) right-align via align=END; default stays left.
+        assert table.cell("x").horizontal_alignment == videre.Alignment.START
+        right = table.cell("5", align=videre.Alignment.END)
+        assert right.horizontal_alignment == videre.Alignment.END
+
 
 class TestTabs:
     def _tabs(self):
@@ -86,17 +92,14 @@ class TestVideoCard:
         assert str(video.title) in _texts(card)
         _render(card)  # paints without error
 
-    def test_selected_background(self, videroid_context_example):
+    def test_card_background_per_state(self, videroid_context_example):
         video = videroid_context_example.get_videos(100, 0).result[0]
-        parse = videre.Gradient.parse  # Container stores background_color this way
-        assert VideoCard(video, index=1, selected=True).background_color == parse(
+        parse = videre.Gradient.parse  # Container stores background_color as a Gradient
+        assert VideoCard(video, selected=True).background_color == parse(
             theme.SELECTED_BG
         )
-        assert VideoCard(video, index=1, selected=False).background_color == parse(
-            theme.EVEN_BG
-        )
-        # Unselected even-index card has no highlight (the default empty gradient).
-        assert VideoCard(video, index=0, selected=False).background_color == parse(None)
+        # Normal row (found, unselected) is plain white — no zebra (matches kyuti).
+        assert VideoCard(video, selected=False).background_color == parse("#ffffff")
 
     def test_card_with_properties_shows_badges(self, videroid_context_example):
         videos = videroid_context_example.get_videos(100, 0).result
@@ -104,8 +107,13 @@ class TestVideoCard:
         assert with_props is not None  # the example DB has tagged videos
         card = VideoCard(with_props, index=0)
         assert "PROPERTIES" in _texts(card)
-        badge_bg = videre.Gradient.parse(theme.BADGE_BG)
-        badges = [
-            c for c in _find(card, videre.Container) if c.background_color == badge_bg
+        # Value chips: #1976d2 underlined text on #e3f2fd (kyuti parity, not BADGE_BG).
+        chip_bg = videre.Gradient.parse(theme.SELECTED_BG)
+        chips = [
+            c for c in _find(card, videre.Container) if c.background_color == chip_bg
         ]
-        assert badges  # at least one property value rendered as a badge
+        assert chips  # at least one property value rendered as a chip
+        chip_texts = [t for chip in chips for t in _find(chip, videre.Text)]
+        assert chip_texts and all(
+            t.underline and t.color == videre.parse_color("#1976d2") for t in chip_texts
+        )

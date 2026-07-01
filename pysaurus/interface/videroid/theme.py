@@ -17,3 +17,7 @@ EVEN_BG = videre.parse_color((245, 245, 245))
 SELECTED_BG = videre.parse_color((227, 242, 253))
 # Small inline badges (property / classifier chips).
 BADGE_BG = videre.parse_color((240, 240, 240))
+# Sidebar filter sections — alternating backgrounds (kyuti color_light/lighter,
+# videos_page.py:389-390 = "#f0f0f0"/"#ffffff").
+SECTION_BG_A = videre.parse_color((240, 240, 240))
+SECTION_BG_B = videre.parse_color((255, 255, 255))

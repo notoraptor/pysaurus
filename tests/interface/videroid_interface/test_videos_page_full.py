@@ -5,9 +5,11 @@ batch + per-video actions, pagination. Backend-constrained or external calls
 from unittest.mock import Mock
 
 import pytest
+import videre
 
 from pysaurus.core.constants import VIDEO_DEFAULT_SORTING
 from pysaurus.interface.common.common import FIELD_MAP
+from pysaurus.interface.videroid import theme
 from pysaurus.interface.videroid.dialogs.batch_edit_property_dialog import (
     BatchEditPropertyDialog,
 )
@@ -66,6 +68,14 @@ def _group_by_tag_two_videos(app, name="tag"):
 
 
 class TestFilters:
+    def test_sidebar_sections_have_alternating_backgrounds(self, vp):
+        _, _, page = vp
+        sections = page._sidebar_column.controls
+        assert len(sections) >= 2  # sources/search/sorting/grouping/selection...
+        for index, section in enumerate(sections):
+            expected = theme.SECTION_BG_A if index % 2 == 0 else theme.SECTION_BG_B
+            assert section.background_color == videre.Gradient.parse(expected)
+
     def test_search_applies_and_clears(self, vp):
         _, _, page = vp
         page._search_input.value = "foo"

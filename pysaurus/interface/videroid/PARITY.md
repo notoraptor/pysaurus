@@ -199,18 +199,35 @@ Comparaison KYUTI_REFERENCE ↔ videroid sur **toutes** les zones (carte §4a + 
 | **Process** | 🟡 la + en retrait | `ProgressBar` **non stylable** (noir≠`#0078d4`, étend G14), **spinner = barre glissante** (pas d'anneau+checkmark), Clear/header-log absents, autocontinue absent, jobs+log fusionnés (pas de zones séparées), Continue non vert/non-désactivé-avant-fin |
 
 ## Répartition des causes
-- **Oubli videroid (≈ la moitié — corrigeable sans toucher videre)** : couleurs/styles non posés (boutons sidebar, compteur sélection, Multiple-vert, Trash-all rouge), centrages, fonds de sections, largeurs (28/32×24/200/220), désactivation aux bornes, troncatures, ordre des sections, libellés, items de menu absents, video_confirm sans vignette, OK jamais grisé, alignements à droite. **C'est le gros du visuel manquant.**
-- **Manque videre (structurel, → GAPS.md)** : G1 (Table), G2 (Tabs), G3/G10 (menus), G5 (spin), G7 (splitter), G9 (virtualisation/slot-reuse), G11 (TextArea), G12 (placeholder), G15 (Dropdown scroll), G16 (flow), G17 (rich-text/monospace), **G18 (border-radius — PARTOUT)**, **G19 (Button : taille/gras du label)**, **G20 (ScrollView scroll-to)**, **G21 (Dropdown on_change / Checkbox disabled)**, G22 (double-clic), G23 (curseur), G24 (TextInput on_change), G-KBD (raccourcis), G-MODAL (fancybox 80% fixe, mini-tailles ignorées, Entrée≠OK), G-TITLE, G-DPI ; + `ProgressBar` non stylable et pas de spinner circulaire (étendent G14).
+- **Oubli videroid (≈ la moitié — corrigeable sans toucher videre)** : couleurs/styles **de `Text`/`Container`** non posés (compteur sélection ✅, Multiple-vert ✅, fonds/bordures de carte ✅, fonds de sections), centrages, largeurs (28/32×24/200/220), désactivation aux bornes (`Button.disabled` **existe**), troncatures, ordre des sections, libellés, items de menu absents, video_confirm sans vignette, OK jamais grisé, alignements à droite. *(Les **couleurs/gras de boutons** — sidebar ⚙/✕/✙, Delete/Trash-all rouge, Continue vert, Create gras — ne sont **pas** des oublis : elles butent sur **G19**, cf. ci-dessous.)* **C'est le gros du visuel manquant.**
+- **Manque videre (structurel, → GAPS.md)** : G1 (Table), G2 (Tabs), G3/G10 (menus), G5 (spin), G7 (splitter), G9 (virtualisation/slot-reuse), G11 (TextArea), G12 (placeholder), G15 (Dropdown scroll), G16 (flow), G17 (rich-text/monospace), **G18 (border-radius — PARTOUT)**, **G19 (`Button`/`ContextButton` non stylables : `style=` lève `TypeError` → ni couleur ni taille/gras — vérifié)**, **G20 (ScrollView scroll-to)**, **G21 (Dropdown on_change / Checkbox disabled)**, G22 (double-clic), G23 (curseur), G24 (TextInput on_change), G-KBD (raccourcis), G-MODAL (fancybox 80% fixe, mini-tailles ignorées, Entrée≠OK), G-TITLE, G-DPI ; + `ProgressBar` non stylable et pas de spinner circulaire (étendent G14).
 - **Inhérent (non corrigeable — différence de framework)** : chrome Qt natif (barre de menus, scrollbars, **zébrures `AlternateBase`**, en-têtes de table, popups de combo, `QMessageBox`, `QGroupBox`, fenêtres `QDialog`). videre dessine ses propres widgets.
 
 ## Fonctions ABSENTES (à porter)
 `video_properties_dialog` (gros), `batch_edit` multi-prop (test-only chez kyuti), `goto_page` (G5), **Session Log**, **Find Similar / Re-encoded**, **Random Video / Generate Playlist**, actions de similarité (Dismiss/Reset/Generalize), **Move to…**, **classifier Concat**, statut **Re-encoded**, **clic-valeur = filtrer**, **Open in VLC**, **Copy File Title**, vignette du confirm destructif, « Confirm all unique moves ».
 
 ## Correctifs videroid prioritaires (impact visuel élevé, coût faible)
-1. **Page-size défaut → 20** (`videos_page.py:37`, `VIDEO_DEFAULT_PAGE_SIZE`). *Bug net.*
-2. **Carte** : vignette en cadre fixe 180×100 ; retirer la zébrure ; ajouter les 6 états (au moins sélection+not-found+bordures, radius dépend de G18).
-3. **Sidebar** : poser les fonds de sections + couleurs des boutons ⚙/✕/✙ (mode actif gras dépend de G19) ; compteur sélection `#0078d4` gras/italique.
-4. **Properties** : Multiple "Yes" en vert (1 ligne) ; **Databases** : corriger les couleurs de survol (et le bug de l'expansé qui perd son bleu).
-5. Centrages (titres, rangées de boutons), alignement-droite des nombres (Files), extensions avec point `.`, libellés de menu + items manquants (Find Similar/Re-encoded, Random, Playlist).
 
-> **Cap suggéré** : d'abord les correctifs « oubli videroid » (gros gain visuel, zéro dépendance) ; puis trancher quels manques videre enrichir en priorité — les plus structurants pour le visuel sont **G18 (radius)**, **G19 (style des boutons)** et **G-DPI**, et pour l'UX **G-KBD** et **G15**.
+**Lot 1 — FAIT (2026-06-30, 259 tests verts, couverture 100 %)** :
+1. ✅ **Page-size défaut → 20** (`videos_page.py:37`). *Bug net.*
+2. ✅ **Carte** : vignette en cadre fixe 180×100 (centrée, fond `#e0e0e0`/bordure `#ccc`) ; zébrure **retirée** ; états **sélection + not-found** (fonds + bordures par état).
+3. ✅ **Compteur de sélection** `#0078d4` + gras/italique selon l'état.
+4. ✅ **Multiple "Yes" en vert** (`#006400`).
+
+**Lot 2 — FAIT (2026-06-30, 263 tests verts, couverture 100 % ; vérifié visuellement)** :
+5. ✅ **Sidebar** : **fonds de sections** alternés `#f0f0f0`/`#ffffff` (`theme.SECTION_BG_A/B`, alternance par position au peuplement). *(Les **couleurs des boutons** ⚙/✕/✙ restent bloquées par **G19**.)*
+6. ✅ **Databases** : bug de **survol** corrigé — `hover`/`click` explicites (expansé reste bleu ; replié `#e8e8e8`/`#bbb`), neutralise le gris par défaut de videre.
+7. ✅ **Files** : extensions avec point `.` (`.mp4`), nombres **alignés à droite** (`table.cell(align=END)`), état vide **centré** (Container CENTER/CENTER). *(marges/menus fins reportés.)*
+
+**Lot 3 — carte (visuel) FAIT (2026-06-30, 264 tests verts, 100 % ; vérifié visuellement)** :
+8a. ✅ Col space 2→3 ; **titre gras + souligné** noir ; méta-titre `#666666` ; **nom de fichier en cadre** 2 états (non-vu `#8c8cfa`/`#fafafa`+bordure `#f0f0fa` ; vu `#a0a0a0`/`#f8f8f8`) ; **couleurs de statut exactes** (NOT FOUND `#cc0000`, Unreadable `#cc6600`, Watched `#008800`, Similarity `#0066cc`, Errors `#cc0000`) ; **chips** `#1976d2` **soulignés** sur `#e3f2fd` + noms `#666`.
+
+**Reste — oublis videroid (sans toucher videre)** :
+8b. **Carte (interaction)** : survol de carte (events `mouse_enter/exit`, 6 états) ; **clic-toggle** titre ; **clic-filtrer** chips ; **clic-ouvrir** + survol-souligné du nom de fichier. *(monospace = G17 ; enroulement chips = G16 ; Re-encoded `#9900cc` = feature absente.)*
+9. **Centrages** (titres de pages, rangées de boutons) un peu partout ; **Properties** ratio largeur 2:1.
+10. **Menus** : items manquants (Find Similar/Re-encoded, Random, Playlist, Session Log), libellés (`(Ctrl+R)`, About 2 lignes), ordre (Update en 1er), Quit toujours actif.
+11. **Statut** : clic = **vider** (pas "Ready") ; **toasts** auto-effacés (`call_later`).
+12. **video_confirm** : ajouter la **vignette** (Container fixe + PIL).
+13. **Process** : zones jobs/log **séparées**, **Clear** log, autocontinue, Continue **désactivé** avant fin (`Button.disabled` existe).
+
+> **Cap suggéré** : finir les « oublis videroid » ci-dessus (gros gain visuel, zéro dépendance) ; puis trancher quels manques videre enrichir en priorité — les plus structurants pour le visuel sont **G18 (radius)**, **G19 (style des boutons)** et **G-DPI**, et pour l'UX **G-KBD** et **G15**.

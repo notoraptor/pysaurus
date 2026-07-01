@@ -64,7 +64,7 @@ class TestFilesUtils:
         from pysaurus.interface.videroid.pages.files_page import _ext_label
 
         assert _ext_label("") == "(no extension)"
-        assert _ext_label("mp4") == "mp4"
+        assert _ext_label("mp4") == ".mp4"  # kyuti prefixes a dot
         assert _ext_label(EMPTY_FOLDER_EXT) == "(empty folder)"
 
 
@@ -142,7 +142,7 @@ class TestFilesTrash:
         calls = _capture(monkeypatch, page.app.window, "confirm")
         page._trash_all(_evt(data="tmp"))  # all "tmp" files
         shown = _texts(calls[0][0][0])
-        assert any("all 2 'tmp' file(s)" in t for t in shown)  # subject count
+        assert any("all 2 '.tmp' file(s)" in t for t in shown)  # subject count (dotted)
         assert any("/d/a.tmp" in t for t in shown)
         assert any("/d/b.tmp" in t for t in shown)
 

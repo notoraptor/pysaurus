@@ -36,7 +36,8 @@ def _human_size(num: int) -> str:
 def _ext_label(ext) -> str:
     if ext == EMPTY_FOLDER_EXT:
         return "(empty folder)"
-    return ext or "(no extension)"
+    # Kyuti prefixes real extensions with a dot (.mp4), files_page.py:50.
+    return f".{ext}" if ext else "(no extension)"
 
 
 class FilesPage(Page):
@@ -70,17 +71,23 @@ class FilesPage(Page):
     # --- scan ---------------------------------------------------------------
 
     def _empty_state(self) -> Widget:
-        return videre.Column(
-            [
-                videre.Text("Database file inventory", strong=True),
-                videre.Text(
-                    "Scan the database folders to inventory the non-video files "
-                    "(thumbnails, .nfo, .part, subtitles…) accumulated next to "
-                    "your videos."
-                ),
-                videre.Button("Scan folders", on_click=self._on_scan),
-            ],
-            space=10,
+        # Centered in the page (kyuti centers the inventory prompt, files_page.py:168).
+        return videre.Container(
+            videre.Column(
+                [
+                    videre.Text("Database file inventory", strong=True),
+                    videre.Text(
+                        "Scan the database folders to inventory the non-video files "
+                        "(thumbnails, .nfo, .part, subtitles…) accumulated next to "
+                        "your videos."
+                    ),
+                    videre.Button("Scan folders", on_click=self._on_scan),
+                ],
+                space=10,
+                horizontal_alignment=videre.Alignment.CENTER,
+            ),
+            horizontal_alignment=videre.Alignment.CENTER,
+            vertical_alignment=videre.Alignment.CENTER,
         )
 
     def _on_scan(self, widget) -> None:
@@ -171,8 +178,10 @@ class FilesPage(Page):
                                 on_click=self._select_ext,
                                 weight=2,
                             ),
-                            table.cell(len(files), 1),
-                            table.cell(_human_size(total), 2),
+                            table.cell(len(files), 1, align=videre.Alignment.END),
+                            table.cell(
+                                _human_size(total), 2, align=videre.Alignment.END
+                            ),
                             videre.Container(
                                 videre.Button(
                                     "Trash all", data=ext, on_click=self._trash_all
@@ -290,10 +299,18 @@ class FilesPage(Page):
                 videre.Row(
                     [
                         table.cell(_ext_label(ext), 2),
-                        table.cell(len(indexed), 1),
-                        table.cell(_human_size(sum(f.size for f in indexed)), 2),
-                        table.cell(len(unknown), 1),
-                        table.cell(_human_size(sum(f.size for f in unknown)), 2),
+                        table.cell(len(indexed), 1, align=videre.Alignment.END),
+                        table.cell(
+                            _human_size(sum(f.size for f in indexed)),
+                            2,
+                            align=videre.Alignment.END,
+                        ),
+                        table.cell(len(unknown), 1, align=videre.Alignment.END),
+                        table.cell(
+                            _human_size(sum(f.size for f in unknown)),
+                            2,
+                            align=videre.Alignment.END,
+                        ),
                     ],
                     space=0,
                 )

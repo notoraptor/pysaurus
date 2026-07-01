@@ -3,6 +3,10 @@ create. Backend calls (get_database_names / run_process / delete) are mocked, so
 no real Application or threaded op is needed."""
 
 import pytest
+import videre
+
+from pysaurus.interface.videroid import theme
+from tests.interface.videroid_interface._widget_tree import find as _find
 
 
 def _evt(**attrs):
@@ -119,6 +123,28 @@ class TestCreate:
         monkeypatch.setattr(app, "run_process", lambda *a: calls.append(a))
         page._create("newdb", ["/a"])
         assert calls and calls[0][0] == "Creating 'newdb'" and page._sources == []
+
+
+class TestDatabaseItemHover:
+    """The item hover fix (kyuti databases_page.py:90-107): explicit hover/click,
+    else videre's default gray Div hover would override the item's background."""
+
+    def test_expanded_item_stays_blue_on_hover(self, db_page):
+        _, _, page = page_and(db_page)
+        page._expanded = "db2"
+        header = _find(page._db_item("db2"), videre.Div)[0]
+        # Expanded item keeps its blue on hover (the reported bug), not gray.
+        assert header._style.default.background_color == theme.SELECTED_BG
+        assert header._style.hover.background_color == theme.SELECTED_BG
+        assert header._style.hover.background_color != videre.Colors.lightgray
+
+    def test_collapsed_item_darkens_on_hover(self, db_page):
+        _, _, page = page_and(db_page)
+        page._expanded = None
+        header = _find(page._db_item("db2"), videre.Div)[0]
+        # Collapsed hover = #e8e8e8 (kyuti), NOT videre's default lightgray.
+        assert header._style.hover.background_color == videre.parse_color("#e8e8e8")
+        assert header._style.hover.background_color != videre.Colors.lightgray
 
 
 def page_and(fixture):
