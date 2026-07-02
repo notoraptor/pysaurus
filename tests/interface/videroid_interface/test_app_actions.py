@@ -31,6 +31,75 @@ class TestRunProcess:
         assert ended == [end]
 
 
+class TestViewMenu:
+    def test_random_video(self, videroid_app, monkeypatch):
+        app, _ = videroid_app
+        called = []
+        monkeypatch.setattr(
+            app.context, "open_random_video", lambda: called.append("r")
+        )
+        monkeypatch.setattr(
+            app._pages["videos"], "refresh", lambda: called.append("refresh")
+        )
+        app._random_video()
+        assert called == ["r", "refresh"]  # opens + refreshes the view
+
+    def test_generate_playlist(self, videroid_app, monkeypatch):
+        app, _ = videroid_app
+        monkeypatch.setattr(app.context, "generate_playlist", lambda: "/tmp/p.xspf")
+        app._generate_playlist()
+        assert "/tmp/p.xspf" in app._status.text
+
+    def test_thread_exception_expected_error_alerts(self, videroid_app):
+        # An ApplicationError from a background op -> non-fatal alert dialog,
+        # the app keeps running (kyuti's "warning" branch).
+        from pysaurus.application.exceptions import PysaurusError
+
+        app, window = videroid_app
+        app._on_thread_exception(PysaurusError("boom"))
+        window.render()  # the marshalled re-raise hits the warning branch...
+        window.render()  # ...which posts the alert as another task: drain it
+        assert window.has_fancybox()
+        assert window.windowing.running is True
+
+    def test_thread_exception_unexpected_error_is_fatal(self, videroid_app):
+        # Anything else is a bug: the loop stops cleanly (Window.run() would
+        # then re-raise it -> console traceback + non-zero exit); no alert.
+        app, window = videroid_app
+        app._on_thread_exception(RuntimeError("boom"))
+        window.render()  # re-raise -> ExitTask
+        if window.windowing.running:  # the ExitTask may drain on the next step
+            window.render()
+        assert window.windowing.running is False
+        assert not window.has_fancybox()
+
+
+class TestDatabaseSimilarity:
+    def _confirm_then_run(self, app, monkeypatch, trigger):
+        # window.confirm is read-only on the instance -> patch at the class level.
+        captured = {}
+        monkeypatch.setattr(
+            type(app.window),
+            "confirm",
+            lambda self, *a, **k: captured.update(cb=k["on_confirm"]),
+        )
+        procs = []
+        monkeypatch.setattr(app, "run_process", lambda *a, **k: procs.append(a[0]))
+        trigger()
+        captured["cb"]()  # accept the confirm -> run_process
+        return procs
+
+    def test_find_similar(self, videroid_app, monkeypatch):
+        app, _ = videroid_app
+        procs = self._confirm_then_run(app, monkeypatch, app._find_similar)
+        assert procs == ["Finding similar videos"]
+
+    def test_find_reencoded(self, videroid_app, monkeypatch):
+        app, _ = videroid_app
+        procs = self._confirm_then_run(app, monkeypatch, app._find_reencoded)
+        assert procs == ["Finding re-encoded videos"]
+
+
 class TestNotificationRouting:
     def test_routes_to_current_page(self, videroid_app, monkeypatch):
         app, _ = videroid_app

@@ -21,8 +21,12 @@ from pysaurus.interface.videroid.dialogs.batch_edit_property_dialog import (
 from pysaurus.interface.videroid.dialogs.grouping_dialog import GroupingDialog
 from pysaurus.interface.videroid.dialogs.sorting_dialog import SortingDialog
 from pysaurus.interface.videroid.dialogs.sources_dialog import SourcesDialog
+from pysaurus.interface.videroid.dialogs.video_properties_dialog import (
+    VideoPropertiesDialog,
+)
 from pysaurus.interface.videroid.pages.base_page import Page
 from pysaurus.interface.videroid.widgets.video_card import VideoCard, _thumbnail
+from pysaurus.video.video_constants import SIMILARITY_FIELDS
 
 
 class VideosPage(Page):
@@ -54,6 +58,8 @@ class VideosPage(Page):
         self._search_status = videre.Text("(no search)", italic=True)
         self._sorting_display = videre.Text("")
         self._grouping_display = videre.Text("No grouping")
+        # Holds the "Confirm all unique moves" button while grouped by move_id.
+        self._confirm_moves_holder = videre.Container()
         self._groups_column = videre.Column([], space=2)
         self._group_nav_label = videre.Text("")
         self._add_classifier_holder = videre.Container()
@@ -84,13 +90,17 @@ class VideosPage(Page):
             border=videre.Border.all(1, videre.Colors.lightgray),
             padding=videre.Padding.all(6),
         )
+        self._btn_first = videre.Button("<<", on_click=self._first)
+        self._btn_prev = videre.Button("<", on_click=self._prev)
+        self._btn_next = videre.Button(">", on_click=self._next)
+        self._btn_last = videre.Button(">>", on_click=self._last)
         pagination = videre.Row(
             [
-                videre.Button("<<", on_click=self._first),
-                videre.Button("<", on_click=self._prev),
+                self._btn_first,
+                self._btn_prev,
                 self._page_label,
-                videre.Button(">", on_click=self._next),
-                videre.Button(">>", on_click=self._last),
+                self._btn_next,
+                self._btn_last,
             ],
             space=5,
             vertical_alignment=videre.Alignment.CENTER,
@@ -197,17 +207,24 @@ class VideosPage(Page):
                 videre.Button("⚙", on_click=self._open_grouping),
                 videre.Button("✕", on_click=self._clear_grouping),
             ],
-            self._centered(self._grouping_display),
+            videre.Column(
+                [self._centered(self._grouping_display), self._confirm_moves_holder],
+                space=4,
+            ),
         )
 
     def _groups_section(self) -> Widget:
+        self._btn_group_first = videre.Button("|<", on_click=self._group_first)
+        self._btn_group_prev = videre.Button("<", on_click=self._group_prev)
+        self._btn_group_next = videre.Button(">", on_click=self._group_next)
+        self._btn_group_last = videre.Button(">|", on_click=self._group_last)
         nav = videre.Row(
             [
-                videre.Button("|<", on_click=self._group_first),
-                videre.Button("<", on_click=self._group_prev),
+                self._btn_group_first,
+                self._btn_group_prev,
                 self._group_nav_label,
-                videre.Button(">", on_click=self._group_next),
-                videre.Button(">|", on_click=self._group_last),
+                self._btn_group_next,
+                self._btn_group_last,
             ],
             space=2,
             vertical_alignment=videre.Alignment.CENTER,
@@ -231,7 +248,13 @@ class VideosPage(Page):
         body = videre.Column(
             [
                 self._classifier_column,
-                videre.Button("Reverse", on_click=self._classifier_reverse),
+                videre.Row(
+                    [
+                        videre.Button("Reverse", on_click=self._classifier_reverse),
+                        videre.Button("Concat…", on_click=self._classifier_concatenate),
+                    ],
+                    space=4,
+                ),
             ],
             space=4,
         )
@@ -239,9 +262,10 @@ class VideosPage(Page):
 
     def _selection_section(self) -> Widget:
         self._selection_menu = videre.ContextButton("⚙", actions=[], square=True)
+        self._btn_clear_selection = videre.Button("✕", on_click=self._clear_selection)
         return self._section(
             "Selection",
-            [self._selection_menu, videre.Button("✕", on_click=self._clear_selection)],
+            [self._selection_menu, self._btn_clear_selection],
             videre.Column(
                 [
                     self._selection_label,
@@ -290,6 +314,7 @@ class VideosPage(Page):
             self._cards.controls = [videre.Text("No database open.", italic=True)]
             self._status.text = ""
             self._page_label.text = ""
+            self._set_pagination(0, 0)
             self._sidebar_column.controls = self._with_section_backgrounds(
                 [
                     self._sec_sources,
@@ -311,6 +336,7 @@ class VideosPage(Page):
             f"{ctx.selection_file_size} | {ctx.selection_duration}"
         )
         self._page_label.text = f"Page {ctx.page_number + 1} / {ctx.nb_pages or 1}"
+        self._set_pagination(ctx.page_number, ctx.nb_pages or 1)
         self._update_sources(ctx)
         self._update_search(ctx)
         self._update_sorting(ctx)
@@ -363,6 +389,20 @@ class VideosPage(Page):
         # pysaurus' pretty_grouping (which is also barely used elsewhere). Its
         # old crash on property fields has since been fixed in common.py.
         grouping = ctx.grouping
+        # "Confirm all unique moves" only makes sense while grouped by move_id
+        # (kyuti shows/hides the same button; green there = videre gap G19).
+        grouped_by_moves = (
+            grouping is not None
+            and not grouping.is_property
+            and grouping.field == "move_id"
+        )
+        self._confirm_moves_holder.control = (
+            videre.Button(
+                "Confirm all unique moves", on_click=self._confirm_unique_moves
+            )
+            if grouped_by_moves
+            else None
+        )
         if grouping is None or grouping.field is None:
             self._grouping_display.text = "No grouping"
             return
@@ -404,6 +444,14 @@ class VideosPage(Page):
         self._groups_column.controls = items or [videre.Text("(no group)", italic=True)]
         current = (ctx.group_id or 0) + 1 if stats else 0
         self._group_nav_label.text = f"{current} / {len(stats)}"
+        # Grey out group nav at the bounds (kyuti disables |< < / > >| there).
+        gid = ctx.group_id or 0
+        at_first = gid <= 0
+        at_last = gid >= len(stats) - 1
+        self._btn_group_first.disabled = at_first
+        self._btn_group_prev.disabled = at_first
+        self._btn_group_next.disabled = at_last
+        self._btn_group_last.disabled = at_last
 
         is_multiple = False
         if ctx.grouping.is_property:
@@ -437,7 +485,12 @@ class VideosPage(Page):
     # --- search -------------------------------------------------------------
 
     def _on_mode(self, widget) -> None:
-        self.context.set_search(self._search_input.value, widget.data)
+        # Clicking a mode with an empty field is a no-op (kyuti: `if query:`);
+        # the ✕ button is the way to clear a search.
+        value = self._search_input.value.strip()
+        if not value:
+            return
+        self.context.set_search(value, widget.data)
         self._reset_and_reload()
 
     def _clear_search(self, widget) -> None:
@@ -565,7 +618,54 @@ class VideosPage(Page):
 
     def _classifier_reverse(self, widget) -> None:
         self.context.classifier_reverse()
+        self._reload()  # keep the current page (kyuti doesn't reset it)
+
+    def _classifier_concatenate(self, widget) -> None:
+        # Concatenate the classifier path into a single string property
+        # (kyuti _on_classifier_concatenate): pick the target, then merge.
+        if not self._context or not self._context.classifier:
+            return
+        string_props = [p for p in self.context.get_prop_types() if p.type == "str"]
+        if not string_props:
+            self.app.window.alert(
+                "No string property available. Create one first to "
+                "concatenate the path into.",
+                "Concatenate path",
+            )
+            return
+        dropdown = videre.Dropdown([p.name for p in string_props])
+        self.app.window.set_fancybox(
+            videre.Column(
+                [videre.Text("Concatenate the classifier path into:"), dropdown],
+                space=8,
+            ),
+            title="Concatenate path",
+            buttons=[
+                videre.FancyCloseButton(
+                    "Concat", on_click=lambda w: self._do_concatenate(dropdown.selected)
+                ),
+                videre.FancyCloseButton("Cancel"),
+            ],
+        )
+
+    def _do_concatenate(self, to_property) -> None:
+        self.context.classifier_concatenate_path(to_property)
         self._reset_and_reload()
+
+    def _confirm_unique_moves(self, widget) -> None:
+        self.app.window.confirm(
+            "This will automatically confirm all video moves that have only "
+            "one possible destination. The metadata from missing videos will "
+            "be transferred to the found files, and the missing entries will "
+            "be deleted. Continue?",
+            "Confirm All Unique Moves",
+            on_confirm=self._do_confirm_unique_moves,
+        )
+
+    def _do_confirm_unique_moves(self) -> None:
+        count = self.context.confirm_unique_moves()
+        self._reload()
+        self.set_status(f"Confirmed {count} video move(s)")
 
     # --- selection (phase 5b) -----------------------------------------------
 
@@ -573,6 +673,7 @@ class VideosPage(Page):
         count = self._selector.size_from(self._view_count)
         label = self._selection_label
         label.color = "#0078d4"  # kyuti accent blue
+        self._btn_clear_selection.disabled = count == 0  # nothing to clear
         if count:
             label.text = f"{count} selected"
             label.strong, label.italic = True, False  # selected -> bold
@@ -666,6 +767,7 @@ class VideosPage(Page):
     def _do_delete_selected(self, ids) -> None:
         self.context.delete_video_entries(ids)
         self._clear_selection()
+        self.set_status(f"{len(ids)} video(s) removed from database")
 
     def _edit_property_for_selection(self, prop) -> None:
         selector_dict = self._selector.to_dict()
@@ -706,9 +808,128 @@ class VideosPage(Page):
 
     def video_open(self, video) -> None:
         self.context.open_video(video.video_id)
+        # Opening marks the video "watched"; videroid has no state_changed signal,
+        # so reload to surface the Watched indicator (kyuti auto-refreshes here).
+        self._reload()
+
+    def video_open_vlc(self, video) -> None:
+        self.context.open_from_server(video.video_id)
 
     def video_open_folder(self, video) -> None:
         self.context.open_containing_folder(video.video_id)
+
+    def video_dismiss_similarity(self, video, field) -> None:
+        # Mark as "no match" (reversible via Reset). The reload updates the card.
+        self.context.dismiss_similarity(video.video_id, field)
+        self._reload()
+
+    def video_reset_similarity(self, video, field) -> None:
+        self.context.reset_similarity(video.video_id, field)
+        self._reload()
+
+    def grouped_by_similarity(self) -> bool:
+        """True while the view is grouped by a similarity field with several
+        videos on the page — kyuti's condition for the Generalize-title items."""
+        ctx = self._context
+        if ctx is None or ctx.grouping is None or ctx.grouping.is_property:
+            return False
+        return ctx.grouping.field in SIMILARITY_FIELDS and len(ctx.result) > 1
+
+    def video_generalize_title(self, video, title_field) -> None:
+        # Copy this video's title into a property for every OTHER video of the
+        # group (kyuti _generalize_title_to_property).
+        title_value = str(getattr(video, title_field, "") or "")
+        if not title_value:
+            self.app.window.alert("Title is empty.", "Generalize Title")
+            return
+        str_props = [
+            p.name
+            for p in self.context.get_prop_types()
+            if p.type == "str" and not p.enumeration
+        ]
+        if not str_props:
+            self.app.window.alert(
+                "No string (non-enum) property available.", "Generalize Title"
+            )
+            return
+        other_ids = [
+            v.video_id for v in self._context.result if v.video_id != video.video_id
+        ]
+        dropdown = videre.Dropdown(str_props)
+        self.app.window.set_fancybox(
+            videre.Column(
+                [
+                    videre.Text(
+                        f"Copy '{title_value}' into property for "
+                        f"{len(other_ids)} other video(s):",
+                        wrap=videre.TextWrap.WORD,
+                    ),
+                    dropdown,
+                ],
+                space=8,
+            ),
+            title="Generalize Title",
+            buttons=[
+                videre.FancyCloseButton(
+                    "OK",
+                    on_click=lambda w: self._do_generalize(
+                        other_ids, dropdown.selected, title_value
+                    ),
+                ),
+                videre.FancyCloseButton("Cancel"),
+            ],
+        )
+
+    def _do_generalize(self, other_ids, prop_name, title_value) -> None:
+        self.context.add_property_value_for_videos(other_ids, prop_name, [title_value])
+        self._reload()
+        self.set_status(
+            f'Property "{prop_name}" set to "{title_value}" '
+            f"for {len(other_ids)} video(s)"
+        )
+
+    def video_properties(self, video) -> None:
+        # Per-video properties dialog (kyuti VideoPropertiesDialog): edit every
+        # custom property of this video + read-only metadata. OK applies the
+        # diff; Cancel just closes (the global reset).
+        dialog = VideoPropertiesDialog(video, self.context.get_prop_types())
+        self.app.window.set_fancybox(
+            dialog,
+            title=f"Properties - {video.title}",
+            buttons=[
+                videre.FancyCloseButton(
+                    "OK", on_click=lambda w: self._apply_video_properties(video, dialog)
+                ),
+                videre.FancyCloseButton("Cancel"),
+            ],
+        )
+
+    def _apply_video_properties(self, video, dialog) -> None:
+        changes = dialog.get_changes()
+        if changes:
+            self.context.set_video_properties(video.video_id, changes)
+            self._reload()
+
+    def video_confirm_move(self, video, dst_video_id, dst_filename) -> None:
+        # Transfer the missing video's metadata onto the found destination file
+        # and delete the missing entry (kyuti _confirm_move).
+        self.app.window.confirm(
+            f"Transfer metadata from missing video to:\n\n{dst_filename}\n\n"
+            "The missing video entry will be deleted.",
+            "Confirm Move",
+            on_confirm=lambda: self._do_confirm_move(video.video_id, dst_video_id),
+        )
+
+    def _do_confirm_move(self, src_video_id, dst_video_id) -> None:
+        self.context.confirm_move(src_video_id, dst_video_id)
+        self._reload()
+        self.set_status("Video move confirmed")
+
+    def video_filter_property(self, name, value) -> None:
+        # Card property-chip click: focus the view on that (property, value),
+        # like kyuti's property_value_clicked -> classifier_focus_prop_val.
+        self.context.classifier_focus_prop_val(name, value)
+        self._reset_and_reload()
 
     def video_copy(self, video, field: str) -> None:
         pyperclip.copy(str(getattr(video, field)))
@@ -733,17 +954,36 @@ class VideosPage(Page):
         self.context.rename_video(video.video_id, entry.value)
         self._reload()
 
+    def video_move(self, video) -> None:
+        # Pick a destination folder, confirm, then move the file as a background
+        # process (kyuti routes Move-to through the process page too — it
+        # physically moves the file). The dir must be inside a DB folder.
+        directory = videre.Dialog.select_directory()
+        if not directory:
+            return
+        self.app.window.confirm(
+            f"Move '{video.title}' to:\n{directory}?",
+            "Move video",
+            on_confirm=lambda: self.app.run_process(
+                f"Moving '{video.title}'",
+                lambda: self.context.move_video_file(video.video_id, directory),
+                lambda end: self.app.show_page("videos"),
+            ),
+        )
+
     def video_delete_entry(self, video) -> None:
         # Mirror kyuti: a "not found" entry (file gone from disk) is removed
         # without confirmation when the option is disabled.
+        removed = f"'{video.title}' removed from database"
         if not video.found and not self.confirm_not_found_deletion:
-            self._run_video_action(self.context.delete_video_entry, video)
+            self._run_video_action(self.context.delete_video_entry, video, removed)
             return
         self._confirm_video(
             f"Delete '{video.filename}' from database?",
             "Delete from database",
             self.context.delete_video_entry,
             video,
+            removed,
         )
 
     def video_trash(self, video) -> None:
@@ -752,6 +992,7 @@ class VideosPage(Page):
             "Move to Trash",
             self.context.trash_video,
             video,
+            f"'{video.title}' moved to trash",
         )
 
     def video_delete_file(self, video) -> None:
@@ -760,9 +1001,12 @@ class VideosPage(Page):
             "Delete permanently",
             self.context.delete_video_file,
             video,
+            f"'{video.title}' permanently deleted",
         )
 
-    def _confirm_video(self, message, title, action, video) -> None:
+    def _confirm_video(
+        self, message, title, action, video, success_message=None
+    ) -> None:
         # Show the video's thumbnail above the message (kyuti's video_confirm
         # dialog uses a fixed 160x90 preview).
         content = videre.Column(
@@ -774,17 +1018,31 @@ class VideosPage(Page):
             horizontal_alignment=videre.Alignment.CENTER,
         )
         self.app.window.confirm(
-            content, title, on_confirm=lambda: self._run_video_action(action, video)
+            content,
+            title,
+            on_confirm=lambda: self._run_video_action(action, video, success_message),
         )
 
-    def _run_video_action(self, action, video) -> None:
+    def _run_video_action(self, action, video, success_message=None) -> None:
         action(video.video_id)
         self._reload()
+        if success_message:
+            self.set_status(success_message)
 
     # --- pagination ---------------------------------------------------------
 
     def _nb_pages(self) -> int:
         return (self._context.nb_pages or 1) if self._context else 1
+
+    def _set_pagination(self, page_number: int, nb_pages: int) -> None:
+        # Grey out first/prev at the start, next/last at the end (kyuti disables
+        # them at the bounds). With nb_pages == 0 (no db) all four are disabled.
+        at_first = page_number <= 0
+        at_last = page_number >= nb_pages - 1
+        self._btn_first.disabled = at_first
+        self._btn_prev.disabled = at_first
+        self._btn_next.disabled = at_last
+        self._btn_last.disabled = at_last
 
     def _reset_and_reload(self) -> None:
         self._page_number = VIDEO_DEFAULT_PAGE_NUMBER

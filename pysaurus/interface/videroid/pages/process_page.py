@@ -1,11 +1,13 @@
 """Process page — progress display for long backend operations.
 
 Transient screen created by ``VideroidApp.run_process``. Shows a spinner, a
-bounded **jobs** zone (one progress bar per job) kept SEPARATE from a scrolling
-**activity log** (with a Clear button), then enables the Continue button once the
-operation ends (an :class:`End` notification, e.g. ``DatabaseReady``).
-``autocontinue`` skips the button and proceeds immediately (kyuti does this when
-opening a database without updating it).
+dedicated **folder-scan** bar (fed by ``FolderScanProgress``, kept out of the
+log to avoid ~5 Hz flooding), a bounded **jobs** zone (one progress bar per
+job) kept SEPARATE from a scrolling **activity log** (with a Clear button),
+then enables the Continue button once the operation ends (an :class:`End`
+notification, e.g. ``DatabaseReady``). ``autocontinue`` skips the button and
+proceeds immediately (kyuti does this when opening a database without updating
+it).
 
 Reference: kyuti/pages/process_page.py. videre gaps: no circular spinner
 (``Progressing`` is an animated bar, ~G14); Continue can't be styled green
@@ -21,6 +23,7 @@ from videre.widgets.widget import Widget
 
 from pysaurus.core.job_notifications import JobProgressDisplay, NotificationCollector
 from pysaurus.core.notifications import End, Message, Notification
+from pysaurus.database.algorithms.folder_scan import FolderScanProgress
 
 
 class ProcessPage:
@@ -39,6 +42,16 @@ class ProcessPage:
         self._spinner_holder = videre.Container(
             videre.Progressing(), horizontal_alignment=videre.Alignment.CENTER
         )
+        # Dedicated folder-scan bar (unknown total: the max grows as subfolders
+        # are discovered). Hidden until the first FolderScanProgress arrives.
+        self._scan_label = videre.Text("", weight=1)
+        self._scan_bar = videre.ProgressBar(0.0, weight=3)
+        self._scan_row = videre.Row(
+            [self._scan_label, self._scan_bar],
+            vertical_alignment=videre.Alignment.CENTER,
+            space=5,
+        )
+        self._scan_holder = videre.Container()
         self._jobs = videre.Column([], expand_horizontal=True, space=4)
         self._log = videre.Column([], expand_horizontal=True, space=2)
         # Present from the start but disabled until the op ends (kyuti). Styling
@@ -54,6 +67,7 @@ class ProcessPage:
                     padding=videre.Padding.all(6),
                 ),
                 self._spinner_holder,
+                self._scan_holder,
                 # Jobs zone: bounded height, framed (kyuti's jobs QScrollArea).
                 videre.Container(
                     videre.ScrollView(self._jobs, wrap_horizontal=True),
@@ -86,10 +100,24 @@ class ProcessPage:
         return self._widget
 
     def on_notification(self, notification: Notification) -> None:
+        # Folder-scan progress feeds the dedicated bar and stays OUT of the
+        # collector, else it would flood the activity log at ~5 Hz (kyuti).
+        if isinstance(notification, FolderScanProgress):
+            self._update_scan(notification)
+            return
         self._collector.collect(notification)
         self._refresh()
         if isinstance(notification, End):
             self._finish(notification)
+
+    def _update_scan(self, notification: FolderScanProgress) -> None:
+        self._scan_holder.control = self._scan_row  # reveal on first progress
+        done = notification.folders_done
+        discovered = notification.folders_discovered
+        self._scan_bar.value = done / max(1, discovered)
+        self._scan_label.text = (
+            f"{done} / {discovered} folders — {notification.files_found} files"
+        )
 
     def _refresh(self) -> None:
         # `collector.views` is a flat, mixed list: JobProgressDisplay entries

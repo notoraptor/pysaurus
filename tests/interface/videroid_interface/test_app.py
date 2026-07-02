@@ -44,12 +44,19 @@ class TestShell:
             "Rename Database…",
             "Edit Folders…",
             "Update Database",
+            "Find Similar Videos",
+            "Find Re-encoded Videos",
             "Close Database",
+            "Session Log...",
             "Quit",
         ]
         # Without a database: only Quit stays reachable (kyuti keeps Quit active).
         assert [label for label, _ in app._menu_database(False)] == ["Quit"]
-        assert [label for label, _ in app._menu_view()] == ["Refresh View"]
+        assert [label for label, _ in app._menu_view()] == [
+            "Random Video",
+            "Generate Playlist",
+            "Refresh View",
+        ]
         assert [label for label, _ in app._menu_help()] == ["About"]
         options = [label for label, _ in app._menu_options()]
         assert any("Page size" in label for label in options)
@@ -84,6 +91,55 @@ class TestShell:
         app, _ = videroid_app
         app._set_status("Hello")
         assert app._status.text == "Hello"
+
+    def test_session_log_records_status_messages(self, videroid_app):
+        app, window = videroid_app
+        assert app._session_log[1].startswith("Session started: ")  # header seeded
+        before = len(app._session_log)
+        app._set_status("something happened")
+        assert len(app._session_log) == before + 1
+        assert app._session_log[-1].endswith("] something happened")  # timestamped
+        app._set_status("")  # clearing the bar is NOT logged
+        assert len(app._session_log) == before + 1
+        app._show_session_log()  # Database > Session Log... -> read-only fancybox
+        assert window.has_fancybox()
+
+    def test_save_log_to_file_header_once_then_appends(self, tmp_path):
+        from unittest.mock import Mock
+
+        from pysaurus.interface.videroid.app import VideroidApp
+
+        # Bare instance: the writer only needs context + the log state.
+        app = object.__new__(VideroidApp)
+        app._session_log = ["=" * 60, "Session started: X", "=" * 60, "[t1] first"]
+        app._log_file_initialized = set()
+        app.context = Mock()
+        app.context.has_database.return_value = True
+        app.context.get_database_folder_path.return_value = str(tmp_path)
+        app.context.get_database_name.return_value = "db"
+        app._save_log_to_file("[t1] first")
+        content = (tmp_path / "session_log.txt").read_text(encoding="utf-8")
+        # First write flushes the session header, then the entry.
+        assert "Session started: X" in content
+        assert content.endswith("[t1] first\n")
+        app._session_log.append("[t2] second")
+        app._save_log_to_file("[t2] second")
+        content = (tmp_path / "session_log.txt").read_text(encoding="utf-8")
+        assert content.count("Session started: X") == 1  # header written once
+        assert content.endswith("[t2] second\n")
+
+    def test_save_log_to_file_without_database_is_noop(self, tmp_path):
+        from unittest.mock import Mock
+
+        from pysaurus.interface.videroid.app import VideroidApp
+
+        app = object.__new__(VideroidApp)
+        app._session_log = ["x"]
+        app._log_file_initialized = set()
+        app.context = Mock()
+        app.context.has_database.return_value = False
+        app._save_log_to_file("x")  # no db -> nothing written anywhere
+        assert list(tmp_path.iterdir()) == []
 
     def test_status_bar_passive_and_clears_on_click(self, videroid_app):
         import videre

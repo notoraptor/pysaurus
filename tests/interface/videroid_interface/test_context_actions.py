@@ -40,6 +40,26 @@ class TestNotificationBridge:
         api._notify("notif")
         sink.assert_called_once_with("notif")
 
+    def test_set_exception_sink(self, mock_ctx):
+        cb = Mock()
+        mock_ctx.set_exception_sink(cb)
+        mock_ctx._api.set_exception_callback.assert_called_once_with(cb)
+
+    def test_run_thread_surfaces_exception(self):
+        # A background @process op that raises must reach the exception callback
+        # (else the failure is silent — the point of the robustness fix).
+        api = object.__new__(_VideroidAPI)
+        api._exception_callback = None
+        caught = []
+        api.set_exception_callback(caught.append)
+        api._run_thread(lambda: 1 / 0).join()
+        assert len(caught) == 1 and isinstance(caught[0], ZeroDivisionError)
+
+    def test_run_thread_no_callback_is_silent(self):
+        api = object.__new__(_VideroidAPI)
+        api._exception_callback = None
+        api._run_thread(lambda: 1 / 0).join()  # no callback -> swallowed, no crash
+
 
 class TestDatabaseLifecycle:
     def test_get_database_names(self, mock_ctx):
@@ -134,6 +154,79 @@ class TestVideoActions:
     def test_open_containing_folder(self, mock_ctx):
         mock_ctx.open_containing_folder(7)
         mock_ctx._api.open_containing_folder.assert_called_once_with(7)
+
+    def test_open_from_server(self, mock_ctx):
+        mock_ctx._api.open_from_server.return_value = "vlc://x"
+        assert mock_ctx.open_from_server(7) == "vlc://x"
+        mock_ctx._api.open_from_server.assert_called_once_with(7)
+
+    def test_open_random_video(self, mock_ctx):
+        mock_ctx.open_random_video()
+        mock_ctx._api.open_random_video.assert_called_once_with()
+
+    def test_generate_playlist(self, mock_ctx):
+        mock_ctx._api.playlist.return_value = "/tmp/p.xspf"
+        assert mock_ctx.generate_playlist() == "/tmp/p.xspf"
+
+    def test_classifier_concatenate_path(self, mock_ctx):
+        mock_ctx.classifier_concatenate_path("tag")
+        mock_ctx._api.classifier_concatenate_path.assert_called_once_with("tag")
+
+    def test_find_similar_videos(self, mock_ctx):
+        mock_ctx.find_similar_videos()
+        mock_ctx._api.find_similar_videos.assert_called_once_with()
+
+    def test_find_similar_videos_reencoded(self, mock_ctx):
+        mock_ctx.find_similar_videos_reencoded()
+        mock_ctx._api.find_similar_videos_reencoded.assert_called_once_with()
+
+    def test_dismiss_similarity(self, mock_ctx):
+        mock_ctx.dismiss_similarity(7, field="similarity_id_reencoded")
+        mock_ctx._api.database.ops.set_similarities_from_list.assert_called_once_with(
+            [7], [-1], field="similarity_id_reencoded"
+        )
+
+    def test_reset_similarity(self, mock_ctx):
+        mock_ctx.reset_similarity(7)
+        mock_ctx._api.database.ops.set_similarities_from_list.assert_called_once_with(
+            [7], [None], field="similarity_id"
+        )
+
+    def test_move_video_file(self, mock_ctx):
+        mock_ctx.move_video_file(7, "/dest")
+        mock_ctx._api.move_video_file.assert_called_once_with(7, "/dest")
+
+    def test_confirm_move(self, mock_ctx):
+        mock_ctx.confirm_move(7, 9)
+        mock_ctx._api.database.ops.move_video_entry.assert_called_once_with(7, 9)
+
+    def test_confirm_unique_moves(self, mock_ctx):
+        mock_ctx._api.database.algos.confirm_unique_moves.return_value = 3
+        assert mock_ctx.confirm_unique_moves() == 3
+
+    def test_confirm_unique_moves_no_db(self, mock_ctx):
+        mock_ctx._api.database = None
+        assert mock_ctx.confirm_unique_moves() == 0
+
+    def test_get_database_folder_path(self, mock_ctx):
+        mock_ctx._api.database.get_database_folder.return_value = "/dbs/mydb"
+        assert mock_ctx.get_database_folder_path() == "/dbs/mydb"
+        mock_ctx._api.database = None
+        assert mock_ctx.get_database_folder_path() == ""
+
+    def test_set_video_properties(self, mock_ctx):
+        mock_ctx.set_video_properties(7, {"tag": ["x"], "old": []})
+        mock_ctx._api.database.video_entry_set_tags.assert_called_once_with(
+            7, {"tag": ["x"], "old": []}
+        )
+
+    def test_add_property_value_for_videos(self, mock_ctx):
+        prop = Mock(multiple=True)
+        mock_ctx._api.database.get_prop_types.return_value = [prop]
+        mock_ctx.add_property_value_for_videos([1, 2], "tag", ["x"])
+        mock_ctx._api.database.ops.set_property_for_videos.assert_called_once_with(
+            "tag", {1: ["x"], 2: ["x"]}, merge=True
+        )
 
     def test_rename_video(self, mock_ctx):
         mock_ctx.rename_video(7, "new")

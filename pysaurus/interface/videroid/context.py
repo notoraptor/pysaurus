@@ -28,18 +28,38 @@ class _VideroidAPI(GuiAPI):
     handling happens on the loop thread.
     """
 
-    __slots__ = ("_sink",)
+    __slots__ = ("_sink", "_exception_callback")
 
     def __init__(self):
         super().__init__()
         self._sink: Callable[[Notification], None] | None = None
+        self._exception_callback: Callable[[Exception], None] | None = None
 
     def set_sink(self, sink: Callable[[Notification], None] | None) -> None:
         self._sink = sink
 
+    def set_exception_callback(
+        self, callback: Callable[[Exception], None] | None
+    ) -> None:
+        self._exception_callback = callback
+
     def _notify(self, notification: Notification) -> None:
         if self._sink is not None:
             self._sink(notification)
+
+    def _run_thread(self, function, *args, **kwargs):
+        # Catch exceptions raised by background @process ops (open/update/scan)
+        # and route them to the UI instead of losing them to stderr — otherwise
+        # a failed op shows a "success" in the ProcessPage. Mirrors
+        # KyutiAPI._run_thread (kyuti_api.py:50-60).
+        def wrapper():
+            try:
+                function(*args, **kwargs)
+            except Exception as exc:
+                if self._exception_callback is not None:
+                    self._exception_callback(exc)
+
+        return super()._run_thread(wrapper)
 
 
 class VideroidContext:
@@ -59,6 +79,11 @@ class VideroidContext:
     ) -> None:
         """Route backend notifications to ``sink`` (typically ``Window.notify``)."""
         self._api.set_sink(sink)
+
+    def set_exception_sink(self, callback: Callable[[Exception], None] | None) -> None:
+        """Route background-thread op exceptions to ``callback``. Fires on a
+        worker thread — the caller must reach the UI thread-safely."""
+        self._api.set_exception_callback(callback)
 
     # --- read accessors -----------------------------------------------------
 
@@ -142,6 +167,13 @@ class VideroidContext:
     def classifier_reverse(self) -> None:
         self._api.classifier_reverse()
 
+    def classifier_focus_prop_val(self, prop_name, field_value) -> None:
+        self._api.classifier_focus_prop_val(prop_name, field_value)
+
+    def classifier_concatenate_path(self, to_property) -> None:
+        """Concatenate the classifier path into a single string property."""
+        self._api.classifier_concatenate_path(to_property)
+
     def set_sources(self, sources) -> None:
         self._api.set_sources(sources)
 
@@ -186,8 +218,71 @@ class VideroidContext:
         if self._ops is not None:
             self._ops.open_video(video_id)
 
+    def open_from_server(self, video_id) -> str:
+        """Open a video via the server (VLC). Returns the server path/URL."""
+        return self._api.open_from_server(video_id)
+
+    def open_random_video(self) -> None:
+        """Pick a random unwatched video, open it, and narrow the view to it."""
+        self._api.open_random_video()
+
+    def generate_playlist(self) -> str:
+        """Build (and open) an XSPF playlist of the current view; return its path."""
+        return self._api.playlist()
+
+    def find_similar_videos(self) -> None:
+        """Search for visually similar videos (threaded @process); groups by id."""
+        self._api.find_similar_videos()
+
+    def find_similar_videos_reencoded(self) -> None:
+        """Search for re-encoded videos (threaded @process); groups by re-enc id."""
+        self._api.find_similar_videos_reencoded()
+
+    def dismiss_similarity(self, video_id, field="similarity_id") -> None:
+        """Mark a video as having no similar match (-1)."""
+        if self._ops is not None:
+            self._ops.set_similarities_from_list([video_id], [-1], field=field)
+
+    def reset_similarity(self, video_id, field="similarity_id") -> None:
+        """Reset a video's similarity so it is re-evaluated next search (None)."""
+        if self._ops is not None:
+            self._ops.set_similarities_from_list([video_id], [None], field=field)
+
+    def confirm_move(self, src_video_id, dst_video_id) -> None:
+        """Transfer a missing video's metadata onto its found destination entry
+        and delete the missing entry (synchronous)."""
+        if self._ops is not None:
+            self._ops.move_video_entry(src_video_id, dst_video_id)
+
+    def confirm_unique_moves(self) -> int:
+        """Confirm every move with exactly one destination; returns the count."""
+        if self._algos is not None:
+            return self._algos.confirm_unique_moves()
+        return 0
+
+    def set_video_properties(self, video_id, properties: dict) -> None:
+        """Replace properties on one video ({name: [values]}; an empty list
+        deletes the property from the video). Synchronous."""
+        db = self._api.database
+        if db is not None:
+            db.video_entry_set_tags(video_id, properties)
+
+    def add_property_value_for_videos(self, video_ids, prop_name, values) -> None:
+        """Set `values` on a property for several videos — merged with existing
+        values if the property is multiple, replacing them otherwise."""
+        if self._ops is not None:
+            (prop,) = self._api.database.get_prop_types(name=prop_name)
+            self._ops.set_property_for_videos(
+                prop_name, {vid: values for vid in video_ids}, merge=prop.multiple
+            )
+
     def open_containing_folder(self, video_id) -> None:
         self._api.open_containing_folder(video_id)
+
+    def move_video_file(self, video_id, directory) -> None:
+        """Move a video's file to `directory` (threaded @process; the dir must be
+        inside a DB folder or the op notifies an error). Emits Done/Cancelled/End."""
+        self._api.move_video_file(video_id, directory)
 
     def rename_video(self, video_id, new_title: str) -> None:
         if self._ops is not None:
@@ -374,6 +469,11 @@ class VideroidContext:
         """Return the database source folders as strings."""
         db = self._api.database
         return [str(folder) for folder in db.get_folders()] if db is not None else []
+
+    def get_database_folder_path(self) -> str:
+        """The open database's own folder (where session_log.txt lives), or ""."""
+        db = self._api.database
+        return str(db.get_database_folder()) if db is not None else ""
 
     def set_database_folders(self, folders: list[str]) -> None:
         """Replace the database source folders."""

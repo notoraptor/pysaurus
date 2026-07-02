@@ -21,6 +21,7 @@ import pytest
 from videre.testing.step_window import StepWindow
 from videre.testing.utils import LD
 
+from pysaurus.core.core_exceptions import ApplicationError
 from pysaurus.interface.videroid.app import VideroidApp
 from pysaurus.interface.videroid.context import VideroidContext
 
@@ -63,9 +64,23 @@ def videroid_context_example(example_saurus_database_memory) -> VideroidContext:
 
 
 @pytest.fixture
-def videroid_app(mem_saurus_database) -> Iterator[tuple[VideroidApp, StepWindow]]:
-    """A real VideroidApp on a headless StepWindow, db injected, on Videos page."""
-    with _headless_backend(), StepWindow() as window:
+def videroid_app(
+    mem_saurus_database, monkeypatch
+) -> Iterator[tuple[VideroidApp, StepWindow]]:
+    """A real VideroidApp on a headless StepWindow, db injected, on Videos page.
+
+    Session-log FILE writes are disabled: the mem db's folder is the shared
+    on-disk test data, and xdist workers would append to it concurrently. The
+    in-memory log still accumulates; the real writer has dedicated tmp_path
+    tests (test_app::TestSessionLog).
+    """
+    monkeypatch.setattr(VideroidApp, "_save_log_to_file", lambda self, entry: None)
+    # Same warning/fatal exception split as the production Window (app.py):
+    # expected errors alert, unexpected ones stop the loop.
+    with (
+        _headless_backend(),
+        StepWindow(alert_on_exceptions=(ApplicationError, OSError)) as window,
+    ):
         app = VideroidApp(window=window)
         app.context._api.database = mem_saurus_database
         app.show_page("videos")

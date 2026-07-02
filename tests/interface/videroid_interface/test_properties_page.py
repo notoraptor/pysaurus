@@ -40,6 +40,7 @@ class TestRenameConvertDelete:
         page._rename(_prop(app.context, "category"))  # opens fancybox
         page._do_rename(_prop(app.context, "category"), _T("category_x"))
         assert "category_x" in {p.name for p in app.context.get_prop_types()}
+        assert app._status.text == "Property renamed to 'category_x'"  # feedback
 
     def test_convert(self, props):
         app, _, page = props

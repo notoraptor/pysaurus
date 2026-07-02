@@ -36,6 +36,12 @@ class Page:
             self._widget = self.build()
         return self._widget
 
+    def set_status(self, message: str) -> None:
+        """Show a message in the app's status bar (persists until the next
+        message or a click on the bar — kyuti's showMessage without the timeout,
+        which videre can't schedule; gap G25)."""
+        self.app._set_status(message)
+
     def build(self) -> Widget:
         """Build the widget tree (called once). Subclasses override this."""
         return Text(f"{self.title} (not implemented yet)")

@@ -6,6 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 import videre
+from videre.core.events import MouseButton
 
 from pysaurus.core.constants import VIDEO_DEFAULT_SORTING
 from pysaurus.interface.common.common import FIELD_MAP
@@ -16,6 +17,11 @@ from pysaurus.interface.videroid.dialogs.batch_edit_property_dialog import (
 from pysaurus.interface.videroid.dialogs.grouping_dialog import GroupingDialog
 from pysaurus.interface.videroid.dialogs.sorting_dialog import SortingDialog
 from pysaurus.interface.videroid.dialogs.sources_dialog import SourcesDialog
+from pysaurus.interface.videroid.dialogs.video_properties_dialog import (
+    VideoPropertiesDialog,
+)
+from pysaurus.interface.videroid.widgets.video_card import VideoCard, _Clickable
+from tests.interface.videroid_interface._widget_tree import find as _find
 
 
 def _evt(**attrs):
@@ -67,6 +73,92 @@ def _group_by_tag_two_videos(app, name="tag"):
     ctx.set_groups(name, is_property=True)
 
 
+class TestCardInteraction:
+    """Card clicks (kyuti VideoListItem): the title toggles selection, the
+    filename opens the video, a property chip filters by value. handle_click
+    calls get_window().call_now, so the card must be mounted — these drive the
+    real page from `vp`. Clickable order in the tree is title, filename, chips."""
+
+    @staticmethod
+    def _cards(page):
+        return [c for c in page._cards.controls if isinstance(c, VideoCard)]
+
+    def test_title_click_toggles_selection(self, vp):
+        _, _, page = vp
+        card = self._cards(page)[0]
+        vid = card._video.video_id
+        assert not page._selector.contains(vid)
+        title = _find(card, _Clickable)[0]
+        title.handle_click(MouseButton.BUTTON_LEFT)
+        assert card._selected is True
+        assert page._selector.contains(vid)  # global selector updated
+        assert card.background_color == videre.Gradient.parse("#e3f2fd")  # restyled
+
+    def test_hover_tracks_over_card_and_child(self, vp):
+        # Real mouse-motion routing (the crux of the design): the card is
+        # __capture_mouse__, and videre emits enter/exit along the whole owner
+        # lineage — so the card stays highlighted even while the cursor sits on
+        # a clickable child, and the filename underlines on top of that.
+        _, window, page = vp
+        card = self._cards(page)[0]
+        user = window.user
+        user.mouve_over(card)  # over the card body
+        window.render()
+        assert card._hovered is True
+        filename = _find(card, _Clickable)[1]
+        fname_text = _find(filename, videre.Text)[0]
+        user.mouve_over(filename)  # now over a clickable child
+        window.render()
+        assert card._hovered is True  # card kept its hover
+        assert fname_text.underline is True  # child reacted too
+        user.leave()
+        window.render()
+        assert card._hovered is False
+        assert fname_text.underline is False
+
+    def test_filename_click_opens_video(self, vp, monkeypatch):
+        app, _, page = vp
+        card = self._cards(page)[0]
+        opened = []
+        monkeypatch.setattr(app.context, "open_video", opened.append)
+        filename = _find(card, _Clickable)[1]
+        filename.handle_click(MouseButton.BUTTON_LEFT)
+        assert opened == [card._video.video_id]
+
+    def test_chip_click_filters_by_value(self, vp, monkeypatch):
+        app, window, page = vp
+        # Tag one video WITHOUT grouping, so it stays on the page with its chip.
+        ctx = app.context
+        db = ctx._api.database
+        ctx.create_prop_type("tag", "str", "", True)
+        vid = _video(app).video_id
+        with db.to_save():
+            db.videos_tag_set("tag", {vid: ["x"]})
+        page._reload()
+        window.render()
+        blue = videre.parse_color("#1976d2")
+        chip = next(
+            c
+            for card in self._cards(page)
+            for c in _find(card, _Clickable)
+            if any(t.text == "x" and t.color == blue for t in _find(c, videre.Text))
+        )
+        # Spy THROUGH the real context wrapper (the api methods are read-only):
+        # the full video_filter_property -> context.classifier_focus_prop_val ->
+        # api path runs; only the reload is stubbed out.
+        focused = []
+        original = ctx.classifier_focus_prop_val
+
+        def spy(name, value):
+            focused.append((name, value))
+            return original(name, value)
+
+        monkeypatch.setattr(ctx, "classifier_focus_prop_val", spy)
+        monkeypatch.setattr(page, "_reset_and_reload", lambda: None)
+        chip.handle_click(MouseButton.BUTTON_LEFT)
+        assert focused == [("tag", "x")]  # video_filter_property -> classifier
+
+
 class TestFilters:
     def test_sidebar_sections_have_alternating_backgrounds(self, vp):
         _, _, page = vp
@@ -84,6 +176,14 @@ class TestFilters:
         page._clear_search(None)
         assert page._search_input.value == ""
         assert "no search" in page._search_status.text.lower()
+
+    def test_search_mode_click_ignored_when_field_blank(self, vp, monkeypatch):
+        _, _, page = vp
+        page._search_input.value = "   "  # blank -> clicking a mode is a no-op
+        called = []
+        monkeypatch.setattr(page.context, "set_search", lambda *a: called.append(a))
+        page._on_mode(_evt(data="and"))
+        assert called == []
 
     def test_sorting_apply_changes_order_then_clears(self, vp):
         _, _, page = vp
@@ -289,12 +389,14 @@ class TestVideoActions:
         monkeypatch.setattr(page.context, "open_video", opened.append)
         monkeypatch.setattr(page.context, "open_containing_folder", foldered.append)
         monkeypatch.setattr("pyperclip.copy", copied.append)
+        page._page_label.text = ""  # video_open must reload -> repopulates this
         page.video_open(video)
         page.video_open_folder(video)
         page.video_copy(video, "title")
         assert opened == [video.video_id]  # right id forwarded to the player
         assert foldered == [video.video_id]
         assert copied == [str(video.title)]  # the chosen field is copied verbatim
+        assert page._page_label.text.startswith("Page ")  # open reloaded (Watched)
 
     def test_rename(self, vp, monkeypatch):
         app, _, page = vp
@@ -340,9 +442,16 @@ class TestVideoActions:
             page.context, "delete_video_entry", lambda i: deleted.append(i)
         )
         page.confirm_not_found_deletion = False
-        fake = type("V", (), {"found": False, "filename": "gone.mp4", "video_id": 99})()
+        attrs = {
+            "found": False,
+            "filename": "gone.mp4",
+            "video_id": 99,
+            "title": "gone",
+        }
+        fake = type("V", (), attrs)()
         page.video_delete_entry(fake)  # not found + no-confirm -> direct delete
         assert deleted == [99]
+        assert page.app._status.text == "'gone' removed from database"  # feedback
 
 
 class TestPagination:
@@ -355,8 +464,12 @@ class TestPagination:
         page._last(None)
         assert page._page_number == nb - 1
         assert page._page_label.text == f"Page {nb} / {nb}"
+        assert page._btn_next.disabled and page._btn_last.disabled  # at the end
+        assert not page._btn_first.disabled
         page._first(None)
         assert page._page_number == 0
+        assert page._btn_first.disabled and page._btn_prev.disabled  # at the start
+        assert not page._btn_next.disabled
         page._next(None)
         assert page._page_number == 1
         page._prev(None)
@@ -380,6 +493,265 @@ class TestReloadAndFormatting:
         page._reload()
         assert page._cards.controls[0].text == "No database open."
         assert page._page_label.text == ""
+        assert page._btn_first.disabled and page._btn_last.disabled  # no pages
+
+
+class TestBoundsAndFeedback:
+    """Lot 8: buttons greyed at bounds + status feedback on actions."""
+
+    def test_clear_button_reflects_selection(self, vp):
+        _, _, page = vp
+        assert page._btn_clear_selection.disabled is True  # empty selection
+        page._select_page(None)  # select the current page
+        assert page._btn_clear_selection.disabled is False
+
+    def test_group_nav_disabled_at_bounds(self, vp):
+        app, _, page = vp
+        _setup_multiple_prop(app, page)  # groups by a property
+        page._select_group(0)
+        assert page._btn_group_first.disabled and page._btn_group_prev.disabled
+        page._group_last(None)  # jump to the last group
+        assert page._btn_group_next.disabled and page._btn_group_last.disabled
+
+    def test_batch_delete_reports_count(self, vp, monkeypatch):
+        app, _, page = vp
+        monkeypatch.setattr(page.context, "delete_video_entries", lambda ids: None)
+        page._do_delete_selected([1, 2, 3])
+        assert app._status.text == "3 video(s) removed from database"
+
+
+class TestVlcAndConcat:
+    """Lot 9: Open in VLC (per-video) + classifier Concatenate path."""
+
+    def test_open_vlc_forwards_to_server(self, vp, monkeypatch):
+        app, _, page = vp
+        called = []
+        monkeypatch.setattr(page.context, "open_from_server", called.append)
+        video = _video(app)
+        page.video_open_vlc(video)
+        assert called == [video.video_id]
+
+    def test_concat_noop_without_classifier(self, vp):
+        _, window, page = vp
+        page._classifier_concatenate(None)  # no classifier path -> no dialog
+        assert not window.has_fancybox()
+
+    def test_concat_alerts_without_string_prop(self, vp, monkeypatch):
+        app, window, page = vp
+        _setup_multiple_prop(app, page)
+        _stack_group(page, "x")  # activate the classifier path
+        monkeypatch.setattr(app.context, "get_prop_types", lambda: [])
+        page._classifier_concatenate(None)
+        assert window.has_fancybox()  # the "no string property" alert
+
+    def test_concat_opens_dialog_then_runs(self, vp, monkeypatch):
+        app, window, page = vp
+        _setup_multiple_prop(app, page)  # "tag" is a str property
+        _stack_group(page, "x")
+        page._classifier_concatenate(None)  # str prop exists -> dropdown dialog
+        assert window.has_fancybox()
+        window.clear_fancybox()
+        concatenated = []
+        monkeypatch.setattr(
+            app.context, "classifier_concatenate_path", concatenated.append
+        )
+        page._do_concatenate("tag")
+        assert concatenated == ["tag"]
+
+    def test_dismiss_and_reset_similarity(self, vp, monkeypatch):
+        app, _, page = vp
+        calls = []
+        monkeypatch.setattr(
+            page.context,
+            "dismiss_similarity",
+            lambda vid, f: calls.append(("dismiss", vid, f)),
+        )
+        monkeypatch.setattr(
+            page.context,
+            "reset_similarity",
+            lambda vid, f: calls.append(("reset", vid, f)),
+        )
+        video = _video(app)
+        page.video_dismiss_similarity(video, "similarity_id")
+        page.video_reset_similarity(video, "similarity_id_reencoded")
+        assert calls == [
+            ("dismiss", video.video_id, "similarity_id"),
+            ("reset", video.video_id, "similarity_id_reencoded"),
+        ]
+
+    def test_move_cancelled_when_no_folder(self, vp, monkeypatch):
+        app, window, page = vp
+        monkeypatch.setattr(
+            "videre.Dialog.select_directory", staticmethod(lambda: None)
+        )
+        page.video_move(_video(app))  # cancelled -> no confirm dialog
+        assert not window.has_fancybox()
+
+    def test_move_confirms_then_runs_process(self, vp, monkeypatch):
+        app, _, page = vp
+        monkeypatch.setattr(
+            "videre.Dialog.select_directory", staticmethod(lambda: "/dest")
+        )
+        captured = {}
+        monkeypatch.setattr(
+            type(app.window),
+            "confirm",
+            lambda self, *a, **k: captured.update(cb=k["on_confirm"]),
+        )
+        procs = []
+        monkeypatch.setattr(app, "run_process", lambda *a, **k: procs.append(a))
+        moved = []
+        monkeypatch.setattr(
+            app.context, "move_video_file", lambda vid, d: moved.append((vid, d))
+        )
+        video = _video(app)
+        page.video_move(video)
+        captured["cb"]()  # accept the confirm -> run_process(...)
+        assert procs and procs[0][0] == f"Moving '{video.title}'"
+        procs[0][1]()  # the process procedure -> move_video_file (no real move)
+        assert moved == [(video.video_id, "/dest")]
+
+
+class TestConfirmMoves:
+    """Lot 12: per-video Confirm-move + the grouped-by-move_id Confirm-all
+    button. All synchronous backend calls are mocked (metadata transfers)."""
+
+    @staticmethod
+    def _capture_confirm(app, monkeypatch):
+        captured = {}
+        monkeypatch.setattr(
+            type(app.window),
+            "confirm",
+            lambda self, *a, **k: captured.update(cb=k["on_confirm"]),
+        )
+        return captured
+
+    def test_confirm_move_transfers_and_reports(self, vp, monkeypatch):
+        app, _, page = vp
+        captured = self._capture_confirm(app, monkeypatch)
+        moved = []
+        monkeypatch.setattr(
+            page.context, "confirm_move", lambda s, d: moved.append((s, d))
+        )
+        video = _video(app)
+        page.video_confirm_move(video, 99, "/dst.mp4")
+        captured["cb"]()  # accept -> transfer + status
+        assert moved == [(video.video_id, 99)]
+        assert app._status.text == "Video move confirmed"
+
+    def test_confirm_unique_moves_reports_count(self, vp, monkeypatch):
+        app, _, page = vp
+        captured = self._capture_confirm(app, monkeypatch)
+        monkeypatch.setattr(page.context, "confirm_unique_moves", lambda: 3)
+        page._confirm_unique_moves(None)
+        captured["cb"]()
+        assert app._status.text == "Confirmed 3 video move(s)"
+
+    def test_button_only_while_grouped_by_move_id(self, vp):
+        _, _, page = vp
+
+        def ctx(field, is_prop=False):
+            grouping = type(
+                "G",
+                (),
+                {
+                    "field": field,
+                    "is_property": is_prop,
+                    "reverse": False,
+                    "sorting": "field",
+                    "allow_singletons": False,
+                },
+            )()
+            return type("C", (), {"grouping": grouping})()
+
+        page._update_grouping(ctx("move_id"))
+        # Container.control yields an EmptyWidget when unset -> check the TYPE.
+        assert isinstance(page._confirm_moves_holder.control, videre.Button)
+        page._update_grouping(ctx("date"))
+        assert not isinstance(page._confirm_moves_holder.control, videre.Button)
+
+
+class TestVideoProperties:
+    """Lot 15: the per-video properties dialog, applied on the REAL mem db."""
+
+    def test_open_apply_and_persist(self, vp):
+        app, window, page = vp
+        ctx = app.context
+        ctx.create_prop_type("vpd", "str", "", True)  # str multiple, free-form
+        video = _video(app)
+        page.video_properties(video)  # opens the dialog fancybox
+        assert window.has_fancybox()
+        dialog = next(
+            iter(window._layout.collect_matches(lambda w: hasattr(w, "get_changes")))
+        )
+        dialog._editors["vpd"]["input"].value = "tagged"
+        dialog._add_value("vpd")
+        window.clear_fancybox()
+        page._apply_video_properties(video, dialog)  # OK -> real db write
+        refreshed = next(
+            v for v in ctx.get_videos(100, 0).result if v.video_id == video.video_id
+        )
+        assert refreshed.properties.get("vpd") == ["tagged"]
+
+    def test_apply_without_changes_is_a_noop(self, vp, monkeypatch):
+        app, _, page = vp
+        written = []
+        monkeypatch.setattr(
+            app.context, "set_video_properties", lambda *a: written.append(a)
+        )
+        video = _video(app)
+        dialog = VideoPropertiesDialog(video, app.context.get_prop_types())
+        page._apply_video_properties(video, dialog)  # untouched -> no write
+        assert written == []
+
+
+class TestGeneralizeTitle:
+    """Lot 13: Generalize title into property (only grouped by similarity)."""
+
+    def test_grouped_by_similarity_condition(self, vp):
+        _, _, page = vp
+        assert page.grouped_by_similarity() is False  # no grouping by default
+        grouping = type("G", (), {"field": "similarity_id", "is_property": False})()
+        page._context = type("C", (), {"grouping": grouping, "result": [1, 2]})()
+        assert page.grouped_by_similarity() is True
+        page._context = type("C", (), {"grouping": grouping, "result": [1]})()
+        assert page.grouped_by_similarity() is False  # a single video shown
+
+    def test_generalize_empty_title_alerts(self, vp, monkeypatch):
+        app, _, page = vp
+        alerts = []
+        monkeypatch.setattr(
+            type(app.window), "alert", lambda self, msg, title="": alerts.append(msg)
+        )
+        video = type("V", (), {"meta_title": "", "video_id": 1})()
+        page.video_generalize_title(video, "meta_title")
+        assert alerts == ["Title is empty."]
+
+    def test_generalize_without_str_prop_alerts(self, vp, monkeypatch):
+        app, _, page = vp
+        alerts = []
+        monkeypatch.setattr(
+            type(app.window), "alert", lambda self, msg, title="": alerts.append(msg)
+        )
+        monkeypatch.setattr(page.context, "get_prop_types", lambda: [])
+        page.video_generalize_title(_video(app), "file_title")
+        assert alerts and "No string" in alerts[0]
+
+    def test_generalize_opens_dialog_then_applies(self, vp, monkeypatch):
+        app, window, page = vp
+        app.context.create_prop_type("gen", "str", "", False)  # str non-enum target
+        page.video_generalize_title(_video(app), "file_title")
+        assert window.has_fancybox()  # property-picker dialog
+        window.clear_fancybox()
+        added = []
+        monkeypatch.setattr(
+            page.context,
+            "add_property_value_for_videos",
+            lambda ids, name, vals: added.append((tuple(ids), name, tuple(vals))),
+        )
+        page._do_generalize([5, 6], "gen", "T")
+        assert added == [((5, 6), "gen", ("T",))]
+        assert app._status.text == 'Property "gen" set to "T" for 2 video(s)'
 
     def test_grouping_display_count_and_length(self, vp):
         _, _, page = vp

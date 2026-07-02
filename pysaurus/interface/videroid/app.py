@@ -2,10 +2,12 @@
 bar / page selector) and backend wiring."""
 
 import logging
+from datetime import datetime
 
 import videre
 from videre import Window
 
+from pysaurus.core.core_exceptions import ApplicationError
 from pysaurus.interface.videroid.context import VideroidContext
 from pysaurus.interface.videroid.dialogs.edit_folders_dialog import EditFoldersDialog
 from pysaurus.interface.videroid.pages.base_page import Page
@@ -42,10 +44,17 @@ class VideroidApp:
 
     def __init__(self, window: Window | None = None):
         # `window` is injectable for headless tests (e.g. a StepWindow).
-        # alert_on_exceptions (phase 8.3): videre shows an error dialog instead of
-        # crashing on a handled exception in an event handler.
+        # Warning vs fatal split (kyuti main.py PySide6ExceptHook): expected
+        # application/OS errors -> non-fatal alert dialog; anything else is a
+        # bug -> videre stops the loop cleanly and Window.run() re-raises, so
+        # the traceback reaches the console and the process exits non-zero.
+        # (kyuti also shows the traceback in a "Fatal Error" dialog before
+        # exiting — videre's lifecycle cannot show-then-exit.)
         self.window = window or Window(
-            title="Pysaurus", width=1200, height=800, alert_on_exceptions=(Exception,)
+            title="Pysaurus",
+            width=1200,
+            height=800,
+            alert_on_exceptions=(ApplicationError, OSError),
         )
         self.context = VideroidContext()
 
@@ -58,6 +67,12 @@ class VideroidApp:
         self._current = "databases"
         self._active_process: ProcessPage | None = None
         self._process_title = ""
+        # Session log (kyuti): every status message is timestamped, kept in
+        # memory, and appended to <db folder>/session_log.txt while a database
+        # is open (the session header is flushed once per database).
+        self._session_log: list[str] = []
+        self._log_file_initialized: set[str] = set()
+        self._log_session_start()
 
         # Shell widgets (persistent; rebuilt in place on navigation/state).
         self._title_label = videre.Text("Pysaurus", strong=True)
@@ -89,6 +104,8 @@ class VideroidApp:
         # (thread-safe) -> UI loop -> on_notification (UI thread).
         self.context.set_notification_sink(self.window.notify)
         self.window.add_notification_callback(self.on_notification)
+        # Surface background-op failures instead of a silent "success" (kyuti).
+        self.context.set_exception_sink(self._on_thread_exception)
 
         self.show_page("databases")
 
@@ -129,6 +146,59 @@ class VideroidApp:
 
     def _set_status(self, message: str) -> None:
         self._status.text = message
+        # Every status message lands in the session log (kyuti logs the
+        # page-emitted ones; here _set_status is the single funnel). Clearing
+        # the bar (empty message, e.g. the click-to-clear) is not logged.
+        if message:
+            self._log_message(message)
+
+    # --- session log ----------------------------------------------------------
+
+    def _log_session_start(self) -> None:
+        started = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._session_log += ["=" * 60, f"Session started: {started}", "=" * 60]
+
+    def _log_message(self, message: str) -> None:
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        entry = f"[{timestamp}] {message}"
+        self._session_log.append(entry)
+        self._save_log_to_file(entry)
+
+    def _save_log_to_file(self, entry: str) -> None:
+        # Append to session_log.txt in the open database's folder. On the first
+        # write for a database, flush everything logged so far this session
+        # (header + any pre-open messages) before the entry (kyuti).
+        if not self.context.has_database():
+            return
+        log_file = f"{self.context.get_database_folder_path()}/session_log.txt"
+        db_name = self.context.get_database_name()
+        if db_name not in self._log_file_initialized:
+            with open(log_file, "a", encoding="utf-8") as file:
+                file.write("\n")
+                for line in self._session_log[:-1]:
+                    file.write(line + "\n")
+            self._log_file_initialized.add(db_name)
+        with open(log_file, "a", encoding="utf-8") as file:
+            file.write(entry + "\n")
+
+    def _show_session_log(self) -> None:
+        # Read-only view of the in-memory log, scrolled to the end (kyuti's
+        # SessionLogDialog; monospace = videre gap G17).
+        self.window.set_fancybox(
+            videre.Container(
+                videre.ScrollView(
+                    videre.Text(
+                        "\n".join(self._session_log), wrap=videre.TextWrap.WORD
+                    ),
+                    wrap_horizontal=True,
+                    default_bottom=True,
+                ),
+                height=400,
+                padding=videre.Padding.all(6),
+            ),
+            title="Session Log",
+            buttons=[videre.FancyCloseButton("Close")],
+        )
 
     def _refresh_shell(self) -> None:
         has_db = self.context.has_database() and self._active_process is None
@@ -178,20 +248,27 @@ class VideroidApp:
 
     def _menu_database(self, has_db: bool = True):
         # Quit is always available (kyuti). Order mirrors kyuti (Rename, Edit,
-        # Update, Close, Quit); Find Similar/Re-encoded and Session Log are
-        # deferred features (not yet ported).
+        # Update, Find Similar/Re-encoded, Close, Quit); Session Log is a
+        # deferred feature (not yet ported).
         if not has_db:
             return [("Quit", self._quit)]
         return [
             ("Rename Database…", self._rename_db),
             ("Edit Folders…", self._edit_folders),
             ("Update Database", self._update_db),
+            ("Find Similar Videos", self._find_similar),
+            ("Find Re-encoded Videos", self._find_reencoded),
             ("Close Database", self._close_db),
+            ("Session Log...", self._show_session_log),
             ("Quit", self._quit),
         ]
 
     def _menu_view(self):
-        return [("Refresh View", self._refresh_view)]
+        return [
+            ("Random Video", self._random_video),
+            ("Generate Playlist", self._generate_playlist),
+            ("Refresh View", self._refresh_view),
+        ]
 
     def _menu_options(self):
         page_size = self._pages["videos"].page_size
@@ -218,6 +295,28 @@ class VideroidApp:
             "Updating database",
             self.context.update_database,
             lambda end: self.show_page("videos"),
+        )
+
+    def _find_similar(self) -> None:
+        self.window.confirm(
+            "Search for visually similar videos? This may take a while.",
+            "Find Similar Videos",
+            on_confirm=lambda: self.run_process(
+                "Finding similar videos",
+                self.context.find_similar_videos,
+                lambda end: self.show_page("videos"),
+            ),
+        )
+
+    def _find_reencoded(self) -> None:
+        self.window.confirm(
+            "Search for potentially re-encoded videos? This may take a while.",
+            "Find Re-encoded Videos",
+            on_confirm=lambda: self.run_process(
+                "Finding re-encoded videos",
+                self.context.find_similar_videos_reencoded,
+                lambda end: self.show_page("videos"),
+            ),
         )
 
     def _rename_db(self) -> None:
@@ -289,6 +388,25 @@ class VideroidApp:
     def _refresh_view(self) -> None:
         self._pages["videos"].refresh()
         self._set_status("View refreshed.")
+
+    def _random_video(self) -> None:
+        # Opens a random unwatched video and narrows the view to it (kyuti).
+        self.context.open_random_video()
+        self._pages["videos"].refresh()
+
+    def _generate_playlist(self) -> None:
+        path = self.context.generate_playlist()
+        self._set_status(f"Playlist created: {path}")
+
+    def _on_thread_exception(self, exception) -> None:
+        # A background @process op (open/update/scan) failed. Runs on a worker
+        # thread: call_later marshals a re-raise onto the UI loop, where the
+        # task wrapper applies the same warning/fatal split as event handlers
+        # (kyuti re-raises in the main thread for its excepthook the same way).
+        def reraise():
+            raise exception
+
+        self.window.call_later(reraise)
 
     def _set_page_size(self, size: int) -> None:
         videos = self._pages["videos"]

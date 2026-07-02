@@ -4,6 +4,7 @@ import videre
 
 from pysaurus.core.job_notifications import JobProgressDisplay, JobToDo
 from pysaurus.core.notifications import DatabaseReady, End, Message
+from pysaurus.database.algorithms.folder_scan import FolderScanProgress
 from pysaurus.interface.videroid.pages.process_page import ProcessPage
 from tests.interface.videroid_interface._widget_tree import find as _find
 from tests.interface.videroid_interface._widget_tree import texts as _texts
@@ -55,6 +56,27 @@ class TestProcessPage:
         assert page._log_row(Message("m")).text == "m"  # Message -> its text
         sentinel = object()
         assert page._log_row(sentinel).text == str(sentinel)  # fallback str()
+
+    def test_scan_progress_feeds_dedicated_bar_not_the_log(self):
+        page = ProcessPage("Scan", lambda end: None)
+        # Hidden until the first scan notification (holder shows an EmptyWidget).
+        assert page._scan_holder.control is not page._scan_row
+        page.on_notification(FolderScanProgress(3, 12, 120))
+        assert page._scan_holder.control is page._scan_row  # bar revealed
+        assert page._scan_bar.value == 3 / 12
+        assert page._scan_label.text == "3 / 12 folders — 120 files"
+        # Kept OUT of the log/collector (would flood at ~5 Hz).
+        assert page._collector.views == []
+        assert "folders" not in " ".join(_texts(page._log))
+        # The max grows as subfolders are discovered during the walk.
+        page.on_notification(FolderScanProgress(10, 40, 500))
+        assert page._scan_bar.value == 10 / 40
+
+    def test_scan_progress_zero_discovered_no_crash(self):
+        page = ProcessPage("Scan", lambda end: None)
+        page.on_notification(FolderScanProgress(0, 0, 0))  # max(1, 0) guard
+        assert page._scan_bar.value == 0.0
+        assert page._scan_label.text == "0 / 0 folders — 0 files"
 
     def test_clear_log_hides_prior_entries_but_keeps_new_ones(self):
         page = ProcessPage("X", lambda end: None)

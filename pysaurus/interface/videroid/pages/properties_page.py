@@ -156,6 +156,7 @@ class PropertiesPage(Page):
         if new_name and new_name != prop.name:
             self.context.rename_prop_type(prop.name, new_name)
             self._reload()
+            self.set_status(f"Property renamed to '{new_name}'")
 
     def _convert(self, prop) -> None:
         message = (
@@ -170,8 +171,10 @@ class PropertiesPage(Page):
         )
 
     def _do_convert(self, prop) -> None:
+        target = "multiple" if not prop.multiple else "single"
         self.context.set_prop_type_multiple(prop.name, not prop.multiple)
         self._reload()
+        self.set_status(f"Property '{prop.name}' converted to {target}")
 
     def _delete(self, prop) -> None:
         self.app.window.confirm(
@@ -215,6 +218,7 @@ class PropertiesPage(Page):
                 values, prop.name, target.name, concatenate=concatenate
             )
             self._reload()
+            self.set_status(f"Values moved from '{prop.name}' to '{target.name}'")
 
     def _on_fill(self, widget) -> None:
         dialog = FillPropertyDialog(self.context.get_prop_types())
@@ -235,6 +239,7 @@ class PropertiesPage(Page):
             prop, only_empty = result
             self.context.fill_property_with_terms(prop.name, only_empty=only_empty)
             self._reload()
+            self.set_status(f"Property '{prop.name}' filled with terms")
 
     # --- create form --------------------------------------------------------
 
