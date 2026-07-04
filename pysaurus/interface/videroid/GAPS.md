@@ -29,7 +29,7 @@ l'amélioration qui remplacerait le contournement).
 | G10 | menus riches | atténué | `set_context` plat + glyphes ☑ | sous-menus / items cochables / icônes |
 | G11 | `TextInput` multi-ligne | contourné | éditeur 1 ligne | `TextArea` |
 | G12 | placeholder | contourné | label adjacent / gris manuel | placeholder natif |
-| G13 | `Picture` resize | contourné | PIL en amont | `width`/`height`/fit |
+| G13 | `Picture` resize | **comblé** (2026-07-02) | `width`/`height` (ratio auto) | mode `fit` si besoin |
 | G14 | `ProgressBar` libellé % | contourné | `Text` à côté | label intégré |
 | G15 | `Dropdown` sans scroll | **manque, non contourné** | aucun (la liste déborde) | ScrollView borné dans le popup d'options |
 | G16 | pas de layout « flow »/wrap | **manque** | `Row` (pas de retour à la ligne) | layout flow (chips/badges qui s'enroulent) |
@@ -45,7 +45,7 @@ l'amélioration qui remplacerait le contournement).
 | G-KBD | raccourcis clavier | **bloquant, différé** | aucun (tout à la souris) | hook clavier fall-through |
 | G-MODAL | modals empilés | contourné | prompts **inline** | pile de fancybox |
 | G-TITLE | titre OS | contourné | titre **in-app** | setter `Window.title` |
-| G-DPI | scaling DPI | différé | police fixe | accès DPR + police mise à l'échelle |
+| G-DPI | scaling DPI | **livré** (modèle Qt : échelle appliquée à l'enregistrement par `window.drawing`, widgets 100 % logiques) | `dpi_aware=True` | reste : per-monitor dynamique (SDL3) + ClearType |
 
 ---
 
@@ -122,11 +122,10 @@ l'amélioration qui remplacerait le contournement).
 - **Contournement videroid** : label adjacent / gris géré à la main.
 - **Piste videre** : un `placeholder` natif sur `TextInput`.
 
-### G13 — `Picture` ne redimensionne pas
-- **Constat** : `Picture` affiche à la **taille native** (pas de scale).
-- **Impacte** : les vignettes (cible 180×100).
-- **Contournement videroid** : redimensionner via **PIL en amont** (on a les bytes JPEG) — `widgets/video_card.py::_thumbnail` fait `PIL.Image.thumbnail((180,100))` puis crée le `Picture`.
-- **Piste videre** : `width`/`height`/`fit` (contain/cover) sur `Picture`. *(NB : `Gradient` vient de gagner `colors`/`__eq__` — même esprit d'enrichissement.)*
+### G13 — `Picture` ne redimensionne pas — **COMBLÉ** (2026-07-02)
+- **Était** : `Picture` affichait à la **taille native** (pas de scale) ; videroid redimensionnait via PIL en amont.
+- **Comblé** : `Picture(width=, height=, keep_ratio=)` — pixels logiques ; un seul paramètre → ratio préservé (comme `<img>`) ; `keep_ratio=True` avec les deux = **contain** (tenir dans la boîte, l'équivalent de `QPixmap.scaled KeepAspectRatio`). Et c'est TOUT ce qu'il faut pour le DPI : on donne le **bitmap natif** (le JPEG brut) + la taille logique, le renderer resample **une seule fois, directement vers les pixels physiques** → vignette nette à toute échelle, **zéro maniement du scale côté app** (mieux que Qt, où un pixmap dynamique net exige `scaled(size×dpr)` + `setDevicePixelRatio` à la main — kyuti ne le fait pas et a donc un léger flou d'upscale à 150 %). `_thumbnail` n'a plus ni PIL ni try/except.
+- **Reste éventuel** : un mode `cover` si un besoin réel apparaît.
 
 ### G14 — `ProgressBar` sans libellé %
 - **Constat** : pas de pourcentage intégré.
@@ -232,9 +231,35 @@ confirmation indépendante du slot principal.
 
 - **G-TITLE** : `Window.title` n'a qu'un getter (pas de setter) → titre OS figé.
   Contournement : un **label de titre in-app** mis à jour à la navigation.
-- **G-DPI** : videre n'expose pas le device-pixel-ratio ; `Window(font_size=…)`
-  existe mais pas de mise à l'échelle auto par densité d'écran (la version Qt
-  scalait la police). Reporté ; police par défaut conservée.
+- **G-DPI** : videre n'exposait pas le device-pixel-ratio → sur un écran mis à
+  l'échelle (150 %), la fenêtre (non DPI-aware) était **étirée en bitmap** par
+  l'OS = texte flou (diagnostiqué 2026-07-01 : c'était la cause du « texte
+  baveux » vs kyuti/Qt, DPI-aware). **LIVRÉ dans videre (2026-07-02, opt-in
+  `Window(dpi_aware=True)`, activé dans videroid)** sur le **modèle
+  Qt/Flutter** : tout le code widget (layout, wprops, événements, `draw()`)
+  reste en **pixels logiques** et ne voit jamais l'échelle ; elle est
+  appliquée à **une frontière unique** — *l'enregistrement du dessin* :
+  les widgets dessinent via `window.drawing`, qui convertit chaque
+  coordonnée logique en pixels physiques au moment où elle est enregistrée
+  (rectangles arrondis *par bords*, donc pas de coutures ; bordures
+  recalculées à la taille physique de la surface). Le backend reçoit des
+  commandes déjà physiques et les rejoue 1:1 — il ne sait rien de
+  l'échelle. Le texte est rasterisé à taille
+  native par un `TextRendering` qui porte lui-même l'échelle (glyphes
+  jamais resamplés ; métriques/caret reconvertis en logique), la souris
+  est divisée à l'entrée de l'event loop. Déclaration process
+  Windows dans `videre/core/dpi.py` (dégradation gracieuse ailleurs ; le
+  contrat cross-platform est `AbstractWindowing.scale_factor`, SDL3
+  `GetWindowDisplayScale` en sera l'implémentation unifiée quand pygame-ce le
+  livrera). Identité stricte à 1.0 (snapshots au pixel près). Un premier
+  design (phase 2 : `window.scaled()` appelé dans chaque `draw()`) a été
+  **rejeté et remplacé** : une propriété transversale ne doit pas fuiter dans
+  le code de chaque widget. Vignettes : **aucun maniement du scale côté app**
+  non plus — bitmap natif + taille logique via `Picture(width=, height=,
+  keep_ratio=True)`, resamplé une fois vers les pixels physiques par le
+  renderer (cf. G13 ; plus net que kyuti, qui laisse Qt upscaler ses pixmaps
+  180px logiques). **RESTE** : échelle par-moniteur dynamique (attendre
+  SDL3/pygame-ce), ClearType (AA sous-pixel, indépendant).
 
 À l'inverse, la **gestion d'exceptions EST fournie** par videre :
 `Window(alert_on_exceptions=(…,))` affiche un dialog d'erreur au lieu de crasher.
@@ -256,7 +281,7 @@ Pour mémoire (ne pas re-lister comme manques) :
 | Cases / radios | `Checkbox`, `Radio`, `RadioGroup` |
 | Listes déroulantes | `Dropdown` |
 | Menus & popups | `ContextButton` (plat) + `Window.set_context()` |
-| Vignettes (depuis `bytes`) | `Picture` (PIL) — resize en amont (cf. G13) |
+| Vignettes (depuis `bytes`) | `Picture(width=, height=)` — bitmap dense + taille logique (cf. G13/G-DPI) |
 | Champs de saisie | `TextInput` (mono-ligne — cf. G11/G12) |
 | Formulaires | `Form` (`.values()`) + `SubmitButton` |
 | Progression | `ProgressBar`, `Progressing` |

@@ -9,10 +9,7 @@ filter by value).
 
 from __future__ import annotations
 
-import io
-
 import videre
-from PIL import Image
 from videre.core.events import MouseButton, MouseEvent
 from videre.layouts.control_layout import ControlLayout
 from videre.widgets.widget import Widget
@@ -105,15 +102,14 @@ def _thumbnail(video: VideoPattern, box: tuple[int, int] = _THUMB_BOX) -> Widget
         return _thumb_frame(
             videre.Text("(no thumbnail)", italic=True, color=videre.Colors.gray), box
         )
-    try:
-        # Picture does not resize (videre gap G13): scale the JPEG via PIL first.
-        image = Image.open(io.BytesIO(data))
-        image.thumbnail(box)
-        buffer = io.BytesIO()
-        image.save(buffer, "PNG")
-        picture = videre.Picture(buffer.getvalue())
-    except Exception:
-        picture = videre.Picture(data, alt="(thumbnail error)")
+    # The raw JPEG goes straight to videre with its logical display box
+    # (kyuti: QPixmap.scaled KeepAspectRatio): the renderer resamples the
+    # native bitmap once, directly to device pixels, so the thumbnail is as
+    # sharp as the source allows on any display scale. Undecodable bytes fall
+    # back to the alt text (Picture handles it).
+    picture = videre.Picture(
+        data, alt="(thumbnail error)", width=box[0], height=box[1], keep_ratio=True
+    )
     return _thumb_frame(picture, box)
 
 

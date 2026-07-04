@@ -50,11 +50,15 @@ class VideroidApp:
         # the traceback reaches the console and the process exits non-zero.
         # (kyuti also shows the traceback in a "Fatal Error" dialog before
         # exiting — videre's lifecycle cannot show-then-exit.)
+        # dpi_aware (videre phase 1 of G-DPI): on a scaled display (e.g. 150%)
+        # the window opens at device-pixel size and text is rasterized at
+        # native resolution — sharp instead of bitmap-stretched by the OS.
         self.window = window or Window(
             title="Pysaurus",
             width=1200,
             height=800,
             alert_on_exceptions=(ApplicationError, OSError),
+            dpi_aware=True,
         )
         self.context = VideroidContext()
 
