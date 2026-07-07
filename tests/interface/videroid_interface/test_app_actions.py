@@ -60,7 +60,7 @@ class TestViewMenu:
         window.render()  # the marshalled re-raise hits the warning branch...
         window.render()  # ...which posts the alert as another task: drain it
         assert window.has_fancybox()
-        assert window.windowing.running is True
+        assert window.running is True
 
     def test_thread_exception_unexpected_error_is_fatal(self, videroid_app):
         # Anything else is a bug: the loop stops cleanly (Window.run() would
@@ -68,9 +68,9 @@ class TestViewMenu:
         app, window = videroid_app
         app._on_thread_exception(RuntimeError("boom"))
         window.render()  # re-raise -> ExitTask
-        if window.windowing.running:  # the ExitTask may drain on the next step
+        if window.running:  # the ExitTask may drain on the next step
             window.render()
-        assert window.windowing.running is False
+        assert window.running is False
         assert not window.has_fancybox()
 
 
@@ -180,14 +180,14 @@ class TestMenuActions:
         app, window = videroid_app
         closed = []
         monkeypatch.setattr(app.context, "close_app", lambda: closed.append(1))
-        assert window.windowing.running  # loop is "running" by default
+        assert window.running  # loop is "running" by default
         app._quit()  # confirm
         app._do_quit()
-        # App closed and the loop is asked to stop by CLEARING `running` — not by
-        # calling stop()/pygame.quit() mid-step (which crashed the real app with
-        # "video system not initialized"). run()'s finally does the pygame.quit().
+        # App closed and the loop is asked to stop via window.stop() (which clears
+        # `running`) — not by tearing pygame down mid-step (which crashed the real
+        # app with "video system not initialized"). run()'s finally does pygame.quit().
         assert closed == [1]
-        assert window.windowing.running is False
+        assert window.running is False
         # Regression guard: pygame must still be initialized (the old code called
         # windowing.stop() = pygame.quit() here, tearing it down mid-frame).
         assert pygame.display.get_init()

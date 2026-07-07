@@ -383,11 +383,11 @@ class VideroidApp:
 
     def _do_quit(self) -> None:
         self.context.close_app()
-        # Ask the event loop to exit by clearing `running`; run()'s `finally`
-        # then calls stop() (pygame.quit()) ONCE, after the frame. Calling
-        # windowing.stop() directly here tears pygame down mid-step, so the
-        # rest of the current _step crashes ("video system not initialized").
-        self.window.windowing.running = False
+        # Ask the event loop to exit; run()'s `finally` then calls the windowing's
+        # stop() (pygame.quit()) ONCE, after the frame. Tearing pygame down here
+        # mid-step would crash the rest of the current _step ("video system not
+        # initialized"), so we only request the stop and let run() do the teardown.
+        self.window.stop()
 
     def _refresh_view(self) -> None:
         self._pages["videos"].refresh()
