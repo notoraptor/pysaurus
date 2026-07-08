@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
         self._run_process(
             title="Updating Database",
             operation=lambda: self.ctx.update_database(),
-            on_end=self._on_videos_operation_end,
+            on_end=self._on_videos_operation_end_reset_selection,
         )
 
     def _on_find_similar(self):
@@ -282,7 +282,7 @@ class MainWindow(QMainWindow):
         self._run_process(
             title="Finding Similar Videos",
             operation=lambda: self.ctx.find_similar_videos(),
-            on_end=self._on_videos_operation_end,
+            on_end=self._on_videos_operation_end_reset_selection,
         )
 
     def _on_find_similar_reencoded(self):
@@ -290,7 +290,7 @@ class MainWindow(QMainWindow):
         self._run_process(
             title="Finding Re-encoded Videos",
             operation=lambda: self.ctx.find_similar_videos_reencoded(),
-            on_end=self._on_videos_operation_end,
+            on_end=self._on_videos_operation_end_reset_selection,
         )
 
     def _on_move_video(self, video_id: int, directory: str):
@@ -305,6 +305,11 @@ class MainWindow(QMainWindow):
         """Handle videos page operation completion."""
         self._cleanup_process_page()
         self.show_videos_page()
+
+    def _on_videos_operation_end_reset_selection(self, end_notification: End):
+        """Handle completion of an operation that changes the video set (update, find similar/re-encoded), clearing the now possibly-stale selection."""
+        self.videos_page._clear_selection()
+        self._on_videos_operation_end(end_notification)
 
     def _on_scan_folders(self):
         """Handle scan folders request from the files page."""

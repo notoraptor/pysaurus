@@ -101,6 +101,7 @@ class GuiAPI(FeatureAPI):
     def close_database(self) -> None:
         self.database = None
         self._last_scan_result = None
+        self.view.reset()
 
     def delete_database(self) -> None:
         assert self.database is not None
@@ -181,11 +182,13 @@ class GuiAPI(FeatureAPI):
     def create_database(self, name: str, folders: Sequence[str], update: bool) -> None:
         self.database = self.application.new_database(name, folders, update)
         self._last_scan_result = None
+        self.view.reset()
 
     @process()
     def open_database(self, name: str, update: bool) -> None:
         self.database = self.application.open_database_from_name(name, update)
         self._last_scan_result = None
+        self.view.reset()
 
     @process()
     def scan_folders(self) -> None:

@@ -212,8 +212,7 @@ class FeatureAPI:
         path = list(self.view.classifier)
         from_property = self.view.grouping.field
         assert from_property is not None
-        self.view.classifier = []
-        self.view.group = 0
+        self.view.classifier_clear()
         alg = Algo(self.database)
         alg.move_property_values(path, from_property, to_property, concatenate=True)
 

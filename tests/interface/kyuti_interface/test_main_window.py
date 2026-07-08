@@ -90,6 +90,9 @@ class QMockAppContext(QObject):
             return None
         return _empty_video_search_context()
 
+    def get_view_generation(self) -> int:
+        return 0
+
     def close_database(self) -> None:
         self._has_database = False
         self._database_name = ""

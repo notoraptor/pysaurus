@@ -73,7 +73,6 @@ class VideosPage(QWidget):
         self._group_stats: list[FieldStat] = []
         self._current_group_index: int = -1
         self._selected_video_ids: set[int] = set()  # For multiple selection
-        self._last_clicked_index: int = -1  # For Shift+Click range selection
         self._diff_fields: set[str] = set()  # Fields that differ in similarity group
         self._file_title_diffs: dict[int, list[tuple[int, int]]] = {}  # Character diffs
         self._grouped_by_moves: bool = False  # True when grouped by move_id
@@ -90,6 +89,7 @@ class VideosPage(QWidget):
             False  # True when classifier is active (multiple property)
         )
         self._selector: Selector = Selector(False, set())  # Selection state
+        self._known_view_generation: int = 0  # Last ViewContext.generation seen
         self._show_only_selected: bool = (
             False  # Toggle for showing only selected videos
         )
@@ -291,6 +291,11 @@ class VideosPage(QWidget):
         # Reset show only selected if active
         if self._show_only_selected:
             self._show_only_selected = False
+        self._update_selection_display()
+
+    def _purge_video_from_selection(self, video_id: int):
+        """Drop a deleted video's ID from the selector (avoids a stale ghost entry)."""
+        self._selector.exclude(video_id)
         self._update_selection_display()
 
     def _update_selection_display(self):
@@ -861,6 +866,12 @@ class VideosPage(QWidget):
         if not self.ctx.has_database():
             return
 
+        # A filter change (sources/search/grouping/group/classifier) since the
+        # last refresh invalidates any active selection - it may no longer
+        # refer to the same videos. Sorting alone does not bump the generation.
+        if self.ctx.get_view_generation() != self._known_view_generation:
+            self._clear_selection()
+
         # Pass selector to backend if showing only selected
         selector = self._selector if self._show_only_selected else None
 
@@ -944,6 +955,11 @@ class VideosPage(QWidget):
 
         # Display videos
         self._display_videos(context.result)
+
+        # Record the generation as of this refresh (after any internal
+        # mutation above, e.g. auto-selecting the first group) so the next
+        # refresh only clears the selection on a genuinely new filter change.
+        self._known_view_generation = self.ctx.get_view_generation()
 
     def _update_group_bar(self, context: VideoSearchContext):
         """Update the groups panel in the sidebar."""
@@ -1340,17 +1356,8 @@ class VideosPage(QWidget):
         item.selected = self._selector.contains(video.video_id)
         return item
 
-        self._selected_video_id = None
-
-    def _on_video_clicked(self, video_id: int, modifiers=None):
+    def _on_video_clicked(self, video_id: int):
         """Handle video card click - track focused video but don't change selection."""
-        # Find clicked video index for tracking
-        for i, video in enumerate(self._videos):
-            if video.video_id == video_id:
-                self._last_clicked_index = i
-                break
-
-        # Track focused video (for context menu, keyboard navigation, etc.)
         self._selected_video_id = video_id
 
     def _on_video_selection_changed(self, video_id: int, selected: bool):
@@ -1359,12 +1366,6 @@ class VideosPage(QWidget):
             self._selector.include(video_id)
         else:
             self._selector.exclude(video_id)
-
-        # Track last clicked for shift-click ranges
-        for i, video in enumerate(self._videos):
-            if video.video_id == video_id:
-                self._last_clicked_index = i
-                break
 
         self._selected_video_id = video_id
         self._update_selection_display()
@@ -1674,6 +1675,7 @@ class VideosPage(QWidget):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.ctx.confirm_move(src_video_id, dst_video_id)
+            self._purge_video_from_selection(src_video_id)
             self.status_message_requested.emit("Video move confirmed", 3000)
 
     def _on_confirm_unique_moves(self):
@@ -1694,6 +1696,7 @@ class VideosPage(QWidget):
             self.btn_confirm_unique_moves.setEnabled(False)
             try:
                 count = self.ctx.confirm_unique_moves()
+                self._clear_selection()
                 self.status_message_requested.emit(
                     f"Confirmed {count} video move(s)", 3000
                 )
@@ -1778,6 +1781,7 @@ class VideosPage(QWidget):
         # Skip confirmation for "not found" entries if option is disabled
         if is_not_found and not self.confirm_not_found_deletion:
             self.ctx.delete_video_entry(video_id)
+            self._purge_video_from_selection(video_id)
             self.status_message_requested.emit(
                 f"'{video_title}' removed from database", 3000
             )
@@ -1792,6 +1796,7 @@ class VideosPage(QWidget):
             self,
         ):
             self.ctx.delete_video_entry(video_id)
+            self._purge_video_from_selection(video_id)
             self.status_message_requested.emit(
                 f"'{video_title}' removed from database", 5000
             )
@@ -1811,6 +1816,7 @@ class VideosPage(QWidget):
         ):
             try:
                 self.ctx.trash_video(video_id)
+                self._purge_video_from_selection(video_id)
                 self.status_message_requested.emit(
                     f"'{video.title}' moved to trash", 5000
                 )
@@ -1833,6 +1839,7 @@ class VideosPage(QWidget):
         ):
             try:
                 self.ctx.delete_video_file(video_id)
+                self._purge_video_from_selection(video_id)
                 self.status_message_requested.emit(
                     f"'{video.title}' permanently deleted", 5000
                 )

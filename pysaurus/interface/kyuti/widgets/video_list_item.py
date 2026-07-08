@@ -78,7 +78,7 @@ class VideoListItem(QFrame):
     Uses light theme with sizes scaled to application font.
     """
 
-    clicked = Signal(int, object)  # video_id, modifiers
+    clicked = Signal(int)  # video_id
     double_clicked = Signal(int)  # video_id
     open_requested = Signal(int)  # video_id
     context_menu_requested = Signal(int, object)  # video_id, QPoint
@@ -615,7 +615,7 @@ class VideoListItem(QFrame):
     def mousePressEvent(self, event: QMouseEvent):
         """Handle mouse press."""
         if event.button() == Qt.MouseButton.LeftButton:
-            self.clicked.emit(self.video.video_id, event.modifiers())
+            self.clicked.emit(self.video.video_id)
         super().mousePressEvent(event)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):

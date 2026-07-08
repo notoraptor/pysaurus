@@ -284,7 +284,6 @@ class AppContext(QObject):
     def close_database(self) -> None:
         """Close the database."""
         self._api.close_database()
-        self._api.view.reset()
 
     def delete_database(self) -> None:
         """Delete the database."""
@@ -562,6 +561,12 @@ class AppContext(QObject):
         if self._database:
             return self._database.query_videos(self._view, 1, 0)
         return None
+
+    def get_view_generation(self) -> int:
+        """Return the view's generation counter (bumped by any filter change:
+        sources, search, grouping, group, classifier — not sorting). Interfaces
+        use this to detect when a cross-page video selection is stale."""
+        return self._view.generation
 
     def set_sources(self, sources) -> None:
         """Set the video sources filter (flags mode)."""

@@ -163,6 +163,9 @@ class MockAppContext:
             return self._database.query_videos(self._view, 1, 0)
         return None
 
+    def get_view_generation(self) -> int:
+        return self._view.generation
+
     def set_sources(self, sources) -> None:
         if self._database:
             self._view.set_sources(sources)
@@ -327,7 +330,7 @@ class MockAppContext:
             self._database.rename(new_name)
 
     def close_database(self) -> None:
-        pass
+        self._view.reset()
 
     def close_app(self) -> None:
         pass
