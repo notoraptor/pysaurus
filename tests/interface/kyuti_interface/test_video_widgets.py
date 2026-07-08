@@ -4,10 +4,13 @@ Tests for PySide6 video widgets.
 Tests VideoListItem widget with mock data.
 """
 
+from unittest.mock import patch
+
 import pytest
 from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
-from PySide6.QtGui import QEnterEvent
+from PySide6.QtGui import QContextMenuEvent, QCursor, QEnterEvent
 
+from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 from tests.mocks.mock_database import MockVideoPattern
 
 
@@ -43,7 +46,6 @@ class TestVideoListItem:
 
     def test_list_item_creation(self, qtbot, sample_video, prop_types):
         """Test that VideoListItem can be created."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 
         item = VideoListItem(sample_video, prop_types)
         qtbot.addWidget(item)
@@ -52,7 +54,6 @@ class TestVideoListItem:
 
     def test_list_item_displays_title(self, qtbot, sample_video, prop_types):
         """Test that VideoListItem displays video title."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 
         item = VideoListItem(sample_video, prop_types)
         qtbot.addWidget(item)
@@ -63,7 +64,6 @@ class TestVideoListItem:
 
     def test_list_item_has_checkbox(self, qtbot, sample_video, prop_types):
         """Test that VideoListItem has a checkbox."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 
         item = VideoListItem(sample_video, prop_types)
         qtbot.addWidget(item)
@@ -72,7 +72,6 @@ class TestVideoListItem:
 
     def test_list_item_selection_via_checkbox(self, qtbot, sample_video, prop_types):
         """Test that checkbox toggles selection."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 
         item = VideoListItem(sample_video, prop_types)
         qtbot.addWidget(item)
@@ -94,7 +93,6 @@ class TestVideoListItem:
 
     def test_list_item_property_value_click(self, qtbot, sample_video, prop_types):
         """Test that clicking property value emits signal."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 
         item = VideoListItem(sample_video, prop_types)
         qtbot.addWidget(item)
@@ -113,7 +111,6 @@ class TestVideoListItem:
 
     def test_list_item_double_click(self, qtbot, sample_video, prop_types):
         """Test that double-clicking emits signal."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 
         item = VideoListItem(sample_video, prop_types)
         qtbot.addWidget(item)
@@ -137,7 +134,6 @@ class TestVideoListItemHover:
     """Tests for VideoListItem hover and highlight behavior."""
 
     def _make_item(self, qtbot, sample_video, prop_types):
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 
         item = VideoListItem(sample_video, prop_types)
         qtbot.addWidget(item)
@@ -222,9 +218,6 @@ class TestVideoListItemHover:
         self, qtbot, sample_video, prop_types
     ):
         """After context menu closes, hover clears if cursor is outside."""
-        from unittest.mock import patch
-
-        from PySide6.QtGui import QCursor
 
         item = self._make_item(qtbot, sample_video, prop_types)
         item.enterEvent(_make_enter_event(item))
@@ -237,8 +230,6 @@ class TestVideoListItemHover:
         # Simulate cursor far outside the widget
         far_away = item.mapToGlobal(QPoint(-1000, -1000))
         with patch.object(QCursor, "pos", return_value=far_away):
-            from PySide6.QtGui import QContextMenuEvent
-
             event = QContextMenuEvent(
                 QContextMenuEvent.Reason.Mouse,
                 QPoint(10, 10),
@@ -254,9 +245,6 @@ class TestVideoListItemHover:
         self, qtbot, sample_video, prop_types
     ):
         """After context menu closes, hover stays if cursor is still over widget."""
-        from unittest.mock import patch
-
-        from PySide6.QtGui import QCursor
 
         item = self._make_item(qtbot, sample_video, prop_types)
         item.enterEvent(_make_enter_event(item))
@@ -267,8 +255,6 @@ class TestVideoListItemHover:
         # Simulate cursor still over the widget center
         center = item.mapToGlobal(QPoint(item.width() // 2, item.height() // 2))
         with patch.object(QCursor, "pos", return_value=center):
-            from PySide6.QtGui import QContextMenuEvent
-
             event = QContextMenuEvent(
                 QContextMenuEvent.Reason.Mouse,
                 QPoint(10, 10),
@@ -281,7 +267,6 @@ class TestVideoListItemHover:
 
     def test_not_found_video_hover_style(self, qtbot, sample_video_data, prop_types):
         """Not-found videos have distinct hover color (orange, not blue)."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 
         sample_video_data["found"] = False
         video = MockVideoPattern(sample_video_data)

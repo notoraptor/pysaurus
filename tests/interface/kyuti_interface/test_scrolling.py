@@ -7,8 +7,14 @@ Ensures:
 - Wrapping works correctly in list view
 """
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QSizePolicy
 
+from pysaurus.interface.kyuti.pages.videos_page import VideosPage
+from pysaurus.interface.kyuti.widgets.video_list_item import (
+    VideoListItem,
+    WrappingLabel,
+    _add_break_opportunities,
+)
 from tests.mocks.mock_database import MockVideoPattern
 
 
@@ -53,8 +59,6 @@ class TestListViewScrolling:
 
     def test_scrollbar_hidden_when_content_fits(self, qtbot, mock_context):
         """Test that vertical scrollbar is hidden when all videos fit in view."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
-
         # Set up with just 1 video - should fit in a reasonable view
         mock_context._database._videos = make_video_dicts(1)
         page = VideosPage(mock_context)
@@ -79,8 +83,6 @@ class TestListViewScrolling:
 
     def test_scrollbar_visible_when_content_exceeds_view(self, qtbot, mock_context):
         """Test that vertical scrollbar appears when videos exceed view height."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
-
         # Set up with many videos
         mock_context._database._videos = make_video_dicts(30)
         page = VideosPage(mock_context)
@@ -112,8 +114,6 @@ class TestListViewScrolling:
 
     def test_few_items_do_not_need_scroll(self, qtbot, mock_context):
         """Test that with few videos and a large view, no scrolling is needed."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
-
         # Set up with few videos
         mock_context._database._videos = make_video_dicts(2)
         page = VideosPage(mock_context)
@@ -140,8 +140,6 @@ class TestListViewScrolling:
 
     def test_scroll_maximum_matches_content_bottom(self, qtbot, mock_context):
         """Test that scrollbar maximum allows reaching exactly the last video."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
-
         mock_context._database._videos = make_video_dicts(20)
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -176,8 +174,6 @@ class TestListViewScrolling:
 
     def test_cannot_scroll_beyond_last_video(self, qtbot, mock_context):
         """Test that scrolling beyond content is not possible."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
-
         mock_context._database._videos = make_video_dicts(15)
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -207,8 +203,6 @@ class TestListViewWrapping:
 
     def test_wrapping_label_wraps_long_text(self, qtbot):
         """Test that WrappingLabel wraps long text."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import WrappingLabel
-
         long_text = "This is a very long title that should wrap to multiple lines when the widget is narrow enough to require wrapping"
 
         label = WrappingLabel(long_text)
@@ -232,8 +226,6 @@ class TestListViewWrapping:
 
     def test_video_list_item_wraps_long_filename(self, qtbot):
         """Test that VideoListItem wraps long filenames correctly."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
-
         video = MockVideoPattern(
             {
                 "video_id": 1,
@@ -289,10 +281,6 @@ class TestListViewWrapping:
 
     def test_break_opportunities_in_paths(self, qtbot):
         """Test that paths have break opportunities after separators."""
-        from pysaurus.interface.kyuti.widgets.video_list_item import (
-            _add_break_opportunities,
-        )
-
         path = "/path/to/videos/file_name.mp4"
         result = _add_break_opportunities(path)
 
@@ -309,10 +297,6 @@ class TestListViewWrapping:
 
     def test_list_item_expands_horizontally(self, qtbot):
         """Test that VideoListItem expands to fill available width."""
-        from PySide6.QtWidgets import QSizePolicy
-
-        from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
-
         video = MockVideoPattern(
             {
                 "video_id": 1,

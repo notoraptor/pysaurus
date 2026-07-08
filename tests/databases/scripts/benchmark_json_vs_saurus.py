@@ -22,6 +22,11 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 )
 
+from pysaurus.application.application import Application
+from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
+from pysaurus.dbview.view_context import ViewContext
+from tests.utils import TEST_DB_FOLDER, TEST_HOME_DIR
+
 
 def _ignore_sqlite_wal_files(directory, files):
     """Ignore SQLite WAL files that may appear/disappear during copy."""
@@ -168,8 +173,6 @@ def run_read_benchmarks(json_db, saurus_db, all_video_ids, sample_100, sample_10
     # query_videos operations
     # ==========================================================================
     print("  query_videos operations...")
-
-    from pysaurus.dbview.view_context import ViewContext
 
     # query_videos (default view)
     def query_default(db):
@@ -460,9 +463,6 @@ def run_write_benchmarks(get_json_db, get_saurus_db, all_video_ids):
 
 
 def main():
-    from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
-    from tests.utils import TEST_DB_FOLDER, TEST_HOME_DIR
-
     print("=" * 100)
     print("DATABASE BENCHMARK: JSON vs Saurus SQL (both on disk)")
     print("=" * 100)
@@ -490,8 +490,6 @@ def main():
         print("Loading databases (from disk)...")
 
         with timer():
-            from pysaurus.application.application import Application
-
             app = Application(home_dir=temp_home)
             json_db = app.open_database_from_name("test_database")
         json_load_time = timer.elapsed
@@ -543,8 +541,6 @@ def main():
             copy_dir = tempfile.mkdtemp(prefix="json_copy_", dir=temp_base)
             copy_home = os.path.join(copy_dir, "home_dir")
             shutil.copytree(temp_home, copy_home, ignore=_ignore_sqlite_wal_files)
-            from pysaurus.application.application import Application
-
             app = Application(home_dir=copy_home)
             return app.open_database_from_name("test_database")
 

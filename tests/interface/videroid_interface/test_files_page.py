@@ -4,8 +4,14 @@ A fake FolderScanResult is injected into the backend's _last_scan_result so the
 "scanned" state renders without a real folder scan.
 """
 
+import os
+import subprocess
+import sys
+
 import pytest
 
+from pysaurus.database.algorithms.folder_scan import EMPTY_FOLDER_EXT
+from pysaurus.interface.videroid.pages.files_page import _ext_label, _human_size
 from tests.interface.videroid_interface._widget_tree import texts as _texts
 
 
@@ -53,16 +59,11 @@ def scanned(videroid_app):
 
 class TestFilesUtils:
     def test_human_size_units(self):
-        from pysaurus.interface.videroid.pages.files_page import _human_size
-
         assert _human_size(0).endswith("B")
         assert "KB" in _human_size(2048)
         assert "TB" in _human_size(2**42)
 
     def test_ext_label(self):
-        from pysaurus.database.algorithms.folder_scan import EMPTY_FOLDER_EXT
-        from pysaurus.interface.videroid.pages.files_page import _ext_label
-
         assert _ext_label("") == "(no extension)"
         assert _ext_label("mp4") == ".mp4"  # kyuti prefixes a dot
         assert _ext_label(EMPTY_FOLDER_EXT) == "(empty folder)"
@@ -184,9 +185,6 @@ class TestFilesOpenFolder:
         assert alerts and "Select at least one file" in alerts[0][0][0]
 
     def test_open_folder_opens_parent_on_windows(self, scanned, monkeypatch):
-        import os
-        import sys
-
         _, _, page = scanned
         page._selected_files = {"/d/a.tmp"}
         opened = []
@@ -196,9 +194,6 @@ class TestFilesOpenFolder:
         assert opened == ["/d"]  # opens the file's PARENT folder
 
     def test_open_folder_handles_error_with_alert(self, scanned, monkeypatch):
-        import os
-        import sys
-
         _, _, page = scanned
         page._selected_files = {"/d/a.tmp"}
 
@@ -213,9 +208,6 @@ class TestFilesOpenFolder:
         assert "RuntimeError" in msg and "nope" in msg
 
     def test_open_folder_linux_uses_xdg_open(self, scanned, monkeypatch):
-        import subprocess
-        import sys
-
         _, _, page = scanned
         page._selected_files = {"/d/a.tmp"}
         calls = []
@@ -225,9 +217,6 @@ class TestFilesOpenFolder:
         assert calls and calls[0][0][0] == ["xdg-open", "/d"]
 
     def test_open_folder_darwin_uses_open(self, scanned, monkeypatch):
-        import subprocess
-        import sys
-
         _, _, page = scanned
         page._selected_files = {"/d/a.tmp"}
         calls = []

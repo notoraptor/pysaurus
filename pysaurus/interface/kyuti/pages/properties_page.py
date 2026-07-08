@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMenu,
@@ -24,6 +25,9 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.interface.kyuti.app_context import AppContext
+from pysaurus.interface.kyuti.dialogs.fill_property_dialog import FillPropertyDialog
+from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
+from pysaurus.interface.kyuti.dialogs.property_values_dialog import PropertyValuesDialog
 from pysaurus.properties.properties import PropType
 
 
@@ -435,8 +439,6 @@ class PropertiesPage(QWidget):
 
     def _on_rename(self, name: str):
         """Rename a property."""
-        from PySide6.QtWidgets import QInputDialog
-
         new_name, ok = QInputDialog.getText(
             self, "Rename Property", f"Enter new name for '{name}':", text=name
         )
@@ -494,10 +496,6 @@ class PropertiesPage(QWidget):
 
     def _on_manage_values(self, name: str):
         """Open the values management dialog."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         # Find the property type
         prop_type = next((pt for pt in self._prop_types if pt.name == name), None)
         if not prop_type:
@@ -508,8 +506,6 @@ class PropertiesPage(QWidget):
 
     def _on_move_values(self, name: str):
         """Open the move values dialog."""
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         # Find the property type
         prop_type = next((pt for pt in self._prop_types if pt.name == name), None)
         if not prop_type:
@@ -533,10 +529,6 @@ class PropertiesPage(QWidget):
 
     def _on_fill_with_terms(self):
         """Fill a property with terms extracted from video titles."""
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog(self._prop_types, self)
         if dialog.exec():
             prop_type, only_empty = dialog.get_result()

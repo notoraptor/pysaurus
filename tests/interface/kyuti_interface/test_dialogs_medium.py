@@ -7,6 +7,10 @@ Tests SortingDialog, GroupingDialog, SourcesDialog, GoToPageDialog.
 import pytest
 from PySide6.QtCore import Qt
 
+from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
+from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
+from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
+from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
 from pysaurus.properties.properties import PropType
 
 
@@ -15,8 +19,6 @@ class TestSortingDialog:
 
     def test_dialog_creation(self, qtbot):
         """Test that dialog can be created."""
-        from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
-
         dialog = SortingDialog()
         qtbot.addWidget(dialog)
 
@@ -25,8 +27,6 @@ class TestSortingDialog:
 
     def test_dialog_loads_current_sorting(self, qtbot):
         """Test that dialog loads current sorting."""
-        from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
-
         current = [("title", False), ("date", True)]
         dialog = SortingDialog(current_sorting=current)
         qtbot.addWidget(dialog)
@@ -36,8 +36,6 @@ class TestSortingDialog:
 
     def test_add_field_ascending(self, qtbot):
         """Test adding a field with ascending order."""
-        from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
-
         dialog = SortingDialog()
         qtbot.addWidget(dialog)
 
@@ -50,8 +48,6 @@ class TestSortingDialog:
 
     def test_add_field_descending(self, qtbot):
         """Test adding a field with descending order."""
-        from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
-
         dialog = SortingDialog()
         qtbot.addWidget(dialog)
 
@@ -65,8 +61,6 @@ class TestSortingDialog:
 
     def test_move_up(self, qtbot):
         """Test moving an item up."""
-        from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
-
         current = [("title", False), ("date", True)]
         dialog = SortingDialog(current_sorting=current)
         qtbot.addWidget(dialog)
@@ -85,8 +79,6 @@ class TestSortingDialog:
 
     def test_move_down(self, qtbot):
         """Test moving an item down."""
-        from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
-
         current = [("title", False), ("date", True)]
         dialog = SortingDialog(current_sorting=current)
         qtbot.addWidget(dialog)
@@ -105,8 +97,6 @@ class TestSortingDialog:
 
     def test_toggle_direction(self, qtbot):
         """Test toggling sort direction."""
-        from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
-
         current = [("title", False)]  # ascending
         dialog = SortingDialog(current_sorting=current)
         qtbot.addWidget(dialog)
@@ -124,8 +114,6 @@ class TestSortingDialog:
 
     def test_remove_selected(self, qtbot):
         """Test removing selected item."""
-        from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
-
         current = [("title", False), ("date", True)]
         dialog = SortingDialog(current_sorting=current)
         qtbot.addWidget(dialog)
@@ -140,8 +128,6 @@ class TestSortingDialog:
 
     def test_get_sorting(self, qtbot):
         """Test getting sorting results."""
-        from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
-
         current = [("title", False), ("date", True)]
         dialog = SortingDialog(current_sorting=current)
         qtbot.addWidget(dialog)
@@ -169,8 +155,6 @@ class TestGroupingDialog:
 
     def test_dialog_creation(self, qtbot, prop_types):
         """Test that dialog can be created."""
-        from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
-
         dialog = GroupingDialog(prop_types=prop_types)
         qtbot.addWidget(dialog)
 
@@ -178,8 +162,6 @@ class TestGroupingDialog:
 
     def test_dialog_has_type_combo(self, qtbot, prop_types):
         """Test that dialog has type combo."""
-        from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
-
         dialog = GroupingDialog(prop_types=prop_types)
         qtbot.addWidget(dialog)
 
@@ -189,8 +171,6 @@ class TestGroupingDialog:
 
     def test_switch_to_property_type(self, qtbot, prop_types):
         """Test switching to property type populates properties."""
-        from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
-
         dialog = GroupingDialog(prop_types=prop_types)
         qtbot.addWidget(dialog)
 
@@ -206,8 +186,6 @@ class TestGroupingDialog:
 
     def test_sort_options(self, qtbot, prop_types):
         """Test sort options are available."""
-        from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
-
         dialog = GroupingDialog(prop_types=prop_types)
         qtbot.addWidget(dialog)
 
@@ -217,8 +195,6 @@ class TestGroupingDialog:
 
     def test_load_current_grouping(self, qtbot, prop_types):
         """Test loading current grouping."""
-        from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
-
         current = {
             "field": "genre",
             "is_property": True,
@@ -236,8 +212,6 @@ class TestGroupingDialog:
 
     def test_get_grouping(self, qtbot, prop_types):
         """Test getting grouping result."""
-        from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
-
         dialog = GroupingDialog(prop_types=prop_types)
         qtbot.addWidget(dialog)
 
@@ -260,8 +234,6 @@ class TestSourcesDialog:
 
     def test_dialog_creation(self, qtbot):
         """Test that dialog can be created."""
-        from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
-
         dialog = SourcesDialog()
         qtbot.addWidget(dialog)
 
@@ -269,8 +241,6 @@ class TestSourcesDialog:
 
     def test_dialog_has_checkboxes(self, qtbot):
         """Test that dialog has all source checkboxes."""
-        from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
-
         dialog = SourcesDialog()
         qtbot.addWidget(dialog)
 
@@ -285,8 +255,6 @@ class TestSourcesDialog:
 
     def test_select_all(self, qtbot):
         """Test selecting all sources."""
-        from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
-
         dialog = SourcesDialog()
         qtbot.addWidget(dialog)
 
@@ -297,8 +265,6 @@ class TestSourcesDialog:
 
     def test_select_none(self, qtbot):
         """Test deselecting all sources."""
-        from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
-
         dialog = SourcesDialog()
         qtbot.addWidget(dialog)
 
@@ -310,8 +276,6 @@ class TestSourcesDialog:
 
     def test_select_valid(self, qtbot):
         """Test selecting only valid sources."""
-        from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
-
         dialog = SourcesDialog()
         qtbot.addWidget(dialog)
 
@@ -324,8 +288,6 @@ class TestSourcesDialog:
 
     def test_load_current_sources(self, qtbot):
         """Test loading current sources."""
-        from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
-
         current = [["readable", "found", "with_thumbnails"], ["unreadable", "found"]]
         dialog = SourcesDialog(current_sources=current)
         qtbot.addWidget(dialog)
@@ -336,8 +298,6 @@ class TestSourcesDialog:
 
     def test_get_sources(self, qtbot):
         """Test getting selected sources."""
-        from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
-
         dialog = SourcesDialog()
         qtbot.addWidget(dialog)
 
@@ -357,8 +317,6 @@ class TestGoToPageDialog:
 
     def test_dialog_creation(self, qtbot):
         """Test that dialog can be created."""
-        from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
-
         dialog = GoToPageDialog(current_page=1, total_pages=10)
         qtbot.addWidget(dialog)
 
@@ -366,8 +324,6 @@ class TestGoToPageDialog:
 
     def test_dialog_shows_current_page(self, qtbot):
         """Test that dialog shows current page."""
-        from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
-
         dialog = GoToPageDialog(current_page=5, total_pages=10)
         qtbot.addWidget(dialog)
 
@@ -375,8 +331,6 @@ class TestGoToPageDialog:
 
     def test_dialog_limits_to_total_pages(self, qtbot):
         """Test that spin box is limited to total pages."""
-        from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
-
         dialog = GoToPageDialog(current_page=1, total_pages=10)
         qtbot.addWidget(dialog)
 
@@ -385,8 +339,6 @@ class TestGoToPageDialog:
 
     def test_get_page_returns_zero_based(self, qtbot):
         """Test that get_page returns 0-based page number."""
-        from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
-
         dialog = GoToPageDialog(current_page=5, total_pages=10)
         qtbot.addWidget(dialog)
 
@@ -397,8 +349,6 @@ class TestGoToPageDialog:
 
     def test_get_page_first_page(self, qtbot):
         """Test getting first page."""
-        from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
-
         dialog = GoToPageDialog(current_page=1, total_pages=10)
         qtbot.addWidget(dialog)
 
@@ -408,8 +358,6 @@ class TestGoToPageDialog:
 
     def test_get_page_last_page(self, qtbot):
         """Test getting last page."""
-        from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
-
         dialog = GoToPageDialog(current_page=1, total_pages=10)
         qtbot.addWidget(dialog)
 
@@ -419,8 +367,6 @@ class TestGoToPageDialog:
 
     def test_dialog_handles_single_page(self, qtbot):
         """Test dialog with only one page."""
-        from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
-
         dialog = GoToPageDialog(current_page=1, total_pages=1)
         qtbot.addWidget(dialog)
 

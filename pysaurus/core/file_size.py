@@ -19,7 +19,7 @@ class FileSize:
         self.__raw = raw
         self.__neg = neg
         self.__size = size
-        self.__base = (size and min(4, int(math.log(size, 1024)))) or 0
+        self.__base = min(4, int(math.log(size, 1024))) if size else 0
 
     def __hash__(self):
         return hash(self.__raw)

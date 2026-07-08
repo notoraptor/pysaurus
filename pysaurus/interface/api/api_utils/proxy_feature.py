@@ -3,6 +3,10 @@ from types import FunctionType
 from typing import Any, Callable
 
 import filedial
+import pyperclip
+
+from pysaurus.database.database_algorithms import DatabaseAlgorithms
+from pysaurus.database.database_operations import DatabaseOperations
 
 
 class ProxyFeature:
@@ -66,8 +70,6 @@ class FromPyperclip(ProxyFeature):
     __slots__ = ()
 
     def __init__(self, method, returns=False):
-        import pyperclip
-
         super().__init__(getter=lambda: pyperclip, method=method, returns=returns)
 
 
@@ -75,8 +77,6 @@ class FromOps(ProxyFeature):
     __slots__ = ()
 
     def __init__(self, api, method, returns=False):
-        from pysaurus.database.database_operations import DatabaseOperations
-
         super().__init__(
             getter=lambda: DatabaseOperations(api.database),
             method=method,
@@ -88,8 +88,6 @@ class FromAlgo(ProxyFeature):
     __slots__ = ()
 
     def __init__(self, api, method, returns=False):
-        from pysaurus.database.database_algorithms import DatabaseAlgorithms
-
         super().__init__(
             getter=lambda: DatabaseAlgorithms(api.database),
             method=method,

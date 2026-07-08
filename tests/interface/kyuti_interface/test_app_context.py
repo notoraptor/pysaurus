@@ -13,6 +13,18 @@ from unittest.mock import patch
 
 import pytest
 
+from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.job_notifications import JobStep, JobToDo
+from pysaurus.core.notifications import (
+    Cancelled,
+    DatabaseReady,
+    Done,
+    End,
+    ProfilingEnd,
+    ProfilingStart,
+)
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.interface.api.feature_api import FeatureAPI
 from pysaurus.interface.kyuti.app_context import AppContext
 from tests.utils import get_saurus_sql_database
 
@@ -20,9 +32,6 @@ from tests.utils import get_saurus_sql_database
 @pytest.fixture
 def ctx():
     """Create a real AppContext with a FeatureAPI backed by an in-memory SQL database."""
-    from pysaurus.core.notifying import DEFAULT_NOTIFIER
-    from pysaurus.interface.api.feature_api import FeatureAPI
-
     with patch("pysaurus.interface.kyuti.app_context.KyutiAPI"):
         app_ctx = AppContext()
     with patch("pysaurus.interface.api.feature_api.Application"):
@@ -256,8 +265,6 @@ class TestApplyOnView:
 
 class TestOpenRandomVideo:
     def test_open_random_video_emits_state_changed(self, ctx, qtbot, monkeypatch):
-        from pysaurus.core.absolute_path import AbsolutePath
-
         monkeypatch.setattr(AbsolutePath, "open", lambda self: self)
         with qtbot.waitSignal(ctx.state_changed, timeout=1000):
             result = ctx.open_random_video()
@@ -283,8 +290,6 @@ class TestOpenRandomVideo:
 
 class TestApiDelegation:
     def test_close_app(self, ctx, monkeypatch):
-        from pysaurus.interface.api.feature_api import FeatureAPI
-
         called = []
         monkeypatch.setattr(
             FeatureAPI, "close_app", lambda self: called.append(True), raising=False
@@ -304,74 +309,52 @@ class TestApiDelegation:
 
 class TestNotificationProcessing:
     def test_process_database_ready(self, ctx, qtbot):
-        from pysaurus.core.notifications import DatabaseReady
-
         with qtbot.waitSignal(ctx.database_ready, timeout=1000):
             ctx._process_notification(DatabaseReady())
 
     def test_process_done(self, ctx, qtbot):
-        from pysaurus.core.notifications import Done
-
         with qtbot.waitSignal(ctx.operation_done, timeout=1000):
             ctx._process_notification(Done())
 
     def test_process_cancelled(self, ctx, qtbot):
-        from pysaurus.core.notifications import Cancelled
-
         with qtbot.waitSignal(ctx.operation_cancelled, timeout=1000):
             ctx._process_notification(Cancelled())
 
     def test_process_end(self, ctx, qtbot):
-        from pysaurus.core.notifications import End
-
         with qtbot.waitSignal(ctx.operation_ended, timeout=1000):
             ctx._process_notification(End("done"))
 
     def test_process_profiling_start(self, ctx, qtbot):
-        from pysaurus.core.notifications import ProfilingStart
-
         with qtbot.waitSignal(ctx.profiling_started, timeout=1000):
             ctx._process_notification(ProfilingStart("task"))
 
     def test_process_profiling_end(self, ctx, qtbot):
-        from pysaurus.core.notifications import ProfilingEnd
-
         with qtbot.waitSignal(ctx.profiling_ended, timeout=1000):
             ctx._process_notification(ProfilingEnd("task", "1.5s"))
 
     def test_process_job_to_do(self, ctx, qtbot):
-        from pysaurus.core.job_notifications import JobToDo
-
         with qtbot.waitSignal(ctx.job_started, timeout=1000):
             ctx._process_notification(JobToDo("extract", 100, "Extracting"))
 
     def test_process_job_step(self, ctx, qtbot):
-        from pysaurus.core.job_notifications import JobStep
-
         with qtbot.waitSignal(ctx.job_progress, timeout=1000):
             ctx._process_notification(
                 JobStep("extract", "0", 42, 100, title="Extracting")
             )
 
     def test_process_job_step_none_channel(self, ctx, qtbot):
-        from pysaurus.core.job_notifications import JobStep
-
         with qtbot.waitSignal(ctx.job_progress, timeout=1000):
             ctx._process_notification(
                 JobStep("extract", None, 10, 100, title="Extracting")
             )
 
     def test_generic_signal_always_emitted(self, ctx, qtbot):
-        from pysaurus.core.notifications import Done
-
         with qtbot.waitSignal(ctx.notification_received, timeout=1000):
             ctx._process_notification(Done())
 
 
 class TestNotificationHandler:
     def test_handler_receives_notification(self, ctx):
-        from pysaurus.core.notifications import Done
-
         received = []
 
         class Handler:
@@ -385,8 +368,6 @@ class TestNotificationHandler:
         assert isinstance(received[0], Done)
 
     def test_handler_prevents_specific_signals(self, ctx, qtbot):
-        from pysaurus.core.notifications import Done
-
         class Handler:
             def on_notification(self, n):
                 pass
@@ -401,8 +382,6 @@ class TestNotificationHandler:
         assert emitted == []
 
     def test_generic_signal_still_emitted_with_handler(self, ctx, qtbot):
-        from pysaurus.core.notifications import Done
-
         class Handler:
             def on_notification(self, n):
                 pass
@@ -413,8 +392,6 @@ class TestNotificationHandler:
             ctx._process_notification(Done())
 
     def test_clear_handler(self, ctx, qtbot):
-        from pysaurus.core.notifications import Done
-
         class Handler:
             def on_notification(self, n):
                 pass

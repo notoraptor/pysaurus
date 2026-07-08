@@ -174,5 +174,6 @@ class ProcessPage:
         else:
             self._continue.disabled = False
 
-    def _on_continue(self, widget: Widget) -> None:
+    def _on_continue(self, widget: Widget | None) -> None:
+        assert self._end is not None
         self._on_end(self._end)

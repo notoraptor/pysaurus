@@ -121,7 +121,7 @@ class VideosPage(Page):
         self._reload()
         return widget
 
-    def _section(self, title: str, header_buttons, body) -> Widget:
+    def _section(self, title: str, header_buttons, body) -> videre.Container:
         return videre.Container(
             videre.Column(
                 [
@@ -144,19 +144,25 @@ class VideosPage(Page):
         return videre.Container(widget, horizontal_alignment=videre.Alignment.CENTER)
 
     @staticmethod
-    def _with_section_backgrounds(sections: list[Widget]) -> list[Widget]:
+    def _with_section_backgrounds(
+        sections: list[videre.Container | None],
+    ) -> list[videre.Container]:
         """Alternate the section backgrounds (kyuti color_light/lighter zebra).
 
         Applied at populate time, by visual position, so the stripes stay
-        consistent as sections appear/disappear (Groups/Classifier).
+        consistent as sections appear/disappear (Groups/Classifier). Sections
+        are only ever passed here after `build()` has populated them all.
         """
+        result: list[videre.Container] = []
         for index, section in enumerate(sections):
+            assert section is not None
             section.background_color = (
                 theme.SECTION_BG_A if index % 2 == 0 else theme.SECTION_BG_B
             )
-        return sections
+            result.append(section)
+        return result
 
-    def _sources_section(self) -> Widget:
+    def _sources_section(self) -> videre.Container:
         return self._section(
             "Sources",
             [
@@ -166,7 +172,7 @@ class VideosPage(Page):
             self._centered(self._sources_display),
         )
 
-    def _search_section(self) -> Widget:
+    def _search_section(self) -> videre.Container:
         return self._section(
             "Search",
             [videre.Button("✕", on_click=self._clear_search)],
@@ -190,7 +196,7 @@ class VideosPage(Page):
             ),
         )
 
-    def _sorting_section(self) -> Widget:
+    def _sorting_section(self) -> videre.Container:
         return self._section(
             "Sorting",
             [
@@ -200,7 +206,7 @@ class VideosPage(Page):
             self._centered(self._sorting_display),
         )
 
-    def _grouping_section(self) -> Widget:
+    def _grouping_section(self) -> videre.Container:
         return self._section(
             "Grouping",
             [
@@ -213,7 +219,7 @@ class VideosPage(Page):
             ),
         )
 
-    def _groups_section(self) -> Widget:
+    def _groups_section(self) -> videre.Container:
         self._btn_group_first = videre.Button("|<", on_click=self._group_first)
         self._btn_group_prev = videre.Button("<", on_click=self._group_prev)
         self._btn_group_next = videre.Button(">", on_click=self._group_next)
@@ -244,7 +250,7 @@ class VideosPage(Page):
         )
         return self._section("Groups", [], body)
 
-    def _classifier_section(self) -> Widget:
+    def _classifier_section(self) -> videre.Container:
         body = videre.Column(
             [
                 self._classifier_column,
@@ -260,7 +266,7 @@ class VideosPage(Page):
         )
         return self._section("Classifier path", [], body)
 
-    def _selection_section(self) -> Widget:
+    def _selection_section(self) -> videre.Container:
         self._selection_menu = videre.ContextButton("⚙", actions=[], square=True)
         self._btn_clear_selection = videre.Button("✕", on_click=self._clear_selection)
         return self._section(
@@ -838,6 +844,9 @@ class VideosPage(Page):
     def video_generalize_title(self, video, title_field) -> None:
         # Copy this video's title into a property for every OTHER video of the
         # group (kyuti _generalize_title_to_property).
+        ctx = self._context
+        if ctx is None:
+            return
         title_value = str(getattr(video, title_field, "") or "")
         if not title_value:
             self.app.window.alert("Title is empty.", "Generalize Title")
@@ -852,9 +861,7 @@ class VideosPage(Page):
                 "No string (non-enum) property available.", "Generalize Title"
             )
             return
-        other_ids = [
-            v.video_id for v in self._context.result if v.video_id != video.video_id
-        ]
+        other_ids = [v.video_id for v in ctx.result if v.video_id != video.video_id]
         dropdown = videre.Dropdown(str_props)
         self.app.window.set_fancybox(
             videre.Column(

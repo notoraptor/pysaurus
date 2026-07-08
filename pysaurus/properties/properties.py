@@ -1,4 +1,4 @@
-from typing import Collection, Sequence
+from typing import Collection, Sequence, cast
 
 from pysaurus.application import exceptions
 from pysaurus.application.exceptions import InvalidPropertyDefinition
@@ -104,16 +104,15 @@ class PropType:
     def validate_on_multiple_prop_type(self, value: PropRawType) -> list[PropUnitType]:
         if not isinstance(value, (list, tuple, set)):
             raise exceptions.InvalidMultiplePropertyValue(self, value)
-        if not isinstance(value, set):
-            value = set(value)
-        for element in value:
+        elements = set(cast(Collection[PropUnitType], value))
+        for element in elements:
             if not isinstance(element, self.python_type):
                 raise exceptions.InvalidPropertyValue(self, element)
         if self._enum_set:
-            for element in value:
+            for element in elements:
                 if element not in self._enum_set:
                     raise exceptions.InvalidPropertyValue(self, element)
-        return sorted(value)
+        return sorted(elements)
 
     def validate_on_unique_prop_type(self, value: PropRawType) -> PropUnitType:
         if self.python_type is float and isinstance(value, int):
@@ -165,7 +164,7 @@ class PropType:
         enumeration: Sequence[PropUnitType] = []
         default_value: list[PropUnitType]
         if isinstance(definition, (list, tuple)):
-            enumeration = list(definition)
+            enumeration = list(cast(Collection[PropUnitType], definition))
             default_value = [enumeration[0]]
         else:
             if not isinstance(definition, (str, bool, int, float)):
@@ -176,7 +175,7 @@ class PropType:
             enumeration = [float(element) for element in enumeration]
             default_value = [float(element) for element in default_value]
         elif prop_type is str:
-            enumeration = [element.strip() for element in enumeration]
+            enumeration = [str(element).strip() for element in enumeration]
             default_value = [str(element).strip() for element in default_value]
 
         if enumeration:

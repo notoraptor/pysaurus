@@ -9,12 +9,16 @@ The test verifies that all features exposed by FeatureAPI work correctly,
 regardless of the internal architecture.
 """
 
+import shutil
+
 import pytest
 
+from pysaurus.application.application import Application
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database_operations import DatabaseOperations
 from pysaurus.interface.api.feature_api import FeatureAPI
+from tests.utils import TEST_HOME_DIR
 
 
 @pytest.fixture
@@ -27,11 +31,6 @@ def feature_api():
 def feature_api_with_db(feature_api, tmp_path):
     """Create FeatureAPI with an opened test database."""
     # Copy test database to temp directory
-    import shutil
-
-    from pysaurus.application.application import Application
-    from tests.utils import TEST_HOME_DIR
-
     temp_home = tmp_path / "home_dir_test"
     shutil.copytree(TEST_HOME_DIR, temp_home)
 

@@ -1,7 +1,12 @@
 import logging
+from typing import TYPE_CHECKING
 
 from pysaurus.core.functions import camel_case_to_snake_case
 from pysaurus.core.notifications import Notification
+from pysaurus.database.database_operations import DatabaseOperations
+
+if TYPE_CHECKING:
+    from pysaurus.database.abstract_database import AbstractDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +25,6 @@ class DatabaseLoaded(Notification):
 
     def __init__(self, database):
         super().__init__()
-        from pysaurus.database.database_operations import DatabaseOperations
-
         ops = DatabaseOperations(database)
         self.entries = ops.count_videos()
         self.discarded = ops.count_videos("discarded")
@@ -54,9 +57,7 @@ class DatabaseToSaveContext:
     __slots__ = ("database",)
 
     def __init__(self, database):
-        from pysaurus.database.abstract_database import AbstractDatabase
-
-        self.database: AbstractDatabase = database
+        self.database: "AbstractDatabase" = database
 
     def __enter__(self):
         self.database.in_save_context = True

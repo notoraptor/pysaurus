@@ -3,6 +3,7 @@ bar / page selector) and backend wiring."""
 
 import logging
 from datetime import datetime
+from typing import Callable
 
 import videre
 from videre import Window
@@ -68,6 +69,10 @@ class VideroidApp:
             "properties": PropertiesPage(self),
             "files": FilesPage(self),
         }
+        # Typed handle for the videos page: it exposes page-size/deletion-
+        # confirmation state and a refresh() the shell menu/actions need,
+        # which the generic Page base class doesn't declare.
+        self._videos_page: VideosPage = self._pages["videos"]
         self._current = "databases"
         self._active_process: ProcessPage | None = None
         self._process_title = ""
@@ -275,15 +280,15 @@ class VideroidApp:
         ]
 
     def _menu_options(self):
-        page_size = self._pages["videos"].page_size
-        actions = [
+        page_size = self._videos_page.page_size
+        actions: list[tuple[str, Callable[..., None]]] = [
             (
                 f"{'● ' if page_size == size else '○ '}Page size {size}",
                 lambda s=size: self._set_page_size(s),
             )
             for size in _PAGE_SIZES
         ]
-        mark = "☑ " if self._pages["videos"].confirm_not_found_deletion else "☐ "
+        mark = "☑ " if self._videos_page.confirm_not_found_deletion else "☐ "
         actions.append(
             (f"{mark}Confirm deletion of missing entries", self._toggle_confirm_del)
         )
@@ -390,13 +395,13 @@ class VideroidApp:
         self.window.stop()
 
     def _refresh_view(self) -> None:
-        self._pages["videos"].refresh()
+        self._videos_page.refresh()
         self._set_status("View refreshed.")
 
     def _random_video(self) -> None:
         # Opens a random unwatched video and narrows the view to it (kyuti).
         self.context.open_random_video()
-        self._pages["videos"].refresh()
+        self._videos_page.refresh()
 
     def _generate_playlist(self) -> None:
         path = self.context.generate_playlist()
@@ -413,13 +418,13 @@ class VideroidApp:
         self.window.call_later(reraise)
 
     def _set_page_size(self, size: int) -> None:
-        videos = self._pages["videos"]
+        videos = self._videos_page
         videos.page_size = size  # setter resets to page 0 and reloads
         self._refresh_shell()
         self._set_status(f"Page size: {size}.")
 
     def _toggle_confirm_del(self) -> None:
-        videos = self._pages["videos"]
+        videos = self._videos_page
         videos.confirm_not_found_deletion = not videos.confirm_not_found_deletion
         self._refresh_shell()
 

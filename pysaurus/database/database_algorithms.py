@@ -9,7 +9,7 @@ This class contains algorithms that:
 
 import logging
 import tempfile
-from typing import Collection, Sequence
+from typing import TYPE_CHECKING, Collection, Sequence
 
 import ujson as json
 
@@ -28,6 +28,9 @@ from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
+if TYPE_CHECKING:
+    from pysaurus.database.abstract_database import AbstractDatabase
+
 logger = logging.getLogger(__name__)
 
 
@@ -43,9 +46,7 @@ class DatabaseAlgorithms:
         Args:
             db: An AbstractDatabase instance
         """
-        from pysaurus.database.abstract_database import AbstractDatabase
-
-        self.db: AbstractDatabase = db
+        self.db: "AbstractDatabase" = db
 
     @property
     def notifier(self):
@@ -350,7 +351,10 @@ class DatabaseAlgorithms:
         assert self.db.get_prop_types(name=from_name, multiple=True)
         assert self.db.get_prop_types(name=to_name, with_type=str)
 
-        from pysaurus.database.database_operations import DatabaseOperations
+        # Local import: database_operations imports DatabaseAlgorithms too (circular).
+        from pysaurus.database.database_operations import (  # noqa: PLC0415
+            DatabaseOperations,
+        )
 
         ops = DatabaseOperations(self.db)
 
@@ -363,7 +367,7 @@ class DatabaseAlgorithms:
         else:
             to_extended = values
         path_set = set(values)
-        from_new = {}
+        from_new: dict[int | None, Collection[PropUnitType]] = {}
         for video_id, old_values in self.db.videos_tag_get(from_name).items():
             new_values = [v for v in old_values if v not in path_set]
             if len(old_values) > len(new_values) and (
@@ -389,11 +393,14 @@ class DatabaseAlgorithms:
         self, name: str, old_values: list, new_value: object
     ) -> bool:
         """Replace property values across all videos."""
-        from pysaurus.database.database_operations import DatabaseOperations
+        # Local import: database_operations imports DatabaseAlgorithms too (circular).
+        from pysaurus.database.database_operations import (  # noqa: PLC0415
+            DatabaseOperations,
+        )
 
         ops = DatabaseOperations(self.db)
 
-        modified = {}
+        modified: dict[int | None, Collection[PropUnitType]] = {}
         old_values: set = set(ops.validate_prop_values(name, old_values))
         (new_value,) = ops.validate_prop_values(name, [new_value])
         for video_id, previous_values in self.db.videos_tag_get(name).items():
@@ -408,7 +415,10 @@ class DatabaseAlgorithms:
 
     def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
         """Fill property with video terms extracted from filenames."""
-        from pysaurus.database.database_operations import DatabaseOperations
+        # Local import: database_operations imports DatabaseAlgorithms too (circular).
+        from pysaurus.database.database_operations import (  # noqa: PLC0415
+            DatabaseOperations,
+        )
 
         ops = DatabaseOperations(self.db)
 

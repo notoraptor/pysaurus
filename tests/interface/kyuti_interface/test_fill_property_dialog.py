@@ -7,6 +7,7 @@ Tests the dialog for filling a property with terms extracted from video titles.
 import pytest
 from PySide6.QtWidgets import QDialogButtonBox
 
+from pysaurus.interface.kyuti.dialogs.fill_property_dialog import FillPropertyDialog
 from pysaurus.properties.properties import PropType
 
 
@@ -48,20 +49,12 @@ def two_eligible_props():
 
 class TestFillPropertyDialogCreation:
     def test_creation(self, qtbot, mixed_prop_types):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog(mixed_prop_types)
         qtbot.addWidget(dialog)
 
         assert dialog.windowTitle() == "Fill Property with Terms"
 
     def test_filters_eligible_properties(self, qtbot, mixed_prop_types):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog(mixed_prop_types)
         qtbot.addWidget(dialog)
 
@@ -70,10 +63,6 @@ class TestFillPropertyDialogCreation:
         assert dialog._eligible_props[0].name == "tags"
 
     def test_combo_shows_eligible_props(self, qtbot, two_eligible_props):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog(two_eligible_props)
         qtbot.addWidget(dialog)
 
@@ -82,20 +71,12 @@ class TestFillPropertyDialogCreation:
         assert dialog.prop_combo.itemText(1) == "keywords"
 
     def test_combo_disabled_when_no_eligible(self, qtbot, int_prop):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog([int_prop])
         qtbot.addWidget(dialog)
 
         assert not dialog.prop_combo.isEnabled()
 
     def test_ok_disabled_when_no_eligible(self, qtbot, int_prop):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog([int_prop])
         qtbot.addWidget(dialog)
 
@@ -104,10 +85,6 @@ class TestFillPropertyDialogCreation:
         assert not ok_btn.isEnabled()
 
     def test_only_empty_initially_unchecked(self, qtbot, mixed_prop_types):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog(mixed_prop_types)
         qtbot.addWidget(dialog)
 
@@ -116,10 +93,6 @@ class TestFillPropertyDialogCreation:
 
 class TestFillPropertyDialogAccept:
     def test_accept_returns_selected_prop(self, qtbot, two_eligible_props):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog(two_eligible_props)
         qtbot.addWidget(dialog)
 
@@ -131,10 +104,6 @@ class TestFillPropertyDialogAccept:
         assert only_empty is False
 
     def test_accept_with_only_empty(self, qtbot, two_eligible_props):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog(two_eligible_props)
         qtbot.addWidget(dialog)
 
@@ -145,10 +114,6 @@ class TestFillPropertyDialogAccept:
         assert only_empty is True
 
     def test_get_result_before_accept(self, qtbot, mixed_prop_types):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog(mixed_prop_types)
         qtbot.addWidget(dialog)
 
@@ -157,10 +122,6 @@ class TestFillPropertyDialogAccept:
         assert only_empty is False
 
     def test_accept_no_eligible(self, qtbot, int_prop):
-        from pysaurus.interface.kyuti.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog([int_prop])
         qtbot.addWidget(dialog)
 

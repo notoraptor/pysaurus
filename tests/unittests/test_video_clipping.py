@@ -3,9 +3,11 @@ import os
 import shutil
 from pathlib import Path
 
+import av
 import pytest
 
 from pysaurus.core.core_exceptions import ZeroLengthError
+from pysaurus.core.modules import FNV64
 from pysaurus.core.video_clipping import VideoClipping
 
 FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures"
@@ -58,8 +60,6 @@ class TestVideoClip:
         assert os.path.isfile(output)
 
     def test_normal_clip_produces_valid_video(self, video_in_tmp):
-        import av
-
         output = VideoClipping.video_clip(
             video_in_tmp, time_start=0, clip_seconds=5, unique_id="test"
         )
@@ -70,8 +70,6 @@ class TestVideoClip:
         container.close()
 
     def test_time_end_clamped_to_duration(self, video_in_tmp):
-        import av
-
         # time_start=10, clip_seconds=10 => time_end=20 > 15, clamped to 15
         output = VideoClipping.video_clip(
             video_in_tmp, time_start=10, clip_seconds=10, unique_id="test"
@@ -104,8 +102,6 @@ class TestVideoClip:
         assert output == "myid_0_3.mp4"
 
     def test_output_name_without_unique_id(self, video_in_tmp):
-        from pysaurus.core.modules import FNV64
-
         expected_id = FNV64.hash(os.path.abspath(video_in_tmp))
         output = VideoClipping.video_clip(video_in_tmp, time_start=0, clip_seconds=3)
         assert output == f"{expected_id}_0_3.mp4"

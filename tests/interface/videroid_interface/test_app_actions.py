@@ -3,6 +3,9 @@
 Backend mutations and the threaded ops are mocked; dialog handlers are invoked
 directly (they set a fancybox on the real StepWindow)."""
 
+import pygame
+
+from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.notifications import DatabaseReady, Message
 from pysaurus.interface.videroid.dialogs.edit_folders_dialog import EditFoldersDialog
 from tests.interface.videroid_interface._widget_tree import texts as _texts
@@ -53,8 +56,6 @@ class TestViewMenu:
     def test_thread_exception_expected_error_alerts(self, videroid_app):
         # An ApplicationError from a background op -> non-fatal alert dialog,
         # the app keeps running (kyuti's "warning" branch).
-        from pysaurus.application.exceptions import PysaurusError
-
         app, window = videroid_app
         app._on_thread_exception(PysaurusError("boom"))
         window.render()  # the marshalled re-raise hits the warning branch...
@@ -175,8 +176,6 @@ class TestMenuActions:
         assert app._current == "databases"
 
     def test_quit(self, videroid_app, monkeypatch):
-        import pygame
-
         app, window = videroid_app
         closed = []
         monkeypatch.setattr(app.context, "close_app", lambda: closed.append(1))

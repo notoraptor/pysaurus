@@ -9,6 +9,7 @@ Note: pytest-qt plugin is auto-loaded, no need to declare it
 """
 
 import os
+import random
 
 # Use offscreen platform to avoid displaying windows during tests
 # Must be set before any Qt imports
@@ -16,6 +17,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
 
+from pysaurus.dbview.view_context import ViewContext
 from tests.mocks.mock_database import MockDatabase
 
 
@@ -44,8 +46,6 @@ class MockAppContext:
     """
 
     def __init__(self, mock_database: MockDatabase):
-        from pysaurus.dbview.view_context import ViewContext
-
         self._database = mock_database
         self._application = MockApplication()
         self._view = ViewContext()
@@ -204,8 +204,6 @@ class MockAppContext:
     def get_random_video_id(self):
         if not self._database:
             return None
-        import random
-
         videos = self._database.get_videos(where={"found": True})
         if videos:
             return random.choice(videos).video_id

@@ -8,6 +8,11 @@ Tests:
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
+from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
+    BatchEditPropertyDialog,
+)
+from pysaurus.interface.kyuti.pages.videos_page import VideosPage
+
 
 def make_video_dicts(count: int) -> list[dict]:
     """Create a list of mock video dictionaries."""
@@ -176,7 +181,6 @@ class TestVideoPropertyModification:
 
     def test_batch_edit_dialog_applies_changes(self, qtbot, mock_context, monkeypatch):
         """Test that batch edit through VideosPage applies changes to database."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         # Set up videos
         videos = make_video_dicts(3)
@@ -197,10 +201,6 @@ class TestVideoPropertyModification:
         page._selector.select_all()
 
         # Mock the dialog to return changes
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         monkeypatch.setattr(
             BatchEditPropertyDialog,
             "edit_property",
@@ -258,7 +258,6 @@ class TestVideoDeletion:
 
     def test_delete_selected_videos_via_page(self, qtbot, mock_context, monkeypatch):
         """Test deleting selected videos through VideosPage."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         videos = make_video_dicts(5)
         mock_context._database._videos = videos
@@ -295,7 +294,6 @@ class TestVideoDeletion:
 
     def test_delete_cancelled_by_user(self, qtbot, mock_context, monkeypatch):
         """Test that cancelling delete preserves videos."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         videos = make_video_dicts(5)
         mock_context._database._videos = videos
@@ -330,7 +328,6 @@ class TestVideoDeletion:
 
     def test_delete_with_no_selection(self, qtbot, mock_context):
         """Test that delete does nothing when nothing is selected."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         videos = make_video_dicts(5)
         mock_context._database._videos = videos

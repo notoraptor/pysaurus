@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import videre
 
+from pysaurus.interface.videroid import run_with_videroid as mod
 from pysaurus.interface.videroid.pages.base_page import Page
 
 
@@ -19,8 +20,6 @@ class TestBasePage:
 
 class TestRunWithVideroid:
     def test_main_runs_app_inside_information(self, monkeypatch):
-        from pysaurus.interface.videroid import run_with_videroid as mod
-
         events = []
 
         class _Information:

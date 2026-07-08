@@ -7,11 +7,13 @@ process page management, and state change handling.
 
 import pytest
 from PySide6.QtCore import QEvent, QObject, Signal
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QMessageBox
 
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
-from pysaurus.interface.kyuti.main_window import MainWindow
+from pysaurus.interface.kyuti import main_window as mw_module
+from pysaurus.interface.kyuti.main_window import MainWindow, SessionLogDialog
 from pysaurus.video.video_search_context import VideoSearchContext
 
 
@@ -143,11 +145,7 @@ class QMockAppContext(QObject):
 @pytest.fixture
 def main_window(qtbot, monkeypatch):
     """Create a MainWindow with mocked AppContext."""
-    from pysaurus.interface.kyuti import main_window as mw_module
-
     monkeypatch.setattr(mw_module, "AppContext", QMockAppContext)
-
-    from pysaurus.interface.kyuti.main_window import MainWindow
 
     window = MainWindow()
     # Disable closeEvent to prevent QMessageBox blocking during teardown
@@ -289,8 +287,6 @@ class TestSessionLogging:
         assert "]" in entry
 
     def test_session_log_dialog_creation(self, qtbot, main_window):
-        from pysaurus.interface.kyuti.main_window import SessionLogDialog
-
         dialog = SessionLogDialog(main_window._session_log, main_window)
         qtbot.addWidget(dialog)
         assert "Session Log" in dialog.windowTitle()
@@ -499,8 +495,6 @@ class TestCloseEvent:
             QMessageBox, "question", lambda *a, **kw: QMessageBox.StandardButton.No
         )
 
-        from PySide6.QtGui import QCloseEvent
-
         event = QCloseEvent()
         MainWindow.closeEvent(main_window, event)
         assert not event.isAccepted()
@@ -509,8 +503,6 @@ class TestCloseEvent:
         monkeypatch.setattr(
             QMessageBox, "question", lambda *a, **kw: QMessageBox.StandardButton.Yes
         )
-
-        from PySide6.QtGui import QCloseEvent
 
         event = QCloseEvent()
         MainWindow.closeEvent(main_window, event)

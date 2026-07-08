@@ -4,13 +4,19 @@ Tests for PySide6 DatabasesPage.
 Tests the database selection and creation page.
 """
 
+from PySide6.QtWidgets import QMessageBox
+
+from pysaurus.interface.kyuti.pages.databases_page import (
+    DatabaseItemWidget,
+    DatabasesPage,
+)
+
 
 class TestDatabasesPageCreation:
     """Tests for DatabasesPage initialization."""
 
     def test_page_creation(self, qtbot, mock_context):
         """Test that DatabasesPage can be created."""
-        from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)
@@ -19,7 +25,6 @@ class TestDatabasesPageCreation:
 
     def test_page_has_database_list(self, qtbot, mock_context):
         """Test that page shows existing databases."""
-        from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)
@@ -29,7 +34,6 @@ class TestDatabasesPageCreation:
 
     def test_page_has_create_form(self, qtbot, mock_context):
         """Test that page has create database form."""
-        from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)
@@ -44,7 +48,6 @@ class TestDatabaseItemWidget:
 
     def test_widget_creation(self, qtbot):
         """Test that DatabaseItemWidget can be created."""
-        from pysaurus.interface.kyuti.pages.databases_page import DatabaseItemWidget
 
         widget = DatabaseItemWidget("test_db")
         qtbot.addWidget(widget)
@@ -54,7 +57,6 @@ class TestDatabaseItemWidget:
 
     def test_widget_expand_collapse(self, qtbot):
         """Test widget expand/collapse functionality."""
-        from pysaurus.interface.kyuti.pages.databases_page import DatabaseItemWidget
 
         widget = DatabaseItemWidget("test_db")
         qtbot.addWidget(widget)
@@ -77,7 +79,6 @@ class TestDatabaseItemWidget:
 
     def test_widget_open_signal(self, qtbot):
         """Test that open button emits signal."""
-        from pysaurus.interface.kyuti.pages.databases_page import DatabaseItemWidget
 
         widget = DatabaseItemWidget("test_db")
         qtbot.addWidget(widget)
@@ -94,9 +95,6 @@ class TestDatabaseItemWidget:
 
     def test_widget_update_signal(self, qtbot, monkeypatch):
         """Test that update button emits signal with update=True."""
-        from PySide6.QtWidgets import QMessageBox
-
-        from pysaurus.interface.kyuti.pages.databases_page import DatabaseItemWidget
 
         monkeypatch.setattr(
             QMessageBox,
@@ -118,7 +116,6 @@ class TestDatabaseItemWidget:
 
     def test_widget_delete_signal(self, qtbot):
         """Test that delete button emits signal."""
-        from pysaurus.interface.kyuti.pages.databases_page import DatabaseItemWidget
 
         widget = DatabaseItemWidget("test_db")
         qtbot.addWidget(widget)
@@ -138,7 +135,6 @@ class TestDatabasesPageSignals:
 
     def test_database_opening_signal(self, qtbot, mock_context):
         """Test that opening a database emits signal."""
-        from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)
@@ -157,9 +153,6 @@ class TestDatabasesPageSignals:
 
     def test_database_creating_signal(self, qtbot, mock_context, monkeypatch):
         """Test that creating a database emits signal."""
-        from PySide6.QtWidgets import QMessageBox
-
-        from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)
@@ -194,9 +187,6 @@ class TestDatabasesPageValidation:
 
     def test_create_without_name_shows_warning(self, qtbot, mock_context, monkeypatch):
         """Test that creating without name shows warning."""
-        from PySide6.QtWidgets import QMessageBox
-
-        from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)
@@ -216,9 +206,6 @@ class TestDatabasesPageValidation:
         self, qtbot, mock_context, monkeypatch
     ):
         """Test that creating without sources shows warning."""
-        from PySide6.QtWidgets import QMessageBox
-
-        from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)
@@ -241,7 +228,6 @@ class TestDatabasesPageRefresh:
 
     def test_refresh_updates_list(self, qtbot, mock_context):
         """Test that refresh updates the database list."""
-        from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
 
         page = DatabasesPage(mock_context)
         qtbot.addWidget(page)

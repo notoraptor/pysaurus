@@ -6,7 +6,15 @@ Tests BatchEditPropertyDialog and VideoPropertiesDialog.
 
 import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QPushButton, QTabWidget
 
+from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
+    BatchEditPropertyDialog,
+)
+from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
+    MultipleValuesWidget,
+    VideoPropertiesDialog,
+)
 from pysaurus.properties.properties import PropType
 from tests.mocks.mock_database import MockVideoPattern
 
@@ -28,10 +36,6 @@ class TestBatchEditPropertyDialog:
 
     def test_dialog_creation(self, qtbot, prop_type_string_multiple, values_and_counts):
         """Test that dialog can be created."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -44,10 +48,6 @@ class TestBatchEditPropertyDialog:
         self, qtbot, prop_type_string_multiple, values_and_counts
     ):
         """Test that dialog shows current values with counts."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -58,10 +58,6 @@ class TestBatchEditPropertyDialog:
 
     def test_remove_one(self, qtbot, prop_type_string_multiple, values_and_counts):
         """Test moving a value to remove list via inline button."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -74,10 +70,6 @@ class TestBatchEditPropertyDialog:
 
     def test_add_one(self, qtbot, prop_type_string_multiple, values_and_counts):
         """Test moving a value to add list via inline button."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -90,10 +82,6 @@ class TestBatchEditPropertyDialog:
 
     def test_restore_one(self, qtbot, prop_type_string_multiple, values_and_counts):
         """Test restoring a value from remove list via inline button."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -109,10 +97,6 @@ class TestBatchEditPropertyDialog:
 
     def test_add_new_value(self, qtbot, prop_type_string_multiple, values_and_counts):
         """Test adding a new value."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -127,10 +111,6 @@ class TestBatchEditPropertyDialog:
 
     def test_get_changes(self, qtbot, prop_type_string_multiple, values_and_counts):
         """Test getting changes."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -153,10 +133,6 @@ class TestBatchEditPropertyDialog:
         self, qtbot, prop_type_string_multiple, values_and_counts
     ):
         """Test moving all values to remove."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -183,8 +159,6 @@ class TestBatchEditPropertyDialogButtons:
 
     def _find_button(self, entry_list, entry_index, button_text):
         """Find a QPushButton in an entry widget by index and button text."""
-        from PySide6.QtWidgets import QPushButton
-
         # Get the entry widget at the given index
         item = entry_list._layout.itemAt(entry_index)
         assert item is not None, f"No item at index {entry_index}"
@@ -202,10 +176,6 @@ class TestBatchEditPropertyDialogButtons:
         self, qtbot, prop_type_string_multiple, values_and_counts
     ):
         """Test that clicking the remove button on a current entry works."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -226,10 +196,6 @@ class TestBatchEditPropertyDialogButtons:
         self, qtbot, prop_type_string_multiple, values_and_counts
     ):
         """Test that clicking the restore button on a removed entry works."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -252,10 +218,6 @@ class TestBatchEditPropertyDialogButtons:
         self, qtbot, prop_type_string_multiple, values_and_counts
     ):
         """Test that clicking the add button on a current entry works."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -274,10 +236,6 @@ class TestBatchEditPropertyDialogButtons:
         self, qtbot, prop_type_string_multiple, values_and_counts
     ):
         """Test that clicking the cancel button on an added entry works."""
-        from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
-            BatchEditPropertyDialog,
-        )
-
         dialog = BatchEditPropertyDialog(
             "genre", prop_type_string_multiple, 5, values_and_counts
         )
@@ -335,10 +293,6 @@ class TestVideoPropertiesDialog:
 
     def test_dialog_creation(self, qtbot, sample_video, mock_context):
         """Test that dialog can be created."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            VideoPropertiesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         dialog = VideoPropertiesDialog(sample_video, prop_types, mock_context)
         qtbot.addWidget(dialog)
@@ -348,27 +302,17 @@ class TestVideoPropertiesDialog:
 
     def test_dialog_has_tabs(self, qtbot, sample_video, mock_context):
         """Test that dialog has Info and Properties tabs."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            VideoPropertiesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         dialog = VideoPropertiesDialog(sample_video, prop_types, mock_context)
         qtbot.addWidget(dialog)
 
         # Find tab widget
-        from PySide6.QtWidgets import QTabWidget
-
         tabs = dialog.findChild(QTabWidget)
         assert tabs is not None
         assert tabs.count() == 2
 
     def test_dialog_loads_properties(self, qtbot, sample_video, mock_context):
         """Test that dialog loads video properties."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            VideoPropertiesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         dialog = VideoPropertiesDialog(sample_video, prop_types, mock_context)
         qtbot.addWidget(dialog)
@@ -378,10 +322,6 @@ class TestVideoPropertiesDialog:
 
     def test_dialog_shows_video_info(self, qtbot, sample_video, mock_context):
         """Test that dialog shows video info."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            VideoPropertiesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         dialog = VideoPropertiesDialog(sample_video, prop_types, mock_context)
         qtbot.addWidget(dialog)
@@ -414,10 +354,6 @@ class TestMultipleValuesWidget:
 
     def test_widget_creation_free_form(self, qtbot, prop_type_multiple):
         """Test creating widget for free-form values."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            MultipleValuesWidget,
-        )
-
         widget = MultipleValuesWidget(prop_type_multiple)
         qtbot.addWidget(widget)
 
@@ -426,10 +362,6 @@ class TestMultipleValuesWidget:
 
     def test_widget_creation_enum(self, qtbot, prop_type_enum):
         """Test creating widget for enumeration values."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            MultipleValuesWidget,
-        )
-
         widget = MultipleValuesWidget(prop_type_enum)
         qtbot.addWidget(widget)
 
@@ -438,10 +370,6 @@ class TestMultipleValuesWidget:
 
     def test_set_values_free_form(self, qtbot, prop_type_multiple):
         """Test setting values in free-form widget."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            MultipleValuesWidget,
-        )
-
         widget = MultipleValuesWidget(prop_type_multiple)
         qtbot.addWidget(widget)
 
@@ -451,10 +379,6 @@ class TestMultipleValuesWidget:
 
     def test_get_values_free_form(self, qtbot, prop_type_multiple):
         """Test getting values from free-form widget."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            MultipleValuesWidget,
-        )
-
         widget = MultipleValuesWidget(prop_type_multiple)
         qtbot.addWidget(widget)
 
@@ -466,10 +390,6 @@ class TestMultipleValuesWidget:
 
     def test_set_values_enum(self, qtbot, prop_type_enum):
         """Test setting values in enum widget."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            MultipleValuesWidget,
-        )
-
         widget = MultipleValuesWidget(prop_type_enum)
         qtbot.addWidget(widget)
 
@@ -481,10 +401,6 @@ class TestMultipleValuesWidget:
 
     def test_get_values_enum(self, qtbot, prop_type_enum):
         """Test getting values from enum widget."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            MultipleValuesWidget,
-        )
-
         widget = MultipleValuesWidget(prop_type_enum)
         qtbot.addWidget(widget)
 
@@ -498,10 +414,6 @@ class TestMultipleValuesWidget:
 
     def test_add_value_free_form(self, qtbot, prop_type_multiple):
         """Test adding value in free-form widget."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            MultipleValuesWidget,
-        )
-
         widget = MultipleValuesWidget(prop_type_multiple)
         qtbot.addWidget(widget)
 
@@ -513,10 +425,6 @@ class TestMultipleValuesWidget:
 
     def test_clear_values(self, qtbot, prop_type_multiple):
         """Test clearing values."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            MultipleValuesWidget,
-        )
-
         widget = MultipleValuesWidget(prop_type_multiple)
         qtbot.addWidget(widget)
 
@@ -527,10 +435,6 @@ class TestMultipleValuesWidget:
 
     def test_reset_values(self, qtbot, prop_type_multiple):
         """Test resetting to initial values."""
-        from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-            MultipleValuesWidget,
-        )
-
         widget = MultipleValuesWidget(prop_type_multiple)
         qtbot.addWidget(widget)
 

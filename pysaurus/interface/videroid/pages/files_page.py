@@ -15,7 +15,7 @@ import sys
 import videre
 from videre.widgets.widget import Widget
 
-from pysaurus.database.algorithms.folder_scan import EMPTY_FOLDER_EXT
+from pysaurus.database.algorithms.folder_scan import EMPTY_FOLDER_EXT, FolderScanResult
 from pysaurus.interface.videroid import theme
 from pysaurus.interface.videroid.pages.base_page import Page
 from pysaurus.interface.videroid.widgets import table
@@ -49,7 +49,7 @@ class FilesPage(Page):
         self._tabs: Tabs | None = None  # Others | Video stats (built once scanned)
         self._summary = videre.Text("")
         self._filter = videre.TextInput()
-        self._result = None
+        self._result: FolderScanResult | None = None
         self._sel_ext = None
         self._selected_files: set = set()
 
@@ -67,6 +67,19 @@ class FilesPage(Page):
         self._holder.control = (
             self._empty_state() if self._result is None else self._scanned_state()
         )
+
+    @property
+    def _scan_result(self) -> FolderScanResult:
+        """The current scan result. Only accessed from "scanned state" widget
+        code, reachable only once `_reload()` has confirmed a result exists."""
+        assert self._result is not None
+        return self._result
+
+    @property
+    def _tabs_widget(self) -> Tabs:
+        """The tabs widget. Only accessed once `_scanned_state()` has built it."""
+        assert self._tabs is not None
+        return self._tabs
 
     # --- scan ---------------------------------------------------------------
 
@@ -126,7 +139,7 @@ class FilesPage(Page):
         )
 
     def _update_summary(self) -> None:
-        result = self._result
+        result = self._scan_result
         n_others = sum(len(files) for files in result.others.values())
         size_others = sum(f.size for files in result.others.values() for f in files)
         n_indexed = sum(len(files) for files in result.videos_indexed.values())
@@ -158,7 +171,7 @@ class FilesPage(Page):
 
     def _ext_table(self) -> Widget:
         items = sorted(
-            self._result.others.items(),
+            self._scan_result.others.items(),
             key=lambda kv: (-sum(f.size for f in kv[1]), str(kv[0])),
         )
         if self._sel_ext is None and items:
@@ -202,10 +215,10 @@ class FilesPage(Page):
     def _select_ext(self, widget) -> None:
         self._sel_ext = widget.data
         self._selected_files.clear()
-        self._tabs.refresh()
+        self._tabs_widget.refresh()
 
     def _files_panel(self) -> Widget:
-        files = self._result.others.get(self._sel_ext, []) if self._sel_ext else []
+        files = self._scan_result.others.get(self._sel_ext, []) if self._sel_ext else []
         text = (self._filter.value or "").strip().lower()
         if text:
             files = [f for f in files if text in str(f.path).lower()]
@@ -245,7 +258,9 @@ class FilesPage(Page):
                     [
                         videre.Text("Filter:"),
                         self._filter,
-                        videre.Button("Apply", on_click=lambda w: self._tabs.refresh()),
+                        videre.Button(
+                            "Apply", on_click=lambda w: self._tabs_widget.refresh()
+                        ),
                     ],
                     space=5,
                     vertical_alignment=videre.Alignment.CENTER,
@@ -273,7 +288,7 @@ class FilesPage(Page):
     # --- Video stats tab ----------------------------------------------------
 
     def _stats_tab(self) -> Widget:
-        result = self._result
+        result = self._scan_result
         exts = set(result.videos_indexed) | set(result.videos_unknown)
 
         def total(ext) -> int:
@@ -326,7 +341,7 @@ class FilesPage(Page):
 
     def _trash_all(self, widget) -> None:
         ext = widget.data
-        paths = [str(f.path) for f in self._result.others.get(ext, [])]
+        paths = [str(f.path) for f in self._scan_result.others.get(ext, [])]
         if paths:
             self._confirm_trash(paths, f"all {len(paths)} '{_ext_label(ext)}' file(s)")
 
@@ -353,7 +368,7 @@ class FilesPage(Page):
         ok, errors = self.context.trash_files(paths)
         trashed = set(paths) - {path for path, _ in errors}
         self.context.drop_scanned_paths(trashed)
-        if self._sel_ext not in self._result.others:
+        if self._sel_ext not in self._scan_result.others:
             self._sel_ext = None
         self._selected_files.clear()
         self._holder.control = self._scanned_state()

@@ -12,9 +12,12 @@ from typing import Any
 
 from pysaurus.application import exceptions
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.duration import Duration
+from pysaurus.core.file_size import FileSize
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.dbview.view_tools import GroupDef
 from pysaurus.properties.properties import PropType
+from pysaurus.properties.property_value_modifier import PropertyValueModifier
 from pysaurus.video.video_search_context import VideoSearchContext
 
 # Load test data
@@ -116,9 +119,6 @@ class MockVideoPattern:
 
     def json(self, with_moves=False) -> dict:
         """Return video as dict for JSON serialization."""
-        from pysaurus.core.duration import Duration
-        from pysaurus.core.file_size import FileSize
-
         d = self._data
         filename = self.filename
         file_title = filename.file_title
@@ -236,8 +236,6 @@ class MockOps:
 
     def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
         """Apply a modifier function to property values."""
-        from pysaurus.properties.property_value_modifier import PropertyValueModifier
-
         function = getattr(PropertyValueModifier(), mod_name)
         for v in self._db._videos:
             props = v.get("properties", {})
@@ -285,9 +283,6 @@ class MockDatabase:
 
     def query_videos(self, view, page_size, page_number, selector=None):
         """Query videos with filtering, sorting and pagination."""
-        from pysaurus.core.duration import Duration
-        from pysaurus.core.file_size import FileSize
-
         videos = self._filter_videos(view.sources, view.search)
         videos = self._sort_videos(videos, view.sorting)
 

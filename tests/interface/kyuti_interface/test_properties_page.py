@@ -4,13 +4,16 @@ Tests for PySide6 PropertiesPage.
 Tests the property management page.
 """
 
+from PySide6.QtWidgets import QInputDialog, QMessageBox
+
+from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
+
 
 class TestPropertiesPageCreation:
     """Tests for PropertiesPage initialization."""
 
     def test_page_creation(self, qtbot, mock_context):
         """Test that PropertiesPage can be created."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -19,7 +22,6 @@ class TestPropertiesPageCreation:
 
     def test_page_has_table(self, qtbot, mock_context):
         """Test that page has properties table."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -29,7 +31,6 @@ class TestPropertiesPageCreation:
 
     def test_page_has_create_form(self, qtbot, mock_context):
         """Test that page has create property form."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -45,7 +46,6 @@ class TestPropertiesPageRefresh:
 
     def test_refresh_loads_properties(self, qtbot, mock_context):
         """Test that refresh loads properties from database."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -57,7 +57,6 @@ class TestPropertiesPageRefresh:
 
     def test_refresh_displays_property_info(self, qtbot, mock_context):
         """Test that refresh displays property information correctly."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -75,7 +74,6 @@ class TestPropertiesPageCreateForm:
 
     def test_type_combo_has_options(self, qtbot, mock_context):
         """Test that type combo has all type options."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -88,7 +86,6 @@ class TestPropertiesPageCreateForm:
 
     def test_multiple_disabled_for_non_string(self, qtbot, mock_context):
         """Test that multiple checkbox is disabled for non-string types."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -101,7 +98,6 @@ class TestPropertiesPageCreateForm:
 
     def test_multiple_enabled_for_string(self, qtbot, mock_context):
         """Test that multiple checkbox is enabled for string type."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -113,7 +109,6 @@ class TestPropertiesPageCreateForm:
 
     def test_enum_input_disabled_by_default(self, qtbot, mock_context):
         """Test that enum input is disabled by default."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -122,7 +117,6 @@ class TestPropertiesPageCreateForm:
 
     def test_enum_input_enabled_when_checked(self, qtbot, mock_context):
         """Test that enum input is enabled when checkbox is checked."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -133,7 +127,6 @@ class TestPropertiesPageCreateForm:
 
     def test_reset_form(self, qtbot, mock_context):
         """Test that reset form clears all inputs."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -158,9 +151,6 @@ class TestPropertiesPageCreate:
         self, qtbot, mock_context, monkeypatch
     ):
         """Test that creating without name shows warning."""
-        from PySide6.QtWidgets import QMessageBox
-
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -177,9 +167,6 @@ class TestPropertiesPageCreate:
 
     def test_create_property_success(self, qtbot, mock_context, monkeypatch):
         """Test successful property creation."""
-        from PySide6.QtWidgets import QMessageBox
-
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -211,9 +198,6 @@ class TestPropertiesPageActions:
 
     def test_delete_property(self, qtbot, mock_context, monkeypatch):
         """Test deleting a property."""
-        from PySide6.QtWidgets import QMessageBox
-
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -235,9 +219,6 @@ class TestPropertiesPageActions:
 
     def test_rename_property(self, qtbot, mock_context, monkeypatch):
         """Test renaming a property."""
-        from PySide6.QtWidgets import QInputDialog, QMessageBox
-
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
@@ -260,9 +241,6 @@ class TestPropertiesPageActions:
 
     def test_convert_property_multiplicity(self, qtbot, mock_context, monkeypatch):
         """Test converting property between single and multiple."""
-        from PySide6.QtWidgets import QMessageBox
-
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)

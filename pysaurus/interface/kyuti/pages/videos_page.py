@@ -2,8 +2,10 @@
 Videos page for browsing and managing videos.
 """
 
+from html import escape
+
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtGui import QCursor, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -27,7 +29,7 @@ from PySide6.QtWidgets import (
 from pysaurus.core.classes import Selector
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.dbview.field_stat import FieldStat
-from pysaurus.interface.common.common import format_group_value
+from pysaurus.interface.common.common import FIELD_MAP, Uniconst, format_group_value
 from pysaurus.interface.kyuti.app_context import AppContext
 from pysaurus.interface.kyuti.dialogs import (
     BatchEditPropertyDialog,
@@ -41,6 +43,7 @@ from pysaurus.interface.kyuti.dialogs.video_confirm_dialog import VideoConfirmDi
 from pysaurus.interface.kyuti.widgets.left_click_menu import LeftClickMenu
 from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 from pysaurus.properties.properties import PropType
+from pysaurus.video.video_constants import SIMILARITY_FIELDS
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
 
@@ -1135,8 +1138,6 @@ class VideosPage(QWidget):
 
     def _update_sorting_display(self, sorting: list[str] | None):
         """Update the sorting info label."""
-        from pysaurus.interface.common.common import FIELD_MAP, Uniconst
-
         # Enable/disable clear button based on whether sorting differs from default
         is_default = sorting is None or list(sorting) == VIDEO_DEFAULT_SORTING
         self.btn_sorting_clear.setEnabled(not is_default)
@@ -1254,8 +1255,6 @@ class VideosPage(QWidget):
 
         # Update grouped_by_moves flag and show/hide the confirm button
         self._grouped_by_moves = grouping.field == "move_id"
-        from pysaurus.video.video_constants import SIMILARITY_FIELDS
-
         self._grouped_by_similarity = grouping.field in SIMILARITY_FIELDS
         self._similarity_field = grouping.field if self._grouped_by_similarity else None
         self.btn_confirm_unique_moves.setVisible(self._grouped_by_moves)
@@ -1613,8 +1612,6 @@ class VideosPage(QWidget):
         dialog.setWindowTitle("Generalize Title")
         layout = QVBoxLayout(dialog)
 
-        from html import escape
-
         label = QLabel(
             f"Copy <b>{escape(title_value)}</b> "
             f"into property for {nb_others} other video(s):"
@@ -1870,8 +1867,6 @@ class VideosPage(QWidget):
             action.setData(prop_type)
 
         # Show menu at cursor position
-        from PySide6.QtGui import QCursor
-
         action = menu.exec(QCursor.pos())
         if action:
             prop_type = action.data()

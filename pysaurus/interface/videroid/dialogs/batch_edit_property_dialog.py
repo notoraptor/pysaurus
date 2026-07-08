@@ -10,6 +10,8 @@ videre gaps worked around: no Table (G1) → three `Column`s in a `Row`; no Spin
 
 from __future__ import annotations
 
+from typing import Sequence
+
 import videre
 from videre.widgets.widget import Widget
 
@@ -61,7 +63,7 @@ class BatchEditPropertyDialog(videre.Column):
 
     # --- per-type new-value editor ------------------------------------------
 
-    def _make_editor(self) -> Widget:
+    def _make_editor(self) -> videre.Dropdown | videre.TextInput:
         enum = getattr(self._prop, "enumeration", None)
         if enum:
             return videre.Dropdown([str(value) for value in enum])
@@ -72,8 +74,14 @@ class BatchEditPropertyDialog(videre.Column):
     def _read_new_value(self):
         enum = getattr(self._prop, "enumeration", None)
         if self._prop.type == "bool":
+            assert isinstance(self._editor, videre.Dropdown)
             return self._editor.selected == "true"
-        text = (self._editor.selected if enum else self._editor.value) or ""
+        if enum:
+            assert isinstance(self._editor, videre.Dropdown)
+            text = self._editor.selected or ""
+        else:
+            assert isinstance(self._editor, videre.TextInput)
+            text = self._editor.value or ""
         text = text.strip()
         if not text:
             return None
@@ -88,7 +96,7 @@ class BatchEditPropertyDialog(videre.Column):
 
     # --- rendering ----------------------------------------------------------
 
-    def _column(self, title: str, rows: list[Widget]) -> Widget:
+    def _column(self, title: str, rows: Sequence[Widget]) -> Widget:
         return videre.Container(
             videre.Column(
                 [

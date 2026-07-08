@@ -8,14 +8,21 @@ All methods delegate to AbstractDatabase abstract methods, allowing
 subclasses (like PysaurusCollection) to override them with optimized implementations.
 """
 
-from typing import Collection
+from collections import Counter
+from typing import TYPE_CHECKING, Collection
+
+from send2trash import send2trash
 
 from pysaurus.application import exceptions
+from pysaurus.core import functions
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.datestring import Date
 from pysaurus.core.path_tree import PathTree
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.properties.property_value_modifier import PropertyValueModifier
+
+if TYPE_CHECKING:
+    from pysaurus.database.abstract_database import AbstractDatabase
 
 
 class DatabaseOperations:
@@ -30,9 +37,7 @@ class DatabaseOperations:
         Args:
             db: An AbstractDatabase instance
         """
-        from pysaurus.database.abstract_database import AbstractDatabase
-
-        self.db: AbstractDatabase = db
+        self.db: "AbstractDatabase" = db
 
     def set_folders(self, folders) -> None:
         """Set database folders, saving if they changed.
@@ -111,8 +116,6 @@ class DatabaseOperations:
 
     def trash_video(self, video_id: int) -> AbsolutePath:
         """Move video file to system trash and delete database entry."""
-        from send2trash import send2trash
-
         video_filename = self.get_video_filename(video_id)
         send2trash(str(video_filename))
         self.db.video_entry_del(video_id)
@@ -120,9 +123,6 @@ class DatabaseOperations:
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         """Change video file title."""
-        from pysaurus.application import exceptions
-        from pysaurus.core import functions
-
         if functions.has_discarded_characters(new_title):
             raise exceptions.InvalidFileName(new_title)
         old_filename: AbsolutePath = self.get_video_filename(video_id)
@@ -133,7 +133,8 @@ class DatabaseOperations:
 
     def move_video_entry(self, from_id: int, to_id: int) -> None:
         """Move a single video entry."""
-        from pysaurus.database import database_algorithms
+        # Local import: database_algorithms imports DatabaseOperations too (circular).
+        from pysaurus.database import database_algorithms  # noqa: PLC0415
 
         alg = database_algorithms.DatabaseAlgorithms(self.db)
         alg.move_video_entries([(from_id, to_id)])
@@ -165,7 +166,7 @@ class DatabaseOperations:
         assert "a" <= mod_name[0] <= "z"
         function = getattr(PropertyValueModifier(), mod_name)
         assert self.db.get_prop_types(name=prop_name, with_type=str)
-        modified = {}
+        modified: dict[int | None, Collection[PropUnitType]] = {}
         for video_id, values in self.db.videos_tag_get(prop_name).items():
             new_values = [function(value) for value in values]
             if values and new_values != values:
@@ -177,8 +178,6 @@ class DatabaseOperations:
         self, video_indices: list[int], name: str
     ) -> list[list]:
         """Count property values for given videos."""
-        from collections import Counter
-
         count = Counter()
         for values in self.db.videos_tag_get(name, indices=video_indices).values():
             count.update(values)

@@ -9,7 +9,13 @@ NonSubmittingLineEdit.
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
+from PySide6.QtWidgets import QCheckBox, QComboBox, QLineEdit, QSpinBox
 
+from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
+    BatchEditDialog,
+    MultipleValuesWidget,
+    NonSubmittingLineEdit,
+)
 from pysaurus.properties.properties import PropType
 
 # -- Fixtures --
@@ -105,10 +111,6 @@ def all_prop_types(
 
 class TestNonSubmittingLineEdit:
     def test_enter_emits_return_pressed(self, qtbot):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            NonSubmittingLineEdit,
-        )
-
         widget = NonSubmittingLineEdit()
         qtbot.addWidget(widget)
 
@@ -121,10 +123,6 @@ class TestNonSubmittingLineEdit:
             widget.keyPressEvent(event)
 
     def test_enter_key_is_accepted(self, qtbot):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            NonSubmittingLineEdit,
-        )
-
         widget = NonSubmittingLineEdit()
         qtbot.addWidget(widget)
 
@@ -135,10 +133,6 @@ class TestNonSubmittingLineEdit:
         assert event.isAccepted()
 
     def test_other_keys_pass_through(self, qtbot):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            NonSubmittingLineEdit,
-        )
-
         widget = NonSubmittingLineEdit()
         qtbot.addWidget(widget)
 
@@ -158,10 +152,6 @@ class TestNonSubmittingLineEdit:
 
 class TestMultipleValuesWidgetFreeForm:
     def test_creation(self, qtbot, str_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(str_multiple_prop)
         qtbot.addWidget(w)
 
@@ -170,10 +160,6 @@ class TestMultipleValuesWidgetFreeForm:
         assert w.list_widget.count() == 0
 
     def test_add_value(self, qtbot, str_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(str_multiple_prop)
         qtbot.addWidget(w)
 
@@ -184,10 +170,6 @@ class TestMultipleValuesWidgetFreeForm:
         assert w.input_edit.text() == ""
 
     def test_add_empty_value_ignored(self, qtbot, str_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(str_multiple_prop)
         qtbot.addWidget(w)
 
@@ -197,10 +179,6 @@ class TestMultipleValuesWidgetFreeForm:
         assert w.list_widget.count() == 0
 
     def test_add_duplicate_ignored(self, qtbot, str_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(str_multiple_prop)
         qtbot.addWidget(w)
 
@@ -212,10 +190,6 @@ class TestMultipleValuesWidgetFreeForm:
         assert w.list_widget.count() == 1
 
     def test_get_values(self, qtbot, str_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(str_multiple_prop)
         qtbot.addWidget(w)
 
@@ -227,10 +201,6 @@ class TestMultipleValuesWidgetFreeForm:
         assert w.get_values() == ["a", "b"]
 
     def test_remove_selected(self, qtbot, str_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(str_multiple_prop)
         qtbot.addWidget(w)
 
@@ -247,10 +217,6 @@ class TestMultipleValuesWidgetFreeForm:
         assert w.get_values() == ["b"]
 
     def test_clear_values(self, qtbot, str_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(str_multiple_prop)
         qtbot.addWidget(w)
 
@@ -264,10 +230,6 @@ class TestMultipleValuesWidgetFreeForm:
         assert w.list_widget.count() == 0
 
     def test_set_enabled(self, qtbot, str_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(str_multiple_prop)
         qtbot.addWidget(w)
 
@@ -282,10 +244,6 @@ class TestMultipleValuesWidgetFreeForm:
         assert w.input_edit.isEnabled()
 
     def test_add_int_value(self, qtbot, int_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(int_multiple_prop)
         qtbot.addWidget(w)
 
@@ -295,10 +253,6 @@ class TestMultipleValuesWidgetFreeForm:
         assert w.get_values() == [42]
 
     def test_add_invalid_int_ignored(self, qtbot, int_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(int_multiple_prop)
         qtbot.addWidget(w)
 
@@ -313,10 +267,6 @@ class TestMultipleValuesWidgetFreeForm:
 
 class TestMultipleValuesWidgetEnum:
     def test_creation(self, qtbot, enum_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(enum_multiple_prop)
         qtbot.addWidget(w)
 
@@ -324,20 +274,12 @@ class TestMultipleValuesWidgetEnum:
         assert len(w.checkboxes) == 3
 
     def test_get_values_none_checked(self, qtbot, enum_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(enum_multiple_prop)
         qtbot.addWidget(w)
 
         assert w.get_values() == []
 
     def test_get_values_some_checked(self, qtbot, enum_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(enum_multiple_prop)
         qtbot.addWidget(w)
 
@@ -350,10 +292,6 @@ class TestMultipleValuesWidgetEnum:
         assert "comedy" not in values
 
     def test_clear_values(self, qtbot, enum_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(enum_multiple_prop)
         qtbot.addWidget(w)
 
@@ -364,10 +302,6 @@ class TestMultipleValuesWidgetEnum:
         assert w.get_values() == []
 
     def test_set_enabled(self, qtbot, enum_multiple_prop):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            MultipleValuesWidget,
-        )
-
         w = MultipleValuesWidget(enum_multiple_prop)
         qtbot.addWidget(w)
 
@@ -385,8 +319,6 @@ class TestMultipleValuesWidgetEnum:
 
 class TestBatchEditDialogCreation:
     def test_creation_with_props(self, qtbot, all_prop_types, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1, 2, 3], all_prop_types, mock_context)
         qtbot.addWidget(dialog)
 
@@ -394,8 +326,6 @@ class TestBatchEditDialogCreation:
         assert len(dialog._property_widgets) == len(all_prop_types)
 
     def test_creation_no_props(self, qtbot, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [], mock_context)
         qtbot.addWidget(dialog)
 
@@ -404,8 +334,6 @@ class TestBatchEditDialogCreation:
     def test_property_widgets_initially_disabled(
         self, qtbot, all_prop_types, mock_context
     ):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], all_prop_types, mock_context)
         qtbot.addWidget(dialog)
 
@@ -416,10 +344,6 @@ class TestBatchEditDialogCreation:
 
 class TestBatchEditDialogPropertyGroups:
     def test_bool_property_creates_checkbox(self, qtbot, bool_prop, mock_context):
-        from PySide6.QtWidgets import QCheckBox
-
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [bool_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -427,10 +351,6 @@ class TestBatchEditDialogPropertyGroups:
         assert isinstance(widget, QCheckBox)
 
     def test_int_property_creates_spinbox(self, qtbot, int_prop, mock_context):
-        from PySide6.QtWidgets import QSpinBox
-
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [int_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -439,10 +359,6 @@ class TestBatchEditDialogPropertyGroups:
         assert widget.value() == 0
 
     def test_float_property_creates_lineedit(self, qtbot, float_prop, mock_context):
-        from PySide6.QtWidgets import QLineEdit
-
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [float_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -450,10 +366,6 @@ class TestBatchEditDialogPropertyGroups:
         assert isinstance(widget, QLineEdit)
 
     def test_str_property_creates_lineedit(self, qtbot, str_prop, mock_context):
-        from PySide6.QtWidgets import QLineEdit
-
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [str_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -461,10 +373,6 @@ class TestBatchEditDialogPropertyGroups:
         assert isinstance(widget, QLineEdit)
 
     def test_enum_property_creates_combobox(self, qtbot, enum_prop, mock_context):
-        from PySide6.QtWidgets import QComboBox
-
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [enum_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -475,11 +383,6 @@ class TestBatchEditDialogPropertyGroups:
     def test_multiple_property_creates_multiple_values_widget(
         self, qtbot, str_multiple_prop, mock_context
     ):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-            BatchEditDialog,
-            MultipleValuesWidget,
-        )
-
         dialog = BatchEditDialog([1], [str_multiple_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -489,8 +392,6 @@ class TestBatchEditDialogPropertyGroups:
     def test_label_shows_multiple_indicator(
         self, qtbot, str_multiple_prop, mock_context
     ):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [str_multiple_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -498,8 +399,6 @@ class TestBatchEditDialogPropertyGroups:
         assert "(multiple)" in checkbox.text()
 
     def test_label_shows_enum_indicator(self, qtbot, enum_multiple_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [enum_multiple_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -509,8 +408,6 @@ class TestBatchEditDialogPropertyGroups:
 
 class TestBatchEditDialogCheckboxToggle:
     def test_checking_enables_widget(self, qtbot, str_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [str_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -521,8 +418,6 @@ class TestBatchEditDialogCheckboxToggle:
         assert widget.isEnabled()
 
     def test_unchecking_disables_widget(self, qtbot, str_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [str_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -534,8 +429,6 @@ class TestBatchEditDialogCheckboxToggle:
 
 class TestBatchEditDialogAccept:
     def test_accept_no_database(self, qtbot):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         class NoDbCtx:
             def has_database(self):
                 return False
@@ -547,8 +440,6 @@ class TestBatchEditDialogAccept:
         dialog._on_accept()
 
     def test_accept_no_changes(self, qtbot, str_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1, 2], [str_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -562,8 +453,6 @@ class TestBatchEditDialogAccept:
         assert calls == []
 
     def test_accept_applies_str_change(self, qtbot, str_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([10, 20], [str_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -583,8 +472,6 @@ class TestBatchEditDialogAccept:
         assert calls[1] == (20, {"title": ["New Title"]})
 
     def test_accept_applies_bool_change(self, qtbot, bool_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [bool_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -603,8 +490,6 @@ class TestBatchEditDialogAccept:
         assert calls[0] == (1, {"watched": [True]})
 
     def test_accept_applies_int_change(self, qtbot, int_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [int_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -623,8 +508,6 @@ class TestBatchEditDialogAccept:
         assert calls[0] == (1, {"rating": [5]})
 
     def test_accept_applies_float_change(self, qtbot, float_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [float_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -643,8 +526,6 @@ class TestBatchEditDialogAccept:
         assert calls[0] == (1, {"score": [3.14]})
 
     def test_accept_applies_enum_change(self, qtbot, enum_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [enum_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -665,8 +546,6 @@ class TestBatchEditDialogAccept:
     def test_accept_applies_multiple_change(
         self, qtbot, str_multiple_prop, mock_context
     ):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [str_multiple_prop], mock_context)
         qtbot.addWidget(dialog)
 
@@ -690,8 +569,6 @@ class TestBatchEditDialogAccept:
     def test_accept_only_checked_properties(
         self, qtbot, str_prop, int_prop, mock_context
     ):
-        from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
-
         dialog = BatchEditDialog([1], [str_prop, int_prop], mock_context)
         qtbot.addWidget(dialog)
 

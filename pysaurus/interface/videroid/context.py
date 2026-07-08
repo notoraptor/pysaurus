@@ -11,10 +11,19 @@ later phases add the action methods (open/create/delete/edit/...).
 """
 
 import logging
-from typing import Callable
+import os
+from typing import TYPE_CHECKING, Callable, cast
 
+from searchexp.errors import ExpressionError
+
+from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.notifications import Notification
+from pysaurus.database.algorithms.folder_scan import FolderScanResult
+from pysaurus.database.saurus.video_mega_group import _compile_source_expression
 from pysaurus.interface.api.gui_api import GuiAPI
+
+if TYPE_CHECKING:
+    from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
 
 logger = logging.getLogger(__name__)
 
@@ -187,15 +196,8 @@ class VideroidContext:
             return
         text = expression.strip() if expression else None
         if text:
-            from searchexp.errors import ExpressionError
-
-            from pysaurus.application.exceptions import PysaurusError
-            from pysaurus.database.saurus.video_mega_group import (
-                _compile_source_expression,
-            )
-
             try:
-                _compile_source_expression(db.db, text)
+                _compile_source_expression(cast("PysaurusCollection", db).db, text)
             except ExpressionError as exc:
                 raise PysaurusError(exc.format_message()) from exc
         self._api.view.set_source_expression(text)
@@ -270,8 +272,9 @@ class VideroidContext:
     def add_property_value_for_videos(self, video_ids, prop_name, values) -> None:
         """Set `values` on a property for several videos — merged with existing
         values if the property is multiple, replacing them otherwise."""
-        if self._ops is not None:
-            (prop,) = self._api.database.get_prop_types(name=prop_name)
+        db = self._api.database
+        if db is not None and self._ops is not None:
+            (prop,) = db.get_prop_types(name=prop_name)
             self._ops.set_property_for_videos(
                 prop_name, {vid: values for vid in video_ids}, merge=prop.multiple
             )
@@ -391,7 +394,7 @@ class VideroidContext:
         """Scan the DB folders for video and non-video files (threaded op)."""
         self._api.scan_folders()
 
-    def get_last_scan_result(self):
+    def get_last_scan_result(self) -> FolderScanResult | None:
         """Return the last FolderScanResult, or None if no scan has run."""
         return self._api.get_last_scan_result()
 
@@ -418,9 +421,9 @@ class VideroidContext:
 
         Batched send2trash + per-path existence recheck (the batch call gives no
         per-item status). Ported from the Qt app_context."""
-        import os
-
-        from send2trash import send2trash
+        # Local import: tests monkeypatch "send2trash.send2trash" directly, which
+        # only takes effect if this name is looked up fresh on each call.
+        from send2trash import send2trash  # noqa: PLC0415
 
         str_paths = [str(path) for path in paths]
         if not str_paths:

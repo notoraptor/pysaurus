@@ -12,7 +12,6 @@ class TestVideosPageCreation:
 
     def test_page_creation(self, qtbot, mock_context):
         """Test that VideosPage can be created."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -23,7 +22,6 @@ class TestVideosPageCreation:
 
     def test_page_has_search_input(self, qtbot, mock_context):
         """Test that VideosPage has a search input."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -32,7 +30,6 @@ class TestVideosPageCreation:
 
     def test_page_has_pagination(self, qtbot, mock_context):
         """Test that VideosPage has pagination controls."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -47,7 +44,6 @@ class TestVideosPageRefresh:
 
     def test_refresh_loads_videos(self, qtbot, mock_context):
         """Test that refresh loads videos from database."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -60,7 +56,6 @@ class TestVideosPageRefresh:
 
     def test_refresh_updates_page_count(self, qtbot, mock_context):
         """Test that refresh updates total page count."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -76,7 +71,6 @@ class TestVideosPageSelection:
 
     def test_initial_selector_is_empty(self, qtbot, mock_context):
         """Test that initial selector has no selections."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -87,7 +81,6 @@ class TestVideosPageSelection:
 
     def test_select_all_in_page(self, qtbot, mock_context):
         """Test selecting all videos in current page."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -101,7 +94,6 @@ class TestVideosPageSelection:
 
     def test_clear_selection(self, qtbot, mock_context):
         """Test clearing selection."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -117,7 +109,6 @@ class TestVideosPageSelection:
 
     def test_video_selection_signal(self, qtbot, mock_context):
         """Test that video selection signal updates selector."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -135,7 +126,6 @@ class TestVideosPagePagination:
 
     def test_next_page(self, qtbot, mock_context):
         """Test going to next page."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -151,7 +141,6 @@ class TestVideosPagePagination:
 
     def test_prev_page(self, qtbot, mock_context):
         """Test going to previous page."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -164,7 +153,6 @@ class TestVideosPagePagination:
 
     def test_prev_page_at_start(self, qtbot, mock_context):
         """Test that prev page does nothing at start."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -180,7 +168,6 @@ class TestVideosPageSearch:
 
     def test_search_updates_provider(self, qtbot, mock_context):
         """Test that search updates the provider."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -195,7 +182,6 @@ class TestVideosPageSearch:
 
     def test_clear_search(self, qtbot, mock_context):
         """Test clearing search."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -217,7 +203,6 @@ class TestVideosPagePropertyValueClick:
 
     def test_property_value_click_calls_classifier(self, qtbot, mock_context):
         """Test that property value click calls classifier_focus_prop_val."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         # Track calls to classifier_focus_prop_val
         calls = []
@@ -247,7 +232,6 @@ class TestVideosPageSelector:
 
     def test_selector_include_mode(self, qtbot, mock_context):
         """Test selector in include mode (add individual videos)."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -262,7 +246,6 @@ class TestVideosPageSelector:
 
     def test_selector_to_dict(self, qtbot, mock_context):
         """Test that selector can be converted to dict for apply_on_view."""
-        from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)

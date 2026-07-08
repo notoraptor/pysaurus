@@ -4,8 +4,13 @@ Application context for the Kyuti (PySide6/Qt) interface.
 Wraps KyutiAPI and provides Qt signals for backend notifications.
 """
 
-from PySide6.QtCore import QObject, Qt, Signal, Slot
+import os
 
+from PySide6.QtCore import QObject, Qt, Signal, Slot
+from searchexp.errors import ExpressionError
+from send2trash import send2trash
+
+from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.job_notifications import JobStep, JobToDo
 from pysaurus.core.notifications import (
     Cancelled,
@@ -16,6 +21,7 @@ from pysaurus.core.notifications import (
     ProfilingEnd,
     ProfilingStart,
 )
+from pysaurus.database.saurus.video_mega_group import _compile_source_expression
 from pysaurus.interface.kyuti.kyuti_api import KyutiAPI
 from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern
@@ -230,10 +236,6 @@ class AppContext(QObject):
         We then post-check with os.path.exists() to identify any individual
         failures, since the batch call does not report per-item status.
         """
-        import os
-
-        from send2trash import send2trash
-
         str_paths = [str(p) for p in paths]
         if not str_paths:
             return 0, []
@@ -588,13 +590,6 @@ class AppContext(QObject):
         if self._database:
             text = expression.strip() if expression else None
             if text:
-                from searchexp.errors import ExpressionError
-
-                from pysaurus.application.exceptions import PysaurusError
-                from pysaurus.database.saurus.video_mega_group import (
-                    _compile_source_expression,
-                )
-
                 try:
                     _compile_source_expression(self._database.db, text)
                 except ExpressionError as exc:

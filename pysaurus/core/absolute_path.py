@@ -38,7 +38,8 @@ class AbsolutePath(os.PathLike[str]):
     @property
     def best_path(self) -> str | None:
         if System.is_windows():
-            from pysaurus.core.windows import get_short_path_name
+            # Local import: pysaurus.core.windows uses ctypes.windll, Windows-only.
+            from pysaurus.core.windows import get_short_path_name  # noqa: PLC0415
 
             return get_short_path_name(self.standard_path)
         return self.__path
@@ -228,7 +229,9 @@ STDERR: {stderr.decode().strip()}"""
 
     def locate_file(self):
         # https://pypi.org/project/show-in-file-manager/
-        from showinfm import show_in_file_manager
+        # Local import: rarely used, and avoids probing for a file manager
+        # backend (headless/CI environments) unless this path actually runs.
+        from showinfm import show_in_file_manager  # noqa: PLC0415
 
         try:
             show_in_file_manager(self.standard_path)

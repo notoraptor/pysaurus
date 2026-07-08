@@ -6,8 +6,9 @@ Tests the dialog for moving property values between properties.
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialogButtonBox
+from PySide6.QtWidgets import QDialogButtonBox, QMessageBox
 
+from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
 from pysaurus.properties.properties import PropType
 
 
@@ -46,8 +47,6 @@ def all_props(source_prop, target_str_single, target_str_multiple, int_prop):
 
 class TestMoveValuesDialogCreation:
     def test_creation(self, qtbot, source_prop, all_props, mock_context):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         dialog = MoveValuesDialog(source_prop, all_props, mock_context)
         qtbot.addWidget(dialog)
 
@@ -56,8 +55,6 @@ class TestMoveValuesDialogCreation:
     def test_filters_target_properties(
         self, qtbot, source_prop, all_props, mock_context
     ):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         dialog = MoveValuesDialog(source_prop, all_props, mock_context)
         qtbot.addWidget(dialog)
 
@@ -67,16 +64,12 @@ class TestMoveValuesDialogCreation:
         assert len(dialog._target_props) == 2
 
     def test_target_combo_populated(self, qtbot, source_prop, all_props, mock_context):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         dialog = MoveValuesDialog(source_prop, all_props, mock_context)
         qtbot.addWidget(dialog)
 
         assert dialog.target_combo.count() == 2
 
     def test_no_targets_disables_ok(self, qtbot, source_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         # Only source and an int prop: no eligible targets
         props = [
             source_prop,
@@ -92,8 +85,6 @@ class TestMoveValuesDialogCreation:
         assert not ok_btn.isEnabled()
 
     def test_no_targets_disables_combo(self, qtbot, source_prop, mock_context):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         props = [source_prop]  # Only source, no targets
         dialog = MoveValuesDialog(source_prop, props, mock_context)
         qtbot.addWidget(dialog)
@@ -105,8 +96,6 @@ class TestMoveValuesDialogValues:
     def test_loads_values_from_context(
         self, qtbot, source_prop, all_props, mock_context
     ):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         # Mock property values
         mock_context.get_property_values = lambda prop_name: {
             1: ["action", "comedy"],
@@ -120,8 +109,6 @@ class TestMoveValuesDialogValues:
         assert dialog.values_list.count() == 3
 
     def test_values_sorted_by_count(self, qtbot, source_prop, all_props, mock_context):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         mock_context.get_property_values = lambda prop_name: {
             1: ["action", "comedy"],
             2: ["action", "drama"],
@@ -137,8 +124,6 @@ class TestMoveValuesDialogValues:
         assert first_value == "action"
 
     def test_empty_values(self, qtbot, source_prop, all_props, mock_context):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         mock_context.get_property_values = lambda prop_name: {}
 
         dialog = MoveValuesDialog(source_prop, all_props, mock_context)
@@ -151,16 +136,12 @@ class TestMoveValuesDialogAccept:
     def test_accept_no_selection_shows_warning(
         self, qtbot, source_prop, all_props, mock_context, monkeypatch
     ):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         mock_context.get_property_values = lambda prop_name: {1: ["action"]}
 
         dialog = MoveValuesDialog(source_prop, all_props, mock_context)
         qtbot.addWidget(dialog)
 
         # Stub QMessageBox.warning to prevent blocking
-        from PySide6.QtWidgets import QMessageBox
-
         warned = []
         monkeypatch.setattr(QMessageBox, "warning", lambda *args: warned.append(True))
 
@@ -169,8 +150,6 @@ class TestMoveValuesDialogAccept:
         assert len(warned) == 1
 
     def test_accept_with_selection(self, qtbot, source_prop, all_props, mock_context):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         mock_context.get_property_values = lambda prop_name: {1: ["action", "comedy"]}
 
         dialog = MoveValuesDialog(source_prop, all_props, mock_context)
@@ -187,8 +166,6 @@ class TestMoveValuesDialogAccept:
         assert concatenate is False
 
     def test_accept_with_concatenate(self, qtbot, source_prop, all_props, mock_context):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         mock_context.get_property_values = lambda prop_name: {1: ["action", "comedy"]}
 
         dialog = MoveValuesDialog(source_prop, all_props, mock_context)
@@ -206,8 +183,6 @@ class TestMoveValuesDialogAccept:
     def test_get_result_before_accept(
         self, qtbot, source_prop, all_props, mock_context
     ):
-        from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
-
         mock_context.get_property_values = lambda prop_name: {}
 
         dialog = MoveValuesDialog(source_prop, all_props, mock_context)

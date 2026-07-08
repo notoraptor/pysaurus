@@ -7,7 +7,12 @@ the dialog display reflects the changes.
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QInputDialog, QMessageBox
+
+from pysaurus.interface.kyuti.dialogs import property_values_dialog
+from pysaurus.interface.kyuti.dialogs.property_values_dialog import PropertyValuesDialog
+from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
+from pysaurus.properties.property_value_modifier import PropertyValueModifier
 
 
 class TestPropertyValuesDialogCreation:
@@ -15,10 +20,6 @@ class TestPropertyValuesDialogCreation:
 
     def test_dialog_creation(self, qtbot, mock_context):
         """Test that PropertyValuesDialog can be created."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
@@ -29,10 +30,6 @@ class TestPropertyValuesDialogCreation:
 
     def test_dialog_loads_values(self, qtbot, mock_context):
         """Test that dialog loads all property values with counts."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
@@ -44,10 +41,6 @@ class TestPropertyValuesDialogCreation:
 
     def test_dialog_shows_correct_values(self, qtbot, mock_context):
         """Test that dialog shows all values from the database."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
@@ -63,11 +56,6 @@ class TestPropertyValuesDialogCreation:
 
     def test_dialog_shows_modifier_buttons(self, qtbot, mock_context):
         """Test that dialog shows buttons for all available modifiers."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-        from pysaurus.properties.property_value_modifier import PropertyValueModifier
-
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
@@ -100,10 +88,6 @@ class TestPropertyValuesDialogModifiers:
 
     def _apply_modifier(self, qtbot, mock_context, modifier_name, monkeypatch):
         """Helper: create dialog and apply a modifier."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
@@ -197,10 +181,6 @@ class TestPropertyValuesDialogModifiers:
 
     def test_modifier_decline_does_nothing(self, qtbot, mock_context, monkeypatch):
         """Test that declining the confirmation dialog does not modify values."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         before = self._get_all_genre_values(mock_context)
 
         prop_types = mock_context.get_prop_types()
@@ -228,10 +208,6 @@ class TestPropertyValuesDialogDelete:
 
     def test_delete_single_value(self, qtbot, mock_context, monkeypatch):
         """Test deleting a single value from all videos."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
@@ -262,10 +238,6 @@ class TestPropertyValuesDialogDelete:
 
     def test_delete_multiple_values(self, qtbot, mock_context, monkeypatch):
         """Test deleting multiple values at once."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
@@ -293,12 +265,6 @@ class TestPropertyValuesDialogRename:
 
     def test_rename_value(self, qtbot, mock_context, monkeypatch):
         """Test renaming a value updates the database and dialog."""
-        from PySide6.QtWidgets import QInputDialog
-
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
@@ -328,12 +294,6 @@ class TestPropertyValuesDialogRename:
 
     def test_rename_to_existing_merges(self, qtbot, mock_context, monkeypatch):
         """Test renaming to an existing value merges them."""
-        from PySide6.QtWidgets import QInputDialog
-
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-
         prop_types = mock_context.get_prop_types()
         genre_prop = next(pt for pt in prop_types if pt.name == "genre")
 
@@ -368,16 +328,12 @@ class TestPropertyValuesDialogFromPropertiesPage:
 
     def test_manage_values_opens_dialog(self, qtbot, mock_context, monkeypatch):
         """Test that Manage Values action opens PropertyValuesDialog."""
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
-
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
         page.refresh()
 
         # Track dialog creation
         dialogs_created = []
-
-        from pysaurus.interface.kyuti.dialogs import property_values_dialog
 
         original_init = property_values_dialog.PropertyValuesDialog.__init__
 
@@ -403,11 +359,6 @@ class TestPropertyValuesDialogFromPropertiesPage:
 
     def test_full_flow_modifier_from_page(self, qtbot, mock_context, monkeypatch):
         """Test the full flow: page → dialog → modifier → DB changed."""
-        from pysaurus.interface.kyuti.dialogs.property_values_dialog import (
-            PropertyValuesDialog,
-        )
-        from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
-
         page = PropertiesPage(mock_context)
         qtbot.addWidget(page)
         page.refresh()

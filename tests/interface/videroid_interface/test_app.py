@@ -4,7 +4,13 @@ Uses the `videroid_app` fixture (real VideroidApp on a headless StepWindow, with
 an in-memory database injected and the Flask server / home scan patched out).
 """
 
+from unittest.mock import Mock
+
 import pytest
+import videre
+
+from pysaurus.interface.videroid.app import _STATUS_STYLE, VideroidApp
+from tests.interface.videroid_interface._widget_tree import find as _find
 
 
 class TestNavigation:
@@ -64,10 +70,6 @@ class TestShell:
 
     def test_database_menu_stays_enabled_without_db(self, videroid_app, monkeypatch):
         # Quit must stay reachable with no DB, so the Database menu is not disabled.
-        import videre
-
-        from tests.interface.videroid_interface._widget_tree import find as _find
-
         app, _ = videroid_app
         monkeypatch.setattr(app.context, "has_database", lambda: False)
         app._refresh_shell()
@@ -105,10 +107,6 @@ class TestShell:
         assert window.has_fancybox()
 
     def test_save_log_to_file_header_once_then_appends(self, tmp_path):
-        from unittest.mock import Mock
-
-        from pysaurus.interface.videroid.app import VideroidApp
-
         # Bare instance: the writer only needs context + the log state.
         app = object.__new__(VideroidApp)
         app._session_log = ["=" * 60, "Session started: X", "=" * 60, "[t1] first"]
@@ -129,10 +127,6 @@ class TestShell:
         assert content.endswith("[t2] second\n")
 
     def test_save_log_to_file_without_database_is_noop(self, tmp_path):
-        from unittest.mock import Mock
-
-        from pysaurus.interface.videroid.app import VideroidApp
-
         app = object.__new__(VideroidApp)
         app._session_log = ["x"]
         app._log_file_initialized = set()
@@ -142,11 +136,6 @@ class TestShell:
         assert list(tmp_path.iterdir()) == []
 
     def test_status_bar_passive_and_clears_on_click(self, videroid_app):
-        import videre
-
-        from pysaurus.interface.videroid.app import _STATUS_STYLE
-        from tests.interface.videroid_interface._widget_tree import find as _find
-
         app, _ = videroid_app
         # Passive look: default/hover/click share one background → no button flash.
         bgs = {

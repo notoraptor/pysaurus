@@ -5,6 +5,7 @@ state is driven by calling the same handlers its buttons call, then the getter
 (`get_result` / `get_changes` / `get_folders` / `get_sources`) is checked.
 """
 
+from pysaurus.dbview.view_tools import GroupDef
 from pysaurus.interface.videroid.dialogs.batch_edit_property_dialog import (
     BatchEditPropertyDialog,
 )
@@ -132,8 +133,6 @@ class TestGroupingDialog:
         assert d.get_result()["reverse"] is True
 
     def test_prefill_from_current(self):
-        from pysaurus.dbview.view_tools import GroupDef
-
         d = GroupingDialog(["category"], current=GroupDef("category", is_property=True))
         _, name, is_p = d._options[d._field.index]
         assert name == "category" and is_p is True

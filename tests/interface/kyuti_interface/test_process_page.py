@@ -5,14 +5,19 @@ Tests the progress display page including JobProgressWidget,
 ProcessNotificationCollector, and ProcessPage lifecycle.
 """
 
+from PySide6.QtWidgets import QLabel
+
 from pysaurus.core.job_notifications import JobToDo
-from pysaurus.core.notifications import End
+from pysaurus.core.notifications import End, Message
+from pysaurus.interface.kyuti.pages.process_page import (
+    JobProgressWidget,
+    ProcessJobProgress,
+    ProcessPage,
+)
 
 
 class TestJobProgressWidget:
     def test_creation(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import JobProgressWidget
-
         widget = JobProgressWidget("test_job", 100, "Test Job")
         qtbot.addWidget(widget)
 
@@ -21,24 +26,18 @@ class TestJobProgressWidget:
         assert widget.title == "Test Job"
 
     def test_title_label(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import JobProgressWidget
-
         widget = JobProgressWidget("job", 50, "My Title")
         qtbot.addWidget(widget)
 
         assert widget.title_label.text() == "My Title"
 
     def test_title_fallback_to_name(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import JobProgressWidget
-
         widget = JobProgressWidget("job_name", 50, "")
         qtbot.addWidget(widget)
 
         assert widget.title_label.text() == "job_name"
 
     def test_initial_progress(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import JobProgressWidget
-
         widget = JobProgressWidget("job", 100, "Test")
         qtbot.addWidget(widget)
 
@@ -46,8 +45,6 @@ class TestJobProgressWidget:
         assert widget.percent_label.text() == "0%"
 
     def test_set_progress(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import JobProgressWidget
-
         widget = JobProgressWidget("job", 100, "Test")
         qtbot.addWidget(widget)
 
@@ -56,8 +53,6 @@ class TestJobProgressWidget:
         assert widget.percent_label.text() == "50%"
 
     def test_set_progress_full(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import JobProgressWidget
-
         widget = JobProgressWidget("job", 200, "Test")
         qtbot.addWidget(widget)
 
@@ -66,8 +61,6 @@ class TestJobProgressWidget:
         assert widget.percent_label.text() == "100%"
 
     def test_set_progress_zero_total(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import JobProgressWidget
-
         widget = JobProgressWidget("job", 0, "Test")
         qtbot.addWidget(widget)
 
@@ -78,8 +71,6 @@ class TestJobProgressWidget:
 
 class TestProcessPage:
     def test_creation(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Updating database")
         qtbot.addWidget(page)
 
@@ -87,16 +78,12 @@ class TestProcessPage:
         assert not page.btn_continue.isEnabled()
 
     def test_continue_button_disabled_initially(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
         assert not page.btn_continue.isEnabled()
 
     def test_add_log_entry(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -106,8 +93,6 @@ class TestProcessPage:
         assert page.log_layout.count() == initial_count + 1
 
     def test_add_empty_log_entry_ignored(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -117,10 +102,6 @@ class TestProcessPage:
         assert page.log_layout.count() == initial_count
 
     def test_add_log_entry_bold(self, qtbot):
-        from PySide6.QtWidgets import QLabel
-
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -132,10 +113,6 @@ class TestProcessPage:
         assert "bold" in label.styleSheet().lower()
 
     def test_add_log_entry_color(self, qtbot):
-        from PySide6.QtWidgets import QLabel
-
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -146,8 +123,6 @@ class TestProcessPage:
         assert "red" in label.styleSheet()
 
     def test_clear_log(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -159,8 +134,6 @@ class TestProcessPage:
         assert page.log_layout.count() == 1
 
     def test_create_job_widget(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -172,8 +145,6 @@ class TestProcessPage:
         assert "extract_thumbs" in page._job_widgets
 
     def test_create_job_widget_replaces_existing(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -187,8 +158,6 @@ class TestProcessPage:
         assert widget2.total == 20
 
     def test_on_end_notification(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -199,8 +168,6 @@ class TestProcessPage:
         assert page._end_notification is end
 
     def test_on_continue_callback(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         results = []
         page = ProcessPage("Test", callback=lambda n: results.append(n))
         qtbot.addWidget(page)
@@ -213,8 +180,6 @@ class TestProcessPage:
         assert results[0] is end
 
     def test_on_continue_emits_signal(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -225,8 +190,6 @@ class TestProcessPage:
             page._on_continue()
 
     def test_on_continue_without_end_notification(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         results = []
         page = ProcessPage("Test", callback=lambda n: results.append(n))
         qtbot.addWidget(page)
@@ -236,8 +199,6 @@ class TestProcessPage:
         assert len(results) == 0
 
     def test_spinner_animating_initially(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -245,8 +206,6 @@ class TestProcessPage:
         assert not page.spinner._complete
 
     def test_spinner_complete_after_end(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -258,9 +217,6 @@ class TestProcessPage:
 
 class TestProcessNotificationCollector:
     def test_display_notification_adds_log(self, qtbot):
-        from pysaurus.core.notifications import Message
-        from pysaurus.interface.kyuti.pages.process_page import ProcessPage
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -272,11 +228,6 @@ class TestProcessNotificationCollector:
         assert page.log_layout.count() == initial_count + 1
 
     def test_new_progress_creates_widget(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import (
-            ProcessJobProgress,
-            ProcessPage,
-        )
-
         page = ProcessPage("Test")
         qtbot.addWidget(page)
 
@@ -289,11 +240,6 @@ class TestProcessNotificationCollector:
 
 class TestProcessJobProgress:
     def test_display_updates_widget(self, qtbot):
-        from pysaurus.interface.kyuti.pages.process_page import (
-            JobProgressWidget,
-            ProcessJobProgress,
-        )
-
         job = JobToDo("job", 100, "Job")
         widget = JobProgressWidget("job", 100, "Job")
         qtbot.addWidget(widget)

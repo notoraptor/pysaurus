@@ -1,6 +1,7 @@
 """Filesystem utilities for cross-platform filesystem type detection
 and mtime correction on Windows FAT32/exFAT drives."""
 
+import ctypes
 import os
 import sys
 import time
@@ -96,8 +97,6 @@ def _correct_fat_mtime(mtime: float) -> float:
 
 
 def _get_fs_type_windows(drive_root: str) -> str:
-    import ctypes
-
     kernel32 = ctypes.windll.kernel32
     fs_buf = ctypes.create_unicode_buffer(1024)
     vol_buf = ctypes.create_unicode_buffer(1024)

@@ -151,7 +151,7 @@ class PysaurusQtApplication(QWebEngineView):
 
 
 def main():
-    from multiprocessing import freeze_support
+    from multiprocessing import freeze_support  # noqa
 
     # Necessary to allow to create a distribuable standalone application.
     # TODO Retrieve reference for this.

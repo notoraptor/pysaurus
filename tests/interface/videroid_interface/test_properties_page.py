@@ -3,6 +3,7 @@ and the create form (all branches)."""
 
 import pytest
 
+from pysaurus.interface.videroid.dialogs.fill_property_dialog import FillPropertyDialog
 from pysaurus.interface.videroid.dialogs.move_values_dialog import MoveValuesDialog
 from tests.interface.videroid_interface._widget_tree import texts as _texts
 
@@ -99,10 +100,6 @@ class TestDialogs:
 
         assert values() == set()  # empty before fill
         page._on_fill(None)  # opens fancybox
-        from pysaurus.interface.videroid.dialogs.fill_property_dialog import (
-            FillPropertyDialog,
-        )
-
         dialog = FillPropertyDialog(ctx.get_prop_types())
         dialog._combo.index = next(
             i for i, p in enumerate(dialog._eligible) if p.name == "fillme"

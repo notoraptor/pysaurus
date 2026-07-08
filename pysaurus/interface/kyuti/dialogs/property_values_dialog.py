@@ -6,6 +6,7 @@ from collections import Counter
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
@@ -20,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from pysaurus.interface.kyuti.widgets.left_click_menu import LeftClickMenu
 from pysaurus.properties.properties import PropType
+from pysaurus.properties.property_value_modifier import PropertyValueModifier
 
 
 class PropertyValuesDialog(QDialog):
@@ -95,8 +97,6 @@ class PropertyValuesDialog(QDialog):
         actions_layout.addWidget(QLabel("Apply to all values:"))
 
         # Get available modifiers from PropertyValueModifier
-        from pysaurus.properties.property_value_modifier import PropertyValueModifier
-
         self._modifier_buttons: list[QPushButton] = []
         modifiers = PropertyValueModifier.get_modifiers()
         for mod_name in modifiers:
@@ -285,8 +285,6 @@ class PropertyValuesDialog(QDialog):
 
     def _copy_value(self, value):
         """Copy value to clipboard."""
-        from PySide6.QtWidgets import QApplication
-
         clipboard = QApplication.clipboard()
         clipboard.setText(str(value))
 

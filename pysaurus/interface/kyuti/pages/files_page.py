@@ -13,6 +13,7 @@ Two tabs:
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
@@ -575,10 +576,6 @@ def _open_in_file_manager(path: str) -> None:
     if sys.platform.startswith("win"):
         os.startfile(path)  # type: ignore[attr-defined]
     elif sys.platform == "darwin":
-        import subprocess
-
         subprocess.Popen(["open", path])
     else:
-        import subprocess
-
         subprocess.Popen(["xdg-open", path])

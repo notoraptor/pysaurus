@@ -2,6 +2,8 @@
 Dialog for moving property values between properties.
 """
 
+from collections import Counter
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -12,6 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QVBoxLayout,
 )
 
@@ -122,8 +125,6 @@ class MoveValuesDialog(QDialog):
             return
 
         # Get all values with counts
-        from collections import Counter
-
         all_values = self.ctx.get_property_values(self.source_prop.name)
         counter = Counter()
         for values in all_values.values():
@@ -147,8 +148,6 @@ class MoveValuesDialog(QDialog):
         ]
 
         if not self._selected_values:
-            from PySide6.QtWidgets import QMessageBox
-
             QMessageBox.warning(self, "No Selection", "Please select values to move.")
             return
 

@@ -25,6 +25,7 @@ from pysaurus.core.notifications import (
 )
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
+from pysaurus.database.algorithms.folder_scan import FolderScanResult
 from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.database.features.db_similar_reencoded import DbSimilarReencoded
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
@@ -195,7 +196,7 @@ class GuiAPI(FeatureAPI):
         assert self.database is not None
         self._last_scan_result = self.database.algos.scan_folders()
 
-    def get_last_scan_result(self):
+    def get_last_scan_result(self) -> FolderScanResult | None:
         return self._last_scan_result
 
     @process()

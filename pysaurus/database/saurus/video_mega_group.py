@@ -31,7 +31,10 @@ from pysaurus.database.saurus.sql_utils import (
 from pysaurus.database.saurus.sql_video_wrapper import VIDEO_TABLE_FIELD_NAMES
 from pysaurus.database.saurus.video_mega_utils import _get_videos
 from pysaurus.dbview.view_tools import GroupDef, SearchDef
+from pysaurus.properties.properties import PROP_UNIT_CONVERTER
+from pysaurus.video.video_constants import COMMON_FIELDS
 from pysaurus.video.video_constants import SIMILARITY_FIELDS as _SIMILARITY_FIELDS
+from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
 
@@ -258,9 +261,6 @@ def _compute_results_and_stats(
         and context.grouping
         and context.grouping.field in _SIMILARITY_FIELDS
     ):
-        from pysaurus.video.video_constants import COMMON_FIELDS
-        from pysaurus.video.video_features import VideoFeatures
-
         context.common_fields = VideoFeatures.get_common_fields(
             context.result, fields=COMMON_FIELDS
         )
@@ -604,8 +604,6 @@ def _get_property_value_converter(
     sql_db: PysaurusConnection, property_name: str
 ) -> Callable:
     """Return a converter function for property values from SQL (TEXT) to Python types."""
-    from pysaurus.properties.properties import PROP_UNIT_CONVERTER
-
     row = sql_db.query_one("SELECT type FROM property WHERE name = ?", [property_name])
     prop_type = row["type"] if row else "str"
     return PROP_UNIT_CONVERTER[prop_type]

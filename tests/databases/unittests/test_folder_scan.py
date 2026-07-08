@@ -6,6 +6,7 @@ import os
 
 import pytest
 
+from pysaurus.application.application import Application
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.database.algorithms.folder_scan import (
@@ -223,8 +224,6 @@ class TestGroupByMount:
 
 class TestDatabaseAlgorithmsIntegration:
     def test_scan_folders_via_db_algos(self, tmp_path):
-        from pysaurus.application.application import Application
-
         app = Application(home_dir=str(tmp_path))
         db = app.new_database("mydb", [])
         tree = tmp_path / "videos"
