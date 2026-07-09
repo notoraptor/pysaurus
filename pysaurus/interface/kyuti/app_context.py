@@ -367,12 +367,6 @@ class AppContext(QObject):
             self._api.classifier_concatenate_path(to_property)
             self.state_changed.emit()
 
-    def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
-        """Focus on a specific property value (resets classifier and jumps to value)."""
-        if self._database:
-            self._api.classifier_focus_prop_val(prop_name, field_value)
-            self.state_changed.emit()
-
     # =========================================================================
     # View operations with selector
     # =========================================================================
@@ -609,6 +603,12 @@ class AppContext(QObject):
         """Clear (remove) the current grouping."""
         if self._database:
             self._api.set_groups(None)
+            self.state_changed.emit()
+
+    def focus_prop_val(self, prop_name: str, field_value) -> None:
+        """Group by prop_name, then select the group matching field_value."""
+        if self._database:
+            self._api.focus_prop_val(prop_name, field_value)
             self.state_changed.emit()
 
     def set_search(self, text, cond) -> None:

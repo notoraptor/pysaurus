@@ -144,19 +144,19 @@ class TestCardInteraction:
             if any(t.text == "x" and t.color == blue for t in _find(c, videre.Text))
         )
         # Spy THROUGH the real context wrapper (the api methods are read-only):
-        # the full video_filter_property -> context.classifier_focus_prop_val ->
+        # the full video_filter_property -> context.focus_prop_val ->
         # api path runs; only the reload is stubbed out.
         focused = []
-        original = ctx.classifier_focus_prop_val
+        original = ctx.focus_prop_val
 
         def spy(name, value):
             focused.append((name, value))
             return original(name, value)
 
-        monkeypatch.setattr(ctx, "classifier_focus_prop_val", spy)
+        monkeypatch.setattr(ctx, "focus_prop_val", spy)
         monkeypatch.setattr(page, "_reset_and_reload", lambda: None)
         chip.handle_click(MouseButton.BUTTON_LEFT)
-        assert focused == [("tag", "x")]  # video_filter_property -> classifier
+        assert focused == [("tag", "x")]  # video_filter_property -> focus_prop_val
 
 
 class TestFilters:

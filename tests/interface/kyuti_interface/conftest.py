@@ -291,7 +291,7 @@ class MockAppContext:
             return self._view.classifier_reverse()
         return []
 
-    def classifier_focus_prop_val(self, prop_name: str, field_value) -> None:
+    def focus_prop_val(self, prop_name: str, field_value) -> None:
         if not self._database:
             return
         self._view.set_grouping(
@@ -303,8 +303,7 @@ class MockAppContext:
         )
         result = self._database.query_videos(self._view, 1, 0)
         group_id = result.result_groups.lookup_index(field_value)
-        value = result.result_groups[group_id].get_value()
-        self._view.classifier_select(value)
+        self._view.set_group(group_id)
 
     def query_on_view(self, selector_dict: dict, operation: str, *args):
         return self._apply_on_view_impl(selector_dict, operation, *args)

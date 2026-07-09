@@ -934,8 +934,8 @@ class VideosPage(Page):
 
     def video_filter_property(self, name, value) -> None:
         # Card property-chip click: focus the view on that (property, value),
-        # like kyuti's property_value_clicked -> classifier_focus_prop_val.
-        self.context.classifier_focus_prop_val(name, value)
+        # like kyuti's property_value_clicked -> focus_prop_val.
+        self.context.focus_prop_val(name, value)
         self._reset_and_reload()
 
     def video_copy(self, video, field: str) -> None:

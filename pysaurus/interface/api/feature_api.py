@@ -134,7 +134,7 @@ class FeatureAPI:
     def classifier_reverse(self) -> list:
         return self.view.classifier_reverse()
 
-    def classifier_focus_prop_val(self, prop_name, field_value) -> None:
+    def focus_prop_val(self, prop_name, field_value) -> None:
         assert self.database is not None
         self.view.set_grouping(
             field=prop_name,
@@ -145,8 +145,7 @@ class FeatureAPI:
         )
         result = self.database.query_videos(self.view, 1, 0)
         group_id = result.result_groups.lookup_index(field_value)
-        value = result.result_groups[group_id].get_value()
-        self.view.classifier_select(value)
+        self.view.set_group(group_id)
 
     def apply_on_view(self, selector, db_fn_name, *db_fn_args):
         assert self.database is not None

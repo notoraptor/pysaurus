@@ -193,7 +193,7 @@ def _toggle_checkbox(checkbox) -> None:
 
 def _chip(name: str, value, page) -> Widget:
     # Value chip: #1976d2 underlined on #e3f2fd (kyuti:442-446). Clicking filters
-    # by that value (kyuti property_value_clicked -> classifier_focus_prop_val);
+    # by that value (kyuti property_value_clicked -> focus_prop_val);
     # wrapping (FlowLayout) is still gap G16. `name`/`value` are captured as
     # function parameters, so no late-binding closure bug in the caller's loop.
     box = videre.Container(

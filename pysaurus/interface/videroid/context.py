@@ -176,8 +176,8 @@ class VideroidContext:
     def classifier_reverse(self) -> None:
         self._api.classifier_reverse()
 
-    def classifier_focus_prop_val(self, prop_name, field_value) -> None:
-        self._api.classifier_focus_prop_val(prop_name, field_value)
+    def focus_prop_val(self, prop_name, field_value) -> None:
+        self._api.focus_prop_val(prop_name, field_value)
 
     def classifier_concatenate_path(self, to_property) -> None:
         """Concatenate the classifier path into a single string property."""

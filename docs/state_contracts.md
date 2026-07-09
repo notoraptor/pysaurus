@@ -207,13 +207,21 @@ Pour chaque feature, ce document identifie :
 | **UI requise** | Mettre à jour la sélection dans la barre de groupes, recalculer et réafficher la liste de vidéos du nouveau groupe sélectionné |
 | **PySide6** | `ctx.set_group(...)` puis `refresh()`. OK. |
 
-### `classifier_select_group`, `classifier_back`, `classifier_reverse`, `classifier_focus_prop_val`
+### `focus_prop_val`
+| Aspect | Détail |
+|--------|--------|
+| **État** | VIEW:grouping (+ réinitialise VIEW:classifier, VIEW:search, VIEW:sort) + VIEW:group |
+| **Ce qui change** | Groupe par la propriété donnée, puis sélectionne directement le groupe correspondant à la valeur cliquée (sans passer par le classifieur) |
+| **UI requise** | Afficher la barre de groupes de cette propriété avec le bon groupe sélectionné, recalculer et réafficher la liste de vidéos, mettre à jour les indicateurs de filtre dans la sidebar |
+| **PySide6** | Appel via façade `ctx.focus_prop_val(prop_name, field_value)` puis `refresh()`. OK. |
+
+### `classifier_select_group`, `classifier_back`, `classifier_reverse`
 | Aspect | Détail |
 |--------|--------|
 | **État** | VIEW:classifier + VIEW:group |
 | **Ce qui change** | Le chemin du classifieur et le groupe sélectionné |
 | **UI requise** | Mettre à jour l'affichage du chemin classifieur, la barre de groupes, et la liste de vidéos |
-| **PySide6** | Appel via façade `ctx.classifier_select_group()`, `ctx.classifier_back()`, `ctx.classifier_reverse()`, `ctx.classifier_focus_prop_val()` puis `refresh()`. OK. |
+| **PySide6** | Appel via façade `ctx.classifier_select_group()`, `ctx.classifier_back()`, `ctx.classifier_reverse()` puis `refresh()`. OK. |
 
 ### `classifier_concatenate_path`
 | Aspect | Détail |

@@ -119,6 +119,35 @@ class TestViewMutations:
         with qtbot.waitSignal(ctx.state_changed, timeout=1000):
             ctx.set_group(0)
 
+    def test_focus_prop_val_emits_state_changed(self, ctx, qtbot):
+        # Get a property with values
+        prop_types = ctx._database.get_prop_types()
+        if not prop_types:
+            pytest.skip("No properties in test database")
+        prop_name = prop_types[0].name
+        # Find a value for this property
+        all_tags = ctx._database.videos_tag_get(prop_name)
+        values = set()
+        for vid_values in all_tags.values():
+            values.update(vid_values)
+        if not values:
+            pytest.skip(f"No values for property {prop_name}")
+        field_value = next(iter(values))
+
+        with qtbot.waitSignal(ctx.state_changed, timeout=1000):
+            ctx.focus_prop_val(prop_name, field_value)
+
+        assert ctx._view.grouping.field == prop_name
+        assert ctx._view.grouping.is_property is True
+        assert ctx._view.classifier == []
+        result = ctx._database.query_videos(ctx._view, 1, 0)
+        assert result.result_groups[ctx._view.group].get_value() == field_value
+
+    def test_focus_prop_val_returns_without_database(self, ctx):
+        ctx._api.database = None
+        ctx.focus_prop_val("some_prop", "some_value")
+        # Should silently return without crashing
+
 
 # =========================================================================
 # Classifier operations
@@ -160,33 +189,6 @@ class TestClassifierOperations:
         with qtbot.waitSignal(ctx.state_changed, timeout=1000):
             result = ctx.classifier_reverse()
         assert isinstance(result, list)
-
-    def test_classifier_focus_prop_val(self, ctx, qtbot):
-        # Get a property with values
-        prop_types = ctx._database.get_prop_types()
-        if not prop_types:
-            pytest.skip("No properties in test database")
-        prop_name = prop_types[0].name
-        # Find a value for this property
-        all_tags = ctx._database.videos_tag_get(prop_name)
-        values = set()
-        for vid_values in all_tags.values():
-            values.update(vid_values)
-        if not values:
-            pytest.skip(f"No values for property {prop_name}")
-        field_value = next(iter(values))
-
-        with qtbot.waitSignal(ctx.state_changed, timeout=1000):
-            ctx.classifier_focus_prop_val(prop_name, field_value)
-
-        assert ctx._view.grouping.field == prop_name
-        assert ctx._view.grouping.is_property is True
-        assert len(ctx._view.classifier) == 1
-
-    def test_classifier_focus_prop_val_returns_without_database(self, ctx):
-        ctx._api.database = None
-        ctx.classifier_focus_prop_val("some_prop", "some_value")
-        # Should silently return without crashing
 
     def test_classifier_concatenate_path(self, ctx, qtbot):
         # Use an existing property from the test database

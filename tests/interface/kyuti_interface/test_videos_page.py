@@ -201,17 +201,17 @@ class TestVideosPageSearch:
 class TestVideosPagePropertyValueClick:
     """Tests for property value click (focus prop val)."""
 
-    def test_property_value_click_calls_classifier(self, qtbot, mock_context):
-        """Test that property value click calls classifier_focus_prop_val."""
+    def test_property_value_click_calls_focus_prop_val(self, qtbot, mock_context):
+        """Test that property value click calls focus_prop_val."""
 
-        # Track calls to classifier_focus_prop_val
+        # Track calls to focus_prop_val
         calls = []
-        original_method = mock_context.classifier_focus_prop_val
+        original_method = mock_context.focus_prop_val
 
         def mock_focus(prop_name, value):
             calls.append((prop_name, value))
 
-        mock_context.classifier_focus_prop_val = mock_focus
+        mock_context.focus_prop_val = mock_focus
 
         page = VideosPage(mock_context)
         qtbot.addWidget(page)
@@ -224,7 +224,7 @@ class TestVideosPagePropertyValueClick:
         assert calls[0] == ("genre", "action")
 
         # Restore original
-        mock_context.classifier_focus_prop_val = original_method
+        mock_context.focus_prop_val = original_method
 
 
 class TestVideosPageSelector:
