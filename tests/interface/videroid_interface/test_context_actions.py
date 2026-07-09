@@ -84,10 +84,11 @@ class TestDatabaseLifecycle:
         mock_ctx.update_database()
         mock_ctx._api.update_database.assert_called_once_with()
 
-    def test_close_database_resets_view(self, mock_ctx):
+    def test_close_database_delegates(self, mock_ctx):
+        # The view reset itself is GuiAPI.close_database()'s responsibility
+        # (it resets its own view internally) - context.py just delegates.
         mock_ctx.close_database()
         mock_ctx._api.close_database.assert_called_once_with()
-        mock_ctx._api.view.reset.assert_called_once_with()
 
     def test_close_app(self, mock_ctx):
         mock_ctx.close_app()

@@ -100,6 +100,23 @@ class TestDatabaseSimilarity:
         procs = self._confirm_then_run(app, monkeypatch, app._find_reencoded)
         assert procs == ["Finding re-encoded videos"]
 
+    def test_find_similar_and_reencoded_reset_selection_on_end(
+        self, videroid_app, monkeypatch
+    ):
+        # Both searches change the video set (grouped by [re-encoded] similarity
+        # id) - completion must go through the selection-resetting callback.
+        app, _ = videroid_app
+        monkeypatch.setattr(
+            type(app.window), "confirm", lambda self, *a, **k: k["on_confirm"]()
+        )
+        procs = []
+        monkeypatch.setattr(app, "run_process", lambda *a: procs.append(a))
+        app._find_similar()
+        app._find_reencoded()
+        assert [p[2] for p in procs] == [
+            app._on_videos_operation_end_reset_selection
+        ] * 2
+
 
 class TestNotificationRouting:
     def test_routes_to_current_page(self, videroid_app, monkeypatch):
@@ -145,6 +162,18 @@ class TestMenuActions:
         monkeypatch.setattr(app, "run_process", lambda *a: calls.append(a))
         app._update_db()
         assert calls and calls[0][0] == "Updating database"  # right process title
+        # Update changes the video set - completion must reset the selection.
+        assert calls[0][2] == app._on_videos_operation_end_reset_selection
+
+    def test_videos_operation_end_reset_selection(self, videroid_app, monkeypatch):
+        app, _ = videroid_app
+        video = app.context.get_videos(1, 0).result[0]
+        app._videos_page._selector.include(video.video_id)
+        shown = []
+        monkeypatch.setattr(app, "show_page", shown.append)
+        app._on_videos_operation_end_reset_selection(None)
+        assert not app._videos_page._selector.contains(video.video_id)
+        assert shown == ["videos"]
 
     def test_rename_db(self, videroid_app, monkeypatch):
         app, _ = videroid_app

@@ -44,6 +44,7 @@ class VideosPage(Page):
         self._context = None
         # Selection (phase 5b): persists across reloads/pages until cleared.
         self._selector = Selector(False, set())
+        self._known_view_generation = 0  # Last ViewContext.generation seen
         self._view_count = 0
         self._show_only_selected = False
         self._selection_label = videre.Text("no selection", italic=True)
@@ -311,6 +312,16 @@ class VideosPage(Page):
     # --- data ---------------------------------------------------------------
 
     def _reload(self) -> None:
+        # A filter change (sources/search/grouping/group/classifier) since the
+        # last reload invalidates any active selection - it may no longer
+        # refer to the same videos. Sorting alone does not bump the generation.
+        # Deselect directly (not via _clear_selection, which itself reloads -
+        # we are already reloading, and that would recurse).
+        if (
+            self.context.has_database()
+            and self.context.get_view_generation() != self._known_view_generation
+        ):
+            self._reset_selection_state()
         selector = self._selector if self._show_only_selected else None
         self._context = self.context.get_videos(
             self._page_size, self._page_number, selector
@@ -362,6 +373,11 @@ class VideosPage(Page):
             self._populate_classifier(ctx)
             sections.append(self._sec_classifier)
         self._sidebar_column.controls = self._with_section_backgrounds(sections)
+
+        # Record the generation as of this reload (after any internal mutation
+        # above, e.g. auto-selecting the first group) so the next reload only
+        # resets the selection on a genuinely new filter change.
+        self._known_view_generation = self.context.get_view_generation()
 
     def _update_search(self, ctx) -> None:
         search = ctx.search
@@ -670,7 +686,7 @@ class VideosPage(Page):
 
     def _do_confirm_unique_moves(self) -> None:
         count = self.context.confirm_unique_moves()
-        self._reload()
+        self._clear_selection()
         self.set_status(f"Confirmed {count} video move(s)")
 
     # --- selection (phase 5b) -----------------------------------------------
@@ -686,6 +702,11 @@ class VideosPage(Page):
         else:
             label.text = "no selection"
             label.strong, label.italic = False, True  # none -> italic
+
+    def _purge_video_from_selection(self, video_id) -> None:
+        """Drop a deleted video's ID from the selector (avoids a stale ghost entry)."""
+        self._selector.exclude(video_id)
+        self._update_selection_counter()
 
     def _on_card_check(self, checkbox) -> None:
         video_id = checkbox.data
@@ -705,10 +726,15 @@ class VideosPage(Page):
         self._selector.select_all()
         self._reload()
 
-    def _clear_selection(self, widget=None) -> None:
+    def _reset_selection_state(self) -> None:
+        """Deselect everything and turn off 'show only selected' (no reload -
+        for use from within _reload() itself, which would otherwise recurse)."""
         self._selector.deselect_all()
-        was_show_only = self._show_only_selected
         self._show_only_selected = False
+
+    def _clear_selection(self, widget=None) -> None:
+        was_show_only = self._show_only_selected
+        self._reset_selection_state()
         if was_show_only:
             self._reset_and_reload()
         else:
@@ -929,6 +955,7 @@ class VideosPage(Page):
 
     def _do_confirm_move(self, src_video_id, dst_video_id) -> None:
         self.context.confirm_move(src_video_id, dst_video_id)
+        self._purge_video_from_selection(src_video_id)
         self._reload()
         self.set_status("Video move confirmed")
 
@@ -1032,6 +1059,7 @@ class VideosPage(Page):
 
     def _run_video_action(self, action, video, success_message=None) -> None:
         action(video.video_id)
+        self._purge_video_from_selection(video.video_id)
         self._reload()
         if success_message:
             self.set_status(success_message)

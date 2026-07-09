@@ -115,6 +115,12 @@ class VideroidContext:
         self._api.view.group = result.group_id
         return result
 
+    def get_view_generation(self) -> int:
+        """Return the view's generation counter (bumped by any filter change:
+        sources, search, grouping, group, classifier — not sorting). Interfaces
+        use this to detect when a cross-page video selection is stale."""
+        return self._api.view.generation
+
     def get_all_view_ids(self) -> list:
         """All video ids of the current view (every page), for whole-view
         selection actions. Mirrors how the backend resolves a selector over the
@@ -453,7 +459,6 @@ class VideroidContext:
     def close_database(self) -> None:
         """Close the current database and reset the view."""
         self._api.close_database()
-        self._api.view.reset()
 
     def rename_database(self, new_name: str) -> None:
         """Rename the current database and update the application registry."""

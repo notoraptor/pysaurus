@@ -380,6 +380,29 @@ class TestSelection:
         vids = app.context.get_videos(1000, 0).result
         assert vids and all("calm" in (v.properties.get("mood") or []) for v in vids)
 
+    def test_view_change_invalidates_selection(self, vp):
+        # A grouping change bumps the view's generation counter - the next
+        # reload notices it and drops the now possibly-stale selection.
+        app, _, page = vp
+        video = _video(app)
+        page._selector.include(video.video_id)
+        page._reload()  # sync _known_view_generation first
+        assert page._selector.contains(video.video_id)
+        app.context.set_groups("extension")
+        page._reload()
+        assert not page._selector.contains(video.video_id)
+
+    def test_sort_change_keeps_selection(self, vp):
+        # Sorting alone does not bump the view's generation (it reorders the
+        # view, it never changes its membership) - the selection must survive.
+        app, _, page = vp
+        video = _video(app)
+        page._selector.include(video.video_id)
+        page._reload()
+        app.context.set_sorting(["-file_size"])
+        page._reload()
+        assert page._selector.contains(video.video_id)
+
 
 class TestVideoActions:
     def test_open_and_folder_and_copy(self, vp, monkeypatch):
@@ -426,6 +449,15 @@ class TestVideoActions:
         called = []
         page._run_video_action(lambda i: called.append(i), video)
         assert called == [video.video_id]
+
+    def test_run_video_action_purges_selection(self, vp):
+        # A video removed via delete/trash/delete-file all funnel through
+        # _run_video_action - it must drop the id from the selector too.
+        app, _, page = vp
+        video = _video(app)
+        page._selector.include(video.video_id)
+        page._run_video_action(lambda i: None, video)
+        assert not page._selector.contains(video.video_id)
 
     def test_toggle_watched(self, vp, monkeypatch):
         app, _, page = vp
@@ -639,6 +671,18 @@ class TestConfirmMoves:
         assert moved == [(video.video_id, 99)]
         assert app._status.text == "Video move confirmed"
 
+    def test_confirm_move_purges_selection(self, vp, monkeypatch):
+        # The source video disappears from the view - drop it from the
+        # selector too, so it doesn't linger as a ghost entry.
+        app, _, page = vp
+        captured = self._capture_confirm(app, monkeypatch)
+        monkeypatch.setattr(page.context, "confirm_move", lambda s, d: None)
+        video = _video(app)
+        page._selector.include(video.video_id)
+        page.video_confirm_move(video, 99, "/dst.mp4")
+        captured["cb"]()
+        assert not page._selector.contains(video.video_id)
+
     def test_confirm_unique_moves_reports_count(self, vp, monkeypatch):
         app, _, page = vp
         captured = self._capture_confirm(app, monkeypatch)
@@ -646,6 +690,18 @@ class TestConfirmMoves:
         page._confirm_unique_moves(None)
         captured["cb"]()
         assert app._status.text == "Confirmed 3 video move(s)"
+
+    def test_confirm_unique_moves_clears_selection(self, vp, monkeypatch):
+        # Several videos may disappear at once - clear the whole selection
+        # rather than trying to purge individual ids.
+        app, _, page = vp
+        captured = self._capture_confirm(app, monkeypatch)
+        monkeypatch.setattr(page.context, "confirm_unique_moves", lambda: 3)
+        video = _video(app)
+        page._selector.include(video.video_id)
+        page._confirm_unique_moves(None)
+        captured["cb"]()
+        assert page._selector.size_from(page._view_count) == 0
 
     def test_button_only_while_grouped_by_move_id(self, vp):
         _, _, page = vp

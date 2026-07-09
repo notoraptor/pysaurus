@@ -303,7 +303,7 @@ class VideroidApp:
         self.run_process(
             "Updating database",
             self.context.update_database,
-            lambda end: self.show_page("videos"),
+            self._on_videos_operation_end_reset_selection,
         )
 
     def _find_similar(self) -> None:
@@ -313,7 +313,7 @@ class VideroidApp:
             on_confirm=lambda: self.run_process(
                 "Finding similar videos",
                 self.context.find_similar_videos,
-                lambda end: self.show_page("videos"),
+                self._on_videos_operation_end_reset_selection,
             ),
         )
 
@@ -324,9 +324,16 @@ class VideroidApp:
             on_confirm=lambda: self.run_process(
                 "Finding re-encoded videos",
                 self.context.find_similar_videos_reencoded,
-                lambda end: self.show_page("videos"),
+                self._on_videos_operation_end_reset_selection,
             ),
         )
+
+    def _on_videos_operation_end_reset_selection(self, end) -> None:
+        """Handle completion of an operation that changes the video set
+        (update, find similar/re-encoded), clearing the now possibly-stale
+        selection."""
+        self._videos_page._clear_selection()
+        self.show_page("videos")
 
     def _rename_db(self) -> None:
         entry = videre.TextInput(self.context.get_database_name())
