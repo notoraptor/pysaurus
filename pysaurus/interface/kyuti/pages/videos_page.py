@@ -769,6 +769,17 @@ class VideosPage(QWidget):
             font.setPointSizeF(font.pointSizeF() * 0.8)
             btn.setFont(font)
 
+        # Let a click anywhere in the sidebar - including labels and section
+        # backgrounds, which don't accept focus by default - take focus away
+        # from whatever currently has it (e.g. search_input), instead of
+        # being a no-op because the clicked widget never takes focus itself.
+        # Buttons/list widgets already have their own (non-NoFocus) policy
+        # and are left untouched.
+        sidebar.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        for widget in sidebar.findChildren(QWidget):
+            if widget.focusPolicy() == Qt.FocusPolicy.NoFocus:
+                widget.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+
         return sidebar
 
     def _create_content_area(self) -> QWidget:
@@ -1998,6 +2009,10 @@ class VideosPage(QWidget):
         if query:
             self.page_number = 0
             self.ctx.set_search(query, mode)
+            # Release focus so a subsequent Ctrl+A/Ctrl+Shift+A/Delete/...
+            # reaches the page shortcut instead of being consumed by the
+            # QLineEdit's own standard editing shortcuts (e.g. select-all-text).
+            self.search_input.clearFocus()
 
     def _clear_search(self):
         """Clear the search."""

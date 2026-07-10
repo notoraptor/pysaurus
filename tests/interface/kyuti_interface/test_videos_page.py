@@ -4,6 +4,8 @@ Tests for PySide6 VideosPage.
 Tests the main video browsing page with mock database.
 """
 
+from PySide6.QtCore import Qt
+
 from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
 
@@ -381,6 +383,63 @@ class TestVideosPageSearchModes:
         page._do_search("and")
 
         assert len(calls) == 0
+
+    def test_search_clears_focus_so_shortcuts_work_after(self, qtbot, mock_context):
+        """After a search runs, search_input must release focus so a
+        following Ctrl+A/Ctrl+Shift+A/... page shortcut reaches the page
+        instead of being swallowed by QLineEdit's own standard shortcuts
+        (e.g. Ctrl+A = select-all-text-in-field)."""
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.show()
+        qtbot.waitExposed(page)
+        page.refresh()
+
+        page.search_input.setText("test query")
+        page.search_input.setFocus()
+        qtbot.waitUntil(lambda: page.search_input.hasFocus())
+
+        page._on_search()
+
+        assert not page.search_input.hasFocus()
+        assert page.search_input.text() == "test query"
+
+    def test_empty_search_does_not_clear_focus(self, qtbot, mock_context):
+        """An empty search is a no-op (test_empty_search_not_applied) and
+        must not steal focus from the field the user is still typing in."""
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.show()
+        qtbot.waitExposed(page)
+        page.refresh()
+
+        page.search_input.setText("")
+        page.search_input.setFocus()
+        qtbot.waitUntil(lambda: page.search_input.hasFocus())
+
+        page._on_search()
+
+        assert page.search_input.hasFocus()
+
+
+class TestVideosPageSidebarFocus:
+    """Sidebar labels/section backgrounds don't accept focus by default, so
+    clicking them was a no-op that left search_input focused. _create_sidebar
+    gives them Qt.ClickFocus so a click anywhere in the sidebar releases
+    whatever currently has focus."""
+
+    def test_click_sidebar_label_clears_search_focus(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.show()
+        qtbot.waitExposed(page)
+
+        page.search_input.setFocus()
+        qtbot.waitUntil(lambda: page.search_input.hasFocus())
+
+        qtbot.mouseClick(page.sources_info, Qt.MouseButton.LeftButton)
+
+        assert not page.search_input.hasFocus()
 
 
 class TestVideosPageClearActions:
