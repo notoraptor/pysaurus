@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Collection, Iterable, Sequence
+from typing import Any, Collection, Iterable, Sequence, cast
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -16,13 +16,13 @@ from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.saurus_database_algorithms import SaurusDatabaseAlgorithms
 from pysaurus.database.saurus.sql_useful_constants import WRITABLE_FIELDS
 from pysaurus.database.saurus.sql_utils import sql_placeholders
-from pysaurus.database.saurus.video_mega_group import video_mega_group
+from pysaurus.database.saurus.video_mega_group import video_mega_group, video_mega_ids
 from pysaurus.database.saurus.video_mega_search import (
     video_mega_count,
     video_mega_exists,
     video_mega_search,
 )
-from pysaurus.database.saurus.video_mega_utils import _get_video_moves
+from pysaurus.database.saurus.video_mega_utils import _chunk_ids, _get_video_moves
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.dbview.view_context import ViewContext
 from pysaurus.properties.properties import PropRawType, PropType, PropUnitType
@@ -115,6 +115,20 @@ class PysaurusCollection(AbstractDatabase):
         )
         return output
 
+    def get_view_video_ids(
+        self, view: ViewContext, selector: Selector | None = None
+    ) -> list[int]:
+        return video_mega_ids(
+            self.db,
+            sources=view.sources,
+            source_expression=view.source_expression,
+            grouping=view.grouping,
+            classifier=view.classifier,
+            group=view.group,
+            search=view.search,
+            selector=selector,
+        )
+
     def _set_date(self, date: Date):
         self.db.modify("UPDATE collection SET date_updated = ?", [date.time])
 
@@ -148,21 +162,26 @@ class PysaurusCollection(AbstractDatabase):
     ) -> dict[int, list[PropUnitType]]:
         (pt,) = self.get_prop_types(name=name)
         output = {}
+        # Chunked even when unrestricted (chunks defaults to a single empty
+        # chunk): a selection can have more ids than SQLite allows as bound
+        # variables in one query (SQLITE_LIMIT_VARIABLE_NUMBER).
+        chunks = list(_chunk_ids(list(indices))) if indices else [()]
         with self.db:
-            for row in self.db.query(
-                "SELECT pv.video_id, pv.property_value "
-                "FROM video_property_value AS pv "
-                "JOIN property AS p "
-                "ON pv.property_id = p.property_id "
-                "WHERE p.name = ?"
-                + (
-                    f" AND pv.video_id IN ({sql_placeholders(len(indices))})"
-                    if indices
-                    else ""
-                ),
-                [name] + list(indices),
-            ):
-                output.setdefault(row[0], []).append(pt.from_string(row[1]))
+            for chunk in chunks:
+                for row in self.db.query(
+                    "SELECT pv.video_id, pv.property_value "
+                    "FROM video_property_value AS pv "
+                    "JOIN property AS p "
+                    "ON pv.property_id = p.property_id "
+                    "WHERE p.name = ?"
+                    + (
+                        f" AND pv.video_id IN ({sql_placeholders(len(chunk))})"
+                        if chunk
+                        else ""
+                    ),
+                    [name] + list(chunk),
+                ):
+                    output.setdefault(row[0], []).append(pt.from_string(row[1]))
         return output
 
     def videos_tag_set(
@@ -176,18 +195,17 @@ class PysaurusCollection(AbstractDatabase):
 
         (pt,) = self.get_prop_types(name=name)
         video_ids = list(updates.keys())
-        if len(video_ids) == 1 and video_ids[0] is None:
-            placeholders_string = None
-        else:
-            if not all(isinstance(video_id, int) for video_id in video_ids):
-                raise TypeError("All video_ids must be integers")
-            placeholders_string = sql_placeholders(len(video_ids))
+        update_all_videos = len(video_ids) == 1 and video_ids[0] is None
+        if not update_all_videos and not all(
+            isinstance(video_id, int) for video_id in video_ids
+        ):
+            raise TypeError("All video_ids must be integers")
         for video_id in video_ids:
             updates[video_id] = pt.instantiate(updates[video_id])
 
         property_id = pt.property_id
 
-        if placeholders_string is None:
+        if update_all_videos:
             values = updates[None]
             # Update all video
             if action == Change.REMOVE:
@@ -232,12 +250,17 @@ class PysaurusCollection(AbstractDatabase):
                 )
             else:
                 if action == Change.REPLACE:
-                    self.db.modify(
-                        f"DELETE FROM video_property_value "
-                        f"WHERE property_id = ? "
-                        f"AND video_id IN ({placeholders_string})",
-                        [property_id] + video_ids,
-                    )
+                    # Chunked: `updates` can cover more video ids than SQLite
+                    # allows as bound variables in one query. Cast: this
+                    # branch is only reached when `not update_all_videos`,
+                    # already validated above to be all int.
+                    for chunk in _chunk_ids(cast(list[int], video_ids)):
+                        self.db.modify(
+                            f"DELETE FROM video_property_value "
+                            f"WHERE property_id = ? "
+                            f"AND video_id IN ({sql_placeholders(len(chunk))})",
+                            [property_id] + list(chunk),
+                        )
                 self.db.modify_many(
                     "INSERT OR IGNORE INTO video_property_value "
                     "(video_id, property_id, property_value) VALUES (?, ?, ?)",
@@ -250,9 +273,7 @@ class PysaurusCollection(AbstractDatabase):
 
         # 3. Update FTS5 properties column if property is string type
         if pt.type == "str":
-            self._update_fts_properties(
-                None if placeholders_string is None else video_ids
-            )
+            self._update_fts_properties(None if update_all_videos else video_ids)
 
     def video_entry_set_tags(
         self, video_id: int, properties: dict, merge=False

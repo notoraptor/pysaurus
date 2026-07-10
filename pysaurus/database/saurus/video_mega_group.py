@@ -39,7 +39,7 @@ from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
 
 
-def video_mega_group(
+def _build_view_where(
     sql_db: PysaurusConnection,
     *,
     sources: Sequence[list[str]] = (),
@@ -48,27 +48,18 @@ def video_mega_group(
     classifier: Sequence[str] = (),
     group=0,
     search: SearchDef = SearchDef(),
-    sorting: Sequence[str] = (),
-    selector: Selector | None = None,
-    page_size: int | None = None,
-    page_number: int = 0,
-    include: Sequence[str] | None = None,
-    with_moves=False,
-) -> VideoSearchContext:
+) -> tuple[QueryMaker, "LookupArray[GroupCount]", Any]:
+    """Build a QueryMaker selecting video_id, WHERE populated for the given
+    sources/grouping/classifier/search view parameters.
+
+    Shared by video_mega_group() (full results + stats) and video_mega_ids()
+    (ids only), so the two never disagree on what "matches the view" means.
+
+    Returns (query_maker, output_groups, group_id): group_id is the
+    resolved/clamped group index (unchanged from `group` when grouping is
+    inactive or yields no groups).
+    """
     output_groups = LookupArray[GroupCount](GroupCount, (), GroupCount.keyof)
-    output = VideoSearchContext(
-        sources=sources,
-        grouping=grouping,
-        classifier=classifier,
-        group_id=group,
-        search=search,
-        sorting=sorting,
-        selector=selector,
-        page_size=page_size,
-        page_number=page_number,
-        with_moves=with_moves,
-        result_groups=output_groups,
-    )
 
     query_maker = QueryMaker("video", "v")
     field_video_id = query_maker.get_main_table().get_alias_field("video_id")
@@ -78,8 +69,7 @@ def video_mega_group(
 
     if search and search.text is not None and search.cond == "id":
         query_maker.where.append_field(field_video_id, int(search.text))
-        _compute_results_and_stats(sql_db, output, query_maker, include=include)
-        return output
+        return query_maker, output_groups, group
 
     field_factory = SqlFieldFactory(sql_db)
     if source_expression:
@@ -145,20 +135,19 @@ def video_mega_group(
         if not output_groups:
             # Make sure to find nothing
             query_maker.where.append_query("0")
-            _compute_results_and_stats(sql_db, output, query_maker, include=include)
-            return output
+            return query_maker, output_groups, group
 
-        output.group_id = min(max(0, output.group_id), len(output_groups) - 1)
-        group = output_groups[output.group_id]
+        group = min(max(0, group), len(output_groups) - 1)
+        selected_group = output_groups[group]
         if grouping.is_property:
             assert prop_meta is not None
-            (field_value,) = group.value
+            (field_value,) = selected_group.value
             where_group_query, where_group_params = _filter_by_selected_property_group(
                 grouping, classifier, field_value, prop_meta
             )
         else:
             where_group_query, where_group_params = _filter_by_selected_field_group(
-                group, grouping, field_factory
+                selected_group, grouping, field_factory
             )
 
     where_builder = query_maker.where
@@ -173,15 +162,94 @@ def video_mega_group(
         where_search, params_search = search_to_sql(search)
         where_builder.append_query(f"v.video_id IN ({where_search})", *params_search)
 
+    return query_maker, output_groups, group
+
+
+def video_mega_group(
+    sql_db: PysaurusConnection,
+    *,
+    sources: Sequence[list[str]] = (),
+    source_expression: str | None = None,
+    grouping: GroupDef = GroupDef(),
+    classifier: Sequence[str] = (),
+    group=0,
+    search: SearchDef = SearchDef(),
+    sorting: Sequence[str] = (),
+    selector: Selector | None = None,
+    page_size: int | None = None,
+    page_number: int = 0,
+    include: Sequence[str] | None = None,
+    with_moves=False,
+) -> VideoSearchContext:
+    query_maker, output_groups, group_id = _build_view_where(
+        sql_db,
+        sources=sources,
+        source_expression=source_expression,
+        grouping=grouping,
+        classifier=classifier,
+        group=group,
+        search=search,
+    )
+    output = VideoSearchContext(
+        sources=sources,
+        grouping=grouping,
+        classifier=classifier,
+        group_id=group_id,
+        search=search,
+        sorting=sorting,
+        selector=selector,
+        page_size=page_size,
+        page_number=page_number,
+        with_moves=with_moves,
+        result_groups=output_groups,
+    )
+
+    field_factory = SqlFieldFactory(sql_db)
     sql_sorting = [
         field_factory.get_sorting(field, reverse)
         for field, reverse in VideoSorting(sorting)
     ]
+    for sort_clause in sql_sorting:
+        query_maker.order_by_complex(sort_clause)
 
-    for sorting in sql_sorting:
-        query_maker.order_by_complex(sorting)
     _compute_results_and_stats(sql_db, output, query_maker, include=include)
     return output
+
+
+def video_mega_ids(
+    sql_db: PysaurusConnection,
+    *,
+    sources: Sequence[list[str]] = (),
+    source_expression: str | None = None,
+    grouping: GroupDef = GroupDef(),
+    classifier: Sequence[str] = (),
+    group=0,
+    search: SearchDef = SearchDef(),
+    selector: Selector | None = None,
+) -> list[int]:
+    """Return every video_id matching the given view and selector.
+
+    Lean counterpart to video_mega_group(): no pagination, no sorting, no
+    thumbnail/property/language/error hydration - just the ids, for callers
+    that only need to know which videos are in scope (batch property edits,
+    playlist generation, "select all in view").
+    """
+    query_maker, _, _ = _build_view_where(
+        sql_db,
+        sources=sources,
+        source_expression=source_expression,
+        grouping=grouping,
+        classifier=classifier,
+        group=group,
+        search=search,
+    )
+    field_video_id = query_maker.get_main_table().get_alias_field("video_id")
+    if selector is not None:
+        select_query, select_params = selector.to_sql(field_video_id)
+        query_maker.where.append_query(select_query, *select_params)
+    query_maker.set_field(field_video_id)
+    with sql_db:
+        return [row[0] for row in sql_db.query(*query_maker.to_sql())]
 
 
 def _compute_results_and_stats(

@@ -267,6 +267,47 @@ class TestVideoPropertyOperations:
 
 
 # =============================================================================
+# videos_tag_get / videos_tag_set chunking
+# =============================================================================
+
+
+class TestVideosTagChunking:
+    """videos_tag_get/videos_tag_set build a `video_id IN (...)` SQL clause
+    per chunk; a selection bigger than SQLite's bound-variable limit must be
+    split across several queries. Exercise the split by shrinking the chunk
+    size rather than creating tens of thousands of rows."""
+
+    def test_get_and_set_across_chunk_boundary(self, db, monkeypatch):
+        monkeypatch.setattr(
+            "pysaurus.database.saurus.video_mega_utils._SQL_VAR_CHUNK", 3
+        )
+        db.prop_type_add("chunk_prop", "str", "", True)
+        video_ids = [v.video_id for v in db.get_videos(include=["video_id"])[:10]]
+
+        db.videos_tag_set("chunk_prop", {vid: ["old"] for vid in video_ids})
+        tags = db.videos_tag_get("chunk_prop", indices=video_ids)
+        assert set(tags.keys()) == set(video_ids)
+        assert all(tags[vid] == ["old"] for vid in video_ids)
+
+        # REPLACE (default action) must clear "old" for every video, even
+        # though the DELETE is now split across several chunked queries.
+        db.videos_tag_set("chunk_prop", {vid: ["new"] for vid in video_ids})
+        tags = db.videos_tag_get("chunk_prop", indices=video_ids)
+        assert all(tags[vid] == ["new"] for vid in video_ids)
+
+    def test_get_unrestricted_ignores_chunk_size(self, db, monkeypatch):
+        """indices=() must still mean "no filter", not "no chunks"."""
+        monkeypatch.setattr(
+            "pysaurus.database.saurus.video_mega_utils._SQL_VAR_CHUNK", 3
+        )
+        db.prop_type_add("chunk_prop", "str", "", True)
+        video_id = db.get_videos(include=["video_id"])[0].video_id
+        db.videos_tag_set("chunk_prop", {video_id: ["x"]})
+
+        assert db.videos_tag_get("chunk_prop")[video_id] == ["x"]
+
+
+# =============================================================================
 # videos_set_field
 # =============================================================================
 

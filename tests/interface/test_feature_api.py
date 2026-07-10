@@ -566,6 +566,27 @@ class TestFeatureAPIProvider:
         # Verify result is returned (implementation-specific)
         # Just verify the call works
 
+    def test_apply_on_view_all_excludes_given_ids(self, feature_api_with_db):
+        """Test "select all in view except excluded" resolves against the view,
+        not just the (empty) include list."""
+        api = feature_api_with_db
+        # Per test_apply_on_view above, this video's "category" is "other".
+        first_video = api.database.get_videos()[0]
+
+        def count_other(selector):
+            result = api.__run_feature__(
+                "apply_on_view", selector, "count_property_values", "category"
+            )
+            return dict(result).get("other", 0)
+
+        baseline = count_other({"all": True, "include": [], "exclude": []})
+        excluding_first = count_other(
+            {"all": True, "include": [], "exclude": [first_video.video_id]}
+        )
+
+        assert baseline > 0
+        assert excluding_first == baseline - 1
+
     def test_open_random_video(self, feature_api_with_db):
         """Test opening random video."""
         api = feature_api_with_db

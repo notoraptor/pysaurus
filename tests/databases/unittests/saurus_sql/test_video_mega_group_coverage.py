@@ -10,6 +10,7 @@ focusing on edge cases like:
 
 import pytest
 
+from pysaurus.core.classes import Selector
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.dbview.view_context import ViewContext
 
@@ -306,3 +307,103 @@ class TestVideoMegaGroupEdgeCases:
         view.set_search("unknown", "and")
         indices = self._query_ids(saurus_database, view)
         assert len(indices) > 0
+
+
+class TestGetViewVideoIds:
+    """Tests for get_view_video_ids() / video_mega_ids(), the ids-only
+    counterpart to query_videos() used by apply_on_view() and playlist().
+
+    Since video_mega_group() and video_mega_ids() share the same WHERE-
+    building helper, the main property to verify is that they never
+    disagree on which videos match a given view.
+    """
+
+    def _full_ids(self, db, view) -> set[int]:
+        return {v.video_id for v in db.query_videos(view, None, None).result}
+
+    def _query_stats(self, db, view):
+        return db.query_videos(view, 1, 0).classifier_stats
+
+    def test_matches_query_videos_with_no_filters(self, saurus_database):
+        view = ViewContext()
+        lean_ids = set(saurus_database.get_view_video_ids(view))
+        assert lean_ids == self._full_ids(saurus_database, view)
+        assert len(lean_ids) > 0
+
+    def test_matches_query_videos_with_sources(self, saurus_database):
+        view = ViewContext()
+        view.set_sources([["readable"], ["unreadable"]])
+        lean_ids = set(saurus_database.get_view_video_ids(view))
+        assert lean_ids == self._full_ids(saurus_database, view)
+
+    def test_matches_query_videos_with_search(self, saurus_database):
+        view = ViewContext()
+        view.set_search("a", "and")
+        lean_ids = set(saurus_database.get_view_video_ids(view))
+        assert lean_ids == self._full_ids(saurus_database, view)
+        assert len(lean_ids) > 0
+
+    def test_matches_query_videos_with_search_by_id(self, saurus_database):
+        view = ViewContext()
+        view.set_search("196", "id")
+        lean_ids = set(saurus_database.get_view_video_ids(view))
+        assert lean_ids == self._full_ids(saurus_database, view)
+        assert lean_ids == {196}
+
+    def test_matches_query_videos_with_grouping_and_group_selected(
+        self, saurus_database
+    ):
+        view = ViewContext()
+        view.set_grouping("category", is_property=True, allow_singletons=True)
+        view.group = 0
+        lean_ids = set(saurus_database.get_view_video_ids(view))
+        assert lean_ids == self._full_ids(saurus_database, view)
+        assert len(lean_ids) > 0
+
+    def test_matches_query_videos_with_classifier(self, saurus_database):
+        db = saurus_database
+        view = ViewContext()
+        view.set_grouping(
+            "category", is_property=True, allow_singletons=True, sorting="count"
+        )
+        stats = self._query_stats(db, view)
+        non_null = [s.value for s in stats if s.value is not None and s.count > 0]
+        if not non_null:
+            pytest.skip("No non-null category groups in test database")
+        view.classifier = [non_null[0]]
+        lean_ids = set(db.get_view_video_ids(view))
+        assert lean_ids == self._full_ids(db, view)
+        assert len(lean_ids) > 0
+
+    def test_matches_query_videos_with_empty_result_set(self, saurus_database):
+        view = ViewContext()
+        view.set_sources([["readable", "without_thumbnails"]])
+        view.set_grouping("audio_codec")
+        assert saurus_database.get_view_video_ids(view) == []
+        assert self._full_ids(saurus_database, view) == set()
+
+    def test_selector_include(self, saurus_database):
+        view = ViewContext()
+        all_ids = sorted(saurus_database.get_view_video_ids(view))
+        chosen = set(all_ids[:3])
+        selector = Selector(False, set(chosen))
+        assert set(saurus_database.get_view_video_ids(view, selector)) == chosen
+
+    def test_selector_exclude(self, saurus_database):
+        view = ViewContext()
+        all_ids = set(saurus_database.get_view_video_ids(view))
+        excluded = set(sorted(all_ids)[:2])
+        selector = Selector(True, excluded)
+        result = set(saurus_database.get_view_video_ids(view, selector))
+        assert result == all_ids - excluded
+
+    def test_selector_exclude_empty_selects_everything(self, saurus_database):
+        view = ViewContext()
+        all_ids = set(saurus_database.get_view_video_ids(view))
+        selector = Selector(True, set())
+        assert set(saurus_database.get_view_video_ids(view, selector)) == all_ids
+
+    def test_selector_include_empty_selects_nothing(self, saurus_database):
+        view = ViewContext()
+        selector = Selector(False, set())
+        assert saurus_database.get_view_video_ids(view, selector) == []

@@ -151,6 +151,19 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_view_video_ids(
+        self, view: ViewContext, selector: Selector | None = None
+    ) -> list[int]:
+        """Return every video_id matching the given view (and optional selector).
+
+        Lean counterpart to query_videos(): no pagination, no thumbnails, no
+        property/language/error hydration. Use this instead of
+        query_videos(view, 0, 0) whenever only the id list is needed (batch
+        operations on a selection, playlist generation, "select all in view").
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def videos_get_terms(self) -> dict[int, list[str]]:
         raise NotImplementedError()
 

@@ -5,7 +5,6 @@ from typing import Any
 from pysaurus.application import exceptions
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
-from pysaurus.core import functions
 from pysaurus.core.classes import Selector, StringPrinter
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
 from pysaurus.core.file_utils import create_xspf_playlist
@@ -149,16 +148,23 @@ class FeatureAPI:
 
     def apply_on_view(self, selector, db_fn_name, *db_fn_args):
         assert self.database is not None
-        result = self.database.query_videos(self.view, 0, 0)
-        view_indices = [v.video_id for v in result.result]
+        if selector["all"]:
+            # "Select all in view except excluded": the excluded ids alone
+            # don't tell us what's IN the selection, so the view must be
+            # queried (lean: ids only, honors the current sources/search/
+            # grouping and the selector, no thumbnail/property hydration).
+            video_indices = self.database.get_view_video_ids(
+                self.view, Selector.parse_dict(selector)
+            )
+        else:
+            # Manual selection: the included ids already ARE the answer.
+            video_indices = selector["include"]
         ops = Ops(self.database)
         callable_methods = {
             "count_property_values": ops.count_property_for_videos,
             "edit_property_for_videos": ops.update_property_for_videos,
         }
-        return callable_methods[db_fn_name](
-            functions.apply_selector_to_data(selector, view_indices), *db_fn_args
-        )
+        return callable_methods[db_fn_name](video_indices, *db_fn_args)
 
     def open_random_video(self, open_video=True) -> str:
         assert self.database is not None
@@ -219,8 +225,7 @@ class FeatureAPI:
         db = self.database
         assert db is not None
         ops = Ops(db)
-        result = db.query_videos(self.view, 0, 0)
-        view_indices = [v.video_id for v in result.result]
+        view_indices = db.get_view_video_ids(self.view)
         return str(
             create_xspf_playlist(map(ops.get_video_filename, view_indices)).open()
         )
