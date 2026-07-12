@@ -16,7 +16,7 @@ import os
 import subprocess
 import sys
 
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
+from PySide6.QtCore import QAbstractTableModel, QEvent, QModelIndex, Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
@@ -68,6 +68,8 @@ BULK_CONFIRM_THRESHOLD = 500
 class _FileTableModel(QAbstractTableModel):
     """Virtualized model exposing a list of FileInfo filtered by substring."""
 
+    # Column structure/count only. The *displayed* header labels come from
+    # headerData() via say() so they translate live (see headerData).
     HEADERS = ("Path", "Size")
 
     def __init__(self, parent=None):
@@ -110,7 +112,10 @@ class _FileTableModel(QAbstractTableModel):
             role == Qt.ItemDataRole.DisplayRole
             and orientation == Qt.Orientation.Horizontal
         ):
-            return self.HEADERS[section]
+            # say() literals (not self.HEADERS[section]): the strings must be
+            # extractable, and re-evaluating say() on every repaint is what lets
+            # the header translate live once retranslateUi() re-emits it.
+            return (say("Path"), say("Size"))[section]
         return None
 
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
@@ -165,29 +170,29 @@ class FilesPage(QWidget):
         layout = QVBoxLayout(w)
         layout.addStretch()
 
-        title = QLabel("<b>" + say("Database file inventory") + "</b>")
-        title.setStyleSheet("font-size: 16px;")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(title)
+        self._empty_title = QLabel("<b>" + say("Database file inventory") + "</b>")
+        self._empty_title.setStyleSheet("font-size: 16px;")
+        self._empty_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self._empty_title)
 
-        desc = QLabel(
+        self._empty_desc = QLabel(
             say(
                 "Scan all files in the database source folders, then review and "
                 "clean non-video files that have accumulated there "
                 "(thumbnails, .nfo, .part, subtitles, …)."
             )
         )
-        desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        desc.setWordWrap(True)
-        desc.setStyleSheet("color: #555; padding: 10px;")
-        layout.addWidget(desc)
+        self._empty_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._empty_desc.setWordWrap(True)
+        self._empty_desc.setStyleSheet("color: #555; padding: 10px;")
+        layout.addWidget(self._empty_desc)
 
-        btn = QPushButton(say("Scan folders"))
-        btn.setFixedWidth(200)
-        btn.clicked.connect(self.scan_requested)
+        self._scan_btn = QPushButton(say("Scan folders"))
+        self._scan_btn.setFixedWidth(200)
+        self._scan_btn.clicked.connect(self.scan_requested)
         row = QHBoxLayout()
         row.addStretch()
-        row.addWidget(btn)
+        row.addWidget(self._scan_btn)
         row.addStretch()
         layout.addLayout(row)
 
@@ -228,7 +233,8 @@ class FilesPage(QWidget):
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
-        left_layout.addWidget(QLabel("<b>" + say("Extensions") + "</b>"))
+        self._extensions_label = QLabel("<b>" + say("Extensions") + "</b>")
+        left_layout.addWidget(self._extensions_label)
 
         self._ext_table = QTableWidget(0, 4)
         self._ext_table.setHorizontalHeaderLabels(
@@ -273,7 +279,8 @@ class FilesPage(QWidget):
         actions.addWidget(self._btn_open_folder)
         actions.addWidget(self._btn_trash_selected)
         actions.addStretch()
-        actions.addWidget(QLabel(say("Filter:")))
+        self._filter_label = QLabel(say("Filter:"))
+        actions.addWidget(self._filter_label)
         self._filter_edit = QLineEdit()
         self._filter_edit.setPlaceholderText(say("Substring match on path"))
         self._filter_edit.setClearButtonEnabled(True)
@@ -308,16 +315,16 @@ class FilesPage(QWidget):
         w = QWidget()
         layout = QVBoxLayout(w)
 
-        hint = QLabel(
+        self._video_stats_hint = QLabel(
             say(
                 "Read-only stats for video files. Use the <b>Videos</b> page to "
                 "manage indexed videos. An <i>unknown</i> video is physically "
                 "present on disk but not referenced by the database."
             )
         )
-        hint.setWordWrap(True)
-        hint.setStyleSheet("color: #555; padding: 4px 0;")
-        layout.addWidget(hint)
+        self._video_stats_hint.setWordWrap(True)
+        self._video_stats_hint.setStyleSheet("color: #555; padding: 4px 0;")
+        layout.addWidget(self._video_stats_hint)
 
         self._video_stats_table = QTableWidget(0, 5)
         self._video_stats_table.setHorizontalHeaderLabels(
@@ -342,6 +349,72 @@ class FilesPage(QWidget):
         layout.addWidget(self._video_stats_table)
 
         return w
+
+    def retranslateUi(self):
+        """Re-apply the text of every *static* piece of chrome in the current
+        language. Triggered by QEvent.LanguageChange (see changeEvent).
+
+        The construction keeps its say() calls (the text stays readable at the
+        call site), so this only *repeats* them for the persistent widgets; it
+        is deliberately NOT called at startup. Dynamic content (the per-category
+        files title, the summary label, the per-row "Trash all" buttons and the
+        message boxes) is retranslated on its own by the code paths that build
+        it — refresh() and the trash/confirm dialogs.
+        """
+        # Empty (no-scan) placeholder
+        self._empty_title.setText("<b>" + say("Database file inventory") + "</b>")
+        self._empty_desc.setText(
+            say(
+                "Scan all files in the database source folders, then review and "
+                "clean non-video files that have accumulated there "
+                "(thumbnails, .nfo, .part, subtitles, …)."
+            )
+        )
+        self._scan_btn.setText(say("Scan folders"))
+        # Scanned view: top bar and tab labels
+        self._rescan_btn.setText(say("Rescan folders"))
+        self._tabs.setTabText(0, say("Others"))
+        self._tabs.setTabText(1, say("Video stats"))
+        # Others tab — left (extensions) panel
+        self._extensions_label.setText("<b>" + say("Extensions") + "</b>")
+        self._ext_table.setHorizontalHeaderLabels(
+            [say("Extension"), say("Count"), say("Total size"), ""]
+        )
+        # Others tab — right (files) panel; the files title label is dynamic
+        self._btn_open_folder.setText(say("Open folder"))
+        self._btn_trash_selected.setText(say("Send to trash"))
+        self._filter_label.setText(say("Filter:"))
+        self._filter_edit.setPlaceholderText(say("Substring match on path"))
+        # Video stats tab
+        self._video_stats_hint.setText(
+            say(
+                "Read-only stats for video files. Use the <b>Videos</b> page to "
+                "manage indexed videos. An <i>unknown</i> video is physically "
+                "present on disk but not referenced by the database."
+            )
+        )
+        self._video_stats_table.setHorizontalHeaderLabels(
+            [
+                say("Extension"),
+                say("Indexed (count)"),
+                say("Indexed (size)"),
+                say("Unknown (count)"),
+                say("Unknown (size)"),
+            ]
+        )
+        # Main files QTableView: its header labels come from the model's
+        # headerData() (say() literals). The model is not a widget, so it never
+        # gets LanguageChange itself — ask it to re-emit its header here.
+        self._files_model.headerDataChanged.emit(
+            Qt.Orientation.Horizontal, 0, self._files_model.columnCount() - 1
+        )
+
+    def changeEvent(self, event):
+        """Qt posts LanguageChange to every widget when a QTranslator is
+        installed or removed. That is our cue to re-pull the static chrome."""
+        if event.type() == QEvent.Type.LanguageChange:
+            self.retranslateUi()
+        super().changeEvent(event)
 
     # =========================================================================
     # Public API (called by main window)

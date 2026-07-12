@@ -2,7 +2,7 @@
 Properties page for managing video properties.
 """
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -70,9 +70,9 @@ class PropertiesPage(QWidget):
 
         header_layout.addStretch()
 
-        title_label = QLabel("<b>" + say("Property Management") + "</b>")
-        title_label.setStyleSheet("font-size: 16px;")
-        header_layout.addWidget(title_label)
+        self._title_label = QLabel("<b>" + say("Property Management") + "</b>")
+        self._title_label.setStyleSheet("font-size: 16px;")
+        header_layout.addWidget(self._title_label)
 
         header_layout.addStretch()
 
@@ -101,7 +101,8 @@ class PropertiesPage(QWidget):
 
         # Section header
         header = QHBoxLayout()
-        header.addWidget(QLabel("<b>" + say("Existing Properties") + "</b>"))
+        self._existing_props_label = QLabel("<b>" + say("Existing Properties") + "</b>")
+        header.addWidget(self._existing_props_label)
         header.addStretch()
 
         self.btn_refresh = QPushButton(say("Refresh"))
@@ -141,7 +142,8 @@ class PropertiesPage(QWidget):
         actions_layout = QHBoxLayout(actions_frame)
         actions_layout.setContentsMargins(5, 5, 5, 5)
 
-        actions_layout.addWidget(QLabel(say("Advanced:")))
+        self._advanced_label = QLabel(say("Advanced:"))
+        actions_layout.addWidget(self._advanced_label)
 
         self.btn_fill_terms = QPushButton(say("Fill with Terms..."))
         self.btn_fill_terms.setToolTip(
@@ -158,12 +160,13 @@ class PropertiesPage(QWidget):
 
     def _create_new_property_panel(self) -> QWidget:
         """Create the panel for adding new properties."""
-        panel = QGroupBox(say("Create New Property"))
-        layout = QVBoxLayout(panel)
+        self._new_property_group = QGroupBox(say("Create New Property"))
+        layout = QVBoxLayout(self._new_property_group)
 
         # Name
         name_layout = QHBoxLayout()
-        name_layout.addWidget(QLabel(say("Name:")))
+        self._name_label = QLabel(say("Name:"))
+        name_layout.addWidget(self._name_label)
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText(say("Property name"))
         name_layout.addWidget(self.name_input)
@@ -171,7 +174,8 @@ class PropertiesPage(QWidget):
 
         # Type
         type_layout = QHBoxLayout()
-        type_layout.addWidget(QLabel(say("Type:")))
+        self._type_label = QLabel(say("Type:"))
+        type_layout.addWidget(self._type_label)
         self.type_combo = QComboBox()
         self.type_combo.addItems(["str", "int", "float", "bool"])
         self.type_combo.currentTextChanged.connect(self._on_type_changed)
@@ -200,8 +204,8 @@ class PropertiesPage(QWidget):
         layout.addWidget(self.enum_check)
 
         # Enum values
-        enum_label = QLabel(say("Enum values (one per line):"))
-        layout.addWidget(enum_label)
+        self._enum_label = QLabel(say("Enum values (one per line):"))
+        layout.addWidget(self._enum_label)
 
         self.enum_input = QLineEdit()
         self.enum_input.setPlaceholderText(say("value1, value2, value3"))
@@ -210,7 +214,8 @@ class PropertiesPage(QWidget):
 
         # Default
         default_layout = QHBoxLayout()
-        default_layout.addWidget(QLabel(say("Default:")))
+        self._default_label = QLabel(say("Default:"))
+        default_layout.addWidget(self._default_label)
         self.default_input = QLineEdit()
         self.default_input.setPlaceholderText(say("Default value"))
         default_layout.addWidget(self.default_input)
@@ -231,7 +236,71 @@ class PropertiesPage(QWidget):
 
         layout.addLayout(btn_layout)
 
-        return panel
+        return self._new_property_group
+
+    def retranslateUi(self):
+        """Re-apply the text of every *static* piece of chrome in the current
+        language. Triggered by QEvent.LanguageChange (see changeEvent).
+
+        The construction keeps its say() calls (the text stays readable at the
+        call site), so this only *repeats* them for the persistent widgets; it
+        is deliberately NOT called at startup. Dynamic content (the properties
+        table rows and their per-row action menus, rebuilt by refresh()) is
+        retranslated on its own via the state_changed signal.
+        """
+        # Header
+        self.btn_back.setText(say("< Back to Videos"))
+        self._title_label.setText("<b>" + say("Property Management") + "</b>")
+        # Existing-properties panel
+        self._existing_props_label.setText("<b>" + say("Existing Properties") + "</b>")
+        self.btn_refresh.setText(say("Refresh"))
+        self.props_table.setHorizontalHeaderLabels(
+            [
+                say("Name"),
+                say("Type"),
+                say("Default"),
+                say("Multiple"),
+                say("Enum"),
+                say("Actions"),
+            ]
+        )
+        self._advanced_label.setText(say("Advanced:"))
+        self.btn_fill_terms.setText(say("Fill with Terms..."))
+        self.btn_fill_terms.setToolTip(
+            say("Fill a property with terms extracted from video titles")
+        )
+        # Create-new-property panel
+        self._new_property_group.setTitle(say("Create New Property"))
+        self._name_label.setText(say("Name:"))
+        self.name_input.setPlaceholderText(say("Property name"))
+        self._type_label.setText(say("Type:"))
+        self.multiple_check.setText(say("Allow multiple values"))
+        self.multiple_check.setToolTip(
+            say(
+                "If enabled, videos can have multiple values for this property.\n"
+                "Only available for string type."
+            )
+        )
+        self.enum_check.setText(say("Use enumeration"))
+        self.enum_check.setToolTip(
+            say(
+                "If enabled, only predefined values can be used.\n"
+                "Enter values below, one per line."
+            )
+        )
+        self._enum_label.setText(say("Enum values (one per line):"))
+        self.enum_input.setPlaceholderText(say("value1, value2, value3"))
+        self._default_label.setText(say("Default:"))
+        self.default_input.setPlaceholderText(say("Default value"))
+        self.btn_reset.setText(say("Reset"))
+        self.btn_create.setText(say("Create Property"))
+
+    def changeEvent(self, event):
+        """Qt posts LanguageChange to every widget when a QTranslator is
+        installed or removed. That is our cue to re-pull the static chrome."""
+        if event.type() == QEvent.Type.LanguageChange:
+            self.retranslateUi()
+        super().changeEvent(event)
 
     def _on_type_changed(self, type_name: str):
         """Handle type change - enable/disable multiple option."""

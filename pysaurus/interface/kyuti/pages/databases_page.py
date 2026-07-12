@@ -4,7 +4,7 @@ Databases page for selecting and creating databases.
 
 import os
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
@@ -181,13 +181,13 @@ class DatabasesPage(QWidget):
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
 
-        title_label = QLabel(say("Existing Databases"))
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_font = title_label.font()
+        self._title_label = QLabel(say("Existing Databases"))
+        self._title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_font = self._title_label.font()
         title_font.setBold(True)
         title_font.setPointSizeF(title_font.pointSizeF() * 1.6)
-        title_label.setFont(title_font)
-        left_layout.addWidget(title_label)
+        self._title_label.setFont(title_font)
+        left_layout.addWidget(self._title_label)
 
         # Scroll area for database items
         scroll_area = QScrollArea()
@@ -211,24 +211,26 @@ class DatabasesPage(QWidget):
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
 
-        create_title = QLabel(say("Create New Database"))
-        create_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        create_font = create_title.font()
+        self._create_title = QLabel(say("Create New Database"))
+        self._create_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        create_font = self._create_title.font()
         create_font.setBold(True)
         create_font.setPointSizeF(create_font.pointSizeF() * 1.6)
-        create_title.setFont(create_font)
-        right_layout.addWidget(create_title)
+        self._create_title.setFont(create_font)
+        right_layout.addWidget(self._create_title)
 
         # Name input
         name_layout = QHBoxLayout()
-        name_layout.addWidget(QLabel(say("Name:")))
+        self._name_label = QLabel(say("Name:"))
+        name_layout.addWidget(self._name_label)
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText(say("Enter database name"))
         name_layout.addWidget(self.name_input)
         right_layout.addLayout(name_layout)
 
         # Sources list
-        right_layout.addWidget(QLabel(say("Sources (folders and files):")))
+        self._sources_label = QLabel(say("Sources (folders and files):"))
+        right_layout.addWidget(self._sources_label)
         self.sources_list = QListWidget()
         right_layout.addWidget(self.sources_list)
 
@@ -254,6 +256,33 @@ class DatabasesPage(QWidget):
         right_layout.addWidget(self.btn_create)
 
         layout.addWidget(right_widget)
+
+    def retranslateUi(self):
+        """Re-apply the text of every *static* piece of chrome in the current
+        language. Triggered by QEvent.LanguageChange (see changeEvent).
+
+        The construction keeps its say() calls (the text stays readable at the
+        call site), so this only *repeats* them for the widgets built once in
+        _setup_ui(); it is deliberately NOT called at startup. The per-database
+        rows (DatabaseItemWidget) are rebuilt by refresh() and retranslate
+        themselves that way.
+        """
+        self._title_label.setText(say("Existing Databases"))
+        self._create_title.setText(say("Create New Database"))
+        self._name_label.setText(say("Name:"))
+        self.name_input.setPlaceholderText(say("Enter database name"))
+        self._sources_label.setText(say("Sources (folders and files):"))
+        self.btn_add_folder.setText(say("Add Folder"))
+        self.btn_add_file.setText(say("Add File"))
+        self.btn_remove_source.setText(say("Remove"))
+        self.btn_create.setText(say("Create Database"))
+
+    def changeEvent(self, event):
+        """Qt posts LanguageChange to every widget when a QTranslator is
+        installed or removed. That is our cue to re-pull the static chrome."""
+        if event.type() == QEvent.Type.LanguageChange:
+            self.retranslateUi()
+        super().changeEvent(event)
 
     def refresh(self):
         """Refresh the page (public interface)."""

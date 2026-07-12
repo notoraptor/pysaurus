@@ -6,12 +6,14 @@ process page management, and state change handling.
 """
 
 import pytest
-from PySide6.QtCore import QEvent, QObject, Signal
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QApplication, QMessageBox
 
+from pysaurus.core import language
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
+from pysaurus.core.language import say
 from pysaurus.interface.kyuti import main_window as mw_module
 from pysaurus.interface.kyuti.main_window import MainWindow, SessionLogDialog
 from pysaurus.video.video_search_context import VideoSearchContext
@@ -441,8 +443,9 @@ class TestOptionsMenu:
         assert main_window._language_group.isExclusive()
         assert [a.data() for a in actions if a.isChecked()] == ["en"]
 
-    def test_language_action_switches(self, main_window, monkeypatch):
-        monkeypatch.setattr(mw_module.QMessageBox, "information", lambda *a, **k: None)
+    def test_language_action_switches(self, main_window):
+        # _on_language_action no longer shows a "restart" dialog: the switch is
+        # applied live, so it simply forwards the code to the context.
         switched = []
         main_window.ctx.set_language = lambda code: switched.append(code)
         action = next(
@@ -450,6 +453,58 @@ class TestOptionsMenu:
         )
         main_window._on_language_action(action)
         assert switched == ["fr"]
+
+    def test_retranslate_on_language_change(self, main_window):
+        """Static chrome of MainWindow AND every page retranslates live when a
+        LanguageChange is delivered (as installTranslator does at runtime),
+        without rebuilding anything — so no UI state is lost."""
+        w = main_window
+        receivers = [
+            w,
+            w.databases_page,
+            w.videos_page,
+            w.properties_page,
+            w.files_page,
+        ]
+
+        def switch(code):
+            language.set_language(code)
+            for widget in receivers:
+                QApplication.sendEvent(widget, QEvent(QEvent.Type.LanguageChange))
+
+        # (accessor, English key): after a switch the widget text must equal
+        # say(key) in the current language, i.e. retranslateUi() has run.
+        probes = [
+            (lambda: w.database_menu.title(), "&Database"),
+            (lambda: w.help_menu.title(), "&Help"),
+            (lambda: w._radio_videos.text(), "Videos"),
+            (lambda: w.databases_page._title_label.text(), "Existing Databases"),
+            (lambda: w.videos_page._grouping_label.text(), "Grouping"),
+            (lambda: w.videos_page._selection_header_label.text(), "Selection"),
+            (
+                lambda: w.properties_page._new_property_group.title(),
+                "Create New Property",
+            ),
+            (lambda: w.files_page._scan_btn.text(), "Scan folders"),
+            (
+                lambda: w.files_page._files_model.headerData(
+                    0, Qt.Orientation.Horizontal
+                ),
+                "Path",
+            ),
+        ]
+
+        for code in ("en", "fr", "en"):
+            switch(code)
+            for accessor, key in probes:
+                assert accessor() == say(key), f"[{code}] {key!r}: {accessor()!r}"
+
+        # Guard against vacuously-true asserts: FR must differ from EN broadly.
+        switch("en")
+        en_vals = [accessor() for accessor, _ in probes]
+        switch("fr")
+        fr_vals = [accessor() for accessor, _ in probes]
+        assert sum(e != f for e, f in zip(en_vals, fr_vals)) >= 5
 
 
 # =============================================================================

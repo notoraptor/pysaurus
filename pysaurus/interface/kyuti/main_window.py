@@ -146,7 +146,7 @@ class MainWindow(QMainWindow):
         self._action_session_log = self.database_menu.addAction(
             say("Session &Log..."), self._show_session_log
         )
-        self.database_menu.addAction(say("&Quit"), self.close)
+        self._action_quit = self.database_menu.addAction(say("&Quit"), self.close)
 
         # View menu
         self.view_menu = QMenu(say("&View"), self)
@@ -237,13 +237,85 @@ class MainWindow(QMainWindow):
         self._language_group.triggered.connect(self._on_language_action)
 
         # Help menu
-        help_menu = QMenu(say("&Help"), self)
-        menu_bar.addMenu(help_menu)
+        self.help_menu = QMenu(say("&Help"), self)
+        menu_bar.addMenu(self.help_menu)
 
-        help_menu.addAction(say("&About"), self._show_about)
+        self._action_about = self.help_menu.addAction(say("&About"), self._show_about)
 
         # Initial state: database menu disabled
         self._update_database_menu_state()
+
+    def retranslateUi(self):
+        """Re-apply the text of every *static* piece of chrome in the current
+        language. Triggered by QEvent.LanguageChange (see changeEvent).
+
+        The construction keeps its say() calls (the text stays readable at the
+        call site), so this only *repeats* them for the persistent menu bar; it
+        is deliberately NOT called at startup. Dynamic page content is
+        retranslated on its own by refresh() via the state_changed signal.
+        """
+        # Menu titles
+        self.database_menu.setTitle(say("&Database"))
+        self.view_menu.setTitle(say("&View"))
+        self.options_menu.setTitle(say("&Options"))
+        self.page_size_menu.setTitle(say("&Page Size"))
+        self.language_menu.setTitle(say("&Language"))
+        self.help_menu.setTitle(say("&Help"))
+        # Database menu actions
+        self._action_rename_db.setText(say("&Rename Database..."))
+        self._action_edit_folders.setText(say("&Edit Folders..."))
+        self._action_update_db.setText(say("&Update Database"))
+        self._action_find_similar.setText(say("Find &Similar Videos"))
+        self._action_find_reencoded.setText(say("Find Re-&encoded Videos"))
+        self._action_close_db.setText(say("&Close Database"))
+        self._action_session_log.setText(say("Session &Log..."))
+        self._action_quit.setText(say("&Quit"))
+        # View menu actions
+        self._action_random_video.setText(say("&Random Video (Ctrl+O)"))
+        self._action_generate_playlist.setText(say("&Generate Playlist (Ctrl+L)"))
+        self._action_refresh_view.setText(say("Re&fresh View (Ctrl+R)"))
+        # Page selector radios
+        self._radio_videos.setText(say("Videos"))
+        self._radio_properties.setText(say("Properties"))
+        self._radio_files.setText(say("Files"))
+        # Options menu
+        self._action_confirm_not_found.setText(
+            say("Confirm &deletion for entries not found")
+        )
+        self._action_confirm_not_found.setToolTip(
+            say(
+                "When checked, show confirmation dialog before deleting entries"
+                " not found"
+            )
+        )
+        # Help menu
+        self._action_about.setText(say("&About"))
+        # Window title depends on the current page
+        self._update_window_title()
+
+    def changeEvent(self, event):
+        """Qt posts LanguageChange to every widget when a QTranslator is
+        installed or removed. That is our cue to re-pull the static chrome."""
+        if event.type() == QEvent.Type.LanguageChange:
+            self.retranslateUi()
+        super().changeEvent(event)
+
+    def _update_window_title(self):
+        """Set the window title from the current page — single source of truth,
+        shared by the show_*_page navigation and by retranslateUi()."""
+        index = self.stack.currentIndex()
+        if index == self.PAGE_DATABASES:
+            self.setWindowTitle(say("Pysaurus - Databases"))
+        elif index == self.PAGE_VIDEOS:
+            self.setWindowTitle(f"Pysaurus - {self.ctx.get_database_name()}")
+        elif index == self.PAGE_PROPERTIES:
+            self.setWindowTitle(
+                say("Pysaurus - Properties - {name}", name=self.ctx.get_database_name())
+            )
+        elif index == self.PAGE_FILES:
+            self.setWindowTitle(
+                say("Pysaurus - Files - {name}", name=self.ctx.get_database_name())
+            )
 
     def _connect_signals(self):
         """Connect signals from pages and context."""
@@ -351,6 +423,8 @@ class MainWindow(QMainWindow):
 
     def _on_state_changed(self):
         """Refresh the active page when backend state changes."""
+        if self._process_page is not None:
+            return  # a process page is showing; nothing under it to refresh
         current = self.stack.currentIndex()
         if current == self.PAGE_VIDEOS:
             self.videos_page.refresh()
@@ -638,14 +712,14 @@ class MainWindow(QMainWindow):
     def show_databases_page(self):
         """Navigate to databases page."""
         self.stack.setCurrentIndex(self.PAGE_DATABASES)
-        self.setWindowTitle(say("Pysaurus - Databases"))
+        self._update_window_title()
         self._update_menu_state()
 
     def show_videos_page(self):
         """Navigate to videos page."""
         if self.ctx.has_database():
             self.stack.setCurrentIndex(self.PAGE_VIDEOS)
-            self.setWindowTitle(f"Pysaurus - {self.ctx.get_database_name()}")
+            self._update_window_title()
             self.videos_page.refresh()
             self._update_menu_state()
         else:
@@ -655,9 +729,7 @@ class MainWindow(QMainWindow):
         """Navigate to properties page."""
         if self.ctx.has_database():
             self.stack.setCurrentIndex(self.PAGE_PROPERTIES)
-            self.setWindowTitle(
-                say("Pysaurus - Properties - {name}", name=self.ctx.get_database_name())
-            )
+            self._update_window_title()
             self.properties_page.refresh()
             self._update_menu_state()
         else:
@@ -667,9 +739,7 @@ class MainWindow(QMainWindow):
         """Navigate to the files page (DB file inventory)."""
         if self.ctx.has_database():
             self.stack.setCurrentIndex(self.PAGE_FILES)
-            self.setWindowTitle(
-                say("Pysaurus - Files - {name}", name=self.ctx.get_database_name())
-            )
+            self._update_window_title()
             self.files_page.refresh()
             self._update_menu_state()
         else:
@@ -693,20 +763,14 @@ class MainWindow(QMainWindow):
         )
 
     def _on_language_action(self, action: QAction):
-        """Handle language selection: switch, then note that a restart applies
-        the change to elements built once (menu bar, toolbars)."""
+        """Handle language selection. The switch is applied live: set_language
+        installs the Qt translator — which posts LanguageChange to every widget,
+        so each retranslateUi() re-pulls its static text — and emits
+        state_changed, which refreshes the active page's dynamic content."""
         code = action.data()
         if code == self.ctx.get_current_language():
             return
         self.ctx.set_language(code)
-        QMessageBox.information(
-            self,
-            say("Language"),
-            say(
-                "Language changed. Some elements will fully update after"
-                " restarting Pysaurus."
-            ),
-        )
 
     def closeEvent(self, event):
         """Handle window close event."""

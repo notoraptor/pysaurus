@@ -453,9 +453,9 @@ class VideosPage(QWidget):
         sources_section, sources_layout = self._create_filter_section(color_light)
         sources_header = QHBoxLayout()
         sources_header.setSpacing(2)
-        sources_label = QLabel(say("Sources"))
-        sources_label.setStyleSheet("font-weight: bold; background: transparent;")
-        sources_header.addWidget(sources_label)
+        self._sources_label = QLabel(say("Sources"))
+        self._sources_label.setStyleSheet("font-weight: bold; background: transparent;")
+        sources_header.addWidget(self._sources_label)
         sources_header.addStretch()
         self.btn_sources = QPushButton("⚙")
         self.btn_sources.setObjectName("settingsBtn")
@@ -484,9 +484,11 @@ class VideosPage(QWidget):
         grouping_section, grouping_layout = self._create_filter_section(color_lighter)
         grouping_header = QHBoxLayout()
         grouping_header.setSpacing(2)
-        grouping_label = QLabel(say("Grouping"))
-        grouping_label.setStyleSheet("font-weight: bold; background: transparent;")
-        grouping_header.addWidget(grouping_label)
+        self._grouping_label = QLabel(say("Grouping"))
+        self._grouping_label.setStyleSheet(
+            "font-weight: bold; background: transparent;"
+        )
+        grouping_header.addWidget(self._grouping_label)
         grouping_header.addStretch()
         self.btn_grouping = QPushButton("⚙")
         self.btn_grouping.setObjectName("settingsBtn")
@@ -527,10 +529,12 @@ class VideosPage(QWidget):
         self.classifier_section, classifier_layout = self._create_filter_section(
             color_light
         )
-        classifier_label = QLabel(say("Classifier Path"))
-        classifier_label.setStyleSheet("font-weight: bold; background: transparent;")
-        classifier_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        classifier_layout.addWidget(classifier_label)
+        self._classifier_label = QLabel(say("Classifier Path"))
+        self._classifier_label.setStyleSheet(
+            "font-weight: bold; background: transparent;"
+        )
+        self._classifier_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        classifier_layout.addWidget(self._classifier_label)
 
         # Path display area (vertical list of path values)
         self.classifier_path_widget = QWidget()
@@ -565,9 +569,9 @@ class VideosPage(QWidget):
         search_section, search_layout = self._create_filter_section(color_light)
         search_header = QHBoxLayout()
         search_header.setSpacing(2)
-        search_label = QLabel(say("Search"))
-        search_label.setStyleSheet("font-weight: bold; background: transparent;")
-        search_header.addWidget(search_label)
+        self._search_label = QLabel(say("Search"))
+        self._search_label.setStyleSheet("font-weight: bold; background: transparent;")
+        search_header.addWidget(self._search_label)
         search_header.addStretch()
         self.btn_search_clear = QPushButton("✕")
         self.btn_search_clear.setObjectName("clearBtn")
@@ -618,9 +622,9 @@ class VideosPage(QWidget):
         sorting_section, sorting_layout = self._create_filter_section(color_lighter)
         sorting_header = QHBoxLayout()
         sorting_header.setSpacing(2)
-        sorting_label = QLabel(say("Sorting"))
-        sorting_label.setStyleSheet("font-weight: bold; background: transparent;")
-        sorting_header.addWidget(sorting_label)
+        self._sorting_label = QLabel(say("Sorting"))
+        self._sorting_label.setStyleSheet("font-weight: bold; background: transparent;")
+        sorting_header.addWidget(self._sorting_label)
         sorting_header.addStretch()
         self.btn_sorting = QPushButton("⚙")
         self.btn_sorting.setObjectName("settingsBtn")
@@ -647,9 +651,11 @@ class VideosPage(QWidget):
         selection_section, selection_layout = self._create_filter_section(color_light)
         selection_header = QHBoxLayout()
         selection_header.setSpacing(2)
-        selection_label = QLabel(say("Selection"))
-        selection_label.setStyleSheet("font-weight: bold; background: transparent;")
-        selection_header.addWidget(selection_label)
+        self._selection_header_label = QLabel(say("Selection"))
+        self._selection_header_label.setStyleSheet(
+            "font-weight: bold; background: transparent;"
+        )
+        selection_header.addWidget(self._selection_header_label)
         selection_header.addStretch()
         self.btn_selection_settings = QPushButton("⚙")
         self.btn_selection_settings.setObjectName("settingsBtn")
@@ -698,9 +704,9 @@ class VideosPage(QWidget):
         # Title with classifier button
         groups_header = QHBoxLayout()
         groups_header.setSpacing(2)
-        groups_title = QLabel(say("Groups"))
-        groups_title.setStyleSheet("font-weight: bold; background: transparent;")
-        groups_header.addWidget(groups_title)
+        self._groups_title = QLabel(say("Groups"))
+        self._groups_title.setStyleSheet("font-weight: bold; background: transparent;")
+        groups_header.addWidget(self._groups_title)
         groups_header.addStretch()
 
         self.btn_add_to_classifier = QPushButton("✙")
@@ -897,6 +903,92 @@ class VideosPage(QWidget):
 
         layout.addStretch()
         return bar
+
+    def retranslateUi(self):
+        """Re-apply the text of every *static* piece of chrome in the current
+        language. Triggered by QEvent.LanguageChange (see changeEvent).
+
+        The construction keeps its say() calls (the text stays readable at the
+        call site), so this only *repeats* them for the persistent sidebar
+        section headers, the fixed filter/pagination buttons and their
+        tooltips; it is deliberately NOT called at startup. Dynamic content
+        (video list, selection count, sources/grouping/sorting info, page
+        indicator, stats, groups list) is retranslated on its own by refresh()
+        via the state_changed signal.
+        """
+        # Sources section
+        self._sources_label.setText(say("Sources"))
+        self.btn_sources.setToolTip(say("Edit video sources (Ctrl+T)"))
+        self.btn_sources_clear.setToolTip(
+            say("Reset to default sources (Ctrl+Shift+T)")
+        )
+        # Grouping section
+        self._grouping_label.setText(say("Grouping"))
+        self.btn_grouping.setToolTip(say("Configure video grouping (Ctrl+G)"))
+        self.btn_grouping_clear.setToolTip(say("Remove grouping (Ctrl+Shift+G)"))
+        self.btn_confirm_unique_moves.setText(say("Confirm all unique moves"))
+        self.btn_confirm_unique_moves.setToolTip(
+            say("Automatically confirm all moves with a single destination")
+        )
+        # Classifier Path section
+        self._classifier_label.setText(say("Classifier Path"))
+        self.btn_classifier_reverse.setText(say("Reverse"))
+        self.btn_classifier_reverse.setToolTip(say("Reverse the order of path values"))
+        self.btn_classifier_concat.setText(say("Concat..."))
+        self.btn_classifier_concat.setToolTip(
+            say("Concatenate path values into a string property")
+        )
+        # Search section
+        self._search_label.setText(say("Search"))
+        self.btn_search_clear.setToolTip(say("Clear search (Ctrl+Shift+F)"))
+        self.search_input.setPlaceholderText(say("Search... (Ctrl+F)"))
+        self.search_input.setToolTip(say("Search videos (Ctrl+F)"))
+        self.btn_search_and.setText(say("AND"))
+        self.btn_search_and.setToolTip(say("Search for all terms"))
+        self.btn_search_or.setText(say("OR"))
+        self.btn_search_or.setToolTip(say("Search for any term"))
+        self.btn_search_exact.setText(say("Exact"))
+        self.btn_search_exact.setToolTip(say("Search for exact sentence"))
+        self.btn_search_id.setText(say("ID"))
+        self.btn_search_id.setToolTip(say("Search by video ID"))
+        # Sorting section
+        self._sorting_label.setText(say("Sorting"))
+        self.btn_sorting.setToolTip(say("Configure video sorting (Ctrl+Shift+S)"))
+        self.btn_sorting_clear.setToolTip(say("Reset to default sorting"))
+        # Selection section
+        self._selection_header_label.setText(say("Selection"))
+        self.btn_selection_settings.setToolTip(say("Selection actions"))
+        self.btn_selection_clear.setToolTip(say("Clear selection (Escape)"))
+        self.btn_select_page.setText(say("Page"))
+        self.btn_select_page.setToolTip(
+            say("Select all videos on current page (Ctrl+A)")
+        )
+        self.btn_select_all.setText(say("All"))
+        self.btn_select_all.setToolTip(
+            say("Select all videos in current view (Ctrl+Shift+A)")
+        )
+        # Groups panel
+        self._groups_title.setText(say("Groups"))
+        self.btn_add_to_classifier.setToolTip(
+            say("Add current group to classifier path")
+        )
+        self.btn_first_group.setToolTip(say("First group"))
+        self.btn_prev_group.setToolTip(say("Previous group (Up arrow)"))
+        self.btn_next_group.setToolTip(say("Next group (Down arrow)"))
+        self.btn_last_group.setToolTip(say("Last group"))
+        # Pagination bar
+        self.btn_first.setToolTip(say("First page (Home)"))
+        self.btn_prev.setToolTip(say("Previous page (Left arrow)"))
+        self.page_button.setToolTip(say("Click to go to a specific page"))
+        self.btn_next.setToolTip(say("Next page (Right arrow)"))
+        self.btn_last.setToolTip(say("Last page (End)"))
+
+    def changeEvent(self, event):
+        """Qt posts LanguageChange to every widget when a QTranslator is
+        installed or removed. That is our cue to re-pull the static chrome."""
+        if event.type() == QEvent.Type.LanguageChange:
+            self.retranslateUi()
+        super().changeEvent(event)
 
     def refresh(self):
         """Refresh the video list."""

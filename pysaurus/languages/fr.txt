@@ -506,10 +506,6 @@ Info_d3acbd7e36ad7e89
 	Info
 InvalidDefaultValueForTypePropType_e2fc4b825a69c45
 	Valeur par défaut invalide pour le type {prop_type}.
-LanguageChangedSomeElementsWillFullyUpdateAfterRestartingPysaurus_aebc685db3ccbc0a
-	Langue modifiée. Certains éléments ne seront pleinement mis à jour qu'après le redémarrage de Pysaurus.
-Language_b52cf743a80759db
-	Langue
 Language_c9b2abbb5447bff
 	&Langue
 LastGroup_e2e13091b918e83c
@@ -673,6 +669,8 @@ PageSize_eb94aa40282346fb
 	Taille de &page
 Page_96e5bf7e14370d0c
 	Page
+Path_96e5ac7e1436ed48
+	Chemin
 PermanentlyDeleteThisVideoThisActionCannotBeUndoneTheFileWillBeDeletedFromDisk_b38e9db0d26860d5
 	Supprimer DÉFINITIVEMENT cette vidéo ?
 	
@@ -945,6 +943,8 @@ Single_c20aa6c1a5b6290d
 	unique
 Size_16021b2387e0b7ec
 	Taille :
+Size_7d0b417e059be1d2
+	Taille
 SkippedFileSWereAlreadyInTheList_2a5857c9bd85fa04
 	{skipped} fichier(s) étaient déjà dans la liste.
 SomeFilesAlreadyInList_74a538c10aaf0a2b
