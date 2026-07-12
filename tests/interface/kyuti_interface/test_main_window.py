@@ -81,6 +81,18 @@ class QMockAppContext(QObject):
     def get_database_names(self) -> list[str]:
         return self._database_names
 
+    def get_available_languages(self) -> list[str]:
+        return ["en", "fr"]
+
+    def get_current_language(self) -> str:
+        return "en"
+
+    def get_language_display_name(self, code: str) -> str:
+        return {"en": "English", "fr": "français"}.get(code, code)
+
+    def set_language(self, code: str) -> None:
+        pass
+
     def get_source_expression(self) -> str | None:
         return None
 
@@ -418,6 +430,26 @@ class TestOptionsMenu:
         assert main_window.videos_page._show_only_selected
         main_window.videos_page._toggle_show_only_selected(False)
         assert not main_window.videos_page._show_only_selected
+
+    def test_language_menu(self, main_window):
+        actions = main_window.language_menu.actions()
+        by_code = {a.data(): a for a in actions}
+        assert set(by_code) == {"en", "fr"}
+        assert by_code["en"].text() == "English"
+        assert by_code["fr"].text() == "français"
+        # Exclusive group, current language (en) checked.
+        assert main_window._language_group.isExclusive()
+        assert [a.data() for a in actions if a.isChecked()] == ["en"]
+
+    def test_language_action_switches(self, main_window, monkeypatch):
+        monkeypatch.setattr(mw_module.QMessageBox, "information", lambda *a, **k: None)
+        switched = []
+        main_window.ctx.set_language = lambda code: switched.append(code)
+        action = next(
+            a for a in main_window.language_menu.actions() if a.data() == "fr"
+        )
+        main_window._on_language_action(action)
+        assert switched == ["fr"]
 
 
 # =============================================================================

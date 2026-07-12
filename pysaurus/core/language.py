@@ -17,6 +17,7 @@ language, keyed by ``key_of`` derived keys). They are maintained offline by
 the static extraction script (``uv run poe i18n``), never written at runtime.
 """
 
+import json
 import logging
 
 from pysaurus import package_dir
@@ -98,6 +99,29 @@ def get_language() -> str:
 def canonical_language(name: str) -> str:
     """Normalize a legacy full-name identifier to its ISO 639-1 code."""
     return LEGACY_LANGUAGE_ALIASES.get(name, name)
+
+
+def display_name(code: str) -> str:
+    """Human-readable endonym for a language code (falls back to the code).
+
+    Reads the generated `language_names.json` (see
+    `pysaurus/scripts/generate_language_names.py`).
+    """
+    return _language_names().get(code, {}).get("native", code)
+
+
+def _language_names() -> dict[str, dict[str, str]]:
+    global _language_names_cache
+    if _language_names_cache is None:
+        path = AbsolutePath.join(package_dir(), "languages", "language_names.json")
+        if path.isfile():
+            _language_names_cache = json.loads(path.read_binary_file().decode("utf-8"))
+        else:
+            _language_names_cache = {}
+    return _language_names_cache
+
+
+_language_names_cache: dict[str, dict[str, str]] | None = None
 
 
 def available_languages(folder: PathType | None = None) -> list[str]:

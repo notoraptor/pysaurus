@@ -219,6 +219,23 @@ class MainWindow(QMainWindow):
             self._on_confirm_not_found_changed
         )
 
+        self.options_menu.addSeparator()
+
+        # Language submenu (one exclusive checkable action per available code)
+        self.language_menu = self.options_menu.addMenu(say("&Language"))
+        self._language_group = QActionGroup(self)
+        self._language_group.setExclusive(True)
+        current_language = self.ctx.get_current_language()
+        for code in self.ctx.get_available_languages():
+            action = QAction(self.ctx.get_language_display_name(code), self)
+            action.setCheckable(True)
+            action.setData(code)
+            if code == current_language:
+                action.setChecked(True)
+            self._language_group.addAction(action)
+            self.language_menu.addAction(action)
+        self._language_group.triggered.connect(self._on_language_action)
+
         # Help menu
         help_menu = QMenu(say("&Help"), self)
         menu_bar.addMenu(help_menu)
@@ -673,6 +690,22 @@ class MainWindow(QMainWindow):
         state = say("enabled") if checked else say("disabled")
         self.status_bar.showMessage(
             say("Confirm deletion for 'not found' entries: {state}", state=state), 3000
+        )
+
+    def _on_language_action(self, action: QAction):
+        """Handle language selection: switch, then note that a restart applies
+        the change to elements built once (menu bar, toolbars)."""
+        code = action.data()
+        if code == self.ctx.get_current_language():
+            return
+        self.ctx.set_language(code)
+        QMessageBox.information(
+            self,
+            say("Language"),
+            say(
+                "Language changed. Some elements will fully update after"
+                " restarting Pysaurus."
+            ),
         )
 
     def closeEvent(self, event):

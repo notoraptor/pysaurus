@@ -506,6 +506,12 @@ Info_d3acbd7e36ad7e89
 	Info
 InvalidDefaultValueForTypePropType_e2fc4b825a69c45
 	Invalid default value for type {prop_type}.
+LanguageChangedSomeElementsWillFullyUpdateAfterRestartingPysaurus_aebc685db3ccbc0a
+	Language changed. Some elements will fully update after restarting Pysaurus.
+Language_b52cf743a80759db
+	Language
+Language_c9b2abbb5447bff
+	&Language
 LastGroup_e2e13091b918e83c
 	Last group
 LastPageEnd_558913873f3de89a

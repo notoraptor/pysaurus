@@ -11,6 +11,7 @@ from searchexp.errors import ExpressionError
 from send2trash import send2trash
 
 from pysaurus.application.exceptions import PysaurusError
+from pysaurus.core import language
 from pysaurus.core.job_notifications import JobStep, JobToDo
 from pysaurus.core.notifications import (
     Cancelled,
@@ -23,6 +24,7 @@ from pysaurus.core.notifications import (
 )
 from pysaurus.database.saurus.video_mega_group import _compile_source_expression
 from pysaurus.interface.kyuti.kyuti_api import KyutiAPI
+from pysaurus.interface.kyuti.qt_translation import QtStandardTranslations
 from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
@@ -81,6 +83,10 @@ class AppContext(QObject):
 
         # Set callback for exceptions from background threads
         self._api.set_exception_callback(self._on_exception_from_thread)
+
+        # Install Qt's built-in translations for the current language.
+        self._qt_translations = QtStandardTranslations()
+        self._qt_translations.apply(self._application.config.language)
 
     def set_notification_handler(self, handler):
         """
@@ -196,6 +202,28 @@ class AppContext(QObject):
     def get_database_names(self) -> list[str]:
         """List of database names."""
         return self._api.application.get_database_names()
+
+    # =========================================================================
+    # Language
+    # =========================================================================
+
+    def get_available_languages(self) -> list[str]:
+        """Installed language codes (ISO 639-1)."""
+        return language.available_languages()
+
+    def get_current_language(self) -> str:
+        """Current language code."""
+        return self._application.config.language
+
+    def get_language_display_name(self, code: str) -> str:
+        """Human-readable endonym for a language code."""
+        return language.display_name(code)
+
+    def set_language(self, code: str) -> None:
+        """Switch language: persist, load catalogs, install Qt translations."""
+        self._application.set_language(code)
+        self._qt_translations.apply(code)
+        self.state_changed.emit()
 
     def create_database(
         self, name: str, folders: list[str], update: bool = True
