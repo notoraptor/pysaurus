@@ -84,6 +84,7 @@ asyncio_default_fixture_loop_scope = "function"
 [tool.poe.tasks]
 format = "ruff format"
 lint = "ruff check --fix"
+i18n = "python -m pysaurus.scripts.extract_language"
 typecheck = """ty check --output-format concise \
     pysaurus/application \
     pysaurus/core \
@@ -95,7 +96,8 @@ typecheck = """ty check --output-format concise \
     pysaurus/interface/console \
     pysaurus/interface/videroid \
     pysaurus/properties \
+    pysaurus/scripts \
     pysaurus/video \
     pysaurus/video_raptor \
     pysaurus/*.py"""
-check = ["format", "lint", "typecheck"]
+check = ["format", "lint", "i18n", "typecheck"]

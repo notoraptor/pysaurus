@@ -5,7 +5,7 @@ class PysaurusError(ApplicationError):
     pass
 
 
-class MissingLanguageFile(PysaurusError):
+class UnknownLanguage(PysaurusError):
     pass
 
 

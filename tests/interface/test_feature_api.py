@@ -13,8 +13,10 @@ import shutil
 
 import pytest
 
+from pysaurus.application import exceptions
 from pysaurus.application.application import Application
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.language import say
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database_operations import DatabaseOperations
 from pysaurus.interface.api.feature_api import FeatureAPI
@@ -59,7 +61,6 @@ class TestFeatureAPIConstants:
         assert "PYTHON_DEFAULT_SOURCES" in constants
         assert "PYTHON_APP_NAME" in constants
         assert "PYTHON_FEATURE_COMPARISON" in constants
-        assert "PYTHON_LANG" in constants
         assert "PYTHON_LANGUAGE" in constants
 
 
@@ -75,8 +76,23 @@ class TestFeatureAPIApplication:
         """Test getting list of language names."""
         names = feature_api.__run_feature__("get_language_names")
         assert isinstance(names, list)
-        # Languages might be empty if _handle_languages() wasn't called
-        # This is OK for interface testing
+        assert {"english", "français"}.issubset(names)
+
+    def test_set_language(self, feature_api_with_db):
+        """Test switching language: config saved, catalog loaded."""
+        api = feature_api_with_db
+        assert api.application.config.language == "english"
+        api.__run_feature__("set_language", "français")
+        assert api.application.config.language == "français"
+        assert say("Move") == "Déplacement"
+        assert say("Unknown text") == "Unknown text"
+
+    def test_set_language_unknown_name_rejected(self, feature_api_with_db):
+        """An unknown language name must raise and leave the config untouched."""
+        api = feature_api_with_db
+        with pytest.raises(exceptions.UnknownLanguage):
+            api.__run_feature__("set_language", "klingon")
+        assert api.application.config.language == "english"
 
 
 class TestFeatureAPIDatabase:

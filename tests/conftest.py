@@ -2,6 +2,7 @@ import os
 
 import pytest
 
+from pysaurus.core import language
 from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
 from tests.mocks.mock_database import MockDatabase
 from tests.utils import TEST_HOME_DIR, get_saurus_sql_database
@@ -10,6 +11,13 @@ EXAMPLE_DB_NAME = "example_db_in_pysaurus"
 EXAMPLE_DB_FOLDER = os.path.join(
     TEST_HOME_DIR, ".Pysaurus", "databases", EXAMPLE_DB_NAME
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_language():
+    """The language catalog is module-global state: start each test from default."""
+    language.set_language(language.DEFAULT_LANGUAGE)
+    yield
 
 
 @pytest.fixture

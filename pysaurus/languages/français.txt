@@ -1,0 +1,14 @@
+CollectVideosInfo_10411a2218cfc565
+	Collecte des informations des vidéos
+CollectVideos_7a2903014b8ebda3
+	Collecte des vidéos
+ErrorNameMessage_d2cde00e44626a9b
+	Erreur {name} : {message}
+GeneratingMiniatures_8110d724ea222712
+	Génération des miniatures.
+Move_b37c3b7e2524ded2
+	Déplacement
+NumpyImagesComparison_913b9ae4ae91effb
+	Comparaison d'images Numpy
+SaveThumbnailsToDb_366bc3c6696f832
+	sauvegarde des vignettes en base de données

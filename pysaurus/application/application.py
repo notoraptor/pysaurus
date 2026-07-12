@@ -1,30 +1,18 @@
-import logging
-import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
 
 import ujson as json
 
-from pysaurus import package_dir
 from pysaurus.application import exceptions
-from pysaurus.application.language.default_language import (
-    DefaultLanguage,
-    language_to_dict,
-)
-from pysaurus.application.language.language import Language
-from pysaurus.core import functions
+from pysaurus.core import functions, language
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
-from pysaurus.core.dict_file_format import dff_dump, dff_load
-from pysaurus.core.language import say
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.database import Database
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -37,11 +25,9 @@ class Application:
         "home_dir",
         "app_dir",
         "dbs_dir",
-        "lang_dir",
         "config_path",
         "config",
         "databases",
-        "languages",
         "notifier",
     )
     app_name = "Pysaurus"
@@ -56,14 +42,12 @@ class Application:
         self.home_dir = home_dir
         self.app_dir = (self.home_dir / f".{self.app_name}").mkdir()
         self.dbs_dir = (self.app_dir / "databases").mkdir()
-        self.lang_dir = (self.app_dir / "languages").mkdir()
         self.config_path = self.app_dir / "config.json"
         self.config = Config()
         self.databases: dict[AbsolutePath, AbstractDatabase | None] = {}
-        self.languages: dict[AbsolutePath, DefaultLanguage | None] = {}
         self.notifier = notifier
         # Load database names.
-        for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
+        for entry in FileSystem.scandir(self.dbs_dir.path):
             if entry.is_dir() and not entry.name.startswith("."):
                 self.databases[AbsolutePath(entry.path)] = None
 
@@ -71,56 +55,7 @@ class Application:
         if self.config_path.exists():
             assert self.config_path.isfile()
             self.config = Config(**parse_json(self.config_path))
-        say.set_language(self.config.language)
-        say.set_folder((self.app_dir / "lang").mkdir())
-
-    def _handle_languages(self):
-        # Load language names.
-        for entry in FileSystem.scandir(self.lang_dir.path):  # type: os.DirEntry
-            path = AbsolutePath(entry.path)
-            if path.isfile() and path.extension == "txt":
-                self.languages[path] = None
-
-        # Load default languages names.
-        for entry in FileSystem.scandir(
-            os.path.join(package_dir(), "application", "language", "default")
-        ):
-            path = AbsolutePath(entry.path)
-            if path.isfile() and path.extension == "txt":
-                logger.info(f"Checking embedded language {path.title}")
-                user_path = self.lang_dir / path.get_basename()
-                if user_path in self.languages:
-                    if user_path.get_date_modified() < path.get_date_modified():
-                        user_path.delete()
-                        path.copy_file_to(user_path)
-                        logger.info(f"Updated embedded language {path.title}")
-                    else:
-                        logger.info(f"User language more up-to-date {path.title}")
-                else:
-                    path.copy_file_to(user_path)
-                    self.languages[user_path] = None
-                    logger.info(f"Installed embedded language {path.title}")
-
-        # Load language.
-        lang_path = self.lang_dir / f"{self.config.language}.txt"
-        if lang_path not in self.languages:
-            if self.config.language == DefaultLanguage.__language__:
-                logger.debug(f"[Default language] {DefaultLanguage.__language__}")
-                dff_dump(language_to_dict(DefaultLanguage, extend=False), lang_path)
-            else:
-                raise exceptions.MissingLanguageFile(self.config.language)
-        self.languages[lang_path] = self._load_lang(lang_path)
-
-    def _load_lang(self, lang_path: AbsolutePath):
-        lang = Language(dff_load(lang_path), self.config.language)
-        if lang.__updated__:
-            logger.info(f"[language updated] {lang_path.title}")
-            dff_dump(language_to_dict(lang, extend=False), lang_path)
-        return lang
-
-    @property
-    def lang(self) -> DefaultLanguage | None:
-        return self.languages[(self.lang_dir / f"{self.config.language}.txt")]
+        language.set_language(self.config.language)
 
     def get_database_names(self) -> list[str]:
         return sorted(path.title for path in self.databases.keys())
@@ -166,25 +101,15 @@ class Application:
             path.delete()
             return True
 
-    def get_language_paths(self) -> list[AbsolutePath]:
-        return sorted(self.languages.keys())
-
     def get_language_names(self) -> list[str]:
-        return sorted(path.title for path in self.languages.keys())
+        return language.available_languages()
 
-    def open_language(self, lang_path: AbsolutePath) -> DefaultLanguage:
-        lang_path = AbsolutePath.ensure(lang_path)
-        assert lang_path in self.languages
-        self.config.language = lang_path.title
-        if not self.languages[lang_path]:
-            self.languages[lang_path] = self._load_lang(lang_path)
+    def set_language(self, name: str) -> None:
+        if name not in language.available_languages():
+            raise exceptions.UnknownLanguage(name)
+        self.config.language = name
         self.save_config()
-        lang = self.lang
-        assert lang is not None
-        return lang
-
-    def open_language_from_name(self, name: str) -> DefaultLanguage:
-        return self.open_language(self.lang_dir / f"{name}.txt")
+        language.set_language(name)
 
     def save_config(self):
         with open(self.config_path.path, "w") as file:

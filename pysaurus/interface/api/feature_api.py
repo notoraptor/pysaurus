@@ -4,7 +4,6 @@ from typing import Any
 
 from pysaurus.application import exceptions
 from pysaurus.application.application import Application
-from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.classes import Selector, StringPrinter
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
 from pysaurus.core.file_utils import create_xspf_playlist
@@ -42,8 +41,7 @@ class FeatureAPI:
             "PYTHON_DEFAULT_SOURCES": PYTHON_DEFAULT_SOURCES,
             "PYTHON_APP_NAME": self.application.app_name,
             "PYTHON_FEATURE_COMPARISON": True,
-            "PYTHON_LANG": "english",
-            "PYTHON_LANGUAGE": "english",
+            "PYTHON_LANGUAGE": self.application.config.language,
         }
         # We must return value for proxy ending with "!"
         self._proxies: dict[str, ProxyFeature] = {
@@ -60,6 +58,7 @@ class FeatureAPI:
             "fill_property_with_terms": FromAlgo(self, Algo.fill_property_with_terms),
             "get_database_names": FromApp(self, Application.get_database_names, True),
             "get_language_names": FromApp(self, Application.get_language_names, True),
+            "set_language": FromApp(self, Application.set_language),
             "move_property_values": FromAlgo(self, Algo.move_property_values),
             "open_video": FromOps(self, Ops.open_video),
             "mark_as_read": FromOps(self, Ops.mark_as_read, True),
@@ -99,10 +98,6 @@ class FeatureAPI:
     # cannot make proxy
     def get_constants(self) -> dict[str, Any]:
         return self._constants
-
-    # cannot make proxy ?
-    def set_language(self, name) -> dict[str, str]:
-        return language_to_dict(self.application.open_language_from_name(name))
 
     # View methods (previously FromView proxies)
 

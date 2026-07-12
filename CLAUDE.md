@@ -43,7 +43,7 @@ uv run ty check
 # Type check (subset used by CI — excludes kyuti/)
 uv run poe typecheck
 
-# Run all checks (format + lint + typecheck subset)
+# Run all checks (format + lint + i18n extraction + typecheck subset)
 uv run poe check
 ```
 
@@ -148,6 +148,12 @@ Standalone parser for structured search expressions (e.g. `width > 1080 and "eng
 ### Properties System
 
 `properties/properties.py` — typed property definitions (bool, int, float, str) with support for multiple values and enumeration.
+
+### Internationalization (i18n)
+
+- `pysaurus/core/language.py` — `say("English literal", **placeholders)` translates user-facing strings; the English source text itself is the key (à la Qt `tr()`). Read-only at runtime: the catalog is loaded once at startup (`Application.__init__`) and swapped atomically on language change (`Application.set_language`, persisted in `config.json`).
+- Catalogs live in `pysaurus/languages/` (dff format; `english.txt` is the generated reference). Regenerate with `uv run poe i18n`: statically scans `say(...)` calls (lupdate-style), merges new/obsolete keys into translation files (orphaned translations move to `<lang>.obsolete.txt`, never silently lost), and validates `{placeholders}`.
+- The first argument of `say(...)` must be a string literal without trailing whitespace, and `say` must be imported unaliased (`from pysaurus.core.language import say`) — the extraction script fails otherwise; dynamic parts go through `**placeholders`. Switching to an unknown language name raises `UnknownLanguage` (`Application.set_language` validates against `available_languages()`).
 
 ### Image Similarity Search
 
