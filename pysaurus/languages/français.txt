@@ -1,14 +1,1081 @@
+1Source_d141516b21b54d21
+	1 source
+AboutPysaurus_d9dbfc63612f91f0
+	À propos de Pysaurus
+About_2e48ec56391750f8
+	À &propos
+Actions_744b2f6cfba0a278
+	Actions :
+Actions_9a6e97866e0a5fb6
+	Actions
+ActivityLog_3053f2b51ef737aa
+	Journal d'activité :
+AddAll_db7b6e4fe2323889
+	Tout ajouter →
+AddAscending_86fdf39cf6764050
+	Ajouter en ordre croissant
+AddCurrentGroupToClassifierPath_9aa90b20a6d46f37
+	Ajouter le groupe actuel au chemin du classificateur
+AddDescending_7c0c0a12b270e7f4
+	Ajouter en ordre décroissant
+AddField_4700b0b041cefb60
+	Ajouter un champ :
+AddFile_5ae57374b6930e98
+	Ajouter un fichier
+AddFile_6bbe1d086834759a
+	Ajouter un fichier...
+AddFolder_74c2752bf9f0e814
+	Ajouter un dossier...
+AddFolder_aafd59f14ef3b08a
+	Ajouter un dossier
+AddValue_786ecece3b09f995
+	Ajouter une valeur
+Add_503d44e1a8be8d95
+	Ajouter ↓
+Add_503d44e1a8be8d97
+	Ajouter ↑
+Add_d86fd0186b52e59e
+	Ajouter
+Advanced_8b4555fb47a8a2bb
+	Avancé :
+Advanced_bd7c3d69eb9128fb
+	Avancé
+AllCountEmptyFolderS_150aef3bbde4b0dc
+	les {count} dossier(s) vide(s)
+AllCountExtFileS_1ce3094697444f9c
+	les {count} fichier(s) .{ext}
+AllCountFileSWithNoExtension_7a135ec88ea754ff
+	les {count} fichier(s) sans extension
+AllFiles_eb285c6c53b36f6b
+	Tous les fichiers
+AllReadable_3f4263d268871dbe
+	Toutes lisibles
+AllSources_7db34dbbad1aab80
+	Toutes les sources
+AllVideosWillBeAffected_d85b9815ed7d7c0f
+	Toutes les vidéos seront affectées.
+All_d86fc8186b52d80e
+	Tout
+AllowMultipleValues_13b3e1f3bb044b6e
+	Autoriser les valeurs multiples
+AllowSingletons_9cef7b685c53d54a
+	Autoriser les singletons
+AlreadyInList_6f6c0d4612a8e3d0
+	Déjà dans la liste
+AnUnexpectedErrorOccurredNameMessage_b791a25984b991a8
+	Une erreur inattendue s'est produite :
+	
+	{name} : {message}
+And_d86fe6186b530b18
+	ET
+ApplyModNameToAllValues_bf2274a929c4cc8d
+	Appliquer '{mod_name}' à toutes les valeurs
+ApplyModifierToAllValuesOfPropNameThisWillModifyValuesAcrossAllVideos_f338572d3d4390ad
+	Appliquer '{modifier}' à TOUTES les valeurs de '{prop_name}' ?
+	
+	Cela modifiera les valeurs dans toutes les vidéos.
+ApplyModifier_cfdd393ffaf1c14c
+	Appliquer {modifier}
+ApplyToAllValues_8c04c051203c35b3
+	Appliquer à toutes les valeurs :
+Apply_7a740db91ac3feeb
+	Appliquer
+AreYouSureYouWantToDeleteName_e6921d27f8d1f88a
+	Êtes-vous sûr de vouloir supprimer '{name}' ?
+AreYouSureYouWantToDeletePropertyNameThisWillRemoveAllValuesForThisPropertyFromAllVideos_28174a1e99b648f7
+	Êtes-vous sûr de vouloir supprimer la propriété '{name}' ?
+	
+	Cela retirera toutes les valeurs de cette propriété de toutes les vidéos.
+AreYouSureYouWantToQuit_8288c1bb87041abf
+	Êtes-vous sûr de vouloir quitter ?
+Audio_5e1ee8b2642f9f21
+	Audio :
+Audio_a5ebf7b9336e28f9
+	Audio
+AutomaticallyConfirmAllMovesWithASingleDestination_95a54ae5a4751f04
+	Confirmer automatiquement tous les déplacements avec une seule destination
+BPropNameBTypeTypeNameMultipleMultiple_6683939c8708d45c
+	<b>{prop_name}</b> (type : {type_name}, multiple : {multiple})
+BackToVideos_b65ea6f55d8de221
+	< Retour aux vidéos
+BitRateS_21b2387294a6366d
+	{bit_rate}/s
+BitRate_b81a86f6e5b28df6
+	Débit binaire :
+ByFieldValueLength_46945dcd6b1a2e2f
+	Par longueur de la valeur du champ
+ByFieldValue_8f9ba538d57e90d5
+	Par valeur du champ
+ByVideoCount_b729bc221feea9da
+	Par nombre de vidéos
+ByteRate_4ae6dd608b63429f
+	Débit
+CancelAllAdditions_87c4bc08e92a21
+	Annuler tous les ajouts
+CancelAll_6ac0345cdd52f76
+	← Tout annuler
+Cancel_96e29103278da1e3
+	Annuler
+Channels_44d502bc3e71fb8d
+	Canaux :
+CheckToSetNameForAllSelectedVideos_c2c87194e7a87a2c
+	Cocher pour définir {name} pour toutes les vidéos sélectionnées
+ClassifierPath_92b466874784457f
+	Chemin du classificateur
+ClearGrouping_f45dccb00f5a0387
+	Effacer le regroupement
+ClearSearchCtrlShiftF_edc110fb736ca76
+	Effacer la recherche (Ctrl+Shift+F)
+ClearSelectionEscape_178d278875fc6900
+	Effacer la sélection (Échap)
+Clear_672072ac7eb4ec70
+	Effacer
+ClickContinueToProceed_b5b1cca61be91d77
+	Cliquez sur 'Continuer' pour poursuivre
+ClickToGoToASpecificPage_accd159b3809097
+	Cliquer pour aller à une page précise
+ClickToOpenVideo_f77dea2a18612e57
+	Cliquer pour ouvrir la vidéo
+CloseDatabaseName_3c81de1488612d8
+	Fermer la base de données '{name}' ?
+CloseDatabase_b8fd13aea5ab6162
+	&Fermer la base de données
+CloseDatabase_d6484eff04a7138e
+	Fermer la base de données
+CodecDescription_de29b28991847e23
+	Description du codec :
+Codec_4763ed37f91979cd
+	Codec :
 CollectVideosInfo_10411a2218cfc565
 	Collecte des informations des vidéos
 CollectVideos_7a2903014b8ebda3
 	Collecte des vidéos
+Concat_507981a9d0d42dc9
+	Concaténer...
+ConcatenatePathValuesIntoAStringProperty_25df9b25bca609a
+	Concaténer les valeurs du chemin dans une propriété de type chaîne
+ConcatenatePath_2102e936a9eb06cd
+	Concaténer le chemin
+ConcatenateValuesIntoOne_12d1c68c2bd99b38
+	Concaténer les valeurs en une seule
+ConfigureVideoGroupingCtrlG_8900e4f5eb5443ad
+	Configurer le regroupement des vidéos (Ctrl+G)
+ConfigureVideoSortingCtrlShiftS_f1d58c30fd35b76f
+	Configurer le tri des vidéos (Ctrl+Shift+S)
+ConfirmAllUniqueMoves_2b5e7cfc43dbded5
+	Confirmer tous les déplacements uniques
+ConfirmAllUniqueMoves_b195ed24f3ecf675
+	Confirmer tous les déplacements uniques
+ConfirmDeletionForEntriesNotFound_e3e1c3b0be379841
+	&Demander avant de supprimer les entrées non trouvées
+ConfirmDeletionForNotFoundEntriesState_f7a5b88ac5f7b12c
+	Demander avant de supprimer les entrées 'non trouvées' : {state}
+ConfirmMoveTo_cf719c48ee647f89
+	Confirmer le déplacement vers
+ConfirmMove_2552219ef9624446
+	Confirmer le déplacement
+ConfirmRemoval_f6d727b86342ad47
+	Confirmer le retrait
+ConfirmedCountVideoMoveS_837b13f43758f559
+	{count} déplacement(s) de vidéo confirmé(s)
+Container_dab3750d3a516d40
+	Conteneur :
+Continue_27821035e5ce3052
+	Continuer
+ConvertNameToTarget_3b99c5e257130630
+	Convertir '{name}' en {target} ?
+ConvertProperty_1c659f646a454cb9
+	Convertir la propriété
+ConvertToMultipleValues_c0a03dc9462634a7
+	Convertir en valeurs multiples
+ConvertToSingleValue_f4ae599bc4ad33f4
+	Convertir en valeur unique
+CopyBTitleBIntoPropertyForCountOtherVideoS_18417d01fa6aac01
+	Copier <b>{title}</b> dans la propriété pour {count} autre(s) vidéo(s) :
+CopyFilePath_5b1d27ebea18d101
+	Copier le chemin du fichier
+CopyFileTitle_59216abb20252086
+	Copier le titre du fichier
+CopyTitle_ef89980224aea5b4
+	Copier le titre
+CopyValue_ca1406f065261ba1
+	Copier la valeur
+CopyVideoId_3e8ce37f53ace92a
+	Copier l'identifiant vidéo
+Copy_a28bf7e5640917a
+	Copier
+CountFileSWereAlreadyInTheList_e6602531ff0831f7
+	{count} fichier(s) étaient déjà dans la liste.
+CountFileS_8b17fa05eba49bb0
+	{count} fichier(s)
+CountGroups_1c0afa3f8df3e182
+	{count} groupes
+CountIndexedVideos_6bc4f2cb034d2b8b
+	{count} vidéos indexées
+CountMore_3653cc0a049eba47
+	… (+{count} autres)
+CountOtherFilesSize_8b0780cdae4e9425
+	{count} autres fichiers ({size})
+CountSelected_b15d1c0400d35e9d
+	{count} sélectionnée(s)
+CountSources_17b2497302c11220
+	{count} sources
+CountUnknownVideos_7c9330fb255dd764
+	{count} vidéos inconnues
+CountVideoSRemovedFromDatabase_cbf87f024b1082ba
+	{count} vidéo(s) retirée(s) de la base de données
+CountVideosSizeDuration_cedc7f3c42eeac6d
+	{count} vidéos | {size} | {duration}
+Count_83d8eeac8fbfa3c2
+	Nombre
+CreateDatabaseNameWithCountSourceSThisWillScanAllSourcesForVideoFiles_13700c67ddb7180d
+	Créer la base de données '{name}' avec {count} source(s) ?
+	
+	Cela analysera toutes les sources à la recherche de fichiers vidéo.
+CreateDatabase_36de1e7014228b68
+	Créer la base de données
+CreateNewDatabase_bfd1458df184b0f2
+	Créer une nouvelle base de données
+CreateNewProperty_6a91e030c5b0cf8e
+	Créer une nouvelle propriété
+CreateProperty_69f8d57d3c8d0f78
+	Créer la propriété
+CreatingDatabase_f88c1ba634f012f
+	Création de la base de données
+CurrentValues_4708b01c97906ad2
+	Valeurs actuelles
+CustomProperty_1ba8e87e6e278977
+	Propriété personnalisée
+DatabaseFileInventory_38d036a40a388fc4
+	Inventaire des fichiers de la base de données
+DatabaseRenamedToName_5b675f19d283409a
+	Base de données renommée en '{name}'
+Database_58ea48b9657c49fa
+	&Base de données
+DateModified_bcdd75e0db1e9714
+	Date de modification :
+Date_fed7987e4f172179
+	Date
+DefaultValue_18639f57473befd3
+	Valeur par défaut
+Default_ab2a3d4ef1c9d192
+	Par défaut :
+Default_f9aa7601f26e83b8
+	Par défaut
+DeleteCountValueSFromAllVideosThisWillRemoveTheseValuesFromEveryVideoThatHasThem_29f35316652632ae
+	Supprimer {count} valeur(s) de toutes les vidéos ?
+	
+	Cela retirera ces valeurs de chaque vidéo qui les possède.
+DeleteCountVideoSFromTheDatabaseFilesWillNotBeDeletedFromDisk_fd2f78014a2280e9
+	Supprimer {count} vidéo(s) de la base de données ?
+	
+	(Les fichiers ne seront PAS supprimés du disque)
+DeleteDatabase_758542920e0976d3
+	Supprimer la base de données
+DeleteDatabase_f37c04f2c057e773
+	Supprimer la base de données
+DeleteFromDatabase_301c9143d33a5a73
+	Supprimer de la base de données
+DeletePermanently_37f7a067cd1feb
+	Supprimer définitivement
+DeletePermanently_64bee5acd769e30b
+	Supprimer définitivement
+DeleteProperty_f725a2c4b4c350c7
+	Supprimer la propriété
+DeleteSelected_112170a1ac562ef
+	Supprimer la sélection
+DeleteThisVideoFromTheDatabaseTheFileWillNotBeDeletedFromDisk_32ee2c568226cb4
+	Supprimer cette vidéo de la base de données ?
+	
+	(Le fichier ne sera PAS supprimé du disque)
+DeleteValues_7e12342da34ce83e
+	Supprimer les valeurs
+DeleteVideo_61a37ad83d4ec1d5
+	Supprimer la vidéo
+DeleteVideos_378b92702cd35c9c
+	Supprimer les vidéos
+Delete_dd094ca8b6186454
+	Supprimer
+Disabled_2a7b76aeb356bef5
+	désactivé
+DismissLabel_feb8fdf19ce9542f
+	Rejeter {label}
+DismissSimilarity_f2dff3dde1309538
+	Rejeter la similarité
+Duration_7110eeef2b779601
+	Durée :
+EGWidth1080AndFoundAndEngInAudioLanguages_2bec0a6c0e302eff
+	ex. : width > 1080 and found and "eng" in audio_languages
+EditDatabaseFolders_fff5c1d1bf75450b
+	Éditer les dossiers de la base de données
+EditFoldersDatabaseName_9e746f465b5b26dc
+	Éditer les dossiers - {database_name}
+EditFolders_d5126039b02b3888
+	&Éditer les dossiers...
+EditNameForCountVideoS_9e1981188a8598d1
+	Éditer "{name}" pour {count} vidéo(s)
+EditPropertiesCountVideos_9e64587522a2afc4
+	Éditer les propriétés - {count} vidéos
+EditProperties_4940e800b7da6bd0
+	Éditer les propriétés
+EditVideoSourcesCtrlT_1e25b65da34e9d85
+	Éditer les sources des vidéos (Ctrl+T)
+EmptyFolder_730f259322216e2b
+	(dossier vide)
+EmptyFolders_fc889539220ee093
+	Dossiers vides
+Enabled_f3249c65b130742c
+	activé
+EnterANumber_63f356e7c5d6a0db
+	Saisir un nombre
+EnterASearchExpressionToFilterVideos_ae7fe039c4772ed7
+	Saisir une expression de recherche pour filtrer les vidéos :
+EnterDatabaseName_45d6435a19c58f25
+	Saisir le nom de la base de données
+EnterNewNameForName_63518febea0a9432
+	Saisir le nouveau nom de '{name}' :
+EnterNewValue_f7f79b91fc10146
+	Saisir la nouvelle valeur...
+EnterValue_375e8356bd51eb14
+	Saisir une valeur...
+Entry_960e72a88d48ae8a
+	(entrée)
+EnumValuesOnePerLine_cd2fc280ad9290a4
+	Valeurs de l'énumération (une par ligne) :
+Enum_dbd907ee9336202
+	énum
+Enum_f7b4707e4b7a5662
+	Énum
+ErrorCreatingPlaylist_2b5584f9976b7654
+	Erreur lors de la création de la liste de lecture
 ErrorNameMessage_d2cde00e44626a9b
 	Erreur {name} : {message}
+Error_5404229ac9dbbd15
+	Erreur
+Errors_2923ea7fa70533ee
+	Erreurs :
+Exact_2117309aad4ef4fa
+	Exact
+ExistingDatabases_e46e5f179ddba1e0
+	Bases de données existantes
+ExistingProperties_6af5192fe3ef47b9
+	Propriétés existantes
+ExistingValuesWillBecomeLists_56279a878ca04f8a
+	Les valeurs existantes deviendront des listes.
+Extension_1b4791e17276df8
+	Extension
+Extensions_d17c62157ffdc1b
+	Extensions
+ExtractTermsFromVideoFilenamesAndAddThemToAPropertyThisIsUsefulForAutomaticallyTaggingVideosBasedOn..._487dc4d009c21452
+	Extraire les termes des noms de fichiers des vidéos et les ajouter à une propriété.
+	Ceci est utile pour étiqueter automatiquement les vidéos d'après leurs noms.
+FailedToApplyModifierError_1cdcb87d33aab13e
+	Échec de l'application du modificateur : {error}
+FailedToConvertPropertyError_a71a430b9dc896f
+	Échec de la conversion de la propriété : {error}
+FailedToCreatePlaylistError_a9538c34dd51af17
+	Échec de la création de la liste de lecture : {error}
+FailedToCreatePropertyError_46a77fbd624c34b0
+	Échec de la création de la propriété : {error}
+FailedToDeleteError_8de08d1f537001c4
+	Échec de la suppression : {error}
+FailedToDeletePropertyError_b3c8681018678da9
+	Échec de la suppression de la propriété : {error}
+FailedToDeleteValuesError_bd74ae32427ec986
+	Échec de la suppression des valeurs : {error}
+FailedToFillPropertyError_63ca6201c0129367
+	Échec du remplissage de la propriété : {error}
+FailedToMoveToTrashError_fbd12b1a725cf709
+	Échec de la mise à la corbeille : {error}
+FailedToMoveValuesError_d067d64f25b377c4
+	Échec du déplacement des valeurs : {error}
+FailedToRenameDatabaseError_10e1c0b426214b4
+	Échec du renommage de la base de données :
+	{error}
+FailedToRenamePropertyError_74d56e11dc532f2e
+	Échec du renommage de la propriété : {error}
+FailedToRenameValueError_47ea68beb6fbd6f8
+	Échec du renommage de la valeur : {error}
+FailedToUpdateFoldersError_ff0c153f3fb07059
+	Échec de la mise à jour des dossiers :
+	{error}
+FatalError_4b284ae34b81bd8f
+	Erreur fatale
+Field_e67fc2f2510220db
+	Champ :
+File_ed69627e452fef2b
+	Fichier
+Filename_8cf4f0afd0b7c430
+	Nom du fichier :
+FilesExt_689382464d949f5f
+	Fichiers — .{ext}
+FilesNoExtension_4f211f23a716632f
+	Fichiers — (sans extension)
+Files_9a01878f90736662
+	Fichiers
+FillAPropertyWithTermsExtractedFromVideoTitles_8bf89a2fe2932e75
+	Remplir une propriété avec les termes extraits des titres des vidéos
+FillNameWithTermsExtractedFromVideoFilenames_292dcfde68f91b5c
+	Remplir '{name}' avec les termes extraits des noms de fichiers des vidéos ?
+FillPropertyWithTerms_4075b6c7ec659ffa
+	Remplir la propriété avec des termes
+FillProperty_18741deef14bf21d
+	Remplir la propriété
+FillWithTerms_fe407baede53462f
+	Remplir avec des termes...
+FilterByNameValue_2d39a07256baff8b
+	Filtrer par {name} = {value}
+Filter_c499fefb8cc28f43
+	Filtre :
+FindReEncodedVideos_6d32fcc0162b737e
+	Trouver les vidéos réencodées
+FindReEncodedVideos_cf0344805e9f9664
+	Trouver les vidéos ré&encodées
+FindSimilarVideos_c656fca854481fb3
+	Trouver les vidéos &similaires
+FindSimilarVideos_ce3badc1ca9946c1
+	Trouver les vidéos similaires
+FindingReEncodedVideos_3580906b92ab48e
+	Recherche des vidéos réencodées
+FindingSimilarVideos_50b3c0fa521a4f91
+	Recherche des vidéos similaires
+FirstGroup_9a47aa25bb582408
+	Premier groupe
+FirstPageHome_a15d601c1a2ec05c
+	Première page (Début)
+FoldersHaveBeenUpdatedDoYouWantToScanForNewVideosNow_d27348292fd024ed
+	Les dossiers ont été mis à jour.
+	
+	Voulez-vous rechercher de nouvelles vidéos maintenant ?
+FoldersUpdated_964291c6aee3ca9d
+	Dossiers mis à jour
+Found_1d941eff01a21ffb
+	Trouvé :
+Found_a879d08f97d696bb
+	Trouvé
+Fps2FFps_f43a19aa4eef0543
+	{fps:.2f} fps
+FrameRate_de97ebf954c74684
+	Fréquence d'images :
+GeneralizeFileTitleIntoProperty_def889ce48f622aa
+	Généraliser le titre du fichier dans une propriété...
+GeneralizeMetaTitleIntoProperty_ee5bf0fa2be16a15
+	Généraliser le méta-titre dans une propriété...
+GeneralizeTitle_7b6ca5c695678f55
+	Généraliser le titre
+GeneratePlaylistCtrlL_e558d17081447c15
+	&Générer une liste de lecture (Ctrl+L)
 GeneratingMiniatures_8110d724ea222712
 	Génération des miniatures.
+GoToPage_1d4742f8eca55c57
+	Aller à la page
+GoToPage_900125061e6c5b8f
+	Aller à la page :
+GroupBy_91b5115d754ba409
+	Grouper par
+Grouping_92ad3f5d761e938e
+	Regroupement
+Groups_6208d6be485ccb75
+	Groupes
+HasThumbnail_eaea830ed2fbc307
+	Possède une vignette :
+Help_a9586b2fa7f4848
+	Aid&e
+INoEligiblePropertiesFoundThisFeatureRequiresAStringPropertyWithMultipleEnabledI_b3b11b0bcd7406fb
+	<i>Aucune propriété éligible trouvée. Cette fonctionnalité nécessite une propriété de type chaîne avec 'multiple' activé.</i>
+INoEligibleTargetPropertiesCreateAnotherStringPropertyFirstI_4741a361b0fe98f9
+	<i>Aucune propriété cible éligible. Créez d'abord une autre propriété de type chaîne.</i>
+Id_8323f07b4eaf3a6
+	ID
+IfCheckedAllSelectedValuesWillBeJoinedWithSpacesIntoASingleValueInTheTargetProperty_dddb6022743bebde
+	Si coché, toutes les valeurs sélectionnées seront jointes avec des espaces
+	en une seule valeur dans la propriété cible.
+IfCheckedOnlyVideosThatDonTHaveAnyValuesForThisPropertyWillBeFilledExistingValuesWillNot..._1d34f8d46ac81641
+	Si coché, seules les vidéos n'ayant aucune valeur pour cette propriété seront remplies. Les valeurs existantes ne seront pas modifiées.
+IfEnabledOnlyPredefinedValuesCanBeUsedEnterValuesBelowOnePerLine_972634b4a32302bf
+	Si activé, seules des valeurs prédéfinies peuvent être utilisées.
+	Saisissez les valeurs ci-dessous, une par ligne.
+IfEnabledVideosCanHaveMultipleValuesForThisPropertyOnlyAvailableForStringType_44b5ff96cb20791c
+	Si activé, les vidéos peuvent avoir plusieurs valeurs pour cette propriété.
+	Disponible uniquement pour le type chaîne.
+IndexedCount_4798684b91fc1cb2
+	Indexées (nombre)
+IndexedSize_c3e03c49849a6294
+	Indexées (taille)
+Info_d3acbd7e36ad7e89
+	Info
+InvalidDefaultValueForTypePropType_e2fc4b825a69c45
+	Valeur par défaut invalide pour le type {prop_type}.
+LastGroup_e2e13091b918e83c
+	Dernier groupe
+LastPageEnd_558913873f3de89a
+	Dernière page (Fin)
+ManageTheSourcesFoldersAndFilesForThisDatabase_b5417329326deeb7
+	Gérer les sources (dossiers et fichiers) de cette base de données :
+ManageValues_a845ff0d2a8be24c
+	Gérer les valeurs...
+MarkThisVideoAsHavingNoSimilarMatchesTheVideoWillBeExcludedFromFutureSimilaritySearches_6a82468d504db49d
+	Marquer cette vidéo comme n'ayant aucune correspondance similaire ?
+	
+	La vidéo sera exclue des futures recherches de similarité.
+MergeValues_2dc7a901888c8177
+	Fusionner les valeurs
+MoveAllCurrentValuesToAddList_e5ce3db8c20ce890
+	Déplacer toutes les valeurs actuelles vers la liste d'ajout
+MoveAllCurrentValuesToRemoveList_d05485e014c7c5c9
+	Déplacer toutes les valeurs actuelles vers la liste de retrait
+MoveDown_2d53b0d701b4c37e
+	Descendre
+MoveThisVideoToTheSystemTrashTheFileCanBeRestoredFromTheTrashIfNeeded_2bd88fc64ac0615d
+	Déplacer cette vidéo vers la corbeille système ?
+	
+	(Le fichier peut être restauré depuis la corbeille si besoin)
+MoveTitleToDirectory_3b152d3e0fe0df9
+	Déplacer '{title}' vers :
+	{directory} ?
+MoveToTrash_89d2438c8079e1b7
+	Mettre à la corbeille
+MoveTo_37fd1eebbe2558c1
+	Déplacer vers...
+MoveTo_a3507ac7694de68d
+	Déplacer vers :
+MoveUp_2e88f8ddbc9027a5
+	Monter
+MoveValuesFromName_7a5b25ba6eaccaf
+	Déplacer les valeurs de {name}
+MoveValues_d89fa8b5fb05527a
+	Déplacer les valeurs...
+MoveVideoTo_51241d4bba158da2
+	Déplacer la vidéo vers
+MoveVideo_317b44ceb7e919d3
+	Déplacer la vidéo
 Move_b37c3b7e2524ded2
 	Déplacement
+MovedValuesForCountVideosFromNameToTargetName_c2fba9e915a37a77
+	Valeurs de {count} vidéos déplacées de '{name}' vers '{target_name}'.
+MovingVideo_8161147827c2f39a
+	Déplacement de la vidéo
+MultipleValues_534ddc6a5318a61d
+	valeurs multiples
+Multiple_16f4299eb2aef9f9
+	multiple
+Multiple_8b3991d0d469d359
+	Multiple
+NA_d843e7186b2dd265
+	N/A
+Name_a837fb7e1e05ced4
+	Nom
+Name_dcef2b4d03de7206
+	Nom :
+NewDatabaseName_a21ebd16b7464419
+	Nouveau nom de la base de données :
+NewFileTitle_3b5427726c4f4447
+	Nouveau titre du fichier :
+NewValueAlreadyExistsMergeOldValueIntoIt_f74196216ae94e48
+	'{new_value}' existe déjà. Fusionner '{old_value}' avec cette valeur ?
+NewValue_49eeb78ac7c1e7a8
+	Nouvelle valeur :
+NextGroupDownArrow_67d64bc1aa7532ad
+	Groupe suivant (Flèche bas)
+NextPageRightArrow_92eb7d3ad2ab2339
+	Page suivante (Flèche droite)
+NoCustomPropertiesDefinedCreatePropertiesInThePropertiesPageFirst_8d2d3aa616a89782
+	Aucune propriété personnalisée définie.
+	Créez d'abord des propriétés dans la page Propriétés.
+NoCustomPropertiesDefined_570e33de412afd17
+	Aucune propriété personnalisée définie.
+NoEligibleProperties_e137cfef3ff4f201
+	(Aucune propriété éligible)
+NoEligibleTargetProperties_bee2775786625f48
+	(Aucune propriété cible éligible)
+NoExtension_5dc23e3f1fb039ae
+	(sans extension)
+NoGrouping_d45bf52a90cc70e3
+	Aucun regroupement
+NoPreview_79d1e13bab26fbd8
+	Aucun aperçu
+NoPropertiesDefined_79a2f2adaa66508f
+	(aucune propriété définie)
+NoProperties_3dbf791f0485b0ab
+	Aucune propriété
+NoSelection_4effb87af82a0776
+	Aucune sélection
+NoSelection_699c3c68e3ab7c36
+	aucune sélection
+NoSelection_bad36fe0e9abd896
+	Aucune sélection
+NoSingleValueStringPropertiesAvailableCreateAStringPropertyFirstToConcatenateThePathInto_1b54165d35ea07e0
+	Aucune propriété de type chaîne à valeur unique disponible.
+	
+	Créez d'abord une propriété de type chaîne pour y concaténer le chemin.
+NoSources_2d997bf874af680a
+	Aucune source
+NoStringNonEnumPropertyAvailable_2b25f97fc363419b
+	Aucune propriété de type chaîne (non-énum) disponible.
+NoTargetProperty_cb88b0b68d282e8a
+	Aucune propriété cible
+NoThumbnail_ac809daedf31bfc8
+	Aucune vignette
+No_8323a07b4eaeb0c
+	Non
+None_4e7bea3392d46062
+	(aucun)
+NotFound_cce592bae33191bc
+	Non trouvé
+NotFound_f38b8a623dcf0c3c
+	INTROUVABLE
 NumpyImagesComparison_913b9ae4ae91effb
 	Comparaison d'images Numpy
+Ok_8323907b4eae9fb
+	OK
+OnlyFillVideosWithoutValues_5afa84de4267e28
+	Remplir uniquement les vidéos sans valeurs
+OnlyVideosWithoutValuesWillBeAffected_26bb190c23243174
+	Seules les vidéos sans valeurs seront affectées.
+OpenAndUpdateDatabase_6dae4fe3bbf3a430
+	Ouvrir et mettre à jour la base de données
+OpenAndUpdateNameThisWillScanAllSourcesForNewOrModifiedVideosAndMayTakeSomeTime_f6055f73561b80ea
+	Ouvrir et mettre à jour '{name}' ?
+	
+	Cela analysera toutes les sources à la recherche de vidéos nouvelles ou modifiées
+	et peut prendre un certain temps.
+OpenDatabase_7eac1cca62daa07c
+	Ouvrir la base de données
+OpenFolder_23b129ff774dd503
+	Ouvrir le dossier
+OpenFolder_e3711165e96327a3
+	Ouvrir le dossier
+OpenInVlc_d41ee53b1cab9af
+	Ouvrir dans VLC
+Open_a10ec67e1a6481b1
+	Ouvrir
+Opened_f3ab8448d597db19
+	(ouverture)
+OpeningDatabase_f2a7ee6cd79cdbde
+	Ouverture de la base de données
+Options_27b156aa6ca43065
+	&Options
+Or_8323907b4eae9e2
+	OU
+OsError_27fb234f2511c0f1
+	Erreur système
+Others_66741785e8efeb28
+	Autres
+PageCurrentTotal_c45ee8b52882590a
+	Page {current}/{total}
+PageSize_eb94aa40282346fb
+	Taille de &page
+Page_96e5bf7e14370d0c
+	Page
+PermanentlyDeleteThisVideoThisActionCannotBeUndoneTheFileWillBeDeletedFromDisk_b38e9db0d26860d5
+	Supprimer DÉFINITIVEMENT cette vidéo ?
+	
+	Cette action ne peut pas être annulée !
+	Le fichier sera supprimé du disque.
+PlaylistOpenedFilename_8275214988e84cc5
+	Liste de lecture ouverte : {filename}
+PleaseAddAtLeastOneSource_6ea16b47d090bdad
+	Veuillez ajouter au moins une source.
+PleaseEnterADatabaseName_944a65e4781c47be
+	Veuillez saisir un nom de base de données.
+PleaseEnterAPropertyName_fe9eac74d3046a92
+	Veuillez saisir un nom de propriété.
+PleaseSelectExactlyOneValueToRename_dad66864edf74f61
+	Veuillez sélectionner exactement une valeur à renommer.
+PleaseSelectValuesToDelete_e831f42c3db51d51
+	Veuillez sélectionner des valeurs à supprimer.
+PleaseSelectValuesToMove_201ff9f7a5b631af
+	Veuillez sélectionner des valeurs à déplacer.
+PreviousGroupUpArrow_a3a88716f67d4bec
+	Groupe précédent (Flèche haut)
+PreviousPageLeftArrow_36b97351dd898578
+	Page précédente (Flèche gauche)
+PropertiesTitle_2807f8f0c9b2163f
+	Propriétés - {title}
+Properties_4a36bd9181ff5e9c
+	Propriétés...
+Properties_91696bb346248f12
+	Propriétés
+PropertyManagement_469c8b85f9598adb
+	Gestion des propriétés
+PropertyNameConvertedToTarget_190d076c18fff56b
+	Propriété '{name}' convertie en {target}.
+PropertyNameCreatedSuccessfully_112d61171bd2bc8a
+	Propriété '{name}' créée avec succès.
+PropertyNameFilledWithTerms_11f0e3a694f9dfa2
+	Propriété '{name}' remplie avec les termes.
+PropertyNameSetToValueForCountVideoS_ec36192e62c1429a
+	Propriété "{name}" définie à "{value}" pour {count} vidéo(s)
+PropertyName_56e14868b02b4deb
+	Nom de la propriété
+PropertyRenamedToNewName_4ed5be33f1b87d2f
+	Propriété renommée en '{new_name}'.
+Property_989f9612113a7414
+	Propriété :
+PysaurusDatabases_62b94442af2ecfa
+	Pysaurus - Bases de données
+PysaurusFilesName_6ec4c97e80e667e3
+	Pysaurus - Fichiers - {name}
+PysaurusPropertiesName_4c2c1295eba60c79
+	Pysaurus - Propriétés - {name}
+PysaurusVideoCollectionManagerANativeQt6DesktopInterfaceForManagingVideoCollections_c74291daf1537f8f
+	Pysaurus - Gestionnaire de collections de vidéos
+	
+	Une interface de bureau native Qt6 pour gérer des collections de vidéos.
+PysaurusVideoCollectionManager_a1c94b2dbb9d28e
+	Pysaurus - Gestionnaire de collections de vidéos
+Quit_8f60807e10475098
+	Quitter
+Quit_bb7b32b2cd5dc33c
+	&Quitter
+RandomVideoCtrlO_fc449a83cc87bb19
+	Vidéo &aléatoire (Ctrl+O)
+ReEncodedGroup_272ad0e25bd9d184
+	Groupe de réencodage :
+ReEncodedIdValue_ae092fdaa09ec2f3
+	ID de réencodage : {value}
+ReEncodedNoMatch_241ee1815c34456e
+	Réencodage : (aucune correspondance)
+ReFreshViewCtrlR_c6421c4aa3501d44
+	Ra&fraîchir la vue (Ctrl+R)
+ReadOnlyStatsForVideoFilesUseTheBVideosBPageToManageIndexedVideosAnIUnknownI..._451ad572c7ab989f
+	Statistiques en lecture seule des fichiers vidéo. Utilisez la page <b>Vidéos</b> pour gérer les vidéos indexées. Une vidéo <i>inconnue</i> est physiquement présente sur le disque mais non référencée par la base de données.
+Readable_e2d0c84bec967aa5
+	Lisible
+Readable_ff3efe0303b26665
+	Lisible :
+Ready_bb1ff02f46cc14ba
+	Prêt
+Refresh_d6dc3fb5aef927f6
+	Rafraîchir
+RemoveAllValues_160846f8042dc1c2
+	Retirer toutes les valeurs
+RemoveAll_8695474f05264dac
+	← Tout retirer
+RemoveCountSources_21c3fb5674af07f5
+	Retirer {count} sources ?
+RemoveFromPathUnstack_b782d4a2c426ee68
+	Retirer du chemin (dépiler)
+RemoveGroupingCtrlShiftG_2fbf421e92589e09
+	Retirer le regroupement (Ctrl+Shift+G)
+RemoveNameValueFromThisVideo_6faeaf0a85b4387a
+	Retirer la valeur {name} de cette vidéo
+RemoveSelectedValueS_5f87907368fa4759
+	Retirer les valeurs sélectionnées
+RemoveSelectedValuesFromAllVideos_e6f80fd1433ad71d
+	Retirer les valeurs sélectionnées de toutes les vidéos
+RemoveSelected_3cb97df442381ae8
+	Retirer la sélection
+RemoveThisSourceSource_774820a411d121ec
+	Retirer cette source ?
+	
+	{source}
+Remove_e71387556151e3d1
+	Retirer
+RenameAValueMergesIfTargetExists_98c61ed40f3b34d3
+	Renommer une valeur (fusionne si la cible existe)
+RenameDatabaseName_11b5b3a289fede87
+	Renommer la base de données : {name}
+RenameDatabase_e711b3f2f163d5c
+	&Renommer la base de données...
+RenameFailed_d4af4a7af695941e
+	Échec du renommage
+RenameOldValueTo_406620727bfc55cf
+	Renommer '{old_value}' en :
+RenameProperty_161981044184352a
+	Renommer la propriété
+RenameValue_64182fcfc68cbaec
+	Renommer la valeur
+RenameValue_a34b0cb19cd8da7e
+	Renommer la valeur...
+RenameVideo_1fc0f7cfa01c8de6
+	Renommer la vidéo
+Rename_5b5a4713822c71f3
+	Renommer...
+RescanFoldersAndUpdateTheDatabaseThisMayTakeAWhileDependingOnTheNumberOfVideos_353d4fdf110d961
+	Réanalyser les dossiers et mettre à jour la base de données ?
+	
+	Cela peut prendre du temps selon le nombre de vidéos.
+RescanFolders_6f9f330a49ead4da
+	Réanalyser les dossiers
+ResetLabel_110c73e7b1e8a9b6
+	Réinitialiser {label}
+ResetSimilarityStatusForThisVideoTheVideoWillBeReEvaluatedInTheNextSimilaritySearch_7b94c41fbe58f9b6
+	Réinitialiser le statut de similarité de cette vidéo ?
+	
+	La vidéo sera réévaluée lors de la prochaine recherche de similarité.
+ResetSimilarity_d4672286e4622fab
+	Réinitialiser la similarité
+ResetToDefaultSorting_790563954f3812aa
+	Réinitialiser au tri par défaut
+ResetToDefaultSourcesCtrlShiftT_8155ae59f801cb84
+	Réinitialiser aux sources par défaut (Ctrl+Shift+T)
+Reset_bae3032f4698869a
+	Réinitialiser
+Resolution_4ce3c6592b7c1bf7
+	Résolution :
+RestoreAllRemovedValuesBackToCurrent_68cfea8909c04c11
+	Restaurer toutes les valeurs retirées vers les valeurs actuelles
+RestoreAll_f76e036967db72f6
+	Tout restaurer →
+RestoreInitialValueOfName_1305ae1acf822be8
+	Restaurer la valeur initiale de {name}
+RestoreInitialValues_b4975658560dc6f5
+	Restaurer les valeurs initiales
+RestoreToCurrent_499341d0b49d0f3
+	Restaurer vers les valeurs actuelles
+ReverseOrder_d1990004e08c9611
+	Inverser l'ordre
+ReverseTheOrderOfPathValues_95634e9af168d4be
+	Inverser l'ordre des valeurs du chemin
+Reverse_a6ca2231e3611da9
+	Inverser
+SampleRateHz_d88f4883d0884bd6
+	{sample_rate} Hz
+SampleRate_d7f25b8ab3b08a87
+	Fréquence d'échantillonnage :
 SaveThumbnailsToDb_366bc3c6696f832
 	sauvegarde des vignettes en base de données
+ScanAllFilesInTheDatabaseSourceFoldersThenReviewAndCleanNonVideoFilesThatHaveAccumulatedThereThumbnails..._cadc200e916a2c76
+	Analyser tous les fichiers des dossiers sources de la base de données, puis examiner et nettoyer les fichiers non vidéo qui s'y sont accumulés (vignettes, .nfo, .part, sous-titres, …).
+ScanFolders_def9e99dcc5a81e9
+	Analyser les dossiers
+ScanningFolders_37d8180acf667d07
+	Analyse des dossiers
+SearchByVideoId_66884cae567d6338
+	Rechercher par identifiant vidéo
+SearchCtrlF_f13cd9a9be183bd6
+	Rechercher... (Ctrl+F)
+SearchForAllTerms_406e4228c89dfc38
+	Rechercher tous les termes
+SearchForAnyTerm_cf5c562cd0a250ac
+	Rechercher n'importe quel terme
+SearchForExactSentence_32fd4c542f49ef98
+	Rechercher la phrase exacte
+SearchForPotentiallyReEncodedVideosComparesFilenamesAndDurationsToFindVideosThatMayBeReEncodingsOfThe..._341807490d07eab4
+	Rechercher des vidéos potentiellement réencodées ?
+	
+	Compare les noms de fichiers et les durées pour trouver des vidéos
+	qui peuvent être des réencodages de la même source.
+SearchForVisuallySimilarVideosThisMayTakeAWhileDependingOnTheNumberOfVideos_9c9c383ac8256f3f
+	Rechercher des vidéos visuellement similaires ?
+	
+	Cela peut prendre du temps selon le nombre de vidéos.
+SearchVideosCtrlF_dc9dc764b76b8b98
+	Rechercher des vidéos (Ctrl+F)
+Search_e91ceafac99dbb55
+	Recherche
+SelectAllVideosInCurrentViewCtrlShiftA_a5f880ac7242a4a4
+	Sélectionner toutes les vidéos de la vue actuelle (Ctrl+Shift+A)
+SelectAllVideosOnCurrentPageCtrlA_789f05606a6c386f
+	Sélectionner toutes les vidéos de la page actuelle (Ctrl+A)
+SelectAll_17340da0bf9a8c4
+	Tout sélectionner
+SelectAtLeastOneFileFirst_6b95f2b2ad409fbd
+	Sélectionnez d'abord au moins un fichier.
+SelectFolder_788b32a95fc43237
+	Sélectionner un dossier
+SelectNone_2425a7822e6eda11
+	Désélectionner tout
+SelectOne_15142da0bdcc5cd
+	Sélection unique
+SelectSources_a4b7264e7949ce53
+	Sélectionner les sources
+SelectTargetPropertyToConcatenatePathValuesInto_d890c35298aed2c4
+	Sélectionner la propriété cible dans laquelle concaténer les valeurs du chemin :
+SelectValuesFromBNameBToMoveToAnotherPropertyTheValuesWillBeRemovedFromTheSourceAnd..._ab19bc6f95e98674
+	Sélectionnez les valeurs de <b>{name}</b> à déplacer vers une autre propriété.
+	Les valeurs seront retirées de la source et ajoutées à la cible.
+SelectValuesToMove_270f452ab889a3bf
+	Sélectionner les valeurs à déplacer :
+SelectVideoFiles_fb043e25a1907fb9
+	Sélectionner des fichiers vidéo
+SelectVideoVideoId_2f2b86a420bc6051
+	Sélectionner la vidéo {video_id}
+SelectWhichVideosToDisplay_83a4701e445eb35b
+	Sélectionner les vidéos à afficher :
+SelectionActions_f35e87c6e34ac50
+	Actions de sélection
+Selection_3edb2506f8bb5489
+	Sélection
+SendSubjectToTheSystemTrash_82d777dd5d94ab61
+	Envoyer {subject} à la corbeille système ?
+SendToTrash_4fca8108025a5338
+	Envoyer à la corbeille
+SentCountFileSToTrashFailedFailed_8db0d686b4ed11a5
+	{count} fichier(s) envoyé(s) à la corbeille. {failed} échec(s) :
+SessionLog_57eea1ac9c574e61
+	&Journal de session...
+SessionLog_fb17c959aaf2db99
+	Journal de session
+SessionStartedTime_a0cae67329f98ea7
+	Session démarrée : {time}
+SetGrouping_aebc69547ebc4b2e
+	Définir le regroupement
+SetPropertiesForCountSelectedVideosCheckTheBoxNextToAPropertyToApplyTheChange_935f9f558c8eb139
+	Définir les propriétés de {count} vidéos sélectionnées.
+	Cochez la case à côté d'une propriété pour appliquer le changement.
+SetSorting_b3821ff535d168bb
+	Définir le tri
+ShowGroupsWithOnlyOneVideo_b7bad910947902e1
+	Afficher les groupes n'ayant qu'une seule vidéo
+ShowOnlySelected_5bcb4df72924f9d3
+	Afficher uniquement la sélection
+SimilarityGroup_33868d701fe44d19
+	Groupe de similarité :
+SimilarityIdValue_b910b09d6bf6d658
+	ID de similarité : {value}
+SimilarityNoMatch_9dd502917079dfd1
+	Similarité : (aucune correspondance)
+SimilarityReEncoded_23d62b561a450f2f
+	Similarité (réencodage)
+Similarity_4126117aa1747700
+	Similarité
+Simple_b654ec602223ea27
+	Simple
+SingleValue_11727eb8e822abe
+	valeur unique
+Single_c20aa6c1a5b6290d
+	unique
+Size_16021b2387e0b7ec
+	Taille :
+SkippedFileSWereAlreadyInTheList_2a5857c9bd85fa04
+	{skipped} fichier(s) étaient déjà dans la liste.
+SomeFilesAlreadyInList_74a538c10aaf0a2b
+	Fichiers déjà dans la liste
+SortByFirstHasHighestPriority_861bfe2f86bfb7bb
+	Trier par (le premier a la priorité la plus élevée) :
+SortGroups_1bdead18335020ef
+	Trier les groupes
+Sorting_4b4bbc61376dff9b
+	Tri
+SourcesFoldersAndFiles_7db92a6e8ac4293f
+	Sources (dossiers et fichiers) :
+Sources_46526b6c96e78569
+	Sources
+Status_5b7a4177e1b9b193
+	Statut
+SubstringMatchOnPath_b1f10a9cdec9e469
+	Correspondance de sous-chaîne sur le chemin
+Subtitles_dc91a773f834306a
+	Sous-titres :
+Success_5225c5937fb8fa36
+	Succès
+TheDatabaseHasNoSourcesAreYouSureYouWantToContinue_bb03a8ca9519b65a
+	La base de données n'a aucune source.
+	
+	Êtes-vous sûr de vouloir continuer ?
+ThisFolderIsAlreadyInTheListFolder_7a63e23a39c23b15
+	Ce dossier est déjà dans la liste :
+	{folder}
+ThisIsABulkOperationCountFilesItCannotBeUndoneFromPysaurusFilesWillGoToTheSystemTrash..._7242922458bbc8c3
+	Ceci est une opération en masse ({count} fichiers). Elle ne peut pas être annulée depuis Pysaurus ; les fichiers iront dans la corbeille système si disponible.
+ThisWillAutomaticallyConfirmAllVideoMovesThatHaveOnlyOnePossibleDestinationTheMetadataFromMissingVideosWillBe..._af91d694717ac966
+	Cela confirmera automatiquement tous les déplacements de vidéos qui n'ont qu'une seule destination possible.
+	
+	Les métadonnées des vidéos manquantes seront transférées vers les fichiers trouvés, et les entrées manquantes seront supprimées.
+	
+	Continuer ?
+TitleIsEmpty_f46e6d05cbdc4252
+	Le titre est vide.
+TitleMovedToTrash_7d4b243805b3d88f
+	'{title}' mis à la corbeille
+TitlePermanentlyDeleted_cd8054be7ee23467
+	'{title}' supprimé définitivement
+TitleRemovedFromDatabase_c65935f384a6934
+	'{title}' retiré de la base de données
+Title_faf921506746458d
+	Titre :
+ToAdd_b8d3927f966050df
+	À ajouter
+ToRemove_8b0a65b3864198ee
+	À retirer
+ToggleDirection_56aa30f4c8de121a
+	Inverser la direction
+ToggleWatched_dd6fe6ed5ef44557
+	Basculer l'état vu
+TotalSize_d1fdda6ac1d84e14
+	Taille totale
+TotalValuesUniqueValuesTotalUsagesTotalUsages_62d62bb05326545c
+	{total_values} valeurs uniques
+	{total_usages} utilisations au total
+TransferMetadataFromMissingVideoToFilenameTheMissingVideoEntryWillBeDeleted_364ee0653628d274
+	Transférer les métadonnées de la vidéo manquante vers :
+	
+	{filename}
+	
+	L'entrée de la vidéo manquante sera supprimée.
+TrashAll_c8994130b00fc498
+	Tout mettre à la corbeille
+TrashCompletedWithErrors_320ca9d8af632007
+	Mise à la corbeille terminée avec des erreurs
+Type_2d126f1d4bd6b8fd
+	Type :
+Type_75d7147e01f09a9d
+	Type
+UncheckAllValues_930fa6008dcf1f3d
+	Décocher toutes les valeurs
+UnknownCount_2a01d8b58bddae27
+	Inconnues (nombre)
+UnknownSize_3bf67ddc0536b387
+	Inconnues (taille)
+Unreadable_ff8d4f08668a9334
+	Illisible
+UpdateDatabase_7fcb88bf411e8bcd
+	Mettre à jour la base de données
+UpdateDatabase_b737c50ea334e41
+	&Mettre à jour la base de données
+UpdateFailed_8d90ce5b86160339
+	Échec de la mise à jour
+Update_b20e92384dbb549a
+	Mettre à jour
+UpdatingDatabase_e38960da199e66ba
+	Mise à jour de la base de données
+UseEnumeration_272c87be68943aaf
+	Utiliser une énumération
+VMFoldersFilesFiles_f3ab283f4a6c0af2
+	%v / %m dossiers — {files} fichiers
+ValidOnly_24631ced3f71e09
+	Valides uniquement
+Value1Value2Value3_a582d157d7d4e8
+	valeur1, valeur2, valeur3
+ValueBits_51b2c44fd8174c90
+	{value} bits
+ValueCh_6f106a4a493cabc9
+	{value} ch
+ValueFps_f59a7f3a7220674d
+	{value} fps
+ValueNew_b7da364620732e87
+	{value} (nouvelle)
+ValuesClickToSelectRightClickForActions_3601320b80e01cc
+	Valeurs (cliquer pour sélectionner, clic droit pour les actions) :
+ValuesPropName_3216a5abac8cfd0d
+	Valeurs - {prop_name}
+ValuesWillBeMerged_c643c547f6df462a
+	Les valeurs seront fusionnées.
+VideoAttribute_21b1ef0c89d1486
+	Attribut vidéo
+VideoFilesExtFilterAllFiles_9dda84a63a66433b
+	Fichiers vidéo ({ext_filter});;Tous les fichiers (*)
+VideoFiles_240fb25902c135b3
+	Fichiers vidéo
+VideoMoveConfirmed_1df7d12bdf7c3dce
+	Déplacement de vidéo confirmé
+VideoStats_31950b06e879ab6f
+	Statistiques des vidéos
+Video_c2e7570b658e9996
+	Vidéo
+Videos_bdb27e5d914ef991
+	Vidéos
+View_d4f6bdb2dba870fa
+	&Affichage
+Watched_16565a9d7afc02ed
+	Vu
+WhenCheckedShowConfirmationDialogBeforeDeletingEntriesNotFound_89412382292a39f8
+	Si coché, afficher une boîte de confirmation avant de supprimer les entrées non trouvées
+WithThumbnails_88c2766413208194
+	Avec vignettes
+WithoutThumbnails_8c06a845c11f8ee2
+	Sans vignettes
+Yes_d81ec1186b0e7526
+	Oui

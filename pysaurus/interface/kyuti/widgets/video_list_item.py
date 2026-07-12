@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pysaurus.core.language import say
 from pysaurus.interface.kyuti.widgets.flow_layout import FlowLayout
 from pysaurus.video.video_pattern import VideoPattern
 
@@ -145,7 +146,9 @@ class VideoListItem(QFrame):
         title_row.setSpacing(4)
 
         self.checkbox = QCheckBox()
-        self.checkbox.setToolTip(f"Select video {self.video.video_id}")
+        self.checkbox.setToolTip(
+            say("Select video {video_id}", video_id=self.video.video_id)
+        )
         self.checkbox.stateChanged.connect(self._on_checkbox_changed)
         title_row.addWidget(self.checkbox)
 
@@ -204,7 +207,7 @@ class VideoListItem(QFrame):
             )
         filename_label.setTextFormat(Qt.TextFormat.RichText)
         filename_label.setCursor(Qt.CursorShape.PointingHandCursor)
-        filename_label.setToolTip("Click to open video")
+        filename_label.setToolTip(say("Click to open video"))
         filename_label.mousePressEvent = self._on_filename_clicked
         filename_label.enterEvent = self._on_filename_enter
         filename_label.leaveEvent = self._on_filename_leave
@@ -245,7 +248,7 @@ class VideoListItem(QFrame):
             f"{ext_html} "
             f"{size_html} / {container_html} "
             f"({video_codec_html}, {audio_codec_html}) "
-            f'<span style="{badge}">&nbsp;Byte rate&nbsp;</span> '
+            f'<span style="{badge}">&nbsp;{say("Byte rate")}&nbsp;</span> '
             f"{byte_rate_html}"
         )
         format_label = WrappingLabel(format_line)
@@ -276,11 +279,19 @@ class VideoListItem(QFrame):
         height_html = self._highlight_if_diff(
             "height", f'<b style="color: #006600;">{height}</b>'
         )
-        frame_rate_html = self._highlight_if_diff("frame_rate", f"{frame_rate} fps")
-        bit_depth_html = self._highlight_if_diff("bit_depth", f"{bit_depth} bits")
+        frame_rate_html = self._highlight_if_diff(
+            "frame_rate", say("{value} fps", value=frame_rate)
+        )
+        bit_depth_html = self._highlight_if_diff(
+            "bit_depth", say("{value} bits", value=bit_depth)
+        )
         sample_rate_html = self._highlight_if_diff("sample_rate", f"{sample_rate} Hz")
-        audio_bits_html = self._highlight_if_diff("audio_bits", f"{audio_bits} bits")
-        channels_html = self._highlight_if_diff("channels", f"{channels} ch")
+        audio_bits_html = self._highlight_if_diff(
+            "audio_bits", say("{value} bits", value=audio_bits)
+        )
+        channels_html = self._highlight_if_diff(
+            "channels", say("{value} ch", value=channels)
+        )
         audio_bit_rate_html = self._highlight_if_diff(
             "audio_bit_rate", f"{audio_bit_rate_str}/s"
         )
@@ -319,13 +330,17 @@ class VideoListItem(QFrame):
                 "date_entry_modified",
                 f'<code style="color: #996600;">{date_entry_modified}</code>',
             )
-            date_line += f' | <i style="color: #888;">(entry)</i> {date_mod_html}'
+            date_line += (
+                f' | <i style="color: #888;">{say("(entry)")}</i> {date_mod_html}'
+            )
         if date_entry_opened:
             date_opened_html = self._highlight_if_diff(
                 "date_entry_opened",
                 f'<code style="color: #996600;">{date_entry_opened}</code>',
             )
-            date_line += f' | <i style="color: #888;">(opened)</i> {date_opened_html}'
+            date_line += (
+                f' | <i style="color: #888;">{say("(opened)")}</i> {date_opened_html}'
+            )
 
         date_label = WrappingLabel(date_line)
         date_label.setTextFormat(Qt.TextFormat.RichText)
@@ -337,12 +352,12 @@ class VideoListItem(QFrame):
         audio_str = (
             ", ".join(audio_langs)
             if audio_langs
-            else '<span style="color: #aaa;">(none)</span>'
+            else f'<span style="color: #aaa;">{say("(none)")}</span>'
         )
         subtitle_str = (
             ", ".join(subtitle_langs)
             if subtitle_langs
-            else '<span style="color: #aaa;">(none)</span>'
+            else f'<span style="color: #aaa;">{say("(none)")}</span>'
         )
 
         audio_langs_html = self._highlight_if_diff("audio_languages", audio_str)
@@ -350,8 +365,8 @@ class VideoListItem(QFrame):
             "subtitle_languages", subtitle_str
         )
         lang_line = (
-            f'<b style="color: #333;">Audio:</b> {audio_langs_html} | '
-            f'<b style="color: #333;">Subtitles:</b> {subtitle_langs_html}'
+            f'<b style="color: #333;">{say("Audio:")}</b> {audio_langs_html} | '
+            f'<b style="color: #333;">{say("Subtitles:")}</b> {subtitle_langs_html}'
         )
         lang_label = WrappingLabel(lang_line)
         lang_label.setTextFormat(Qt.TextFormat.RichText)
@@ -362,31 +377,48 @@ class VideoListItem(QFrame):
         status_parts = []
         if not self.video.found:
             status_parts.append(
-                '<span style="color: #cc0000; font-weight: bold;">NOT FOUND</span>'
+                '<span style="color: #cc0000; font-weight: bold;">'
+                + say("NOT FOUND")
+                + "</span>"
             )
         if not self.video.readable:
             status_parts.append(
-                '<span style="color: #cc6600; font-weight: bold;">Unreadable</span>'
+                '<span style="color: #cc6600; font-weight: bold;">'
+                + say("Unreadable")
+                + "</span>"
             )
         if self.video.watched:
-            status_parts.append('<span style="color: #008800;">Watched</span>')
+            status_parts.append(
+                f'<span style="color: #008800;">{say("Watched")}</span>'
+            )
         if self.video.similarity_id is not None:
             if self.video.similarity_id == -1:
                 status_parts.append(
-                    '<span style="color: #666666;">Similarity: (no match)</span>'
+                    '<span style="color: #666666;">'
+                    + say("Similarity: (no match)")
+                    + "</span>"
                 )
             else:
                 status_parts.append(
-                    f'<span style="color: #0066cc;">Similarity ID: {self.video.similarity_id}</span>'
+                    '<span style="color: #0066cc;">'
+                    + say("Similarity ID: {value}", value=self.video.similarity_id)
+                    + "</span>"
                 )
         if self.video.similarity_id_reencoded is not None:
             if self.video.similarity_id_reencoded == -1:
                 status_parts.append(
-                    '<span style="color: #666666;">Re-encoded: (no match)</span>'
+                    '<span style="color: #666666;">'
+                    + say("Re-encoded: (no match)")
+                    + "</span>"
                 )
             else:
                 status_parts.append(
-                    f'<span style="color: #9900cc;">Re-encoded ID: {self.video.similarity_id_reencoded}</span>'
+                    '<span style="color: #9900cc;">'
+                    + say(
+                        "Re-encoded ID: {value}",
+                        value=self.video.similarity_id_reencoded,
+                    )
+                    + "</span>"
                 )
 
         if status_parts:
@@ -398,7 +430,7 @@ class VideoListItem(QFrame):
         errors = getattr(self.video, "errors", None) or []
         if errors:
             errors_label = WrappingLabel(
-                f'<span style="color: #cc0000;"><b>Errors:</b> {", ".join(str(e) for e in errors)}</span>'
+                f'<span style="color: #cc0000;"><b>{say("Errors:")}</b> {", ".join(str(e) for e in errors)}</span>'
             )
             errors_label.setTextFormat(Qt.TextFormat.RichText)
             details_layout.addWidget(errors_label)
@@ -445,7 +477,9 @@ class VideoListItem(QFrame):
                         "border-radius: 3px;"
                     )
                     value_label.setCursor(Qt.CursorShape.PointingHandCursor)
-                    value_label.setToolTip(f"Filter by {prop_name} = {value}")
+                    value_label.setToolTip(
+                        say("Filter by {name} = {value}", name=prop_name, value=value)
+                    )
                     # Capture prop_name and value for the lambda
                     value_label.mousePressEvent = lambda e, pn=prop_name, v=value: (
                         self._on_property_value_clicked(pn, v)
@@ -474,7 +508,7 @@ class VideoListItem(QFrame):
                 return
 
         # No thumbnail - show placeholder
-        self.thumb_label.setText("No thumbnail")
+        self.thumb_label.setText(say("No thumbnail"))
         self.thumb_label.setStyleSheet(
             "background-color: #e0e0e0; color: #666666; border: 1px solid #ccc;"
         )

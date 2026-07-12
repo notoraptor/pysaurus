@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pysaurus.core.language import say
 from pysaurus.properties.properties import PropType
 
 _BTN_STYLE = (
@@ -140,7 +141,9 @@ class BatchEditPropertyDialog(QDialog):
         self._to_remove: list = []
         self._current: list = list(self._value_counts.keys())
 
-        self.setWindowTitle(f'Edit "{prop_name}" for {nb_videos} video(s)')
+        self.setWindowTitle(
+            say('Edit "{name}" for {count} video(s)', name=prop_name, count=nb_videos)
+        )
         self.setMinimumWidth(700)
         self.setMinimumHeight(400)
 
@@ -153,13 +156,15 @@ class BatchEditPropertyDialog(QDialog):
         # Header labels
         header_layout = QHBoxLayout()
         header_layout.addWidget(
-            QLabel("<b>To remove</b>"), 1, Qt.AlignmentFlag.AlignCenter
+            QLabel("<b>" + say("To remove") + "</b>"), 1, Qt.AlignmentFlag.AlignCenter
         )
         header_layout.addWidget(
-            QLabel("<b>Current values</b>"), 1, Qt.AlignmentFlag.AlignCenter
+            QLabel("<b>" + say("Current values") + "</b>"),
+            1,
+            Qt.AlignmentFlag.AlignCenter,
         )
         header_layout.addWidget(
-            QLabel("<b>To add</b>"), 1, Qt.AlignmentFlag.AlignCenter
+            QLabel("<b>" + say("To add") + "</b>"), 1, Qt.AlignmentFlag.AlignCenter
         )
         layout.addLayout(header_layout)
 
@@ -170,8 +175,8 @@ class BatchEditPropertyDialog(QDialog):
         left_layout = QVBoxLayout()
         self.remove_list = _EntryList()
         left_layout.addWidget(self.remove_list)
-        btn_restore_all = QPushButton("Restore All →")
-        btn_restore_all.setToolTip("Restore all removed values back to current")
+        btn_restore_all = QPushButton(say("Restore All →"))
+        btn_restore_all.setToolTip(say("Restore all removed values back to current"))
         btn_restore_all.clicked.connect(self._restore_all)
         left_layout.addWidget(btn_restore_all)
         columns_layout.addLayout(left_layout, 1)
@@ -181,13 +186,13 @@ class BatchEditPropertyDialog(QDialog):
         self.current_list = _EntryList()
         center_layout.addWidget(self.current_list)
         bulk_center = QHBoxLayout()
-        btn_remove_all = QPushButton("← Remove All")
-        btn_remove_all.setToolTip("Move all current values to remove list")
+        btn_remove_all = QPushButton(say("← Remove All"))
+        btn_remove_all.setToolTip(say("Move all current values to remove list"))
         btn_remove_all.clicked.connect(self._move_all_to_remove)
         bulk_center.addWidget(btn_remove_all)
         if self.is_multiple:
-            btn_add_all = QPushButton("Add All →")
-            btn_add_all.setToolTip("Move all current values to add list")
+            btn_add_all = QPushButton(say("Add All →"))
+            btn_add_all.setToolTip(say("Move all current values to add list"))
             btn_add_all.clicked.connect(self._move_all_to_add)
             bulk_center.addWidget(btn_add_all)
         center_layout.addLayout(bulk_center)
@@ -197,8 +202,8 @@ class BatchEditPropertyDialog(QDialog):
         right_layout = QVBoxLayout()
         self.add_list = _EntryList()
         right_layout.addWidget(self.add_list)
-        btn_cancel_all = QPushButton("← Cancel All")
-        btn_cancel_all.setToolTip("Cancel all additions")
+        btn_cancel_all = QPushButton(say("← Cancel All"))
+        btn_cancel_all.setToolTip(say("Cancel all additions"))
         btn_cancel_all.clicked.connect(self._cancel_all)
         right_layout.addWidget(btn_cancel_all)
         columns_layout.addLayout(right_layout, 1)
@@ -207,7 +212,7 @@ class BatchEditPropertyDialog(QDialog):
 
         # New value input (adapted to property type)
         input_layout = QHBoxLayout()
-        input_layout.addWidget(QLabel("New value:"))
+        input_layout.addWidget(QLabel(say("New value:")))
 
         if self.enumeration:
             self.value_input = QComboBox()
@@ -228,11 +233,11 @@ class BatchEditPropertyDialog(QDialog):
             input_layout.addWidget(self.value_input, 1)
         else:
             self.value_input = QLineEdit()
-            self.value_input.setPlaceholderText("Enter new value...")
+            self.value_input.setPlaceholderText(say("Enter new value..."))
             self.value_input.returnPressed.connect(self._add_new_value)
             input_layout.addWidget(self.value_input, 1)
 
-        btn_add_new = QPushButton("Add")
+        btn_add_new = QPushButton(say("Add"))
         btn_add_new.clicked.connect(self._add_new_value)
         input_layout.addWidget(btn_add_new)
 
@@ -267,7 +272,7 @@ class BatchEditPropertyDialog(QDialog):
             widget = _make_entry_widget(
                 f"{value} ({count})",
                 value,
-                [("→", "Restore to current", self._on_restore_clicked)],
+                [("→", say("Restore to current"), self._on_restore_clicked)],
             )
             self.remove_list.add_entry(widget)
 
@@ -280,8 +285,8 @@ class BatchEditPropertyDialog(QDialog):
                 f"{value} ({count})",
                 value,
                 [
-                    ("←", "Remove", self._on_remove_clicked),
-                    ("→", "Add", self._on_add_clicked),
+                    ("←", say("Remove"), self._on_remove_clicked),
+                    ("→", say("Add"), self._on_add_clicked),
                 ],
             )
             self.current_list.add_entry(widget)
@@ -291,9 +296,12 @@ class BatchEditPropertyDialog(QDialog):
         self.add_list.clear()
         for value in self._to_add:
             count = self._value_counts.get(value, 0)
-            label = f"{value} ({count})" if count > 0 else f"{value} (new)"
+            if count > 0:
+                label = f"{value} ({count})"
+            else:
+                label = say("{value} (new)", value=value)
             widget = _make_entry_widget(
-                label, value, [("←", "Cancel", self._on_cancel_clicked)]
+                label, value, [("←", say("Cancel"), self._on_cancel_clicked)]
             )
             self.add_list.add_entry(widget)
 

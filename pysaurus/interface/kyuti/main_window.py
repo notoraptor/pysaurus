@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pysaurus.core.language import say
 from pysaurus.core.notifications import End
 from pysaurus.interface.kyuti.app_context import AppContext
 from pysaurus.interface.kyuti.dialogs import EditFoldersDialog, RenameDialog
@@ -42,7 +43,7 @@ class SessionLogDialog(QDialog):
 
     def __init__(self, log_entries: list[str], parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Session Log")
+        self.setWindowTitle(say("Session Log"))
         self.resize(700, 500)
 
         layout = QVBoxLayout(self)
@@ -86,7 +87,7 @@ class MainWindow(QMainWindow):
 
     def _setup_ui(self):
         """Set up the main UI components."""
-        self.setWindowTitle("Pysaurus - Video Collection Manager")
+        self.setWindowTitle(say("Pysaurus - Video Collection Manager"))
         self.resize(1200, 800)
 
         # Central stacked widget for pages
@@ -108,7 +109,7 @@ class MainWindow(QMainWindow):
         # Status bar (click to clear message)
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage("Ready")
+        self.status_bar.showMessage(say("Ready"))
         self.status_bar.installEventFilter(self)
 
     def _setup_menu(self):
@@ -117,49 +118,49 @@ class MainWindow(QMainWindow):
         self.setMenuBar(menu_bar)
 
         # Database menu
-        self.database_menu = QMenu("&Database", self)
+        self.database_menu = QMenu(say("&Database"), self)
         menu_bar.addMenu(self.database_menu)
 
         self._action_rename_db = self.database_menu.addAction(
-            "&Rename Database...", self._on_rename_database
+            say("&Rename Database..."), self._on_rename_database
         )
         self._action_edit_folders = self.database_menu.addAction(
-            "&Edit Folders...", self._on_edit_folders
+            say("&Edit Folders..."), self._on_edit_folders
         )
         self.database_menu.addSeparator()
         self._action_update_db = self.database_menu.addAction(
-            "&Update Database", self.videos_page._on_update_database
+            say("&Update Database"), self.videos_page._on_update_database
         )
         self.database_menu.addSeparator()
         self._action_find_similar = self.database_menu.addAction(
-            "Find &Similar Videos", self.videos_page._on_find_similar
+            say("Find &Similar Videos"), self.videos_page._on_find_similar
         )
         self._action_find_reencoded = self.database_menu.addAction(
-            "Find Re-&encoded Videos", self.videos_page._on_find_reencoded
+            say("Find Re-&encoded Videos"), self.videos_page._on_find_reencoded
         )
         self.database_menu.addSeparator()
         self._action_close_db = self.database_menu.addAction(
-            "&Close Database", self._on_close_database
+            say("&Close Database"), self._on_close_database
         )
         self.database_menu.addSeparator()
         self._action_session_log = self.database_menu.addAction(
-            "Session &Log...", self._show_session_log
+            say("Session &Log..."), self._show_session_log
         )
-        self.database_menu.addAction("&Quit", self.close)
+        self.database_menu.addAction(say("&Quit"), self.close)
 
         # View menu
-        self.view_menu = QMenu("&View", self)
+        self.view_menu = QMenu(say("&View"), self)
         menu_bar.addMenu(self.view_menu)
 
         self._action_random_video = self.view_menu.addAction(
-            "&Random Video (Ctrl+O)", self.videos_page._on_random_video
+            say("&Random Video (Ctrl+O)"), self.videos_page._on_random_video
         )
         self._action_generate_playlist = self.view_menu.addAction(
-            "&Generate Playlist (Ctrl+L)", self.videos_page._on_playlist
+            say("&Generate Playlist (Ctrl+L)"), self.videos_page._on_playlist
         )
         self.view_menu.addSeparator()
         self._action_refresh_view = self.view_menu.addAction(
-            "Re&fresh View (Ctrl+R)", self.videos_page.refresh
+            say("Re&fresh View (Ctrl+R)"), self.videos_page.refresh
         )
 
         # Page navigation radio buttons (right side of menu bar)
@@ -167,9 +168,9 @@ class MainWindow(QMainWindow):
         page_layout = QHBoxLayout(self._page_selector)
         page_layout.setContentsMargins(0, 0, 4, 0)
         page_layout.setSpacing(8)
-        self._radio_videos = QRadioButton("Videos")
-        self._radio_properties = QRadioButton("Properties")
-        self._radio_files = QRadioButton("Files")
+        self._radio_videos = QRadioButton(say("Videos"))
+        self._radio_properties = QRadioButton(say("Properties"))
+        self._radio_files = QRadioButton(say("Files"))
         self._page_button_group = QButtonGroup(self)
         self._page_button_group.addButton(self._radio_videos, self.PAGE_VIDEOS)
         self._page_button_group.addButton(self._radio_properties, self.PAGE_PROPERTIES)
@@ -181,11 +182,11 @@ class MainWindow(QMainWindow):
         menu_bar.setCornerWidget(self._page_selector, Qt.Corner.TopRightCorner)
 
         # Options menu
-        self.options_menu = QMenu("&Options", self)
+        self.options_menu = QMenu(say("&Options"), self)
         menu_bar.addMenu(self.options_menu)
 
         # Page size submenu
-        self.page_size_menu = self.options_menu.addMenu("&Page Size")
+        self.page_size_menu = self.options_menu.addMenu(say("&Page Size"))
         self._page_size_group = QActionGroup(self)
         self._page_size_group.setExclusive(True)
         self._page_size_actions = {}
@@ -204,22 +205,25 @@ class MainWindow(QMainWindow):
 
         # Confirm deletion for entries not found
         self._action_confirm_not_found = self.options_menu.addAction(
-            "Confirm &deletion for entries not found"
+            say("Confirm &deletion for entries not found")
         )
         self._action_confirm_not_found.setCheckable(True)
         self._action_confirm_not_found.setChecked(True)  # Default: confirm deletions
         self._action_confirm_not_found.setToolTip(
-            "When checked, show confirmation dialog before deleting entries not found"
+            say(
+                "When checked, show confirmation dialog before deleting entries"
+                " not found"
+            )
         )
         self._action_confirm_not_found.triggered.connect(
             self._on_confirm_not_found_changed
         )
 
         # Help menu
-        help_menu = QMenu("&Help", self)
+        help_menu = QMenu(say("&Help"), self)
         menu_bar.addMenu(help_menu)
 
-        help_menu.addAction("&About", self._show_about)
+        help_menu.addAction(say("&About"), self._show_about)
 
         # Initial state: database menu disabled
         self._update_database_menu_state()
@@ -249,7 +253,7 @@ class MainWindow(QMainWindow):
     def _on_database_opening(self, name: str, update: bool):
         """Handle database opening request."""
         self._run_process(
-            title="Opening Database",
+            title=say("Opening Database"),
             operation=lambda: self.ctx.open_database(name, update),
             on_end=self._on_database_operation_end,
             autocontinue=not update,
@@ -258,7 +262,7 @@ class MainWindow(QMainWindow):
     def _on_database_creating(self, name: str, folders: list, update: bool):
         """Handle database creation request."""
         self._run_process(
-            title="Creating Database",
+            title=say("Creating Database"),
             operation=lambda: self.ctx.create_database(name, folders, update),
             on_end=self._on_database_operation_end,
         )
@@ -272,7 +276,7 @@ class MainWindow(QMainWindow):
     def _on_update_database(self):
         """Handle update database request."""
         self._run_process(
-            title="Updating Database",
+            title=say("Updating Database"),
             operation=lambda: self.ctx.update_database(),
             on_end=self._on_videos_operation_end_reset_selection,
         )
@@ -280,7 +284,7 @@ class MainWindow(QMainWindow):
     def _on_find_similar(self):
         """Handle find similar videos request."""
         self._run_process(
-            title="Finding Similar Videos",
+            title=say("Finding Similar Videos"),
             operation=lambda: self.ctx.find_similar_videos(),
             on_end=self._on_videos_operation_end_reset_selection,
         )
@@ -288,7 +292,7 @@ class MainWindow(QMainWindow):
     def _on_find_similar_reencoded(self):
         """Handle find re-encoded videos request."""
         self._run_process(
-            title="Finding Re-encoded Videos",
+            title=say("Finding Re-encoded Videos"),
             operation=lambda: self.ctx.find_similar_videos_reencoded(),
             on_end=self._on_videos_operation_end_reset_selection,
         )
@@ -296,7 +300,7 @@ class MainWindow(QMainWindow):
     def _on_move_video(self, video_id: int, directory: str):
         """Handle move video request."""
         self._run_process(
-            title="Moving Video",
+            title=say("Moving Video"),
             operation=lambda: self.ctx.move_video_file(video_id, directory),
             on_end=self._on_videos_operation_end,
         )
@@ -314,7 +318,7 @@ class MainWindow(QMainWindow):
     def _on_scan_folders(self):
         """Handle scan folders request from the files page."""
         self._run_process(
-            title="Scanning Folders",
+            title=say("Scanning Folders"),
             operation=lambda: self.ctx.scan_folders(),
             on_end=self._on_scan_folders_end,
         )
@@ -353,7 +357,7 @@ class MainWindow(QMainWindow):
         """Log the session start time."""
         start_str = self._session_start.strftime("%Y-%m-%d %H:%M:%S")
         self._session_log.append(f"{'=' * 60}")
-        self._session_log.append(f"Session started: {start_str}")
+        self._session_log.append(say("Session started: {time}", time=start_str))
         self._session_log.append(f"{'=' * 60}")
 
     def _log_message(self, message: str):
@@ -463,9 +467,11 @@ class MainWindow(QMainWindow):
         """Show about dialog."""
         QMessageBox.about(
             self,
-            "About Pysaurus",
-            "Pysaurus - Video Collection Manager\n\n"
-            "A native Qt6 desktop interface for managing video collections.",
+            say("About Pysaurus"),
+            say(
+                "Pysaurus - Video Collection Manager\n\n"
+                "A native Qt6 desktop interface for managing video collections."
+            ),
         )
 
     def _update_menu_state(self):
@@ -520,9 +526,9 @@ class MainWindow(QMainWindow):
 
         current_name = self.ctx.get_database_name()
         new_name = RenameDialog.get_name(
-            title=f"Rename Database: {current_name}",
+            title=say("Rename Database: {name}", name=current_name),
             current_name=current_name,
-            label="New database name:",
+            label=say("New database name:"),
             parent=self,
         )
 
@@ -530,10 +536,14 @@ class MainWindow(QMainWindow):
             try:
                 self.ctx.rename_database(new_name)
                 self.setWindowTitle(f"Pysaurus - {new_name}")
-                self.status_bar.showMessage(f"Database renamed to '{new_name}'", 3000)
+                self.status_bar.showMessage(
+                    say("Database renamed to '{name}'", name=new_name), 3000
+                )
             except Exception as e:
                 QMessageBox.critical(
-                    self, "Rename Failed", f"Failed to rename database:\n{e}"
+                    self,
+                    say("Rename Failed"),
+                    say("Failed to rename database:\n{error}", error=e),
                 )
 
     def _on_edit_folders(self):
@@ -553,14 +563,16 @@ class MainWindow(QMainWindow):
             if set(new_folders) != set(current_folders):
                 try:
                     self.ctx.set_database_folders(new_folders)
-                    self.status_bar.showMessage("Folders updated", 3000)
+                    self.status_bar.showMessage(say("Folders updated"), 3000)
 
                     # Ask if user wants to update the database
                     reply = QMessageBox.question(
                         self,
-                        "Update Database",
-                        "Folders have been updated.\n\n"
-                        "Do you want to scan for new videos now?",
+                        say("Update Database"),
+                        say(
+                            "Folders have been updated.\n\n"
+                            "Do you want to scan for new videos now?"
+                        ),
                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                         QMessageBox.StandardButton.Yes,
                     )
@@ -568,7 +580,9 @@ class MainWindow(QMainWindow):
                         self._on_update_database()
                 except Exception as e:
                     QMessageBox.critical(
-                        self, "Update Failed", f"Failed to update folders:\n{e}"
+                        self,
+                        say("Update Failed"),
+                        say("Failed to update folders:\n{error}", error=e),
                     )
 
     def _on_close_database(self):
@@ -579,8 +593,8 @@ class MainWindow(QMainWindow):
         db_name = self.ctx.get_database_name()
         reply = QMessageBox.question(
             self,
-            "Close Database",
-            f"Close database '{db_name}'?",
+            say("Close Database"),
+            say("Close database '{name}'?", name=db_name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -607,7 +621,7 @@ class MainWindow(QMainWindow):
     def show_databases_page(self):
         """Navigate to databases page."""
         self.stack.setCurrentIndex(self.PAGE_DATABASES)
-        self.setWindowTitle("Pysaurus - Databases")
+        self.setWindowTitle(say("Pysaurus - Databases"))
         self._update_menu_state()
 
     def show_videos_page(self):
@@ -625,7 +639,7 @@ class MainWindow(QMainWindow):
         if self.ctx.has_database():
             self.stack.setCurrentIndex(self.PAGE_PROPERTIES)
             self.setWindowTitle(
-                f"Pysaurus - Properties - {self.ctx.get_database_name()}"
+                say("Pysaurus - Properties - {name}", name=self.ctx.get_database_name())
             )
             self.properties_page.refresh()
             self._update_menu_state()
@@ -636,7 +650,9 @@ class MainWindow(QMainWindow):
         """Navigate to the files page (DB file inventory)."""
         if self.ctx.has_database():
             self.stack.setCurrentIndex(self.PAGE_FILES)
-            self.setWindowTitle(f"Pysaurus - Files - {self.ctx.get_database_name()}")
+            self.setWindowTitle(
+                say("Pysaurus - Files - {name}", name=self.ctx.get_database_name())
+            )
             self.files_page.refresh()
             self._update_menu_state()
         else:
@@ -654,17 +670,17 @@ class MainWindow(QMainWindow):
         """Handle confirm deletion setting change."""
         # Store the setting in videos_page
         self.videos_page.confirm_not_found_deletion = checked
+        state = say("enabled") if checked else say("disabled")
         self.status_bar.showMessage(
-            f"Confirm deletion for 'not found' entries: {'enabled' if checked else 'disabled'}",
-            3000,
+            say("Confirm deletion for 'not found' entries: {state}", state=state), 3000
         )
 
     def closeEvent(self, event):
         """Handle window close event."""
         reply = QMessageBox.question(
             self,
-            "Quit",
-            "Are you sure you want to quit?",
+            say("Quit"),
+            say("Are you sure you want to quit?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )

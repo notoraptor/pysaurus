@@ -22,6 +22,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pysaurus.core.language import say
+
 # Source tree structure
 SOURCE_TREE = {
     "readable": {
@@ -48,7 +50,7 @@ class SourcesDialog(QDialog):
         start_tab: int = 0,
     ):
         super().__init__(parent)
-        self.setWindowTitle("Select Sources")
+        self.setWindowTitle(say("Select Sources"))
         self.setMinimumWidth(450)
 
         self._checkboxes: dict[str, QCheckBox] = {}
@@ -66,8 +68,8 @@ class SourcesDialog(QDialog):
 
         # Tab widget
         self._tabs = QTabWidget()
-        self._tabs.addTab(self._create_simple_tab(), "Simple")
-        self._tabs.addTab(self._create_advanced_tab(), "Advanced")
+        self._tabs.addTab(self._create_simple_tab(), say("Simple"))
+        self._tabs.addTab(self._create_advanced_tab(), say("Advanced"))
         self._tabs.setCurrentIndex(start_tab)
         layout.addWidget(self._tabs)
 
@@ -85,56 +87,58 @@ class SourcesDialog(QDialog):
         layout = QVBoxLayout(widget)
 
         # Instructions
-        layout.addWidget(QLabel("Select which videos to display:"))
+        layout.addWidget(QLabel(say("Select which videos to display:")))
 
         # Readable group
-        readable_group = QGroupBox("Readable")
+        readable_group = QGroupBox(say("Readable"))
         readable_layout = QVBoxLayout(readable_group)
 
         # Found subgroup
-        found_group = QGroupBox("Found")
+        found_group = QGroupBox(say("Found"))
         found_layout = QVBoxLayout(found_group)
         self._add_checkbox(
-            found_layout, "readable.found.with_thumbnails", "With thumbnails"
+            found_layout, "readable.found.with_thumbnails", say("With thumbnails")
         )
         self._add_checkbox(
-            found_layout, "readable.found.without_thumbnails", "Without thumbnails"
+            found_layout, "readable.found.without_thumbnails", say("Without thumbnails")
         )
         readable_layout.addWidget(found_group)
 
         # Not found subgroup
-        not_found_group = QGroupBox("Not Found")
+        not_found_group = QGroupBox(say("Not Found"))
         not_found_layout = QVBoxLayout(not_found_group)
         self._add_checkbox(
-            not_found_layout, "readable.not_found.with_thumbnails", "With thumbnails"
+            not_found_layout,
+            "readable.not_found.with_thumbnails",
+            say("With thumbnails"),
         )
         self._add_checkbox(
             not_found_layout,
             "readable.not_found.without_thumbnails",
-            "Without thumbnails",
+            say("Without thumbnails"),
         )
         readable_layout.addWidget(not_found_group)
 
         layout.addWidget(readable_group)
 
         # Unreadable group
-        unreadable_group = QGroupBox("Unreadable")
+        unreadable_group = QGroupBox(say("Unreadable"))
         unreadable_layout = QVBoxLayout(unreadable_group)
-        self._add_checkbox(unreadable_layout, "unreadable.found", "Found")
-        self._add_checkbox(unreadable_layout, "unreadable.not_found", "Not Found")
+        self._add_checkbox(unreadable_layout, "unreadable.found", say("Found"))
+        self._add_checkbox(unreadable_layout, "unreadable.not_found", say("Not Found"))
         layout.addWidget(unreadable_group)
 
         # Quick select buttons
         btn_layout = QHBoxLayout()
-        btn_all = QPushButton("Select All")
+        btn_all = QPushButton(say("Select All"))
         btn_all.clicked.connect(self._select_all)
         btn_layout.addWidget(btn_all)
 
-        btn_none = QPushButton("Select None")
+        btn_none = QPushButton(say("Select None"))
         btn_none.clicked.connect(self._select_none)
         btn_layout.addWidget(btn_none)
 
-        btn_valid = QPushButton("Valid Only")
+        btn_valid = QPushButton(say("Valid Only"))
         btn_valid.clicked.connect(self._select_valid)
         btn_layout.addWidget(btn_valid)
 
@@ -146,11 +150,11 @@ class SourcesDialog(QDialog):
         widget = QWidget()
         layout = QVBoxLayout(widget)
 
-        layout.addWidget(QLabel("Enter a search expression to filter videos:"))
+        layout.addWidget(QLabel(say("Enter a search expression to filter videos:")))
 
         self._expression_edit = QTextEdit()
         self._expression_edit.setPlaceholderText(
-            'e.g. width > 1080 and found and "eng" in audio_languages'
+            say('e.g. width > 1080 and found and "eng" in audio_languages')
         )
         self._expression_edit.setAcceptRichText(False)
         self._expression_edit.installEventFilter(self)

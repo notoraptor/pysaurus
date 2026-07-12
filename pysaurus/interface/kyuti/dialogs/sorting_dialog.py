@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from pysaurus.core.language import say
 from pysaurus.interface.common.common import FIELD_MAP
 
 
@@ -29,7 +30,7 @@ class SortingDialog(QDialog):
         self, current_sorting: list[tuple[str, bool]] | None = None, parent=None
     ):
         super().__init__(parent)
-        self.setWindowTitle("Set Sorting")
+        self.setWindowTitle(say("Set Sorting"))
         self.setMinimumWidth(400)
         self.setMinimumHeight(350)
 
@@ -42,7 +43,7 @@ class SortingDialog(QDialog):
         """Set up the UI."""
         layout = QVBoxLayout(self)
 
-        layout.addWidget(QLabel("Sort by (first has highest priority):"))
+        layout.addWidget(QLabel(say("Sort by (first has highest priority):")))
 
         # Sort criteria list
         self.sort_list = QListWidget()
@@ -52,19 +53,19 @@ class SortingDialog(QDialog):
         # Buttons for managing sort criteria
         btn_layout = QHBoxLayout()
 
-        self.btn_up = QPushButton("Move Up")
+        self.btn_up = QPushButton(say("Move Up"))
         self.btn_up.clicked.connect(self._move_up)
         btn_layout.addWidget(self.btn_up)
 
-        self.btn_down = QPushButton("Move Down")
+        self.btn_down = QPushButton(say("Move Down"))
         self.btn_down.clicked.connect(self._move_down)
         btn_layout.addWidget(self.btn_down)
 
-        self.btn_toggle = QPushButton("Toggle Direction")
+        self.btn_toggle = QPushButton(say("Toggle Direction"))
         self.btn_toggle.clicked.connect(self._toggle_direction)
         btn_layout.addWidget(self.btn_toggle)
 
-        self.btn_remove = QPushButton("Remove")
+        self.btn_remove = QPushButton(say("Remove"))
         self.btn_remove.clicked.connect(self._remove_selected)
         btn_layout.addWidget(self.btn_remove)
 
@@ -73,20 +74,20 @@ class SortingDialog(QDialog):
         # Add new field section
         add_layout = QHBoxLayout()
 
-        add_layout.addWidget(QLabel("Add field:"))
+        add_layout.addWidget(QLabel(say("Add field:")))
 
         self.field_combo = QComboBox()
         for field_info in FIELD_MAP.sortable:
             self.field_combo.addItem(field_info.title, field_info.name)
         add_layout.addWidget(self.field_combo)
 
-        self.btn_add_asc = QPushButton("Add ↑")
-        self.btn_add_asc.setToolTip("Add ascending")
+        self.btn_add_asc = QPushButton(say("Add ↑"))
+        self.btn_add_asc.setToolTip(say("Add ascending"))
         self.btn_add_asc.clicked.connect(self._on_add_asc)
         add_layout.addWidget(self.btn_add_asc)
 
-        self.btn_add_desc = QPushButton("Add ↓")
-        self.btn_add_desc.setToolTip("Add descending")
+        self.btn_add_desc = QPushButton(say("Add ↓"))
+        self.btn_add_desc.setToolTip(say("Add descending"))
         self.btn_add_desc.clicked.connect(self._on_add_desc)
         add_layout.addWidget(self.btn_add_desc)
 
@@ -94,8 +95,8 @@ class SortingDialog(QDialog):
 
         # Dialog buttons
         button_box = QDialogButtonBox()
-        button_box.addButton("Apply", QDialogButtonBox.ButtonRole.AcceptRole)
-        button_box.addButton("Reset", QDialogButtonBox.ButtonRole.ResetRole)
+        button_box.addButton(say("Apply"), QDialogButtonBox.ButtonRole.AcceptRole)
+        button_box.addButton(say("Reset"), QDialogButtonBox.ButtonRole.ResetRole)
         button_box.addButton(QDialogButtonBox.StandardButton.Cancel)
 
         button_box.accepted.connect(self.accept)

@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.file_size import FileSize
+from pysaurus.core.language import say
 from pysaurus.database.algorithms.folder_scan import (
     EMPTY_FOLDER_EXT,
     FileInfo,
@@ -47,17 +48,17 @@ from pysaurus.interface.kyuti.app_context import AppContext
 def _ext_display(ext: str) -> str:
     """Human-readable label for an extension key."""
     if ext == EMPTY_FOLDER_EXT:
-        return "(empty folder)"
-    return f".{ext}" if ext else "(no extension)"
+        return say("(empty folder)")
+    return f".{ext}" if ext else say("(no extension)")
 
 
 def _ext_subject(ext: str, count: int) -> str:
     """Label for a trash-all confirmation message."""
     if ext == EMPTY_FOLDER_EXT:
-        return f"all {count} empty folder(s)"
+        return say("all {count} empty folder(s)", count=count)
     if ext:
-        return f"all {count} .{ext} file(s)"
-    return f"all {count} file(s) with no extension"
+        return say("all {count} .{ext} file(s)", count=count, ext=ext)
+    return say("all {count} file(s) with no extension", count=count)
 
 
 # Ask for confirmation when a bulk trash operation exceeds this many files.
@@ -164,22 +165,24 @@ class FilesPage(QWidget):
         layout = QVBoxLayout(w)
         layout.addStretch()
 
-        title = QLabel("<b>Database file inventory</b>")
+        title = QLabel("<b>" + say("Database file inventory") + "</b>")
         title.setStyleSheet("font-size: 16px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
         desc = QLabel(
-            "Scan all files in the database source folders, then review and "
-            "clean non-video files that have accumulated there "
-            "(thumbnails, .nfo, .part, subtitles, …)."
+            say(
+                "Scan all files in the database source folders, then review and "
+                "clean non-video files that have accumulated there "
+                "(thumbnails, .nfo, .part, subtitles, …)."
+            )
         )
         desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         desc.setWordWrap(True)
         desc.setStyleSheet("color: #555; padding: 10px;")
         layout.addWidget(desc)
 
-        btn = QPushButton("Scan folders")
+        btn = QPushButton(say("Scan folders"))
         btn.setFixedWidth(200)
         btn.clicked.connect(self.scan_requested)
         row = QHBoxLayout()
@@ -197,7 +200,7 @@ class FilesPage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         top = QHBoxLayout()
-        self._rescan_btn = QPushButton("Rescan folders")
+        self._rescan_btn = QPushButton(say("Rescan folders"))
         self._rescan_btn.clicked.connect(self.scan_requested)
         top.addWidget(self._rescan_btn)
         self._summary_label = QLabel("")
@@ -207,8 +210,8 @@ class FilesPage(QWidget):
         layout.addLayout(top)
 
         self._tabs = QTabWidget()
-        self._tabs.addTab(self._build_others_tab(), "Others")
-        self._tabs.addTab(self._build_video_stats_tab(), "Video stats")
+        self._tabs.addTab(self._build_others_tab(), say("Others"))
+        self._tabs.addTab(self._build_video_stats_tab(), say("Video stats"))
         layout.addWidget(self._tabs)
 
         return w
@@ -225,11 +228,11 @@ class FilesPage(QWidget):
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
-        left_layout.addWidget(QLabel("<b>Extensions</b>"))
+        left_layout.addWidget(QLabel("<b>" + say("Extensions") + "</b>"))
 
         self._ext_table = QTableWidget(0, 4)
         self._ext_table.setHorizontalHeaderLabels(
-            ["Extension", "Count", "Total size", ""]
+            [say("Extension"), say("Count"), say("Total size"), ""]
         )
         self._ext_table.verticalHeader().setVisible(False)
         self._ext_table.setSelectionBehavior(
@@ -257,22 +260,22 @@ class FilesPage(QWidget):
         right_layout.setContentsMargins(0, 0, 0, 0)
 
         right_header = QHBoxLayout()
-        self._files_title = QLabel("<b>Files</b>")
+        self._files_title = QLabel("<b>" + say("Files") + "</b>")
         right_header.addWidget(self._files_title)
         right_header.addStretch()
         right_layout.addLayout(right_header)
 
         actions = QHBoxLayout()
-        self._btn_open_folder = QPushButton("Open folder")
+        self._btn_open_folder = QPushButton(say("Open folder"))
         self._btn_open_folder.clicked.connect(self._on_open_selected_folder)
-        self._btn_trash_selected = QPushButton("Send to trash")
+        self._btn_trash_selected = QPushButton(say("Send to trash"))
         self._btn_trash_selected.clicked.connect(self._on_trash_selected)
         actions.addWidget(self._btn_open_folder)
         actions.addWidget(self._btn_trash_selected)
         actions.addStretch()
-        actions.addWidget(QLabel("Filter:"))
+        actions.addWidget(QLabel(say("Filter:")))
         self._filter_edit = QLineEdit()
-        self._filter_edit.setPlaceholderText("Substring match on path")
+        self._filter_edit.setPlaceholderText(say("Substring match on path"))
         self._filter_edit.setClearButtonEnabled(True)
         self._filter_edit.textChanged.connect(self._files_model.set_filter)
         self._filter_edit.setFixedWidth(220)
@@ -306,9 +309,11 @@ class FilesPage(QWidget):
         layout = QVBoxLayout(w)
 
         hint = QLabel(
-            "Read-only stats for video files. Use the <b>Videos</b> page to "
-            "manage indexed videos. An <i>unknown</i> video is physically "
-            "present on disk but not referenced by the database."
+            say(
+                "Read-only stats for video files. Use the <b>Videos</b> page to "
+                "manage indexed videos. An <i>unknown</i> video is physically "
+                "present on disk but not referenced by the database."
+            )
         )
         hint.setWordWrap(True)
         hint.setStyleSheet("color: #555; padding: 4px 0;")
@@ -317,11 +322,11 @@ class FilesPage(QWidget):
         self._video_stats_table = QTableWidget(0, 5)
         self._video_stats_table.setHorizontalHeaderLabels(
             [
-                "Extension",
-                "Indexed (count)",
-                "Indexed (size)",
-                "Unknown (count)",
-                "Unknown (size)",
+                say("Extension"),
+                say("Indexed (count)"),
+                say("Indexed (size)"),
+                say("Unknown (count)"),
+                say("Unknown (size)"),
             ]
         )
         self._video_stats_table.verticalHeader().setVisible(False)
@@ -386,7 +391,7 @@ class FilesPage(QWidget):
             self._ext_table.setItem(row_index, 1, count_item)
             self._ext_table.setItem(row_index, 2, size_item)
 
-            btn = QPushButton("Trash all")
+            btn = QPushButton(say("Trash all"))
             btn.setStyleSheet("color: #a40000;")
             btn.clicked.connect(
                 lambda _checked=False, e=ext: self._on_trash_extension(e)
@@ -398,23 +403,23 @@ class FilesPage(QWidget):
             self._ext_table.selectRow(0)
             self._on_ext_row_changed(0)
         else:
-            self._files_title.setText("<b>Files</b>")
+            self._files_title.setText("<b>" + say("Files") + "</b>")
             self._files_model.set_items([])
 
     def _on_ext_row_changed(self, row: int) -> None:
         if row < 0 or row >= len(self._sorted_ext_keys) or self._result is None:
             self._files_model.set_items([])
-            self._files_title.setText("<b>Files</b>")
+            self._files_title.setText("<b>" + say("Files") + "</b>")
             return
         ext = self._sorted_ext_keys[row]
         items = self._result.others.get(ext, [])
         self._files_model.set_items(items)
         if ext == EMPTY_FOLDER_EXT:
-            heading = "Empty folders"
+            heading = say("Empty folders")
         elif ext:
-            heading = f"Files — .{ext}"
+            heading = say("Files — .{ext}", ext=ext)
         else:
-            heading = "Files — (no extension)"
+            heading = say("Files — (no extension)")
         self._files_title.setText(f"<b>{heading}</b> ({len(items)})")
 
     def _selected_file_infos(self) -> list[FileInfo]:
@@ -430,7 +435,7 @@ class FilesPage(QWidget):
         infos = self._selected_file_infos()
         if not infos:
             QMessageBox.information(
-                self, "No selection", "Select at least one file first."
+                self, say("No selection"), say("Select at least one file first.")
             )
             return
         # Open the parent folder of the first selected file.
@@ -441,7 +446,7 @@ class FilesPage(QWidget):
         infos = self._selected_file_infos()
         if not infos:
             QMessageBox.information(
-                self, "No selection", "Select at least one file first."
+                self, say("No selection"), say("Select at least one file first.")
             )
             return
         if not self._confirm_trash(len(infos), preview_paths=infos):
@@ -467,24 +472,28 @@ class FilesPage(QWidget):
         what: str | None = None,
         preview_paths: list[FileInfo] | None = None,
     ) -> bool:
-        subject = what or f"{count} file(s)"
+        subject = what or say("{count} file(s)", count=count)
         detail = ""
         if preview_paths:
             head = [str(p.path) for p in preview_paths[:5]]
             detail = "\n".join(head)
             if len(preview_paths) > 5:
-                detail += f"\n… (+{len(preview_paths) - 5} more)"
+                detail += "\n" + say("… (+{count} more)", count=len(preview_paths) - 5)
         warn_bulk = ""
         if count > BULK_CONFIRM_THRESHOLD:
-            warn_bulk = (
-                f"\n\nThis is a bulk operation ({count} files). "
+            warn_bulk = "\n\n" + say(
+                "This is a bulk operation ({count} files). "
                 "It cannot be undone from Pysaurus; files will go to the "
-                "system trash if available."
+                "system trash if available.",
+                count=count,
             )
         reply = QMessageBox.question(
             self,
-            "Send to trash",
-            f"Send {subject} to the system trash?{warn_bulk}\n\n{detail}",
+            say("Send to trash"),
+            say("Send {subject} to the system trash?", subject=subject)
+            + warn_bulk
+            + "\n\n"
+            + detail,
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -502,11 +511,17 @@ class FilesPage(QWidget):
         if errors:
             detail = "\n".join(f"{p}: {msg}" for p, msg in errors[:10])
             if len(errors) > 10:
-                detail += f"\n… (+{len(errors) - 10} more)"
+                detail += "\n" + say("… (+{count} more)", count=len(errors) - 10)
             QMessageBox.warning(
                 self,
-                "Trash completed with errors",
-                f"Sent {ok} file(s) to trash. {len(errors)} failed:\n\n{detail}",
+                say("Trash completed with errors"),
+                say(
+                    "Sent {count} file(s) to trash. {failed} failed:",
+                    count=ok,
+                    failed=len(errors),
+                )
+                + "\n\n"
+                + detail,
             )
 
     def _drop_paths_from_others(self, removed_paths: set[str]) -> None:
@@ -559,8 +574,15 @@ class FilesPage(QWidget):
         nb_idx = sum(len(v) for v in self._result.videos_indexed.values())
         nb_unk = sum(len(v) for v in self._result.videos_unknown.values())
         self._summary_label.setText(
-            f"{nb_others} other files ({FileSize(size_others)})  ·  "
-            f"{nb_idx} indexed videos  ·  {nb_unk} unknown videos"
+            say(
+                "{count} other files ({size})",
+                count=nb_others,
+                size=FileSize(size_others),
+            )
+            + "  ·  "
+            + say("{count} indexed videos", count=nb_idx)
+            + "  ·  "
+            + say("{count} unknown videos", count=nb_unk)
         )
 
 

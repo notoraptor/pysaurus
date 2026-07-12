@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
+from pysaurus.core.language import say
 from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern
 
@@ -103,13 +104,13 @@ class MultipleValuesWidget(QWidget):
             btn_layout = QHBoxLayout()
             btn_layout.setContentsMargins(0, 0, 0, 0)
 
-            btn_reset = QPushButton("Reset")
-            btn_reset.setToolTip("Restore initial values")
+            btn_reset = QPushButton(say("Reset"))
+            btn_reset.setToolTip(say("Restore initial values"))
             btn_reset.clicked.connect(self._reset_values)
             btn_layout.addWidget(btn_reset)
 
-            btn_clear = QPushButton("Clear")
-            btn_clear.setToolTip("Uncheck all values")
+            btn_clear = QPushButton(say("Clear"))
+            btn_clear.setToolTip(say("Uncheck all values"))
             btn_clear.clicked.connect(self._clear_values)
             btn_layout.addWidget(btn_clear)
 
@@ -129,19 +130,19 @@ class MultipleValuesWidget(QWidget):
             input_layout.setContentsMargins(0, 0, 0, 0)
 
             self.input_edit = NonSubmittingLineEdit()
-            self.input_edit.setPlaceholderText("Enter value...")
+            self.input_edit.setPlaceholderText(say("Enter value..."))
             self.input_edit.returnPressed.connect(self._add_value)
             input_layout.addWidget(self.input_edit)
 
             btn_add = QPushButton("+")
             btn_add.setFixedWidth(30)
-            btn_add.setToolTip("Add value")
+            btn_add.setToolTip(say("Add value"))
             btn_add.clicked.connect(self._add_value)
             input_layout.addWidget(btn_add)
 
             btn_remove = QPushButton("-")
             btn_remove.setFixedWidth(30)
-            btn_remove.setToolTip("Remove selected value(s)")
+            btn_remove.setToolTip(say("Remove selected value(s)"))
             btn_remove.clicked.connect(self._remove_selected)
             input_layout.addWidget(btn_remove)
 
@@ -151,13 +152,13 @@ class MultipleValuesWidget(QWidget):
             btn_layout = QHBoxLayout()
             btn_layout.setContentsMargins(0, 0, 0, 0)
 
-            btn_reset = QPushButton("Reset")
-            btn_reset.setToolTip("Restore initial values")
+            btn_reset = QPushButton(say("Reset"))
+            btn_reset.setToolTip(say("Restore initial values"))
             btn_reset.clicked.connect(self._reset_values)
             btn_layout.addWidget(btn_reset)
 
-            btn_clear = QPushButton("Clear")
-            btn_clear.setToolTip("Remove all values")
+            btn_clear = QPushButton(say("Clear"))
+            btn_clear.setToolTip(say("Remove all values"))
             btn_clear.clicked.connect(self._clear_values)
             btn_layout.addWidget(btn_clear)
 
@@ -319,7 +320,7 @@ class VideoPropertiesDialog(QDialog):
         self._loading = False
         self._focused_prop: str | None = None
 
-        self.setWindowTitle(f"Properties - {video.title}")
+        self.setWindowTitle(say("Properties - {title}", title=video.title))
         self.setMinimumWidth(500)
         self.setMinimumHeight(400)
 
@@ -338,11 +339,11 @@ class VideoPropertiesDialog(QDialog):
 
         # Properties tab
         props_tab = self._create_properties_tab()
-        tabs.addTab(props_tab, "Properties")
+        tabs.addTab(props_tab, say("Properties"))
 
         # Info tab
         info_tab = self._create_info_tab()
-        tabs.addTab(info_tab, "Info")
+        tabs.addTab(info_tab, say("Info"))
 
         # Dialog buttons
         self.button_box = QDialogButtonBox(
@@ -365,101 +366,115 @@ class VideoPropertiesDialog(QDialog):
         layout = QVBoxLayout(widget)
 
         # File info
-        file_group = QGroupBox("File")
+        file_group = QGroupBox(say("File"))
         file_layout = QFormLayout(file_group)
 
-        file_layout.addRow("Title:", QLabel(str(self.video.title)))
-        file_layout.addRow("Filename:", QLabel(str(self.video.filename)))
-        file_layout.addRow("Size:", QLabel(str(FileSize(self.video.file_size))))
+        file_layout.addRow(say("Title:"), QLabel(str(self.video.title)))
+        file_layout.addRow(say("Filename:"), QLabel(str(self.video.filename)))
+        file_layout.addRow(say("Size:"), QLabel(str(FileSize(self.video.file_size))))
         file_layout.addRow(
-            "Date Modified:", QLabel(str(self.video.date_entry_modified))
+            say("Date Modified:"), QLabel(str(self.video.date_entry_modified))
         )
 
         layout.addWidget(file_group)
 
         # Video info
-        video_group = QGroupBox("Video")
+        video_group = QGroupBox(say("Video"))
         video_layout = QFormLayout(video_group)
 
         duration = Duration(int(self.video.duration * 1_000_000))
-        video_layout.addRow("Duration:", QLabel(str(duration)))
+        video_layout.addRow(say("Duration:"), QLabel(str(duration)))
         video_layout.addRow(
-            "Resolution:", QLabel(f"{self.video.width}x{self.video.height}")
+            say("Resolution:"), QLabel(f"{self.video.width}x{self.video.height}")
         )
         video_layout.addRow(
-            "Codec:",
-            QLabel(str(self.video.video_codec) if self.video.video_codec else "N/A"),
-        )
-        video_layout.addRow(
-            "Codec Description:",
+            say("Codec:"),
             QLabel(
-                str(self.video.video_codec_description)
-                if self.video.video_codec_description
-                else "N/A"
+                str(self.video.video_codec) if self.video.video_codec else say("N/A")
             ),
         )
         video_layout.addRow(
-            "Container:",
+            say("Codec Description:"),
+            QLabel(
+                str(self.video.video_codec_description)
+                if self.video.video_codec_description
+                else say("N/A")
+            ),
+        )
+        video_layout.addRow(
+            say("Container:"),
             QLabel(
                 str(self.video.container_format)
                 if self.video.container_format
-                else "N/A"
+                else say("N/A")
             ),
         )
 
         # Frame rate
         if self.video.frame_rate_den and self.video.frame_rate_den > 0:
             fps = self.video.frame_rate_num / self.video.frame_rate_den
-            video_layout.addRow("Frame Rate:", QLabel(f"{fps:.2f} fps"))
+            video_layout.addRow(
+                say("Frame Rate:"), QLabel(say("{fps:.2f} fps", fps=fps))
+            )
 
         layout.addWidget(video_group)
 
         # Audio info
-        audio_group = QGroupBox("Audio")
+        audio_group = QGroupBox(say("Audio"))
         audio_layout = QFormLayout(audio_group)
 
         audio_layout.addRow(
-            "Codec:",
-            QLabel(str(self.video.audio_codec) if self.video.audio_codec else "N/A"),
-        )
-        audio_layout.addRow(
-            "Channels:",
-            QLabel(str(self.video.channels) if self.video.channels else "N/A"),
-        )
-        audio_layout.addRow(
-            "Sample Rate:",
-            QLabel(f"{self.video.sample_rate} Hz" if self.video.sample_rate else "N/A"),
-        )
-        audio_layout.addRow(
-            "Bit Rate:",
+            say("Codec:"),
             QLabel(
-                f"{self.video.audio_bit_rate_formatted}/s"
+                str(self.video.audio_codec) if self.video.audio_codec else say("N/A")
+            ),
+        )
+        audio_layout.addRow(
+            say("Channels:"),
+            QLabel(str(self.video.channels) if self.video.channels else say("N/A")),
+        )
+        audio_layout.addRow(
+            say("Sample Rate:"),
+            QLabel(
+                say("{sample_rate} Hz", sample_rate=self.video.sample_rate)
+                if self.video.sample_rate
+                else say("N/A")
+            ),
+        )
+        audio_layout.addRow(
+            say("Bit Rate:"),
+            QLabel(
+                say("{bit_rate}/s", bit_rate=self.video.audio_bit_rate_formatted)
                 if self.video.audio_bit_rate
-                else "N/A"
+                else say("N/A")
             ),
         )
 
         layout.addWidget(audio_group)
 
         # Status
-        status_group = QGroupBox("Status")
+        status_group = QGroupBox(say("Status"))
         status_layout = QFormLayout(status_group)
 
-        status_layout.addRow("Found:", QLabel("Yes" if self.video.found else "No"))
         status_layout.addRow(
-            "Readable:", QLabel("No" if self.video.unreadable else "Yes")
+            say("Found:"), QLabel(say("Yes") if self.video.found else say("No"))
         )
         status_layout.addRow(
-            "Has Thumbnail:", QLabel("Yes" if self.video.with_thumbnails else "No")
+            say("Readable:"), QLabel(say("No") if self.video.unreadable else say("Yes"))
+        )
+        status_layout.addRow(
+            say("Has Thumbnail:"),
+            QLabel(say("Yes") if self.video.with_thumbnails else say("No")),
         )
 
         if self.video.similarity_id is not None:
             status_layout.addRow(
-                "Similarity Group:", QLabel(str(self.video.similarity_id))
+                say("Similarity Group:"), QLabel(str(self.video.similarity_id))
             )
         if self.video.similarity_id_reencoded is not None:
             status_layout.addRow(
-                "Re-encoded Group:", QLabel(str(self.video.similarity_id_reencoded))
+                say("Re-encoded Group:"),
+                QLabel(str(self.video.similarity_id_reencoded)),
             )
 
         layout.addWidget(status_group)
@@ -473,7 +488,7 @@ class VideoPropertiesDialog(QDialog):
         if not self.prop_types:
             widget = QWidget()
             layout = QVBoxLayout(widget)
-            layout.addWidget(QLabel("No custom properties defined."))
+            layout.addWidget(QLabel(say("No custom properties defined.")))
             layout.addStretch()
             return widget
 
@@ -516,9 +531,9 @@ class VideoPropertiesDialog(QDialog):
             label_text = name
             detail_parts = []
             if prop_type.multiple:
-                detail_parts.append("multiple")
+                detail_parts.append(say("multiple"))
             if prop_type.enumeration:
-                detail_parts.append("enum")
+                detail_parts.append(say("enum"))
             if detail_parts:
                 label_text += f"  ({', '.join(detail_parts)})"
 
@@ -543,8 +558,8 @@ class VideoPropertiesDialog(QDialog):
                 input_widget = self._create_single_property_widget(prop_type)
                 h_layout.addWidget(input_widget, 1)
 
-                reset_btn = QPushButton("Reset")
-                reset_btn.setToolTip(f"Restore initial value of {name}")
+                reset_btn = QPushButton(say("Reset"))
+                reset_btn.setToolTip(say("Restore initial value of {name}", name=name))
                 reset_btn.setFixedWidth(50)
                 reset_btn.clicked.connect(
                     lambda _checked, n=name: self._on_reset_property(n)
@@ -552,8 +567,10 @@ class VideoPropertiesDialog(QDialog):
                 reset_btn.setVisible(False)
                 h_layout.addWidget(reset_btn)
 
-                clear_btn = QPushButton("Clear")
-                clear_btn.setToolTip(f"Remove {name} value from this video")
+                clear_btn = QPushButton(say("Clear"))
+                clear_btn.setToolTip(
+                    say("Remove {name} value from this video", name=name)
+                )
                 clear_btn.setFixedWidth(50)
                 clear_btn.clicked.connect(
                     lambda _checked, n=name: self._on_clear_property(n)
@@ -645,7 +662,7 @@ class VideoPropertiesDialog(QDialog):
         # float or str
         widget = QLineEdit()
         if ptype == "float":
-            widget.setPlaceholderText("Enter a number")
+            widget.setPlaceholderText(say("Enter a number"))
         widget.textEdited.connect(lambda _text, n=name: self._on_widget_changed(n))
         return widget
 

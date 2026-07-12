@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from pysaurus.core.language import say
 from pysaurus.video.video_pattern import VideoPattern
 
 
@@ -45,9 +46,9 @@ class VideoConfirmDialog(QDialog):
                 )
                 thumb_label.setPixmap(scaled)
             else:
-                thumb_label.setText("No preview")
+                thumb_label.setText(say("No preview"))
         else:
-            thumb_label.setText("No preview")
+            thumb_label.setText(say("No preview"))
         top.addWidget(thumb_label)
 
         # File path in monospace

@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from pysaurus.core.language import say
 from pysaurus.interface.common.common import FIELD_MAP
 from pysaurus.properties.properties import PropType
 
@@ -37,7 +38,7 @@ class GroupingDialog(QDialog):
         parent=None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("Set Grouping")
+        self.setWindowTitle(say("Set Grouping"))
         self.setMinimumWidth(350)
 
         self._prop_types = prop_types or []
@@ -51,29 +52,29 @@ class GroupingDialog(QDialog):
         layout = QVBoxLayout(self)
 
         # Field selection
-        field_group = QGroupBox("Group By")
+        field_group = QGroupBox(say("Group By"))
         field_layout = QFormLayout(field_group)
 
         # Field type (attribute or property)
         self.type_combo = QComboBox()
-        self.type_combo.addItems(["Video Attribute", "Custom Property"])
+        self.type_combo.addItems([say("Video Attribute"), say("Custom Property")])
         self.type_combo.currentIndexChanged.connect(self._on_type_changed)
-        field_layout.addRow("Type:", self.type_combo)
+        field_layout.addRow(say("Type:"), self.type_combo)
 
         # Field selector
         self.field_combo = QComboBox()
-        field_layout.addRow("Field:", self.field_combo)
+        field_layout.addRow(say("Field:"), self.field_combo)
 
         layout.addWidget(field_group)
 
         # Sort options
-        sort_group = QGroupBox("Sort Groups")
+        sort_group = QGroupBox(say("Sort Groups"))
         sort_layout = QVBoxLayout(sort_group)
 
         self.sort_button_group = QButtonGroup(self)
-        self.sort_field = QRadioButton("By field value")
-        self.sort_count = QRadioButton("By video count")
-        self.sort_length = QRadioButton("By field value length")
+        self.sort_field = QRadioButton(say("By field value"))
+        self.sort_count = QRadioButton(say("By video count"))
+        self.sort_length = QRadioButton(say("By field value length"))
 
         self.sort_button_group.addButton(self.sort_field, 0)
         self.sort_button_group.addButton(self.sort_count, 1)
@@ -88,19 +89,21 @@ class GroupingDialog(QDialog):
         # Options
         options_layout = QHBoxLayout()
 
-        self.reverse_check = QCheckBox("Reverse order")
+        self.reverse_check = QCheckBox(say("Reverse order"))
         options_layout.addWidget(self.reverse_check)
 
-        self.singletons_check = QCheckBox("Allow singletons")
-        self.singletons_check.setToolTip("Show groups with only one video")
+        self.singletons_check = QCheckBox(say("Allow singletons"))
+        self.singletons_check.setToolTip(say("Show groups with only one video"))
         options_layout.addWidget(self.singletons_check)
 
         layout.addLayout(options_layout)
 
         # Dialog buttons
         button_box = QDialogButtonBox()
-        button_box.addButton("Apply", QDialogButtonBox.ButtonRole.AcceptRole)
-        button_box.addButton("Clear Grouping", QDialogButtonBox.ButtonRole.ResetRole)
+        button_box.addButton(say("Apply"), QDialogButtonBox.ButtonRole.AcceptRole)
+        button_box.addButton(
+            say("Clear Grouping"), QDialogButtonBox.ButtonRole.ResetRole
+        )
         button_box.addButton(QDialogButtonBox.StandardButton.Cancel)
 
         button_box.accepted.connect(self.accept)

@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
+from pysaurus.core.language import say
 
 
 def _normalize_path(path: str) -> str:
@@ -44,9 +45,11 @@ class EditFoldersDialog(QDialog):
 
     def _setup_ui(self):
         """Set up the UI."""
-        title = "Edit Database Folders"
+        title = say("Edit Database Folders")
         if self._database_name:
-            title = f"Edit Folders - {self._database_name}"
+            title = say(
+                "Edit Folders - {database_name}", database_name=self._database_name
+            )
         self.setWindowTitle(title)
         self.setMinimumWidth(500)
         self.setMinimumHeight(400)
@@ -55,7 +58,7 @@ class EditFoldersDialog(QDialog):
 
         # Instructions
         layout.addWidget(
-            QLabel("Manage the sources (folders and files) for this database:")
+            QLabel(say("Manage the sources (folders and files) for this database:"))
         )
 
         # Folder list
@@ -67,15 +70,15 @@ class EditFoldersDialog(QDialog):
         # Buttons for source management
         btn_layout = QHBoxLayout()
 
-        self._btn_add_folder = QPushButton("Add Folder...")
+        self._btn_add_folder = QPushButton(say("Add Folder..."))
         self._btn_add_folder.clicked.connect(self._on_add_folder)
         btn_layout.addWidget(self._btn_add_folder)
 
-        self._btn_add_file = QPushButton("Add File...")
+        self._btn_add_file = QPushButton(say("Add File..."))
         self._btn_add_file.clicked.connect(self._on_add_file)
         btn_layout.addWidget(self._btn_add_file)
 
-        self._btn_remove = QPushButton("Remove Selected")
+        self._btn_remove = QPushButton(say("Remove Selected"))
         self._btn_remove.clicked.connect(self._on_remove_selected)
         self._btn_remove.setEnabled(False)
         btn_layout.addWidget(self._btn_remove)
@@ -105,7 +108,10 @@ class EditFoldersDialog(QDialog):
     def _update_count(self):
         """Update the source count label."""
         count = len(self._folders)
-        self._count_label.setText(f"{count} source{'s' if count != 1 else ''}")
+        if count == 1:
+            self._count_label.setText(say("1 source"))
+        else:
+            self._count_label.setText(say("{count} sources", count=count))
 
     def _on_selection_changed(self):
         """Handle selection changes."""
@@ -115,15 +121,15 @@ class EditFoldersDialog(QDialog):
     def _on_add_folder(self):
         """Add a new folder."""
         folder = QFileDialog.getExistingDirectory(
-            self, "Select Folder", "", QFileDialog.Option.ShowDirsOnly
+            self, say("Select Folder"), "", QFileDialog.Option.ShowDirsOnly
         )
         if folder:
             folder = _normalize_path(folder)
             if folder in self._folders:
                 QMessageBox.information(
                     self,
-                    "Already in List",
-                    f"This folder is already in the list:\n{folder}",
+                    say("Already in List"),
+                    say("This folder is already in the list:\n{folder}", folder=folder),
                 )
             else:
                 self._folders.add(folder)
@@ -133,7 +139,10 @@ class EditFoldersDialog(QDialog):
         """Add video files."""
         ext_filter = " ".join(f"*.{ext}" for ext in sorted(VIDEO_SUPPORTED_EXTENSIONS))
         files, _ = QFileDialog.getOpenFileNames(
-            self, "Select Video Files", "", f"Video files ({ext_filter});;All files (*)"
+            self,
+            say("Select Video Files"),
+            "",
+            say("Video files ({ext_filter});;All files (*)", ext_filter=ext_filter),
         )
         added = 0
         for file in files:
@@ -147,8 +156,8 @@ class EditFoldersDialog(QDialog):
             skipped = len(files) - added
             QMessageBox.information(
                 self,
-                "Some Files Already in List",
-                f"{skipped} file(s) were already in the list.",
+                say("Some Files Already in List"),
+                say("{skipped} file(s) were already in the list.", skipped=skipped),
             )
 
     def _on_remove_selected(self):
@@ -160,13 +169,15 @@ class EditFoldersDialog(QDialog):
         # Confirm removal
         count = len(selected_items)
         if count == 1:
-            msg = f"Remove this source?\n\n{selected_items[0].text()}"
+            msg = say(
+                "Remove this source?\n\n{source}", source=selected_items[0].text()
+            )
         else:
-            msg = f"Remove {count} sources?"
+            msg = say("Remove {count} sources?", count=count)
 
         reply = QMessageBox.question(
             self,
-            "Confirm Removal",
+            say("Confirm Removal"),
             msg,
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
@@ -182,8 +193,10 @@ class EditFoldersDialog(QDialog):
         if not self._folders:
             reply = QMessageBox.warning(
                 self,
-                "No Sources",
-                "The database has no sources.\n\nAre you sure you want to continue?",
+                say("No Sources"),
+                say(
+                    "The database has no sources.\n\nAre you sure you want to continue?"
+                ),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )

@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from pysaurus.core.language import say
+
 
 class GoToPageDialog(QDialog):
     """
@@ -27,7 +29,7 @@ class GoToPageDialog(QDialog):
             parent: Parent widget
         """
         super().__init__(parent)
-        self.setWindowTitle("Go to Page")
+        self.setWindowTitle(say("Go to Page"))
         self.setModal(True)
         self.setMinimumWidth(250)
 
@@ -38,7 +40,7 @@ class GoToPageDialog(QDialog):
         # Page input row
         input_layout = QHBoxLayout()
 
-        input_layout.addWidget(QLabel("Go to page:"))
+        input_layout.addWidget(QLabel(say("Go to page:")))
 
         self.page_spin = QSpinBox()
         self.page_spin.setMinimum(1)

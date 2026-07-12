@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from pysaurus.core.core_exceptions import ApplicationError
 from pysaurus.core.informer import Information
+from pysaurus.core.language import say
 from pysaurus.interface.common.qt_utils import ExceptHookForQt
 from pysaurus.interface.kyuti.main_window import MainWindow
 
@@ -101,18 +102,22 @@ class PySide6ExceptHook(ExceptHookForQt):
     def sys_except_hook(self, cls, exception, trace):
         if isinstance(exception, ApplicationError):
             logger.warning(f"Application error: {exception}")
-            QMessageBox.warning(None, "Error", str(exception))
+            QMessageBox.warning(None, say("Error"), str(exception))
         elif isinstance(exception, OSError):
             logger.warning(f"OS error: {exception}")
-            QMessageBox.warning(None, "OS error", str(exception))
+            QMessageBox.warning(None, say("OS error"), str(exception))
         else:
             tb_str = "".join(traceback.format_exception(cls, exception, trace))
             logger.error(f"Fatal error: {exception}")
             sys.__excepthook__(cls, exception, trace)
             msg = QMessageBox(
                 QMessageBox.Icon.Critical,
-                "Fatal Error",
-                f"An unexpected error occurred:\n\n{type(exception).__name__}: {exception}",
+                say("Fatal Error"),
+                say(
+                    "An unexpected error occurred:\n\n{name}: {message}",
+                    name=type(exception).__name__,
+                    message=exception,
+                ),
             )
             msg.setDetailedText(tb_str)
             msg.exec()

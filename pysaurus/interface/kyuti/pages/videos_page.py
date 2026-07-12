@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from pysaurus.core.classes import Selector
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
+from pysaurus.core.language import say
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.interface.common.common import FIELD_MAP, Uniconst, format_group_value
 from pysaurus.interface.kyuti.app_context import AppContext
@@ -254,18 +255,18 @@ class VideosPage(QWidget):
         has_selection = count > 0
 
         menu = LeftClickMenu(self)
-        action_show = menu.addAction("Show Only Selected\tCtrl+Shift+D")
+        action_show = menu.addAction(say("Show Only Selected") + "\tCtrl+Shift+D")
         action_show.setCheckable(True)
         action_show.setChecked(self._show_only_selected)
         action_show.setEnabled(has_selection or self._show_only_selected)
         action_show.triggered.connect(self._toggle_show_only_selected)
         menu.addSeparator()
-        action_toggle = menu.addAction("Toggle Watched")
+        action_toggle = menu.addAction(say("Toggle Watched"))
         action_toggle.setEnabled(has_selection)
         action_toggle.triggered.connect(self._on_toggle_watched_selection)
 
         # Edit Properties as a submenu listing each property
-        edit_submenu = menu.addMenu("Edit Properties")
+        edit_submenu = menu.addMenu(say("Edit Properties"))
         edit_submenu.setEnabled(has_selection)
         if has_selection and self.ctx.has_database():
             prop_types = self.ctx.get_prop_types()
@@ -277,7 +278,7 @@ class VideosPage(QWidget):
                     lambda a: self._edit_property_for_selection(a.data())
                 )
             else:
-                no_props = edit_submenu.addAction("(no properties defined)")
+                no_props = edit_submenu.addAction(say("(no properties defined)"))
                 no_props.setEnabled(False)
 
         menu.exec(
@@ -316,12 +317,12 @@ class VideosPage(QWidget):
         count = self._selector.size_from(self._view_count)
         has_selection = count > 0
         if has_selection:
-            self.selection_label.setText(f"{count} selected")
+            self.selection_label.setText(say("{count} selected", count=count))
             self.selection_label.setStyleSheet(
                 "color: #0078d4; font-weight: bold; background: transparent;"
             )
         else:
-            self.selection_label.setText("no selection")
+            self.selection_label.setText(say("no selection"))
             self.selection_label.setStyleSheet(
                 "color: #0078d4; font-style: italic; background: transparent;"
             )
@@ -349,9 +350,12 @@ class VideosPage(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Delete Videos",
-            f"Delete {count} video(s) from the database?\n\n"
-            "(Files will NOT be deleted from disk)",
+            say("Delete Videos"),
+            say(
+                "Delete {count} video(s) from the database?\n\n"
+                "(Files will NOT be deleted from disk)",
+                count=count,
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -359,7 +363,7 @@ class VideosPage(QWidget):
             if self.ctx.has_database():
                 self.ctx.delete_video_entries(video_ids)
                 self.status_message_requested.emit(
-                    f"{count} video(s) removed from database", 5000
+                    say("{count} video(s) removed from database", count=count), 5000
                 )
                 self._clear_selection()
 
@@ -373,11 +377,15 @@ class VideosPage(QWidget):
             filename = self.ctx.playlist()
 
             # Emit signal for status message
-            self.status_message_requested.emit(f"Playlist opened: {filename}", 5000)
+            self.status_message_requested.emit(
+                say("Playlist opened: {filename}", filename=filename), 5000
+            )
 
         except Exception as e:
             QMessageBox.critical(
-                self, "Error Creating Playlist", f"Failed to create playlist: {str(e)}"
+                self,
+                say("Error Creating Playlist"),
+                say("Failed to create playlist: {error}", error=e),
             )
 
     def _create_filter_section(self, color: str) -> QFrame:
@@ -445,25 +453,27 @@ class VideosPage(QWidget):
         sources_section, sources_layout = self._create_filter_section(color_light)
         sources_header = QHBoxLayout()
         sources_header.setSpacing(2)
-        sources_label = QLabel("Sources")
+        sources_label = QLabel(say("Sources"))
         sources_label.setStyleSheet("font-weight: bold; background: transparent;")
         sources_header.addWidget(sources_label)
         sources_header.addStretch()
         self.btn_sources = QPushButton("⚙")
         self.btn_sources.setObjectName("settingsBtn")
-        self.btn_sources.setToolTip("Edit video sources (Ctrl+T)")
+        self.btn_sources.setToolTip(say("Edit video sources (Ctrl+T)"))
         self.btn_sources.setFixedWidth(28)
         self.btn_sources.clicked.connect(self._on_edit_sources)
         sources_header.addWidget(self.btn_sources)
         self.btn_sources_clear = QPushButton("✕")
         self.btn_sources_clear.setObjectName("clearBtn")
-        self.btn_sources_clear.setToolTip("Reset to default sources (Ctrl+Shift+T)")
+        self.btn_sources_clear.setToolTip(
+            say("Reset to default sources (Ctrl+Shift+T)")
+        )
         self.btn_sources_clear.setFixedWidth(28)
         self.btn_sources_clear.clicked.connect(self._clear_sources)
         sources_header.addWidget(self.btn_sources_clear)
         sources_layout.addLayout(sources_header)
 
-        self.sources_info = QLabel("All readable")
+        self.sources_info = QLabel(say("All readable"))
         self.sources_info.setStyleSheet("color: #555; background: transparent;")
         self.sources_info.setWordWrap(True)
         self.sources_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -474,34 +484,34 @@ class VideosPage(QWidget):
         grouping_section, grouping_layout = self._create_filter_section(color_lighter)
         grouping_header = QHBoxLayout()
         grouping_header.setSpacing(2)
-        grouping_label = QLabel("Grouping")
+        grouping_label = QLabel(say("Grouping"))
         grouping_label.setStyleSheet("font-weight: bold; background: transparent;")
         grouping_header.addWidget(grouping_label)
         grouping_header.addStretch()
         self.btn_grouping = QPushButton("⚙")
         self.btn_grouping.setObjectName("settingsBtn")
-        self.btn_grouping.setToolTip("Configure video grouping (Ctrl+G)")
+        self.btn_grouping.setToolTip(say("Configure video grouping (Ctrl+G)"))
         self.btn_grouping.setFixedWidth(28)
         self.btn_grouping.clicked.connect(self._on_set_grouping)
         grouping_header.addWidget(self.btn_grouping)
         self.btn_grouping_clear = QPushButton("✕")
         self.btn_grouping_clear.setObjectName("clearBtn")
-        self.btn_grouping_clear.setToolTip("Remove grouping (Ctrl+Shift+G)")
+        self.btn_grouping_clear.setToolTip(say("Remove grouping (Ctrl+Shift+G)"))
         self.btn_grouping_clear.setFixedWidth(28)
         self.btn_grouping_clear.clicked.connect(self._clear_grouping)
         grouping_header.addWidget(self.btn_grouping_clear)
         grouping_layout.addLayout(grouping_header)
 
-        self.grouping_info = QLabel("No grouping")
+        self.grouping_info = QLabel(say("No grouping"))
         self.grouping_info.setStyleSheet("color: #555; background: transparent;")
         self.grouping_info.setWordWrap(True)
         self.grouping_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         grouping_layout.addWidget(self.grouping_info)
 
         # Button for confirming all unique moves (only visible when grouped by move_id)
-        self.btn_confirm_unique_moves = QPushButton("Confirm all unique moves")
+        self.btn_confirm_unique_moves = QPushButton(say("Confirm all unique moves"))
         self.btn_confirm_unique_moves.setToolTip(
-            "Automatically confirm all moves with a single destination"
+            say("Automatically confirm all moves with a single destination")
         )
         self.btn_confirm_unique_moves.setStyleSheet(
             "QPushButton { background-color: #4CAF50; color: white; font-weight: bold; }"
@@ -517,7 +527,7 @@ class VideosPage(QWidget):
         self.classifier_section, classifier_layout = self._create_filter_section(
             color_light
         )
-        classifier_label = QLabel("Classifier Path")
+        classifier_label = QLabel(say("Classifier Path"))
         classifier_label.setStyleSheet("font-weight: bold; background: transparent;")
         classifier_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         classifier_layout.addWidget(classifier_label)
@@ -534,14 +544,14 @@ class VideosPage(QWidget):
         classifier_btn_layout = QHBoxLayout()
         classifier_btn_layout.setSpacing(2)
 
-        self.btn_classifier_reverse = QPushButton("Reverse")
-        self.btn_classifier_reverse.setToolTip("Reverse the order of path values")
+        self.btn_classifier_reverse = QPushButton(say("Reverse"))
+        self.btn_classifier_reverse.setToolTip(say("Reverse the order of path values"))
         self.btn_classifier_reverse.clicked.connect(self._on_classifier_reverse)
         classifier_btn_layout.addWidget(self.btn_classifier_reverse)
 
-        self.btn_classifier_concat = QPushButton("Concat...")
+        self.btn_classifier_concat = QPushButton(say("Concat..."))
         self.btn_classifier_concat.setToolTip(
-            "Concatenate path values into a string property"
+            say("Concatenate path values into a string property")
         )
         self.btn_classifier_concat.clicked.connect(self._on_classifier_concatenate)
         classifier_btn_layout.addWidget(self.btn_classifier_concat)
@@ -555,21 +565,21 @@ class VideosPage(QWidget):
         search_section, search_layout = self._create_filter_section(color_light)
         search_header = QHBoxLayout()
         search_header.setSpacing(2)
-        search_label = QLabel("Search")
+        search_label = QLabel(say("Search"))
         search_label.setStyleSheet("font-weight: bold; background: transparent;")
         search_header.addWidget(search_label)
         search_header.addStretch()
         self.btn_search_clear = QPushButton("✕")
         self.btn_search_clear.setObjectName("clearBtn")
-        self.btn_search_clear.setToolTip("Clear search (Ctrl+Shift+F)")
+        self.btn_search_clear.setToolTip(say("Clear search (Ctrl+Shift+F)"))
         self.btn_search_clear.setFixedWidth(28)
         self.btn_search_clear.clicked.connect(self._clear_search)
         search_header.addWidget(self.btn_search_clear)
         search_layout.addLayout(search_header)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search... (Ctrl+F)")
-        self.search_input.setToolTip("Search videos (Ctrl+F)")
+        self.search_input.setPlaceholderText(say("Search... (Ctrl+F)"))
+        self.search_input.setToolTip(say("Search videos (Ctrl+F)"))
         self.search_input.returnPressed.connect(self._on_search)
         self.search_input.textChanged.connect(self._on_search_text_changed)
         self.search_input.installEventFilter(self)
@@ -578,13 +588,13 @@ class VideosPage(QWidget):
         # First row: AND, OR buttons
         search_btn_layout1 = QHBoxLayout()
         search_btn_layout1.setSpacing(2)
-        self.btn_search_and = QPushButton("AND")
-        self.btn_search_and.setToolTip("Search for all terms")
+        self.btn_search_and = QPushButton(say("AND"))
+        self.btn_search_and.setToolTip(say("Search for all terms"))
         self.btn_search_and.clicked.connect(self._on_search_and)
         search_btn_layout1.addWidget(self.btn_search_and)
 
-        self.btn_search_or = QPushButton("OR")
-        self.btn_search_or.setToolTip("Search for any term")
+        self.btn_search_or = QPushButton(say("OR"))
+        self.btn_search_or.setToolTip(say("Search for any term"))
         self.btn_search_or.clicked.connect(self._on_search_or)
         search_btn_layout1.addWidget(self.btn_search_or)
         search_layout.addLayout(search_btn_layout1)
@@ -592,13 +602,13 @@ class VideosPage(QWidget):
         # Second row: Exact, ID, Clear buttons
         search_btn_layout2 = QHBoxLayout()
         search_btn_layout2.setSpacing(2)
-        self.btn_search_exact = QPushButton("Exact")
-        self.btn_search_exact.setToolTip("Search for exact sentence")
+        self.btn_search_exact = QPushButton(say("Exact"))
+        self.btn_search_exact.setToolTip(say("Search for exact sentence"))
         self.btn_search_exact.clicked.connect(self._on_search_exact)
         search_btn_layout2.addWidget(self.btn_search_exact)
 
-        self.btn_search_id = QPushButton("ID")
-        self.btn_search_id.setToolTip("Search by video ID")
+        self.btn_search_id = QPushButton(say("ID"))
+        self.btn_search_id.setToolTip(say("Search by video ID"))
         self.btn_search_id.clicked.connect(self._on_search_id)
         search_btn_layout2.addWidget(self.btn_search_id)
         search_layout.addLayout(search_btn_layout2)
@@ -608,25 +618,25 @@ class VideosPage(QWidget):
         sorting_section, sorting_layout = self._create_filter_section(color_lighter)
         sorting_header = QHBoxLayout()
         sorting_header.setSpacing(2)
-        sorting_label = QLabel("Sorting")
+        sorting_label = QLabel(say("Sorting"))
         sorting_label.setStyleSheet("font-weight: bold; background: transparent;")
         sorting_header.addWidget(sorting_label)
         sorting_header.addStretch()
         self.btn_sorting = QPushButton("⚙")
         self.btn_sorting.setObjectName("settingsBtn")
-        self.btn_sorting.setToolTip("Configure video sorting (Ctrl+Shift+S)")
+        self.btn_sorting.setToolTip(say("Configure video sorting (Ctrl+Shift+S)"))
         self.btn_sorting.setFixedWidth(28)
         self.btn_sorting.clicked.connect(self._on_set_sorting)
         sorting_header.addWidget(self.btn_sorting)
         self.btn_sorting_clear = QPushButton("✕")
         self.btn_sorting_clear.setObjectName("clearBtn")
-        self.btn_sorting_clear.setToolTip("Reset to default sorting")
+        self.btn_sorting_clear.setToolTip(say("Reset to default sorting"))
         self.btn_sorting_clear.setFixedWidth(28)
         self.btn_sorting_clear.clicked.connect(self._clear_sorting)
         sorting_header.addWidget(self.btn_sorting_clear)
         sorting_layout.addLayout(sorting_header)
 
-        self.sorting_info = QLabel("Date ▼")
+        self.sorting_info = QLabel(say("Date") + " ▼")
         self.sorting_info.setStyleSheet("color: #555; background: transparent;")
         self.sorting_info.setWordWrap(True)
         self.sorting_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -637,19 +647,19 @@ class VideosPage(QWidget):
         selection_section, selection_layout = self._create_filter_section(color_light)
         selection_header = QHBoxLayout()
         selection_header.setSpacing(2)
-        selection_label = QLabel("Selection")
+        selection_label = QLabel(say("Selection"))
         selection_label.setStyleSheet("font-weight: bold; background: transparent;")
         selection_header.addWidget(selection_label)
         selection_header.addStretch()
         self.btn_selection_settings = QPushButton("⚙")
         self.btn_selection_settings.setObjectName("settingsBtn")
-        self.btn_selection_settings.setToolTip("Selection actions")
+        self.btn_selection_settings.setToolTip(say("Selection actions"))
         self.btn_selection_settings.setFixedWidth(28)
         self.btn_selection_settings.clicked.connect(self._on_selection_menu)
         selection_header.addWidget(self.btn_selection_settings)
         self.btn_selection_clear = QPushButton("✕")
         self.btn_selection_clear.setObjectName("clearBtn")
-        self.btn_selection_clear.setToolTip("Clear selection (Escape)")
+        self.btn_selection_clear.setToolTip(say("Clear selection (Escape)"))
         self.btn_selection_clear.setFixedWidth(28)
         self.btn_selection_clear.setEnabled(False)
         self.btn_selection_clear.clicked.connect(self._clear_selection)
@@ -659,18 +669,20 @@ class VideosPage(QWidget):
         # Selection info label + Page/All buttons
         selection_row = QHBoxLayout()
         selection_row.setSpacing(2)
-        self.selection_label = QLabel("no selection")
+        self.selection_label = QLabel(say("no selection"))
         self.selection_label.setStyleSheet(
             "color: #0078d4; font-style: italic; background: transparent;"
         )
         selection_row.addWidget(self.selection_label, 1)
-        self.btn_select_page = QPushButton("Page")
-        self.btn_select_page.setToolTip("Select all videos on current page (Ctrl+A)")
+        self.btn_select_page = QPushButton(say("Page"))
+        self.btn_select_page.setToolTip(
+            say("Select all videos on current page (Ctrl+A)")
+        )
         self.btn_select_page.clicked.connect(self._select_all)
         selection_row.addWidget(self.btn_select_page)
-        self.btn_select_all = QPushButton("All")
+        self.btn_select_all = QPushButton(say("All"))
         self.btn_select_all.setToolTip(
-            "Select all videos in current view (Ctrl+Shift+A)"
+            say("Select all videos in current view (Ctrl+Shift+A)")
         )
         self.btn_select_all.clicked.connect(self._select_all_in_view)
         selection_row.addWidget(self.btn_select_all)
@@ -686,7 +698,7 @@ class VideosPage(QWidget):
         # Title with classifier button
         groups_header = QHBoxLayout()
         groups_header.setSpacing(2)
-        groups_title = QLabel("Groups")
+        groups_title = QLabel(say("Groups"))
         groups_title.setStyleSheet("font-weight: bold; background: transparent;")
         groups_header.addWidget(groups_title)
         groups_header.addStretch()
@@ -694,7 +706,9 @@ class VideosPage(QWidget):
         self.btn_add_to_classifier = QPushButton("✙")
         self.btn_add_to_classifier.setObjectName("classifierBtn")
         self.btn_add_to_classifier.setFixedWidth(28)
-        self.btn_add_to_classifier.setToolTip("Add current group to classifier path")
+        self.btn_add_to_classifier.setToolTip(
+            say("Add current group to classifier path")
+        )
         self.btn_add_to_classifier.clicked.connect(self._on_classifier_add_group)
         self.btn_add_to_classifier.setVisible(False)
         groups_header.addWidget(self.btn_add_to_classifier)
@@ -712,14 +726,14 @@ class VideosPage(QWidget):
 
         self.btn_first_group = QPushButton("<<")
         self.btn_first_group.setFixedWidth(28)
-        self.btn_first_group.setToolTip("First group")
+        self.btn_first_group.setToolTip(say("First group"))
         self.btn_first_group.setStyleSheet(nav_btn_style)
         self.btn_first_group.clicked.connect(self._go_first_group)
         groups_nav.addWidget(self.btn_first_group)
 
         self.btn_prev_group = QPushButton("<")
         self.btn_prev_group.setFixedWidth(28)
-        self.btn_prev_group.setToolTip("Previous group (Up arrow)")
+        self.btn_prev_group.setToolTip(say("Previous group (Up arrow)"))
         self.btn_prev_group.setStyleSheet(nav_btn_style)
         self.btn_prev_group.clicked.connect(self._go_prev_group)
         groups_nav.addWidget(self.btn_prev_group)
@@ -730,14 +744,14 @@ class VideosPage(QWidget):
 
         self.btn_next_group = QPushButton(">")
         self.btn_next_group.setFixedWidth(28)
-        self.btn_next_group.setToolTip("Next group (Down arrow)")
+        self.btn_next_group.setToolTip(say("Next group (Down arrow)"))
         self.btn_next_group.setStyleSheet(nav_btn_style)
         self.btn_next_group.clicked.connect(self._go_next_group)
         groups_nav.addWidget(self.btn_next_group)
 
         self.btn_last_group = QPushButton(">>")
         self.btn_last_group.setFixedWidth(28)
-        self.btn_last_group.setToolTip("Last group")
+        self.btn_last_group.setToolTip(say("Last group"))
         self.btn_last_group.setStyleSheet(nav_btn_style)
         self.btn_last_group.clicked.connect(self._go_last_group)
         groups_nav.addWidget(self.btn_last_group)
@@ -818,7 +832,14 @@ class VideosPage(QWidget):
         layout.addWidget(self.list_widget)
 
         # Stats bar (at bottom)
-        self.stats_label = QLabel("0 videos | 0 B | 0:00:00")
+        self.stats_label = QLabel(
+            say(
+                "{count} videos | {size} | {duration}",
+                count=0,
+                size="0 B",
+                duration="0:00:00",
+            )
+        )
         self.stats_label.setStyleSheet("font-size: 12px; padding: 5px;")
         layout.addWidget(self.stats_label)
 
@@ -838,20 +859,22 @@ class VideosPage(QWidget):
         # Pagination controls
         self.btn_first = QPushButton("<<")
         self.btn_first.setFixedSize(32, 24)
-        self.btn_first.setToolTip("First page (Home)")
+        self.btn_first.setToolTip(say("First page (Home)"))
         self.btn_first.clicked.connect(self._go_first)
         layout.addWidget(self.btn_first)
 
         self.btn_prev = QPushButton("<")
         self.btn_prev.setFixedSize(32, 24)
-        self.btn_prev.setToolTip("Previous page (Left arrow)")
+        self.btn_prev.setToolTip(say("Previous page (Left arrow)"))
         self.btn_prev.clicked.connect(self._go_prev)
         layout.addWidget(self.btn_prev)
 
         # Page indicator button (clickable to go to a specific page)
-        self.page_button = QPushButton("Page 1/1")
+        self.page_button = QPushButton(
+            say("Page {current}/{total}", current=1, total=1)
+        )
         self.page_button.setMinimumWidth(80)
-        self.page_button.setToolTip("Click to go to a specific page")
+        self.page_button.setToolTip(say("Click to go to a specific page"))
         self.page_button.setFlat(True)
         self.page_button.setStyleSheet(
             "QPushButton { text-decoration: underline; color: #0078d4; }"
@@ -862,13 +885,13 @@ class VideosPage(QWidget):
 
         self.btn_next = QPushButton(">")
         self.btn_next.setFixedSize(32, 24)
-        self.btn_next.setToolTip("Next page (Right arrow)")
+        self.btn_next.setToolTip(say("Next page (Right arrow)"))
         self.btn_next.clicked.connect(self._go_next)
         layout.addWidget(self.btn_next)
 
         self.btn_last = QPushButton(">>")
         self.btn_last.setFixedSize(32, 24)
-        self.btn_last.setToolTip("Last page (End)")
+        self.btn_last.setToolTip(say("Last page (End)"))
         self.btn_last.clicked.connect(self._go_last)
         layout.addWidget(self.btn_last)
 
@@ -899,9 +922,12 @@ class VideosPage(QWidget):
 
         # Update stats
         self.stats_label.setText(
-            f"{context.view_count} videos | "
-            f"{context.selection_file_size} | "
-            f"{context.selection_duration}"
+            say(
+                "{count} videos | {size} | {duration}",
+                count=context.view_count,
+                size=context.selection_file_size,
+                duration=context.selection_duration,
+            )
         )
 
         # Sync page_number from clamped result (safety net)
@@ -910,7 +936,9 @@ class VideosPage(QWidget):
         # Update pagination
         nb_pages = max(1, context.nb_pages)
         self._total_pages = nb_pages
-        self.page_button.setText(f"Page {self.page_number + 1}/{nb_pages}")
+        self.page_button.setText(
+            say("Page {current}/{total}", current=self.page_number + 1, total=nb_pages)
+        )
 
         # Update pagination button states
         self.btn_first.setEnabled(self.page_number > 0)
@@ -953,7 +981,7 @@ class VideosPage(QWidget):
         else:
             self._diff_fields = set()
             self._file_title_diffs = {}
-            self.grouping_info.setText("No grouping")
+            self.grouping_info.setText(say("No grouping"))
             self.btn_grouping_clear.setEnabled(False)
             self._hide_groups_panel()
             self._group_stats = []
@@ -1093,7 +1121,7 @@ class VideosPage(QWidget):
             if i == len(self._classifier_path) - 1:
                 unstack_btn = QPushButton("✕")
                 unstack_btn.setFixedSize(20, 20)
-                unstack_btn.setToolTip("Remove from path (unstack)")
+                unstack_btn.setToolTip(say("Remove from path (unstack)"))
                 unstack_btn.setStyleSheet(
                     "QPushButton { background-color: #cc3333; color: white; "
                     "font-weight: bold; border-radius: 3px; }"
@@ -1122,7 +1150,7 @@ class VideosPage(QWidget):
         self.btn_sources_clear.setEnabled(not is_default)
 
         if not sources:
-            self.sources_info.setText("All sources")
+            self.sources_info.setText(say("All sources"))
             self.sources_info.setToolTip("")
             return
 
@@ -1154,7 +1182,7 @@ class VideosPage(QWidget):
         self.btn_sorting_clear.setEnabled(not is_default)
 
         if not sorting:
-            self.sorting_info.setText("Default")
+            self.sorting_info.setText(say("Default"))
             return
 
         lines = []
@@ -1239,7 +1267,7 @@ class VideosPage(QWidget):
         """Update the grouping info label with detailed information."""
         grouping = context.grouping
         if not grouping or not grouping.field:
-            self.grouping_info.setText("No grouping")
+            self.grouping_info.setText(say("No grouping"))
             self.btn_grouping_clear.setEnabled(False)
             return
 
@@ -1257,7 +1285,7 @@ class VideosPage(QWidget):
 
         # Line 2: group count + singletons
         nb_groups = len(context.classifier_stats) if context.classifier_stats else 0
-        count_line = f"{nb_groups} groups"
+        count_line = say("{count} groups", count=nb_groups)
         if not grouping.allow_singletons:
             count_line += " (# > 1)"
 
@@ -1393,23 +1421,27 @@ class VideosPage(QWidget):
         """Show context menu for a video."""
         menu = LeftClickMenu(self)
 
-        menu.addAction("Toggle Watched", lambda: self._toggle_watched(video_id))
+        menu.addAction(say("Toggle Watched"), lambda: self._toggle_watched(video_id))
         menu.addSeparator()
-        menu.addAction("Open", lambda: self._open_video(video_id))
-        menu.addAction("Open in VLC", lambda: self._open_in_vlc(video_id))
-        menu.addAction("Open Folder", lambda: self._open_folder(video_id))
+        menu.addAction(say("Open"), lambda: self._open_video(video_id))
+        menu.addAction(say("Open in VLC"), lambda: self._open_in_vlc(video_id))
+        menu.addAction(say("Open Folder"), lambda: self._open_folder(video_id))
         menu.addSeparator()
 
         # Copy submenu
-        copy_menu = menu.addMenu("Copy")
-        copy_menu.addAction("Copy Title", lambda: self._copy_title(video_id))
-        copy_menu.addAction("Copy File Title", lambda: self._copy_file_title(video_id))
-        copy_menu.addAction("Copy File Path", lambda: self._copy_file_path(video_id))
-        copy_menu.addAction("Copy Video ID", lambda: self._copy_video_id(video_id))
+        copy_menu = menu.addMenu(say("Copy"))
+        copy_menu.addAction(say("Copy Title"), lambda: self._copy_title(video_id))
+        copy_menu.addAction(
+            say("Copy File Title"), lambda: self._copy_file_title(video_id)
+        )
+        copy_menu.addAction(
+            say("Copy File Path"), lambda: self._copy_file_path(video_id)
+        )
+        copy_menu.addAction(say("Copy Video ID"), lambda: self._copy_video_id(video_id))
 
         menu.addSeparator()
-        menu.addAction("Rename...", lambda: self._rename_video(video_id))
-        menu.addAction("Move to...", lambda: self._move_video(video_id))
+        menu.addAction(say("Rename..."), lambda: self._rename_video(video_id))
+        menu.addAction(say("Move to..."), lambda: self._move_video(video_id))
         menu.addSeparator()
 
         # Similarity actions (for both similarity_id and similarity_id_reencoded)
@@ -1417,21 +1449,21 @@ class VideosPage(QWidget):
         has_sim_actions = False
         if video:
             for sim_field, sim_label in (
-                ("similarity_id", "Similarity"),
-                ("similarity_id_reencoded", "Similarity (re-encoded)"),
+                ("similarity_id", say("Similarity")),
+                ("similarity_id_reencoded", say("Similarity (re-encoded)")),
             ):
                 sim_val = getattr(video, sim_field, None)
                 if sim_val is not None:
                     has_sim_actions = True
                     if sim_val >= 0:
                         menu.addAction(
-                            f"Dismiss {sim_label}",
+                            say("Dismiss {label}", label=sim_label),
                             lambda f=sim_field: self._dismiss_similarity(
                                 video_id, field=f
                             ),
                         )
                     menu.addAction(
-                        f"Reset {sim_label}",
+                        say("Reset {label}", label=sim_label),
                         lambda f=sim_field: self._reset_similarity(video_id, field=f),
                     )
             # Generalize title actions (only when grouped by a similarity field)
@@ -1439,13 +1471,13 @@ class VideosPage(QWidget):
                 menu.addSeparator()
                 if video.meta_title:
                     menu.addAction(
-                        "Generalize meta title into property...",
+                        say("Generalize meta title into property..."),
                         lambda: self._generalize_title_to_property(
                             video_id, "meta_title"
                         ),
                     )
                 menu.addAction(
-                    "Generalize file title into property...",
+                    say("Generalize file title into property..."),
                     lambda: self._generalize_title_to_property(video_id, "file_title"),
                 )
             if has_sim_actions:
@@ -1453,7 +1485,7 @@ class VideosPage(QWidget):
 
         # Move confirmation actions (only when video has moves)
         if video and video.moves:
-            move_menu = menu.addMenu("Confirm move to")
+            move_menu = menu.addMenu(say("Confirm move to"))
             for move in video.moves:
                 dst_id = move["video_id"]
                 filename = move["filename"]
@@ -1463,11 +1495,15 @@ class VideosPage(QWidget):
                 )
             menu.addSeparator()
 
-        menu.addAction("Properties...", lambda: self._show_properties(video_id))
+        menu.addAction(say("Properties..."), lambda: self._show_properties(video_id))
         menu.addSeparator()
-        menu.addAction("Delete from database", lambda: self._delete_video(video_id))
-        menu.addAction("Move to Trash", lambda: self._trash_video(video_id))
-        menu.addAction("Delete permanently", lambda: self._delete_video_file(video_id))
+        menu.addAction(
+            say("Delete from database"), lambda: self._delete_video(video_id)
+        )
+        menu.addAction(say("Move to Trash"), lambda: self._trash_video(video_id))
+        menu.addAction(
+            say("Delete permanently"), lambda: self._delete_video_file(video_id)
+        )
 
         menu.exec(pos)
 
@@ -1557,8 +1593,8 @@ class VideosPage(QWidget):
         current_title = str(video.file_title)
         new_title, ok = QInputDialog.getText(
             self,
-            "Rename Video",
-            "New file title:",
+            say("Rename Video"),
+            say("New file title:"),
             QLineEdit.EchoMode.Normal,
             current_title,
         )
@@ -1567,15 +1603,17 @@ class VideosPage(QWidget):
             try:
                 self.ctx.rename_video(video_id, new_title)
             except Exception as e:
-                QMessageBox.warning(self, "Rename Failed", str(e))
+                QMessageBox.warning(self, say("Rename Failed"), str(e))
 
     def _dismiss_similarity(self, video_id: int, field: str = "similarity_id"):
         """Dismiss similarity for a video (mark as no match)."""
         reply = QMessageBox.question(
             self,
-            "Dismiss Similarity",
-            "Mark this video as having no similar matches?\n\n"
-            "The video will be excluded from future similarity searches.",
+            say("Dismiss Similarity"),
+            say(
+                "Mark this video as having no similar matches?\n\n"
+                "The video will be excluded from future similarity searches."
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -1586,9 +1624,11 @@ class VideosPage(QWidget):
         """Reset similarity for a video (mark as not compared)."""
         reply = QMessageBox.question(
             self,
-            "Reset Similarity",
-            "Reset similarity status for this video?\n\n"
-            "The video will be re-evaluated in the next similarity search.",
+            say("Reset Similarity"),
+            say(
+                "Reset similarity status for this video?\n\n"
+                "The video will be re-evaluated in the next similarity search."
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -1603,7 +1643,9 @@ class VideosPage(QWidget):
 
         title_value = str(getattr(video, title_field, "") or "")
         if not title_value:
-            QMessageBox.information(self, "Generalize Title", "Title is empty.")
+            QMessageBox.information(
+                self, say("Generalize Title"), say("Title is empty.")
+            )
             return
 
         # Get str non-enum properties
@@ -1613,19 +1655,24 @@ class VideosPage(QWidget):
         ]
         if not str_props:
             QMessageBox.information(
-                self, "Generalize Title", "No string (non-enum) property available."
+                self,
+                say("Generalize Title"),
+                say("No string (non-enum) property available."),
             )
             return
 
         # Ask user to pick a property via a custom dialog with wrapping text
         nb_others = len(self._videos) - 1
         dialog = QDialog(self)
-        dialog.setWindowTitle("Generalize Title")
+        dialog.setWindowTitle(say("Generalize Title"))
         layout = QVBoxLayout(dialog)
 
         label = QLabel(
-            f"Copy <b>{escape(title_value)}</b> "
-            f"into property for {nb_others} other video(s):"
+            say(
+                "Copy <b>{title}</b> into property for {count} other video(s):",
+                title=escape(title_value),
+                count=nb_others,
+            )
         )
         label.setWordWrap(True)
         label.setTextFormat(Qt.TextFormat.RichText)
@@ -1636,8 +1683,8 @@ class VideosPage(QWidget):
         layout.addWidget(combo)
 
         buttons = QHBoxLayout()
-        btn_ok = QPushButton("OK")
-        btn_cancel = QPushButton("Cancel")
+        btn_ok = QPushButton(say("OK"))
+        btn_cancel = QPushButton(say("Cancel"))
         btn_ok.clicked.connect(dialog.accept)
         btn_cancel.clicked.connect(dialog.reject)
         buttons.addStretch()
@@ -1654,8 +1701,12 @@ class VideosPage(QWidget):
         other_ids = [v.video_id for v in self._videos if v.video_id != video_id]
         self.ctx.add_property_value_for_videos(other_ids, prop_name, [title_value])
         self.status_message_requested.emit(
-            f'Property "{prop_name}" set to "{title_value}" '
-            f"for {len(other_ids)} video(s)",
+            say(
+                'Property "{name}" set to "{value}" for {count} video(s)',
+                name=prop_name,
+                value=title_value,
+                count=len(other_ids),
+            ),
             5000,
         )
 
@@ -1674,9 +1725,12 @@ class VideosPage(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Confirm Move",
-            f"Transfer metadata from missing video to:\n\n{dst_filename}\n\n"
-            "The missing video entry will be deleted.",
+            say("Confirm Move"),
+            say(
+                "Transfer metadata from missing video to:\n\n{filename}\n\n"
+                "The missing video entry will be deleted.",
+                filename=dst_filename,
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -1684,18 +1738,20 @@ class VideosPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             self.ctx.confirm_move(src_video_id, dst_video_id)
             self._purge_video_from_selection(src_video_id)
-            self.status_message_requested.emit("Video move confirmed", 3000)
+            self.status_message_requested.emit(say("Video move confirmed"), 3000)
 
     def _on_confirm_unique_moves(self):
         """Confirm all unique video moves (videos with only one possible destination)."""
         reply = QMessageBox.question(
             self,
-            "Confirm All Unique Moves",
-            "This will automatically confirm all video moves that have only "
-            "one possible destination.\n\n"
-            "The metadata from missing videos will be transferred to the "
-            "found files, and the missing entries will be deleted.\n\n"
-            "Continue?",
+            say("Confirm All Unique Moves"),
+            say(
+                "This will automatically confirm all video moves that have only "
+                "one possible destination.\n\n"
+                "The metadata from missing videos will be transferred to the "
+                "found files, and the missing entries will be deleted.\n\n"
+                "Continue?"
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -1706,7 +1762,7 @@ class VideosPage(QWidget):
                 count = self.ctx.confirm_unique_moves()
                 self._clear_selection()
                 self.status_message_requested.emit(
-                    f"Confirmed {count} video move(s)", 3000
+                    say("Confirmed {count} video move(s)", count=count), 3000
                 )
             finally:
                 self.btn_confirm_unique_moves.setEnabled(True)
@@ -1733,7 +1789,7 @@ class VideosPage(QWidget):
 
         # Show folder selection dialog
         directory = QFileDialog.getExistingDirectory(
-            self, "Move Video To", initial_dir, QFileDialog.Option.ShowDirsOnly
+            self, say("Move Video To"), initial_dir, QFileDialog.Option.ShowDirsOnly
         )
 
         if not directory:
@@ -1746,8 +1802,12 @@ class VideosPage(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Move Video",
-            f"Move '{video.title}' to:\n{directory}?",
+            say("Move Video"),
+            say(
+                "Move '{title}' to:\n{directory}?",
+                title=video.title,
+                directory=directory,
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -1791,22 +1851,24 @@ class VideosPage(QWidget):
             self.ctx.delete_video_entry(video_id)
             self._purge_video_from_selection(video_id)
             self.status_message_requested.emit(
-                f"'{video_title}' removed from database", 3000
+                say("'{title}' removed from database", title=video_title), 3000
             )
             return
 
         confirm_video = video or self.ctx.get_video_by_id(video_id)
         if confirm_video and VideoConfirmDialog.confirm(
-            "Delete Video",
-            "Delete this video from the database?\n\n"
-            "(The file will NOT be deleted from disk)",
+            say("Delete Video"),
+            say(
+                "Delete this video from the database?\n\n"
+                "(The file will NOT be deleted from disk)"
+            ),
             confirm_video,
             self,
         ):
             self.ctx.delete_video_entry(video_id)
             self._purge_video_from_selection(video_id)
             self.status_message_requested.emit(
-                f"'{video_title}' removed from database", 5000
+                say("'{title}' removed from database", title=video_title), 5000
             )
 
     def _trash_video(self, video_id: int):
@@ -1816,9 +1878,11 @@ class VideosPage(QWidget):
             return
 
         if VideoConfirmDialog.confirm(
-            "Move to Trash",
-            "Move this video to the system trash?\n\n"
-            "(The file can be restored from the trash if needed)",
+            say("Move to Trash"),
+            say(
+                "Move this video to the system trash?\n\n"
+                "(The file can be restored from the trash if needed)"
+            ),
             video,
             self,
         ):
@@ -1826,10 +1890,12 @@ class VideosPage(QWidget):
                 self.ctx.trash_video(video_id)
                 self._purge_video_from_selection(video_id)
                 self.status_message_requested.emit(
-                    f"'{video.title}' moved to trash", 5000
+                    say("'{title}' moved to trash", title=video.title), 5000
                 )
             except Exception as e:
-                QMessageBox.warning(self, "Error", f"Failed to move to trash: {e}")
+                QMessageBox.warning(
+                    self, say("Error"), say("Failed to move to trash: {error}", error=e)
+                )
 
     def _delete_video_file(self, video_id: int):
         """Permanently delete a video file (with confirmation)."""
@@ -1838,10 +1904,12 @@ class VideosPage(QWidget):
             return
 
         if VideoConfirmDialog.confirm(
-            "Delete Permanently",
-            "PERMANENTLY delete this video?\n\n"
-            "This action cannot be undone!\n"
-            "The file will be deleted from disk.",
+            say("Delete Permanently"),
+            say(
+                "PERMANENTLY delete this video?\n\n"
+                "This action cannot be undone!\n"
+                "The file will be deleted from disk."
+            ),
             video,
             self,
         ):
@@ -1849,10 +1917,12 @@ class VideosPage(QWidget):
                 self.ctx.delete_video_file(video_id)
                 self._purge_video_from_selection(video_id)
                 self.status_message_requested.emit(
-                    f"'{video.title}' permanently deleted", 5000
+                    say("'{title}' permanently deleted", title=video.title), 5000
                 )
             except Exception as e:
-                QMessageBox.warning(self, "Error", f"Failed to delete: {e}")
+                QMessageBox.warning(
+                    self, say("Error"), say("Failed to delete: {error}", error=e)
+                )
 
     def _on_batch_edit(self):
         """Show menu of properties to batch edit for selected videos."""
@@ -1864,9 +1934,11 @@ class VideosPage(QWidget):
         if not prop_types:
             QMessageBox.information(
                 self,
-                "No Properties",
-                "No custom properties defined.\n"
-                "Create properties in the Properties page first.",
+                say("No Properties"),
+                say(
+                    "No custom properties defined.\n"
+                    "Create properties in the Properties page first."
+                ),
             )
             return
 
@@ -2075,9 +2147,11 @@ class VideosPage(QWidget):
         """Update/rescan the database."""
         reply = QMessageBox.question(
             self,
-            "Update Database",
-            "Rescan folders and update the database?\n\n"
-            "This may take a while depending on the number of videos.",
+            say("Update Database"),
+            say(
+                "Rescan folders and update the database?\n\n"
+                "This may take a while depending on the number of videos."
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -2087,9 +2161,11 @@ class VideosPage(QWidget):
         """Find similar videos."""
         reply = QMessageBox.question(
             self,
-            "Find Similar Videos",
-            "Search for visually similar videos?\n\n"
-            "This may take a while depending on the number of videos.",
+            say("Find Similar Videos"),
+            say(
+                "Search for visually similar videos?\n\n"
+                "This may take a while depending on the number of videos."
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -2099,10 +2175,12 @@ class VideosPage(QWidget):
         """Find potentially re-encoded videos."""
         reply = QMessageBox.question(
             self,
-            "Find Re-encoded Videos",
-            "Search for potentially re-encoded videos?\n\n"
-            "Compares filenames and durations to find videos\n"
-            "that may be re-encodings of the same source.",
+            say("Find Re-encoded Videos"),
+            say(
+                "Search for potentially re-encoded videos?\n\n"
+                "Compares filenames and durations to find videos\n"
+                "that may be re-encodings of the same source."
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -2141,9 +2219,11 @@ class VideosPage(QWidget):
         if not string_props:
             QMessageBox.information(
                 self,
-                "No Target Property",
-                "No single-value string properties available.\n\n"
-                "Create a string property first to concatenate the path into.",
+                say("No Target Property"),
+                say(
+                    "No single-value string properties available.\n\n"
+                    "Create a string property first to concatenate the path into."
+                ),
             )
             return
 
@@ -2151,8 +2231,8 @@ class VideosPage(QWidget):
         prop_names = [p.name for p in string_props]
         name, ok = QInputDialog.getItem(
             self,
-            "Concatenate Path",
-            "Select target property to concatenate path values into:",
+            say("Concatenate Path"),
+            say("Select target property to concatenate path values into:"),
             prop_names,
             0,
             False,

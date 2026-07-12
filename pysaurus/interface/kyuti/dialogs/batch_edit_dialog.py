@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pysaurus.core.language import say
 from pysaurus.properties.properties import PropType
 
 
@@ -67,8 +68,8 @@ class MultipleValuesWidget(QWidget):
             btn_layout = QHBoxLayout()
             btn_layout.setContentsMargins(0, 0, 0, 0)
 
-            btn_clear = QPushButton("Clear")
-            btn_clear.setToolTip("Uncheck all values")
+            btn_clear = QPushButton(say("Clear"))
+            btn_clear.setToolTip(say("Uncheck all values"))
             btn_clear.clicked.connect(self._clear_values)
             btn_layout.addWidget(btn_clear)
             self._buttons.append(btn_clear)
@@ -89,20 +90,20 @@ class MultipleValuesWidget(QWidget):
             input_layout.setContentsMargins(0, 0, 0, 0)
 
             self.input_edit = NonSubmittingLineEdit()
-            self.input_edit.setPlaceholderText("Enter value...")
+            self.input_edit.setPlaceholderText(say("Enter value..."))
             self.input_edit.returnPressed.connect(self._add_value)
             input_layout.addWidget(self.input_edit)
 
             btn_add = QPushButton("+")
             btn_add.setFixedWidth(30)
-            btn_add.setToolTip("Add value")
+            btn_add.setToolTip(say("Add value"))
             btn_add.clicked.connect(self._add_value)
             input_layout.addWidget(btn_add)
             self._buttons.append(btn_add)
 
             btn_remove = QPushButton("-")
             btn_remove.setFixedWidth(30)
-            btn_remove.setToolTip("Remove selected value(s)")
+            btn_remove.setToolTip(say("Remove selected value(s)"))
             btn_remove.clicked.connect(self._remove_selected)
             input_layout.addWidget(btn_remove)
             self._buttons.append(btn_remove)
@@ -113,8 +114,8 @@ class MultipleValuesWidget(QWidget):
             btn_layout = QHBoxLayout()
             btn_layout.setContentsMargins(0, 0, 0, 0)
 
-            btn_clear = QPushButton("Clear")
-            btn_clear.setToolTip("Remove all values")
+            btn_clear = QPushButton(say("Clear"))
+            btn_clear.setToolTip(say("Remove all values"))
             btn_clear.clicked.connect(self._clear_values)
             btn_layout.addWidget(btn_clear)
             self._buttons.append(btn_clear)
@@ -210,7 +211,9 @@ class BatchEditDialog(QDialog):
         self.ctx = ctx
         self._property_widgets: dict[str, tuple[QCheckBox, QWidget]] = {}
 
-        self.setWindowTitle(f"Edit Properties - {len(video_ids)} videos")
+        self.setWindowTitle(
+            say("Edit Properties - {count} videos", count=len(video_ids))
+        )
         self.setMinimumWidth(500)
         self.setMinimumHeight(400)
 
@@ -222,8 +225,11 @@ class BatchEditDialog(QDialog):
 
         # Info label
         info_label = QLabel(
-            f"Set properties for {len(self.video_ids)} selected videos.\n"
-            "Check the box next to a property to apply the change."
+            say(
+                "Set properties for {count} selected videos.\n"
+                "Check the box next to a property to apply the change.",
+                count=len(self.video_ids),
+            )
         )
         info_label.setStyleSheet("color: #666; padding: 5px;")
         layout.addWidget(info_label)
@@ -236,7 +242,7 @@ class BatchEditDialog(QDialog):
         form_layout = QVBoxLayout(widget)
 
         if not self.prop_types:
-            form_layout.addWidget(QLabel("No custom properties defined."))
+            form_layout.addWidget(QLabel(say("No custom properties defined.")))
         else:
             # Create a form for each property
             for prop_type in self.prop_types:
@@ -275,13 +281,15 @@ class BatchEditDialog(QDialog):
         # Build label with type info
         label_text = name
         if is_multiple:
-            label_text += " (multiple)"
+            label_text += " (" + say("multiple") + ")"
         if enumeration:
-            label_text += " [enum]"
+            label_text += " [" + say("enum") + "]"
 
         # Checkbox to enable/disable the property change
         checkbox = QCheckBox(f"{label_text}:")
-        checkbox.setToolTip(f"Check to set {name} for all selected videos")
+        checkbox.setToolTip(
+            say("Check to set {name} for all selected videos", name=name)
+        )
         layout.addWidget(checkbox)
 
         # Create the appropriate input widget based on type
@@ -294,7 +302,7 @@ class BatchEditDialog(QDialog):
                 input_widget.addItem(str(value), value)
             input_widget.setEnabled(False)
         elif ptype == "bool":
-            input_widget = QCheckBox("Yes")
+            input_widget = QCheckBox(say("Yes"))
             input_widget.setEnabled(False)
         elif ptype == "int":
             input_widget = QSpinBox()
@@ -303,7 +311,7 @@ class BatchEditDialog(QDialog):
             input_widget.setEnabled(False)
         elif ptype == "float":
             input_widget = QLineEdit()
-            input_widget.setPlaceholderText("Enter a number")
+            input_widget.setPlaceholderText(say("Enter a number"))
             if default is not None:
                 input_widget.setText(str(default))
             input_widget.setEnabled(False)

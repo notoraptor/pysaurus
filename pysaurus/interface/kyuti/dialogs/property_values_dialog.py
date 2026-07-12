@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from pysaurus.core.language import say
 from pysaurus.interface.kyuti.widgets.left_click_menu import LeftClickMenu
 from pysaurus.properties.properties import PropType
 from pysaurus.properties.property_value_modifier import PropertyValueModifier
@@ -43,7 +44,7 @@ class PropertyValuesDialog(QDialog):
         self._values_count: dict[str, int] = {}
         self._modified = False
 
-        self.setWindowTitle(f"Values - {prop_name}")
+        self.setWindowTitle(say("Values - {prop_name}", prop_name=prop_name))
         self.setMinimumWidth(500)
         self.setMinimumHeight(400)
 
@@ -56,9 +57,14 @@ class PropertyValuesDialog(QDialog):
 
         # Header info
         type_name = self.prop_type.type
-        multiple = "Yes" if self.prop_type.multiple else "No"
+        multiple = say("Yes") if self.prop_type.multiple else say("No")
         info_label = QLabel(
-            f"<b>{self.prop_name}</b> (type: {type_name}, multiple: {multiple})"
+            say(
+                "<b>{prop_name}</b> (type: {type_name}, multiple: {multiple})",
+                prop_name=self.prop_name,
+                type_name=type_name,
+                multiple=multiple,
+            )
         )
         layout.addWidget(info_label)
 
@@ -68,7 +74,7 @@ class PropertyValuesDialog(QDialog):
         # Values list
         list_layout = QVBoxLayout()
         list_layout.addWidget(
-            QLabel("Values (click to select, right-click for actions):")
+            QLabel(say("Values (click to select, right-click for actions):"))
         )
 
         self.values_list = QListWidget()
@@ -81,27 +87,27 @@ class PropertyValuesDialog(QDialog):
 
         # Actions panel
         actions_layout = QVBoxLayout()
-        actions_layout.addWidget(QLabel("Actions:"))
+        actions_layout.addWidget(QLabel(say("Actions:")))
 
-        self.btn_delete = QPushButton("Delete Selected")
-        self.btn_delete.setToolTip("Remove selected values from all videos")
+        self.btn_delete = QPushButton(say("Delete Selected"))
+        self.btn_delete.setToolTip(say("Remove selected values from all videos"))
         self.btn_delete.clicked.connect(self._on_delete)
         actions_layout.addWidget(self.btn_delete)
 
-        self.btn_rename = QPushButton("Rename Value...")
-        self.btn_rename.setToolTip("Rename a value (merges if target exists)")
+        self.btn_rename = QPushButton(say("Rename Value..."))
+        self.btn_rename.setToolTip(say("Rename a value (merges if target exists)"))
         self.btn_rename.clicked.connect(self._on_rename)
         actions_layout.addWidget(self.btn_rename)
 
         actions_layout.addSpacing(20)
-        actions_layout.addWidget(QLabel("Apply to all values:"))
+        actions_layout.addWidget(QLabel(say("Apply to all values:")))
 
         # Get available modifiers from PropertyValueModifier
         self._modifier_buttons: list[QPushButton] = []
         modifiers = PropertyValueModifier.get_modifiers()
         for mod_name in modifiers:
             btn = QPushButton(mod_name.replace("_", " ").title())
-            btn.setToolTip(f"Apply '{mod_name}' to all values")
+            btn.setToolTip(say("Apply '{mod_name}' to all values", mod_name=mod_name))
             btn.setProperty("mod_name", mod_name)
             btn.clicked.connect(self._on_modifier_clicked)
             actions_layout.addWidget(btn)
@@ -151,7 +157,11 @@ class PropertyValuesDialog(QDialog):
         total_values = len(self._values_count)
         total_usages = sum(self._values_count.values())
         self.stats_label.setText(
-            f"{total_values} unique values\n{total_usages} total usages"
+            say(
+                "{total_values} unique values\n{total_usages} total usages",
+                total_values=total_values,
+                total_usages=total_usages,
+            )
         )
 
     def _get_selected_values(self) -> list:
@@ -170,10 +180,10 @@ class PropertyValuesDialog(QDialog):
         value = item.data(Qt.ItemDataRole.UserRole)
         menu = LeftClickMenu(self)
 
-        menu.addAction("Delete", lambda: self._delete_values([value]))
-        menu.addAction("Rename...", lambda: self._rename_value(value))
+        menu.addAction(say("Delete"), lambda: self._delete_values([value]))
+        menu.addAction(say("Rename..."), lambda: self._rename_value(value))
         menu.addSeparator()
-        menu.addAction("Copy Value", lambda: self._copy_value(value))
+        menu.addAction(say("Copy Value"), lambda: self._copy_value(value))
 
         menu.exec(self.values_list.mapToGlobal(pos))
 
@@ -185,7 +195,7 @@ class PropertyValuesDialog(QDialog):
         values = self._get_selected_values()
         if not values:
             QMessageBox.information(
-                self, "No Selection", "Please select values to delete."
+                self, say("No Selection"), say("Please select values to delete.")
             )
             return
 
@@ -203,9 +213,12 @@ class PropertyValuesDialog(QDialog):
         count = len(values)
         reply = QMessageBox.question(
             self,
-            "Delete Values",
-            f"Delete {count} value(s) from all videos?\n\n"
-            "This will remove these values from every video that has them.",
+            say("Delete Values"),
+            say(
+                "Delete {count} value(s) from all videos?\n\n"
+                "This will remove these values from every video that has them.",
+                count=count,
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -216,7 +229,9 @@ class PropertyValuesDialog(QDialog):
                 self._modified = True
                 self._load_values()
             except Exception as e:
-                QMessageBox.warning(self, "Error", f"Failed to delete values: {e}")
+                QMessageBox.warning(
+                    self, say("Error"), say("Failed to delete values: {error}", error=e)
+                )
             finally:
                 self._set_action_buttons_enabled(True)
 
@@ -225,7 +240,9 @@ class PropertyValuesDialog(QDialog):
         values = self._get_selected_values()
         if len(values) != 1:
             QMessageBox.information(
-                self, "Select One", "Please select exactly one value to rename."
+                self,
+                say("Select One"),
+                say("Please select exactly one value to rename."),
             )
             return
 
@@ -234,7 +251,10 @@ class PropertyValuesDialog(QDialog):
     def _rename_value(self, old_value):
         """Rename a value (merges if target exists)."""
         new_value, ok = QInputDialog.getText(
-            self, "Rename Value", f"Rename '{old_value}' to:", text=str(old_value)
+            self,
+            say("Rename Value"),
+            say("Rename '{old_value}' to:", old_value=old_value),
+            text=str(old_value),
         )
 
         if not ok or not new_value.strip():
@@ -248,8 +268,12 @@ class PropertyValuesDialog(QDialog):
         if new_value in self._values_count:
             reply = QMessageBox.question(
                 self,
-                "Merge Values",
-                f"'{new_value}' already exists. Merge '{old_value}' into it?",
+                say("Merge Values"),
+                say(
+                    "'{new_value}' already exists. Merge '{old_value}' into it?",
+                    new_value=new_value,
+                    old_value=old_value,
+                ),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if reply != QMessageBox.StandardButton.Yes:
@@ -260,15 +284,21 @@ class PropertyValuesDialog(QDialog):
             self._modified = True
             self._load_values()
         except Exception as e:
-            QMessageBox.warning(self, "Error", f"Failed to rename value: {e}")
+            QMessageBox.warning(
+                self, say("Error"), say("Failed to rename value: {error}", error=e)
+            )
 
     def _on_apply_modifier(self, modifier: str):
         """Apply a modifier to all property values."""
         reply = QMessageBox.question(
             self,
-            f"Apply {modifier.title()}",
-            f"Apply '{modifier}' to ALL values of '{self.prop_name}'?\n\n"
-            "This will modify values across all videos.",
+            say("Apply {modifier}", modifier=modifier.title()),
+            say(
+                "Apply '{modifier}' to ALL values of '{prop_name}'?\n\n"
+                "This will modify values across all videos.",
+                modifier=modifier,
+                prop_name=self.prop_name,
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -279,7 +309,11 @@ class PropertyValuesDialog(QDialog):
                 self._modified = True
                 self._load_values()
             except Exception as e:
-                QMessageBox.warning(self, "Error", f"Failed to apply modifier: {e}")
+                QMessageBox.warning(
+                    self,
+                    say("Error"),
+                    say("Failed to apply modifier: {error}", error=e),
+                )
             finally:
                 self._set_action_buttons_enabled(True)
 

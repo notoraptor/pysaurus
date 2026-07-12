@@ -26,6 +26,7 @@ from pysaurus.core.job_notifications import (
     JobToDo,
     NotificationCollector,
 )
+from pysaurus.core.language import say
 from pysaurus.core.notifications import End, Notification, ProfilingEnd
 from pysaurus.database.algorithms.folder_scan import FolderScanProgress
 from pysaurus.interface.kyuti.widgets.spinner_widget import SpinnerWidget
@@ -219,10 +220,10 @@ class ProcessPage(QWidget):
 
         # Activity log header
         log_header = QHBoxLayout()
-        log_header.addWidget(QLabel("Activity Log:"))
+        log_header.addWidget(QLabel(say("Activity Log:")))
         log_header.addStretch()
 
-        self.btn_clear_log = QPushButton("Clear")
+        self.btn_clear_log = QPushButton(say("Clear"))
         self.btn_clear_log.setFixedWidth(60)
         self.btn_clear_log.clicked.connect(self._clear_log)
         log_header.addWidget(self.btn_clear_log)
@@ -249,7 +250,7 @@ class ProcessPage(QWidget):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
 
-        self.btn_continue = QPushButton("Continue")
+        self.btn_continue = QPushButton(say("Continue"))
         self.btn_continue.setEnabled(False)
         self.btn_continue.setMinimumWidth(120)
         self.btn_continue.setStyleSheet(
@@ -298,7 +299,7 @@ class ProcessPage(QWidget):
         self.scan_progress_bar.setMaximum(max(1, notification.folders_discovered))
         self.scan_progress_bar.setValue(notification.folders_done)
         self.scan_progress_bar.setFormat(
-            f"%v / %m folders — {notification.files_found} files"
+            say("%v / %m folders — {files} files", files=notification.files_found)
         )
 
     def _on_end(self, notification: End):
@@ -310,7 +311,7 @@ class ProcessPage(QWidget):
         if self._autocontinue:
             self._on_continue()
         else:
-            self.task_label.setText("Click 'Continue' to proceed")
+            self.task_label.setText(say("Click 'Continue' to proceed"))
             self.btn_continue.setEnabled(True)
 
     def _on_continue(self):

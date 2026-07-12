@@ -12,6 +12,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from pysaurus.core.language import say
+
 
 class FillPropertyDialog(QDialog):
     """
@@ -32,7 +34,7 @@ class FillPropertyDialog(QDialog):
             pt for pt in prop_types if pt.type == "str" and pt.multiple
         ]
 
-        self.setWindowTitle("Fill Property with Terms")
+        self.setWindowTitle(say("Fill Property with Terms"))
         self.setMinimumWidth(400)
 
         self._setup_ui()
@@ -43,8 +45,10 @@ class FillPropertyDialog(QDialog):
 
         # Description
         desc_label = QLabel(
-            "Extract terms from video filenames and add them to a property.\n"
-            "This is useful for automatically tagging videos based on their names."
+            say(
+                "Extract terms from video filenames and add them to a property.\n"
+                "This is useful for automatically tagging videos based on their names."
+            )
         )
         desc_label.setWordWrap(True)
         desc_label.setStyleSheet("color: #666; padding: 5px;")
@@ -59,15 +63,17 @@ class FillPropertyDialog(QDialog):
             for pt in self._eligible_props:
                 self.prop_combo.addItem(pt.name, pt)
         else:
-            self.prop_combo.addItem("(No eligible properties)")
+            self.prop_combo.addItem(say("(No eligible properties)"))
             self.prop_combo.setEnabled(False)
-        form_layout.addRow("Property:", self.prop_combo)
+        form_layout.addRow(say("Property:"), self.prop_combo)
 
         # Only empty checkbox
-        self.only_empty_check = QCheckBox("Only fill videos without values")
+        self.only_empty_check = QCheckBox(say("Only fill videos without values"))
         self.only_empty_check.setToolTip(
-            "If checked, only videos that don't have any values for this property "
-            "will be filled. Existing values will not be modified."
+            say(
+                "If checked, only videos that don't have any values for this property "
+                "will be filled. Existing values will not be modified."
+            )
         )
         form_layout.addRow("", self.only_empty_check)
 
@@ -76,8 +82,10 @@ class FillPropertyDialog(QDialog):
         # Info about eligible properties
         if not self._eligible_props:
             info_label = QLabel(
-                "<i>No eligible properties found. "
-                "This feature requires a string property with 'multiple' enabled.</i>"
+                say(
+                    "<i>No eligible properties found. "
+                    "This feature requires a string property with 'multiple' enabled.</i>"
+                )
             )
             info_label.setStyleSheet("color: #c00;")
             info_label.setWordWrap(True)

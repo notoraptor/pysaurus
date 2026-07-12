@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
+from pysaurus.core.language import say
 from pysaurus.interface.kyuti.app_context import AppContext
 
 
@@ -60,18 +61,18 @@ class DatabaseItemWidget(QFrame):
 
         buttons_layout.addStretch()
 
-        self.btn_open = QPushButton("Open")
-        self.btn_open.setToolTip("Open database")
+        self.btn_open = QPushButton(say("Open"))
+        self.btn_open.setToolTip(say("Open database"))
         self.btn_open.clicked.connect(self._on_open)
         buttons_layout.addWidget(self.btn_open)
 
-        self.btn_update = QPushButton("Update")
-        self.btn_update.setToolTip("Open and update database")
+        self.btn_update = QPushButton(say("Update"))
+        self.btn_update.setToolTip(say("Open and update database"))
         self.btn_update.clicked.connect(self._on_update)
         buttons_layout.addWidget(self.btn_update)
 
-        self.btn_delete = QPushButton("Delete")
-        self.btn_delete.setToolTip("Delete database")
+        self.btn_delete = QPushButton(say("Delete"))
+        self.btn_delete.setToolTip(say("Delete database"))
         self.btn_delete.setStyleSheet(
             "QPushButton { background-color: #cc3333; color: white; font-weight: bold; }"
             "QPushButton:hover { background-color: #dd4444; }"
@@ -114,10 +115,13 @@ class DatabaseItemWidget(QFrame):
     def _on_update(self):
         reply = QMessageBox.question(
             self,
-            "Update Database",
-            f"Open and update '{self.name}'?\n\n"
-            "This will scan all sources for new or modified videos\n"
-            "and may take some time.",
+            say("Update Database"),
+            say(
+                "Open and update '{name}'?\n\n"
+                "This will scan all sources for new or modified videos\n"
+                "and may take some time.",
+                name=self.name,
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -177,7 +181,7 @@ class DatabasesPage(QWidget):
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
 
-        title_label = QLabel("Existing Databases")
+        title_label = QLabel(say("Existing Databases"))
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_font = title_label.font()
         title_font.setBold(True)
@@ -207,7 +211,7 @@ class DatabasesPage(QWidget):
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
 
-        create_title = QLabel("Create New Database")
+        create_title = QLabel(say("Create New Database"))
         create_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         create_font = create_title.font()
         create_font.setBold(True)
@@ -217,35 +221,35 @@ class DatabasesPage(QWidget):
 
         # Name input
         name_layout = QHBoxLayout()
-        name_layout.addWidget(QLabel("Name:"))
+        name_layout.addWidget(QLabel(say("Name:")))
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Enter database name")
+        self.name_input.setPlaceholderText(say("Enter database name"))
         name_layout.addWidget(self.name_input)
         right_layout.addLayout(name_layout)
 
         # Sources list
-        right_layout.addWidget(QLabel("Sources (folders and files):"))
+        right_layout.addWidget(QLabel(say("Sources (folders and files):")))
         self.sources_list = QListWidget()
         right_layout.addWidget(self.sources_list)
 
         # Add source buttons
         source_btn_layout = QHBoxLayout()
-        self.btn_add_folder = QPushButton("Add Folder")
+        self.btn_add_folder = QPushButton(say("Add Folder"))
         self.btn_add_folder.clicked.connect(self._on_add_folder)
         source_btn_layout.addWidget(self.btn_add_folder)
 
-        self.btn_add_file = QPushButton("Add File")
+        self.btn_add_file = QPushButton(say("Add File"))
         self.btn_add_file.clicked.connect(self._on_add_file)
         source_btn_layout.addWidget(self.btn_add_file)
 
-        self.btn_remove_source = QPushButton("Remove")
+        self.btn_remove_source = QPushButton(say("Remove"))
         self.btn_remove_source.clicked.connect(self._on_remove_source)
         source_btn_layout.addWidget(self.btn_remove_source)
 
         right_layout.addLayout(source_btn_layout)
 
         # Create button
-        self.btn_create = QPushButton("Create Database")
+        self.btn_create = QPushButton(say("Create Database"))
         self.btn_create.clicked.connect(self._on_create_clicked)
         right_layout.addWidget(self.btn_create)
 
@@ -291,8 +295,8 @@ class DatabasesPage(QWidget):
         """Handle delete request from a database widget."""
         reply = QMessageBox.question(
             self,
-            "Delete Database",
-            f"Are you sure you want to delete '{name}'?",
+            say("Delete Database"),
+            say("Are you sure you want to delete '{name}'?", name=name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -317,14 +321,14 @@ class DatabasesPage(QWidget):
 
     def _on_add_folder(self):
         """Add a folder to sources."""
-        folder = QFileDialog.getExistingDirectory(self, "Select Folder")
+        folder = QFileDialog.getExistingDirectory(self, say("Select Folder"))
         if folder:
             folder = self._normalize_path(folder)
             if folder in self._get_existing_paths():
                 QMessageBox.information(
                     self,
-                    "Already in List",
-                    f"This folder is already in the list:\n{folder}",
+                    say("Already in List"),
+                    say("This folder is already in the list:\n{folder}", folder=folder),
                 )
             else:
                 self.sources_list.addItem(f"📁 {folder}")
@@ -333,7 +337,10 @@ class DatabasesPage(QWidget):
         """Add files to sources."""
         ext_filter = " ".join(f"*.{ext}" for ext in sorted(VIDEO_SUPPORTED_EXTENSIONS))
         files, _ = QFileDialog.getOpenFileNames(
-            self, "Select Video Files", "", f"Video files ({ext_filter});;All files (*)"
+            self,
+            say("Select Video Files"),
+            "",
+            f"{say('Video files')} ({ext_filter});;{say('All files')} (*)",
         )
         existing = self._get_existing_paths()
         added = 0
@@ -347,8 +354,8 @@ class DatabasesPage(QWidget):
             skipped = len(files) - added
             QMessageBox.information(
                 self,
-                "Some Files Already in List",
-                f"{skipped} file(s) were already in the list.",
+                say("Some Files Already in List"),
+                say("{count} file(s) were already in the list.", count=skipped),
             )
 
     def _on_remove_source(self):
@@ -361,7 +368,9 @@ class DatabasesPage(QWidget):
         """Handle create button click."""
         name = self.name_input.text().strip()
         if not name:
-            QMessageBox.warning(self, "Error", "Please enter a database name.")
+            QMessageBox.warning(
+                self, say("Error"), say("Please enter a database name.")
+            )
             return
 
         sources = []
@@ -374,15 +383,21 @@ class DatabasesPage(QWidget):
                 sources.append(text)
 
         if not sources:
-            QMessageBox.warning(self, "Error", "Please add at least one source.")
+            QMessageBox.warning(
+                self, say("Error"), say("Please add at least one source.")
+            )
             return
 
         # Confirmation dialog
         reply = QMessageBox.question(
             self,
-            "Create Database",
-            f"Create database '{name}' with {len(sources)} source(s)?\n\n"
-            "This will scan all sources for video files.",
+            say("Create Database"),
+            say(
+                "Create database '{name}' with {count} source(s)?\n\n"
+                "This will scan all sources for video files.",
+                name=name,
+                count=len(sources),
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply != QMessageBox.StandardButton.Yes:
