@@ -17,7 +17,7 @@ from pysaurus.database.database import Database
 
 @dataclass(slots=True)
 class Config:
-    language: str = "english"
+    language: str = "en"
 
 
 class Application:
@@ -55,6 +55,8 @@ class Application:
         if self.config_path.exists():
             assert self.config_path.isfile()
             self.config = Config(**parse_json(self.config_path))
+        # Normalize legacy full-name identifiers ("english") to ISO 639-1 codes.
+        self.config.language = language.canonical_language(self.config.language)
         language.set_language(self.config.language)
 
     def get_database_names(self) -> list[str]:

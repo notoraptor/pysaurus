@@ -76,14 +76,14 @@ class TestFeatureAPIApplication:
         """Test getting list of language names."""
         names = feature_api.__run_feature__("get_language_names")
         assert isinstance(names, list)
-        assert {"english", "français"}.issubset(names)
+        assert {"en", "fr"}.issubset(names)
 
     def test_set_language(self, feature_api_with_db):
         """Test switching language: config saved, catalog loaded."""
         api = feature_api_with_db
-        assert api.application.config.language == "english"
-        api.__run_feature__("set_language", "français")
-        assert api.application.config.language == "français"
+        assert api.application.config.language == "en"
+        api.__run_feature__("set_language", "fr")
+        assert api.application.config.language == "fr"
         assert say("Move") == "Déplacement"
         assert say("Unknown text") == "Unknown text"
 
@@ -92,7 +92,7 @@ class TestFeatureAPIApplication:
         api = feature_api_with_db
         with pytest.raises(exceptions.UnknownLanguage):
             api.__run_feature__("set_language", "klingon")
-        assert api.application.config.language == "english"
+        assert api.application.config.language == "en"
 
 
 class TestFeatureAPIDatabase:

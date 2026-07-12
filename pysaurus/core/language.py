@@ -27,9 +27,13 @@ from pysaurus.core.modules import FNV64
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_LANGUAGE = "english"
+DEFAULT_LANGUAGE = "en"
 LANGUAGE_EXTENSION = ".txt"
 OBSOLETE_SUFFIX = ".obsolete.txt"
+
+# Legacy identifiers (full names) used before the switch to ISO 639-1 codes,
+# mapped to their code so an old config.json keeps working.
+LEGACY_LANGUAGE_ALIASES = {"english": "en", "français": "fr"}
 
 _current_language: str = DEFAULT_LANGUAGE
 # Maps English source text to translated text, for the current language.
@@ -89,6 +93,11 @@ def set_language(name: str, folder: PathType | None = None) -> None:
 
 def get_language() -> str:
     return _current_language
+
+
+def canonical_language(name: str) -> str:
+    """Normalize a legacy full-name identifier to its ISO 639-1 code."""
+    return LEGACY_LANGUAGE_ALIASES.get(name, name)
 
 
 def available_languages(folder: PathType | None = None) -> list[str]:

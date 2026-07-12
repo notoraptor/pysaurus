@@ -83,17 +83,17 @@ class TestValidatePlaceholders:
     def test_ok(self):
         english = {"K": "Error {name}: {message}"}
         merged = {"K": "Erreur {name} : {message}"}
-        assert validate_placeholders(english, merged, "français") == []
+        assert validate_placeholders(english, merged, "fr") == []
 
     def test_untranslated_ignored(self):
         english = {"K": "Error {name}"}
         merged = {"K": "Error {name}"}
-        assert validate_placeholders(english, merged, "français") == []
+        assert validate_placeholders(english, merged, "fr") == []
 
     def test_mismatch(self):
         english = {"K": "Error {name}"}
         merged = {"K": "Erreur {nom}"}
-        errors = validate_placeholders(english, merged, "français")
+        errors = validate_placeholders(english, merged, "fr")
         assert len(errors) == 1
         assert "placeholders differ" in errors[0]
 
@@ -101,14 +101,14 @@ class TestValidatePlaceholders:
         """{name[0]} and {name.x} are NOT equivalent to {name}."""
         english = {"K": "Error {name}", "L": "Hi {name}"}
         merged = {"K": "Erreur {name[0]}", "L": "Salut {name.x}"}
-        errors = validate_placeholders(english, merged, "français")
+        errors = validate_placeholders(english, merged, "fr")
         assert len(errors) == 2
         assert all("placeholders differ" in error for error in errors)
 
     def test_malformed(self):
         english = {"K": "Error {name}"}
         merged = {"K": "Erreur {name"}
-        errors = validate_placeholders(english, merged, "français")
+        errors = validate_placeholders(english, merged, "fr")
         assert len(errors) == 1
         assert "malformed" in errors[0]
 
@@ -123,24 +123,22 @@ class TestRun:
         languages = tmp_path / "languages"
         languages.mkdir()
         # Existing French file: one live key (translated), one orphan.
-        dff_dump(
-            {key_of("Hello"): "Bonjour", "Old_1": "Vieux"}, languages / "français.txt"
-        )
+        dff_dump({key_of("Hello"): "Bonjour", "Old_1": "Vieux"}, languages / "fr.txt")
 
         assert run(str(package), str(languages)) == 0
         assert "i18n: OK" in capsys.readouterr().out
 
-        english = dff_load(languages / "english.txt")
+        english = dff_load(languages / "en.txt")
         assert english == {
             key_of("Hello"): "Hello",
             key_of("Error {name}"): "Error {name}",
         }
-        french = dff_load(languages / "français.txt")
+        french = dff_load(languages / "fr.txt")
         assert french == {
             key_of("Hello"): "Bonjour",
             key_of("Error {name}"): "Error {name}",
         }
-        obsolete = dff_load(languages / "français.obsolete.txt")
+        obsolete = dff_load(languages / "fr.obsolete.txt")
         assert obsolete == {"Old_1": "Vieux"}
 
     def test_idempotent(self, tmp_path):
@@ -150,12 +148,12 @@ class TestRun:
         languages = tmp_path / "languages"
 
         assert run(str(package), str(languages)) == 0
-        first = (languages / "english.txt").read_bytes()
-        mtime = (languages / "english.txt").stat().st_mtime_ns
+        first = (languages / "en.txt").read_bytes()
+        mtime = (languages / "en.txt").stat().st_mtime_ns
         assert run(str(package), str(languages)) == 0
-        assert (languages / "english.txt").read_bytes() == first
+        assert (languages / "en.txt").read_bytes() == first
         # Unchanged content must not be rewritten (mtime untouched).
-        assert (languages / "english.txt").stat().st_mtime_ns == mtime
+        assert (languages / "en.txt").stat().st_mtime_ns == mtime
 
     def test_reports_violations(self, tmp_path, capsys):
         package = tmp_path / "pkg"
@@ -172,7 +170,7 @@ class TestRun:
         (package / "module.py").write_text("say('Error {name}')\n", encoding="utf-8")
         languages = tmp_path / "languages"
         languages.mkdir()
-        dff_dump({key_of("Error {name}"): "Erreur {nom}"}, languages / "français.txt")
+        dff_dump({key_of("Error {name}"): "Erreur {nom}"}, languages / "fr.txt")
         assert run(str(package), str(languages)) == 1
         err = capsys.readouterr().err
         assert "placeholders differ" in err
