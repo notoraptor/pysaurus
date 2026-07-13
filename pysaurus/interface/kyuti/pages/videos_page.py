@@ -1038,6 +1038,11 @@ class VideosPage(QWidget):
         self.btn_next.setEnabled(self.page_number < nb_pages - 1)
         self.btn_last.setEnabled(self.page_number < nb_pages - 1)
 
+        # Selection buttons: "Page" only differs from "All" across several pages,
+        # so hide it on a single page; hide both when the view is empty.
+        self.btn_select_page.setVisible(nb_pages > 1)
+        self.btn_select_all.setVisible(self._view_count > 0)
+
         # Update sources display
         self._update_sources_display(context.sources)
 

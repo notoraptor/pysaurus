@@ -124,6 +124,30 @@ class TestVideosPageSelection:
 
         assert video_id in page._selector._selection
 
+    def test_selection_buttons_visibility(self, qtbot, mock_context):
+        """Hide "Page" on a single page; hide both when the view is empty."""
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+
+        # Multiple pages (page_size 1, 4 videos in view): both buttons shown.
+        page.page_size = 1
+        page.refresh()
+        assert not page.btn_select_page.isHidden()
+        assert not page.btn_select_all.isHidden()
+
+        # Single page (all videos fit): "Page" hidden, "All" still shown.
+        page.page_size = 20
+        page.page_number = 0
+        page.refresh()
+        assert page.btn_select_page.isHidden()
+        assert not page.btn_select_all.isHidden()
+
+        # Empty view: both hidden.
+        mock_context.set_search("zzz_nonexistent_query_xyz", "and")
+        page.refresh()
+        assert page.btn_select_page.isHidden()
+        assert page.btn_select_all.isHidden()
+
 
 class TestVideosPagePagination:
     """Tests for pagination functionality."""
