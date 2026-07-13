@@ -19,6 +19,7 @@ from pysaurus.dbview.view_tools import GroupDef
 from pysaurus.properties.properties import PropType
 from pysaurus.properties.property_value_modifier import PropertyValueModifier
 from pysaurus.video.video_search_context import VideoSearchContext
+from pysaurus.video.video_sorting import VideoSorting
 
 # Load test data
 TEST_DATA_PATH = Path(__file__).parent / "test_data.json"
@@ -374,9 +375,7 @@ class MockDatabase:
         if not sorting:
             return videos
         result = videos.copy()
-        for sort_key in reversed(sorting):
-            reverse = sort_key.startswith("-")
-            field = sort_key.lstrip("-")
+        for field, reverse in reversed(list(VideoSorting(sorting))):
             result.sort(key=lambda v: v.get(field, ""), reverse=reverse)
         return result
 

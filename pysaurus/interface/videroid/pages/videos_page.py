@@ -27,6 +27,7 @@ from pysaurus.interface.videroid.dialogs.video_properties_dialog import (
 from pysaurus.interface.videroid.pages.base_page import Page
 from pysaurus.interface.videroid.widgets.video_card import VideoCard, _thumbnail
 from pysaurus.video.video_constants import SIMILARITY_FIELDS
+from pysaurus.video.video_sorting import VideoSorting
 
 
 class VideosPage(Page):
@@ -399,9 +400,7 @@ class VideosPage(Page):
 
     def _update_sorting(self, ctx) -> None:
         parts = []
-        for item in ctx.sorting:
-            reverse = item.startswith("-")
-            field = item[1:] if item[:1] in "+-" else item
+        for field, reverse in VideoSorting(ctx.sorting):
             info = FIELD_MAP.fields.get(field)
             parts.append(f"{info.title if info else field} {'▼' if reverse else '▲'}")
         self._sorting_display.text = ", ".join(parts) or "Default"

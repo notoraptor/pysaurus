@@ -10,6 +10,7 @@ import videre
 from videre.widgets.widget import Widget
 
 from pysaurus.interface.common.common import FIELD_MAP
+from pysaurus.video.video_sorting import VideoSorting
 
 
 class SortingDialog(videre.Column):
@@ -17,11 +18,9 @@ class SortingDialog(videre.Column):
     __slots__ = ("_criteria", "_list", "_dropdown", "_title_to_name")
 
     def __init__(self, sorting: list[str]):
-        self._criteria: list[list] = []
-        for item in sorting:
-            reverse = item.startswith("-")
-            field = item[1:] if item[:1] in "+-" else item
-            self._criteria.append([field, reverse])
+        self._criteria: list[list] = [
+            [field, reverse] for field, reverse in VideoSorting(sorting)
+        ]
         sortable = list(FIELD_MAP.sortable)
         self._title_to_name = {f.title: f.name for f in sortable}
         self._list = videre.Column([], space=2)

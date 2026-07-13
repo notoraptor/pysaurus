@@ -2,6 +2,7 @@ from typing import Sequence
 
 from pysaurus.core.constants import VIDEO_DEFAULT_SORTING
 from pysaurus.video.video_constants import VIDEO_FLAGS
+from pysaurus.video.video_sorting import VideoSorting
 
 
 def parse_sources(paths: Sequence[Sequence[str]]) -> list[list[str]]:
@@ -20,4 +21,10 @@ def parse_sources(paths: Sequence[Sequence[str]]) -> list[list[str]]:
 
 
 def parse_sorting(sorting: Sequence[str]) -> list[str]:
-    return list(sorting) if sorting else VIDEO_DEFAULT_SORTING
+    # Empty means "use the default order": this is a view-layer policy, kept out
+    # of the pure VideoSorting model. Otherwise delegate to VideoSorting, the
+    # single authority that parses and deduplicates a sort spec; to_string_list()
+    # returns the canonical form (explicit +/- signs, duplicates dropped).
+    if not sorting:
+        return list(VIDEO_DEFAULT_SORTING)
+    return VideoSorting(sorting).to_string_list()

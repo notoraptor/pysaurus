@@ -12,14 +12,8 @@ ActivityLog_3053f2b51ef737aa
 	Journal d'activité :
 AddAll_db7b6e4fe2323889
 	Tout ajouter →
-AddAscending_86fdf39cf6764050
-	Ajouter en ordre croissant
 AddCurrentGroupToClassifierPath_9aa90b20a6d46f37
 	Ajouter le groupe actuel au chemin du classificateur
-AddDescending_7c0c0a12b270e7f4
-	Ajouter en ordre décroissant
-AddField_4700b0b041cefb60
-	Ajouter un champ :
 AddFile_5ae57374b6930e98
 	Ajouter un fichier
 AddFile_6bbe1d086834759a
@@ -28,12 +22,10 @@ AddFolder_74c2752bf9f0e814
 	Ajouter un dossier...
 AddFolder_aafd59f14ef3b08a
 	Ajouter un dossier
+AddSortField_61b6a1ea1c21eda
+	Ajouter un champ de tri
 AddValue_786ecece3b09f995
 	Ajouter une valeur
-Add_503d44e1a8be8d95
-	Ajouter ↓
-Add_503d44e1a8be8d97
-	Ajouter ↑
 Add_d86fd0186b52e59e
 	Ajouter
 Advanced_8b4555fb47a8a2bb

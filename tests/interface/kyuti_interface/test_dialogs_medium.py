@@ -5,8 +5,9 @@ Tests SortingDialog, GroupingDialog, SourcesDialog, GoToPageDialog.
 """
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QComboBox, QDialogButtonBox, QPushButton
 
+from pysaurus.interface.common.common import Uniconst
 from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
 from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
 from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
@@ -16,6 +17,18 @@ from pysaurus.properties.properties import PropType
 
 class TestSortingDialog:
     """Tests for SortingDialog."""
+
+    @staticmethod
+    def _row_combo(dialog, row: int) -> QComboBox:
+        """The field dropdown embedded in the criterion row at ``row``."""
+        widget = dialog.sort_list.itemWidget(dialog.sort_list.item(row))
+        return widget.findChild(QComboBox)
+
+    @staticmethod
+    def _row_button(dialog, row: int, texts: tuple[str, ...]) -> QPushButton:
+        """A per-row button identified by its glyph, in the row at ``row``."""
+        widget = dialog.sort_list.itemWidget(dialog.sort_list.item(row))
+        return next(b for b in widget.findChildren(QPushButton) if b.text() in texts)
 
     def test_dialog_creation(self, qtbot):
         """Test that dialog can be created."""
@@ -31,100 +44,108 @@ class TestSortingDialog:
         dialog = SortingDialog(current_sorting=current)
         qtbot.addWidget(dialog)
 
-        # Should have 2 items in the list
         assert dialog.sort_list.count() == 2
+        assert dialog.get_sorting() == current
 
-    def test_add_field_ascending(self, qtbot):
-        """Test adding a field with ascending order."""
+    def test_add_appends_ascending_row(self, qtbot):
+        """Adding appends one ascending criterion on a real sortable field."""
         dialog = SortingDialog()
         qtbot.addWidget(dialog)
 
         initial_count = dialog.sort_list.count()
-
-        # Add a field ascending
-        dialog._add_field(False)
+        dialog._on_add()
 
         assert dialog.sort_list.count() == initial_count + 1
+        field, reverse = dialog.get_sorting()[-1]
+        assert reverse is False
+        assert field  # a concrete sortable field, not empty
 
-    def test_add_field_descending(self, qtbot):
-        """Test adding a field with descending order."""
-        dialog = SortingDialog()
+    def test_change_field_via_dropdown(self, qtbot):
+        """The point of the redesign: retarget a criterion without re-adding."""
+        dialog = SortingDialog(current_sorting=[("title", False)])
         qtbot.addWidget(dialog)
 
-        # Add a field descending
-        dialog._add_field(True)
+        combo = self._row_combo(dialog, 0)
+        combo.setCurrentIndex(combo.findData("length"))
 
-        # Check the item has descending direction
-        item = dialog.sort_list.item(dialog.sort_list.count() - 1)
-        field, reverse = item.data(Qt.ItemDataRole.UserRole)
-        assert reverse is True
-
-    def test_move_up(self, qtbot):
-        """Test moving an item up."""
-        current = [("title", False), ("date", True)]
-        dialog = SortingDialog(current_sorting=current)
-        qtbot.addWidget(dialog)
-
-        # Select second item
-        dialog.sort_list.setCurrentRow(1)
-
-        # Move up
-        dialog._move_up()
-
-        # Now it should be at position 0
-        assert dialog.sort_list.currentRow() == 0
-        item = dialog.sort_list.item(0)
-        field, _ = item.data(Qt.ItemDataRole.UserRole)
-        assert field == "date"
-
-    def test_move_down(self, qtbot):
-        """Test moving an item down."""
-        current = [("title", False), ("date", True)]
-        dialog = SortingDialog(current_sorting=current)
-        qtbot.addWidget(dialog)
-
-        # Select first item
-        dialog.sort_list.setCurrentRow(0)
-
-        # Move down
-        dialog._move_down()
-
-        # Now it should be at position 1
-        assert dialog.sort_list.currentRow() == 1
-        item = dialog.sort_list.item(1)
-        field, _ = item.data(Qt.ItemDataRole.UserRole)
-        assert field == "title"
+        assert dialog.get_sorting() == [("length", False)]
 
     def test_toggle_direction(self, qtbot):
         """Test toggling sort direction."""
-        current = [("title", False)]  # ascending
-        dialog = SortingDialog(current_sorting=current)
+        dialog = SortingDialog(current_sorting=[("title", False)])
         qtbot.addWidget(dialog)
 
-        # Select item
-        dialog.sort_list.setCurrentRow(0)
+        dialog._toggle_direction(0)
 
-        # Toggle direction
-        dialog._toggle_direction()
+        assert dialog.get_sorting() == [("title", True)]
 
-        # Check it's now descending
-        item = dialog.sort_list.item(0)
-        _, reverse = item.data(Qt.ItemDataRole.UserRole)
-        assert reverse is True
-
-    def test_remove_selected(self, qtbot):
-        """Test removing selected item."""
-        current = [("title", False), ("date", True)]
-        dialog = SortingDialog(current_sorting=current)
+    def test_row_buttons_survive_clicks(self, qtbot):
+        # Each per-row button rebuilds the list synchronously, deleting the very
+        # button that emitted the click; Qt guards clicked() so it must not crash.
+        dialog = SortingDialog(current_sorting=[("title", False), ("date", True)])
         qtbot.addWidget(dialog)
 
-        # Select first item
-        dialog.sort_list.setCurrentRow(0)
+        # Flip row 0's direction via its ▲/▼ button.
+        self._row_button(dialog, 0, (Uniconst.ARROW_UP, Uniconst.ARROW_DOWN)).click()
+        assert dialog.get_sorting() == [("title", True), ("date", True)]
 
-        # Remove
-        dialog._remove_selected()
+        # Move row 1 up via its ↑ button.
+        self._row_button(dialog, 1, ("↑",)).click()
+        assert dialog.get_sorting() == [("date", True), ("title", True)]
+
+        # Remove row 0 via its ✕ button.
+        self._row_button(dialog, 0, (Uniconst.CROSS,)).click()
+        assert dialog.get_sorting() == [("title", True)]
+
+    def test_move_up(self, qtbot):
+        """Test moving an item up."""
+        dialog = SortingDialog(current_sorting=[("title", False), ("date", True)])
+        qtbot.addWidget(dialog)
+
+        dialog._move_up(1)
+
+        assert dialog.get_sorting() == [("date", True), ("title", False)]
+
+    def test_move_down(self, qtbot):
+        """Test moving an item down."""
+        dialog = SortingDialog(current_sorting=[("title", False), ("date", True)])
+        qtbot.addWidget(dialog)
+
+        dialog._move_down(0)
+
+        assert dialog.get_sorting() == [("date", True), ("title", False)]
+
+    def test_remove(self, qtbot):
+        """Test removing a criterion by index."""
+        dialog = SortingDialog(current_sorting=[("title", False), ("date", True)])
+        qtbot.addWidget(dialog)
+
+        dialog._remove(0)
 
         assert dialog.sort_list.count() == 1
+        assert dialog.get_sorting() == [("date", True)]
+
+    def test_unknown_field_preserved(self, qtbot):
+        """A criterion on a non-sortable/removed field is kept, not dropped."""
+        dialog = SortingDialog(current_sorting=[("mystery", True)])
+        qtbot.addWidget(dialog)
+
+        assert self._row_combo(dialog, 0).currentData() == "mystery"
+        assert dialog.get_sorting() == [("mystery", True)]
+
+    def test_reset_restores_default_sorting(self, qtbot):
+        """Reset repopulates the default order (date modified, descending)."""
+        dialog = SortingDialog(current_sorting=[("width", False), ("height", True)])
+        qtbot.addWidget(dialog)
+
+        reset_btn = next(
+            b
+            for b in dialog._button_box.buttons()
+            if dialog._button_box.buttonRole(b) == QDialogButtonBox.ButtonRole.ResetRole
+        )
+        reset_btn.click()
+
+        assert dialog.get_sorting() == [("date", True)]
 
     def test_get_sorting(self, qtbot):
         """Test getting sorting results."""
@@ -132,10 +153,7 @@ class TestSortingDialog:
         dialog = SortingDialog(current_sorting=current)
         qtbot.addWidget(dialog)
 
-        result = dialog.get_sorting()
-
-        expected = [("title", False), ("date", True)]
-        assert result == expected
+        assert dialog.get_sorting() == [("title", False), ("date", True)]
 
 
 class TestGroupingDialog:

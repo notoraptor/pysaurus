@@ -43,8 +43,21 @@ class TestViewContextState:
 
     def test_set_sort(self):
         view = ViewContext()
+        # The stored form is canonicalized to explicit +/- signs by VideoSorting.
         view.set_sort(["-width", "height"])
-        assert view.sorting == ["-width", "height"]
+        assert view.sorting == ["-width", "+height"]
+
+    def test_set_sort_deduplicates_fields(self):
+        # Sorting a field twice is redundant: keep the first occurrence only.
+        view = ViewContext()
+        view.set_sort(["-date", "+length", "+date"])
+        assert view.sorting == ["-date", "+length"]
+
+    def test_set_sort_duplicate_keeps_first_direction(self):
+        # A later duplicate wins nothing, even with the opposite direction.
+        view = ViewContext()
+        view.set_sort(["+date", "-date"])
+        assert view.sorting == ["+date"]
 
     def test_set_grouping(self):
         view = ViewContext()

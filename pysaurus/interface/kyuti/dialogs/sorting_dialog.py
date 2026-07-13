@@ -2,7 +2,6 @@
 Dialog for setting video sorting.
 """
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -13,17 +12,23 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QPushButton,
     QVBoxLayout,
+    QWidget,
 )
 
+from pysaurus.core.constants import VIDEO_DEFAULT_SORTING
 from pysaurus.core.language import say
-from pysaurus.interface.common.common import FIELD_MAP
+from pysaurus.interface.common.common import FIELD_MAP, Uniconst
+from pysaurus.video.video_sorting import VideoSorting
 
 
 class SortingDialog(QDialog):
     """
     Dialog for setting video sort order.
 
-    Allows multiple sort criteria with ascending/descending order.
+    Each criterion is a self-contained editable row: a dropdown to pick the
+    field, a button to flip its direction, and buttons to move or remove it.
+    ``self._entries`` (a list of ``[field, reverse]``) is the single source of
+    truth; rows are rebuilt from it, so the field dropdowns never desync.
     """
 
     def __init__(
@@ -31,13 +36,15 @@ class SortingDialog(QDialog):
     ):
         super().__init__(parent)
         self.setWindowTitle(say("Set Sorting"))
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(460)
         self.setMinimumHeight(350)
 
-        self._current = current_sorting or []
+        self._entries: list[list] = [
+            [field, reverse] for field, reverse in (current_sorting or [])
+        ]
 
         self._setup_ui()
-        self._load_current()
+        self._render_rows()
 
     def _setup_ui(self):
         """Set up the UI."""
@@ -45,53 +52,14 @@ class SortingDialog(QDialog):
 
         layout.addWidget(QLabel(say("Sort by (first has highest priority):")))
 
-        # Sort criteria list
+        # One editable row per sort criterion.
         self.sort_list = QListWidget()
-        self.sort_list.setDragDropMode(QListWidget.DragDropMode.InternalMove)
         layout.addWidget(self.sort_list)
 
-        # Buttons for managing sort criteria
-        btn_layout = QHBoxLayout()
-
-        self.btn_up = QPushButton(say("Move Up"))
-        self.btn_up.clicked.connect(self._move_up)
-        btn_layout.addWidget(self.btn_up)
-
-        self.btn_down = QPushButton(say("Move Down"))
-        self.btn_down.clicked.connect(self._move_down)
-        btn_layout.addWidget(self.btn_down)
-
-        self.btn_toggle = QPushButton(say("Toggle Direction"))
-        self.btn_toggle.clicked.connect(self._toggle_direction)
-        btn_layout.addWidget(self.btn_toggle)
-
-        self.btn_remove = QPushButton(say("Remove"))
-        self.btn_remove.clicked.connect(self._remove_selected)
-        btn_layout.addWidget(self.btn_remove)
-
-        layout.addLayout(btn_layout)
-
-        # Add new field section
-        add_layout = QHBoxLayout()
-
-        add_layout.addWidget(QLabel(say("Add field:")))
-
-        self.field_combo = QComboBox()
-        for field_info in FIELD_MAP.sortable:
-            self.field_combo.addItem(field_info.title, field_info.name)
-        add_layout.addWidget(self.field_combo)
-
-        self.btn_add_asc = QPushButton(say("Add ↑"))
-        self.btn_add_asc.setToolTip(say("Add ascending"))
-        self.btn_add_asc.clicked.connect(self._on_add_asc)
-        add_layout.addWidget(self.btn_add_asc)
-
-        self.btn_add_desc = QPushButton(say("Add ↓"))
-        self.btn_add_desc.setToolTip(say("Add descending"))
-        self.btn_add_desc.clicked.connect(self._on_add_desc)
-        add_layout.addWidget(self.btn_add_desc)
-
-        layout.addLayout(add_layout)
+        # Append a new criterion (first sortable field, ascending) to edit inline.
+        self.btn_add = QPushButton(say("Add sort field"))
+        self.btn_add.clicked.connect(self._on_add)
+        layout.addWidget(self.btn_add)
 
         # Dialog buttons
         button_box = QDialogButtonBox()
@@ -102,89 +70,139 @@ class SortingDialog(QDialog):
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
         button_box.clicked.connect(self._on_button_clicked)
+        self._button_box = button_box
 
         layout.addWidget(button_box)
 
-    def _load_current(self):
-        """Load current sorting settings."""
+    # --- rendering -----------------------------------------------------------
+
+    def _render_rows(self):
+        """Rebuild the whole list from ``self._entries``."""
         self.sort_list.clear()
-        for field, reverse in self._current:
-            self._add_item(field, reverse)
+        for index in range(len(self._entries)):
+            row = self._build_row(index)
+            item = QListWidgetItem()
+            item.setSizeHint(row.sizeHint())
+            self.sort_list.addItem(item)
+            self.sort_list.setItemWidget(item, row)
 
-    def _add_item(self, field: str, reverse: bool):
-        """Add a sort criterion to the list."""
-        # Get field title
-        title = field
-        if field in FIELD_MAP.fields:
-            title = FIELD_MAP.fields[field].title
+    def _build_row(self, index: int) -> QWidget:
+        """Build the editable widget for the criterion at ``index``."""
+        field, reverse = self._entries[index]
 
-        direction = "↓" if reverse else "↑"
-        text = f"{title} {direction}"
+        row = QWidget()
+        row_layout = QHBoxLayout(row)
+        row_layout.setContentsMargins(2, 2, 2, 2)
 
-        item = QListWidgetItem(text)
-        item.setData(Qt.ItemDataRole.UserRole, (field, reverse))
-        self.sort_list.addItem(item)
+        field_combo = QComboBox()
+        for field_info in FIELD_MAP.sortable:
+            field_combo.addItem(field_info.title, field_info.name)
+        combo_index = field_combo.findData(field)
+        if combo_index < 0:
+            # Unknown field (e.g. a saved sort on a field no longer sortable):
+            # keep it selectable so the criterion is not silently dropped.
+            field_combo.addItem(field, field)
+            combo_index = field_combo.count() - 1
+        field_combo.setCurrentIndex(combo_index)
+        # Connect only after setting the index, so this initial set is silent.
+        field_combo.currentIndexChanged.connect(
+            lambda _=0, i=index, c=field_combo: self._on_field_changed(i, c)
+        )
+        row_layout.addWidget(field_combo, 1)
 
-    def _on_add_asc(self):
-        self._add_field(False)
+        btn_dir = QPushButton(self._direction_symbol(reverse))
+        btn_dir.setFixedWidth(32)
+        btn_dir.setToolTip(say("Toggle Direction"))
+        btn_dir.clicked.connect(lambda _=False, i=index: self._toggle_direction(i))
+        row_layout.addWidget(btn_dir)
 
-    def _on_add_desc(self):
-        self._add_field(True)
+        btn_up = QPushButton("↑")
+        btn_up.setFixedWidth(32)
+        btn_up.setToolTip(say("Move Up"))
+        btn_up.setEnabled(index > 0)
+        btn_up.clicked.connect(lambda _=False, i=index: self._move_up(i))
+        row_layout.addWidget(btn_up)
 
-    def _add_field(self, reverse: bool):
-        """Add a new field to the sort list."""
-        field = self.field_combo.currentData()
-        if field:
-            self._add_item(field, reverse)
+        btn_down = QPushButton("↓")
+        btn_down.setFixedWidth(32)
+        btn_down.setToolTip(say("Move Down"))
+        btn_down.setEnabled(index < len(self._entries) - 1)
+        btn_down.clicked.connect(lambda _=False, i=index: self._move_down(i))
+        row_layout.addWidget(btn_down)
 
-    def _move_up(self):
-        """Move selected item up."""
-        row = self.sort_list.currentRow()
-        if row > 0:
-            item = self.sort_list.takeItem(row)
-            self.sort_list.insertItem(row - 1, item)
-            self.sort_list.setCurrentRow(row - 1)
+        btn_remove = QPushButton(Uniconst.CROSS)
+        btn_remove.setFixedWidth(32)
+        btn_remove.setToolTip(say("Remove"))
+        btn_remove.clicked.connect(lambda _=False, i=index: self._remove(i))
+        row_layout.addWidget(btn_remove)
 
-    def _move_down(self):
-        """Move selected item down."""
-        row = self.sort_list.currentRow()
-        if row < self.sort_list.count() - 1:
-            item = self.sort_list.takeItem(row)
-            self.sort_list.insertItem(row + 1, item)
-            self.sort_list.setCurrentRow(row + 1)
+        return row
 
-    def _toggle_direction(self):
-        """Toggle the direction of the selected item."""
-        item = self.sort_list.currentItem()
-        if item:
-            field, reverse = item.data(Qt.ItemDataRole.UserRole)
-            reverse = not reverse
+    @staticmethod
+    def _direction_symbol(reverse: bool) -> str:
+        return Uniconst.ARROW_DOWN if reverse else Uniconst.ARROW_UP
 
-            # Update item
-            title = field
-            if field in FIELD_MAP.fields:
-                title = FIELD_MAP.fields[field].title
+    @staticmethod
+    def _default_entries() -> list[list]:
+        """The default sort order (date modified, descending)."""
+        return [
+            [field, reverse] for field, reverse in VideoSorting(VIDEO_DEFAULT_SORTING)
+        ]
 
-            direction = "↓" if reverse else "↑"
-            item.setText(f"{title} {direction}")
-            item.setData(Qt.ItemDataRole.UserRole, (field, reverse))
+    # --- mutations -----------------------------------------------------------
 
-    def _remove_selected(self):
-        """Remove the selected item."""
-        row = self.sort_list.currentRow()
-        if row >= 0:
-            self.sort_list.takeItem(row)
+    def _on_add(self):
+        """Append a new criterion (first sortable field, ascending)."""
+        default_field = FIELD_MAP.sortable[0].name if FIELD_MAP.sortable else ""
+        self._entries.append([default_field, False])
+        self._render_rows()
+        self.sort_list.setCurrentRow(len(self._entries) - 1)
+
+    def _on_field_changed(self, index: int, combo: QComboBox):
+        """Update the field of the criterion edited in-place (no rebuild)."""
+        if 0 <= index < len(self._entries):
+            self._entries[index][0] = combo.currentData()
+
+    def _toggle_direction(self, index: int):
+        """Toggle the direction of the criterion at ``index``."""
+        if 0 <= index < len(self._entries):
+            self._entries[index][1] = not self._entries[index][1]
+            self._render_rows()
+            self.sort_list.setCurrentRow(index)
+
+    def _move_up(self, index: int):
+        """Move the criterion at ``index`` up one position."""
+        if 0 < index < len(self._entries):
+            self._entries[index - 1], self._entries[index] = (
+                self._entries[index],
+                self._entries[index - 1],
+            )
+            self._render_rows()
+            self.sort_list.setCurrentRow(index - 1)
+
+    def _move_down(self, index: int):
+        """Move the criterion at ``index`` down one position."""
+        if 0 <= index < len(self._entries) - 1:
+            self._entries[index + 1], self._entries[index] = (
+                self._entries[index],
+                self._entries[index + 1],
+            )
+            self._render_rows()
+            self.sort_list.setCurrentRow(index + 1)
+
+    def _remove(self, index: int):
+        """Remove the criterion at ``index``."""
+        if 0 <= index < len(self._entries):
+            del self._entries[index]
+            self._render_rows()
 
     def _on_button_clicked(self, button):
         """Handle button clicks."""
-        role = self.sender().buttonRole(button)
+        role = self._button_box.buttonRole(button)
         if role == QDialogButtonBox.ButtonRole.ResetRole:
-            self.sort_list.clear()
+            self._entries = self._default_entries()
+            self._render_rows()
 
     def get_sorting(self) -> list[tuple[str, bool]]:
         """Get the sorting settings as a list of (field, reverse) tuples."""
-        result = []
-        for i in range(self.sort_list.count()):
-            item = self.sort_list.item(i)
-            result.append(item.data(Qt.ItemDataRole.UserRole))
-        return result
+        return [(field, reverse) for field, reverse in self._entries]

@@ -47,6 +47,7 @@ from pysaurus.properties.properties import PropType
 from pysaurus.video.video_constants import SIMILARITY_FIELDS
 from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
+from pysaurus.video.video_sorting import VideoSorting
 
 
 class VideosPage(QWidget):
@@ -1277,18 +1278,8 @@ class VideosPage(QWidget):
             return
 
         lines = []
-        for sort_str in sorting:
-            # Parse "-field" or "+field" format
-            if sort_str.startswith("-"):
-                field_name = sort_str[1:]
-                arrow = Uniconst.ARROW_DOWN  # ▼ for descending
-            elif sort_str.startswith("+"):
-                field_name = sort_str[1:]
-                arrow = Uniconst.ARROW_UP  # ▲ for ascending
-            else:
-                field_name = sort_str
-                arrow = Uniconst.ARROW_UP
-
+        for field_name, reverse in VideoSorting(sorting):
+            arrow = Uniconst.ARROW_DOWN if reverse else Uniconst.ARROW_UP
             # Get field title
             if field_name in FIELD_MAP.fields:
                 title = FIELD_MAP.fields[field_name].title

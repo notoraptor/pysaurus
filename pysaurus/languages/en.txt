@@ -12,14 +12,8 @@ ActivityLog_3053f2b51ef737aa
 	Activity Log:
 AddAll_db7b6e4fe2323889
 	Add All →
-AddAscending_86fdf39cf6764050
-	Add ascending
 AddCurrentGroupToClassifierPath_9aa90b20a6d46f37
 	Add current group to classifier path
-AddDescending_7c0c0a12b270e7f4
-	Add descending
-AddField_4700b0b041cefb60
-	Add field:
 AddFile_5ae57374b6930e98
 	Add File
 AddFile_6bbe1d086834759a
@@ -28,12 +22,10 @@ AddFolder_74c2752bf9f0e814
 	Add Folder...
 AddFolder_aafd59f14ef3b08a
 	Add Folder
+AddSortField_61b6a1ea1c21eda
+	Add sort field
 AddValue_786ecece3b09f995
 	Add value
-Add_503d44e1a8be8d95
-	Add ↓
-Add_503d44e1a8be8d97
-	Add ↑
 Add_d86fd0186b52e59e
 	Add
 Advanced_8b4555fb47a8a2bb
