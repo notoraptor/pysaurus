@@ -46,8 +46,6 @@ AllSources_7db34dbbad1aab80
 	Toutes les sources
 AllVideosWillBeAffected_d85b9815ed7d7c0f
 	Toutes les vidéos seront affectées.
-All_d86fc8186b52d80e
-	Tout
 AllowMultipleValues_13b3e1f3bb044b6e
 	Autoriser les valeurs multiples
 AllowSingletons_9cef7b685c53d54a
@@ -659,8 +657,6 @@ PageCurrentTotal_c45ee8b52882590a
 	Page {current}/{total}
 PageSize_eb94aa40282346fb
 	Taille de &page
-Page_96e5bf7e14370d0c
-	Page
 Path_96e5ac7e1436ed48
 	Chemin
 PermanentlyDeleteThisVideoThisActionCannotBeUndoneTheFileWillBeDeletedFromDisk_b38e9db0d26860d5

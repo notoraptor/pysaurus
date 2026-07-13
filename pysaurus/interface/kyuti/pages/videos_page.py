@@ -414,6 +414,15 @@ class VideosPage(QWidget):
             QPushButton {
                 padding: 2px 6px;
             }
+            QPushButton#selectBtn {
+                background-color: #4fc3f7;
+                color: #0a1929;
+                font-weight: bold;
+                padding: 2px 4px;
+            }
+            QPushButton#selectBtn:hover {
+                background-color: #81d4fa;
+            }
             QPushButton#clearBtn {
                 background-color: #cc3333;
                 color: white;
@@ -657,6 +666,21 @@ class VideosPage(QWidget):
         )
         selection_header.addWidget(self._selection_header_label)
         selection_header.addStretch()
+        # Select-page / select-all live here in the header, before the settings gear.
+        self.btn_select_page = QPushButton("𝄛")
+        self.btn_select_page.setObjectName("selectBtn")
+        self.btn_select_page.setToolTip(
+            say("Select all videos on current page (Ctrl+A)")
+        )
+        self.btn_select_page.clicked.connect(self._select_all)
+        selection_header.addWidget(self.btn_select_page)
+        self.btn_select_all = QPushButton("∀")
+        self.btn_select_all.setObjectName("selectBtn")
+        self.btn_select_all.setToolTip(
+            say("Select all videos in current view (Ctrl+Shift+A)")
+        )
+        self.btn_select_all.clicked.connect(self._select_all_in_view)
+        selection_header.addWidget(self.btn_select_all)
         self.btn_selection_settings = QPushButton("⚙")
         self.btn_selection_settings.setObjectName("settingsBtn")
         self.btn_selection_settings.setToolTip(say("Selection actions"))
@@ -672,7 +696,7 @@ class VideosPage(QWidget):
         selection_header.addWidget(self.btn_selection_clear)
         selection_layout.addLayout(selection_header)
 
-        # Selection info label + Page/All buttons
+        # Selection info label (its own line, under the header buttons).
         selection_row = QHBoxLayout()
         selection_row.setSpacing(2)
         self.selection_label = QLabel(say("no selection"))
@@ -680,18 +704,6 @@ class VideosPage(QWidget):
             "color: #0078d4; font-style: italic; background: transparent;"
         )
         selection_row.addWidget(self.selection_label, 1)
-        self.btn_select_page = QPushButton(say("Page"))
-        self.btn_select_page.setToolTip(
-            say("Select all videos on current page (Ctrl+A)")
-        )
-        self.btn_select_page.clicked.connect(self._select_all)
-        selection_row.addWidget(self.btn_select_page)
-        self.btn_select_all = QPushButton(say("All"))
-        self.btn_select_all.setToolTip(
-            say("Select all videos in current view (Ctrl+Shift+A)")
-        )
-        self.btn_select_all.clicked.connect(self._select_all_in_view)
-        selection_row.addWidget(self.btn_select_all)
         selection_layout.addLayout(selection_row)
         layout.addWidget(selection_section)
 
@@ -959,11 +971,9 @@ class VideosPage(QWidget):
         self._selection_header_label.setText(say("Selection"))
         self.btn_selection_settings.setToolTip(say("Selection actions"))
         self.btn_selection_clear.setToolTip(say("Clear selection (Escape)"))
-        self.btn_select_page.setText(say("Page"))
         self.btn_select_page.setToolTip(
             say("Select all videos on current page (Ctrl+A)")
         )
-        self.btn_select_all.setText(say("All"))
         self.btn_select_all.setToolTip(
             say("Select all videos in current view (Ctrl+Shift+A)")
         )

@@ -8,7 +8,11 @@ Add_503d44e1a8be8d95
 	Ajouter ↓
 Add_503d44e1a8be8d97
 	Ajouter ↑
+All_d86fc8186b52d80e
+	Tout
 LanguageChangedSomeElementsWillFullyUpdateAfterRestartingPysaurus_aebc685db3ccbc0a
 	Langue modifiée. Certains éléments ne seront pleinement mis à jour qu'après le redémarrage de Pysaurus.
 Language_b52cf743a80759db
 	Langue
+Page_96e5bf7e14370d0c
+	Page
