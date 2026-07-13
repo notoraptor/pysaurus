@@ -232,6 +232,25 @@ class TestMenuState:
         assert not main_window._action_close_db.isEnabled()
         assert not main_window._action_session_log.isEnabled()
 
+    def test_options_menu_reachable_without_database(self, main_window):
+        # The Language submenu is app-global, so Options stays enabled even with
+        # no database open; only its database-specific children are disabled.
+        main_window._update_menu_state()
+        assert main_window.options_menu.isEnabled()
+        assert main_window.language_menu.isEnabled()
+        assert not main_window._action_confirm_not_found.isEnabled()
+        assert not main_window.page_size_menu.isEnabled()
+
+    def test_options_menu_disabled_during_process(self, main_window):
+        # Language must NOT be switchable while a ProcessPage is up (it has no
+        # retranslateUi), so the whole Options menu is disabled during a process.
+        main_window._process_page = object()  # simulate an in-flight process
+        try:
+            main_window._update_menu_state()
+            assert not main_window.options_menu.isEnabled()
+        finally:
+            main_window._process_page = None
+
     def test_database_actions_enabled_with_database(self, main_window):
         main_window.ctx._simulate_open()
         main_window._update_menu_state()
@@ -522,6 +541,9 @@ class TestDatabaseMenuActions:
 
     def test_rename_database_success(self, main_window, monkeypatch):
         main_window.ctx._simulate_open("old_name")
+        # Renaming happens from the videos page (that is where the DB name shows
+        # in the window title); the title must follow the new name.
+        main_window.show_videos_page()
 
         monkeypatch.setattr(
             "pysaurus.interface.kyuti.main_window.RenameDialog.get_name",

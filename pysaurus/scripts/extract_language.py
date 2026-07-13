@@ -212,12 +212,14 @@ def run(source_dir: str | None = None, languages_dir: str | None = None) -> int:
         return 1
 
     english = dict(sorted(english.items()))
-    folder.mkdir()
-    _write_if_changed(
-        english, AbsolutePath.join(folder, DEFAULT_LANGUAGE + LANGUAGE_EXTENSION)
-    )
-    print(f"{DEFAULT_LANGUAGE}: {len(english)} entries")
 
+    # Compute every merge and validate placeholders BEFORE touching the disk,
+    # so a failed run (bad placeholders) leaves the catalogs exactly as they
+    # were instead of writing a half-updated set of files.
+    writes: list[tuple[dict[str, str], AbsolutePath]] = [
+        (english, AbsolutePath.join(folder, DEFAULT_LANGUAGE + LANGUAGE_EXTENSION))
+    ]
+    summaries: list[str] = [f"{DEFAULT_LANGUAGE}: {len(english)} entries"]
     errors: list[str] = []
     for language in available_languages(folder):
         if language == DEFAULT_LANGUAGE:
@@ -225,14 +227,14 @@ def run(source_dir: str | None = None, languages_dir: str | None = None) -> int:
         lang_path = AbsolutePath.join(folder, language + LANGUAGE_EXTENSION)
         merged, orphans = merge_catalog(english, dff_load(lang_path))
         errors.extend(validate_placeholders(english, merged, language))
-        _write_if_changed(dict(sorted(merged.items())), lang_path)
+        writes.append((dict(sorted(merged.items())), lang_path))
         if orphans:
             obsolete_path = AbsolutePath.join(folder, language + OBSOLETE_SUFFIX)
             obsolete = dff_load(obsolete_path) if obsolete_path.isfile() else {}
             obsolete.update(orphans)
-            _write_if_changed(dict(sorted(obsolete.items())), obsolete_path)
+            writes.append((dict(sorted(obsolete.items())), obsolete_path))
         untranslated = sum(1 for key, value in merged.items() if value == english[key])
-        print(
+        summaries.append(
             f"{language}: {len(merged)} entries, {untranslated} untranslated,"
             f" {len(orphans)} moved to obsolete"
         )
@@ -242,6 +244,12 @@ def run(source_dir: str | None = None, languages_dir: str | None = None) -> int:
             print(error, file=sys.stderr)
         _print_status(False, f"{len(errors)} placeholder error(s)")
         return 1
+
+    folder.mkdir()
+    for dictionary, path in writes:
+        _write_if_changed(dictionary, path)
+    for summary in summaries:
+        print(summary)
     _print_status(True)
     return 0
 

@@ -31,6 +31,7 @@ class QtStandardTranslations:
             return
         for translator in self._translators:
             app.removeTranslator(translator)
+            translator.deleteLater()  # else it lingers as a child of ``app``
         self._translators.clear()
         directory = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
         translator = QTranslator(app)

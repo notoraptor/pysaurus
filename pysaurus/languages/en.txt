@@ -720,6 +720,8 @@ PysaurusDatabases_62b94442af2ecfa
 	Pysaurus - Databases
 PysaurusFilesName_6ec4c97e80e667e3
 	Pysaurus - Files - {name}
+PysaurusName_cbd5caa7164f2a3
+	Pysaurus - {name}
 PysaurusPropertiesName_4c2c1295eba60c79
 	Pysaurus - Properties - {name}
 PysaurusVideoCollectionManagerANativeQt6DesktopInterfaceForManagingVideoCollections_c74291daf1537f8f

@@ -307,7 +307,9 @@ class MainWindow(QMainWindow):
         if index == self.PAGE_DATABASES:
             self.setWindowTitle(say("Pysaurus - Databases"))
         elif index == self.PAGE_VIDEOS:
-            self.setWindowTitle(f"Pysaurus - {self.ctx.get_database_name()}")
+            self.setWindowTitle(
+                say("Pysaurus - {name}", name=self.ctx.get_database_name())
+            )
         elif index == self.PAGE_PROPERTIES:
             self.setWindowTitle(
                 say("Pysaurus - Properties - {name}", name=self.ctx.get_database_name())
@@ -584,9 +586,14 @@ class MainWindow(QMainWindow):
         # View menu: enabled when on videos page
         self.view_menu.setEnabled(has_db and on_videos_page)
 
-        # Options menu: only relevant when a database is open
-        self.options_menu.setEnabled(has_db)
+        # Options menu is reachable without an open database (so the Language
+        # submenu — an app-global setting — can be changed from the home page),
+        # but NOT during a process: switching language installs a QTranslator
+        # that posts LanguageChange to the ProcessPage, which has no
+        # retranslateUi. Its database-specific children are gated individually.
+        self.options_menu.setEnabled(not processing)
         self.page_size_menu.setEnabled(on_videos_page)
+        self._action_confirm_not_found.setEnabled(has_db)
 
         # Page selector radio buttons: hidden during processing
         self._page_selector.setVisible(has_db)
@@ -626,7 +633,7 @@ class MainWindow(QMainWindow):
         if new_name:
             try:
                 self.ctx.rename_database(new_name)
-                self.setWindowTitle(f"Pysaurus - {new_name}")
+                self._update_window_title()
                 self.status_bar.showMessage(
                     say("Database renamed to '{name}'", name=new_name), 3000
                 )

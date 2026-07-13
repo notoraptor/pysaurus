@@ -175,3 +175,18 @@ class TestRun:
         err = capsys.readouterr().err
         assert "placeholders differ" in err
         assert "i18n: FAILED (1 placeholder error(s))" in err
+
+    def test_placeholder_error_leaves_catalogs_untouched(self, tmp_path):
+        # A run that fails placeholder validation must not write anything.
+        package = tmp_path / "pkg"
+        package.mkdir()
+        (package / "module.py").write_text("say('Error {name}')\n", encoding="utf-8")
+        languages = tmp_path / "languages"
+        languages.mkdir()
+        fr_path = languages / "fr.txt"
+        dff_dump({key_of("Error {name}"): "Erreur {nom}"}, fr_path)
+        before = fr_path.read_bytes()
+
+        assert run(str(package), str(languages)) == 1
+        assert not (languages / "en.txt").exists()  # reference never generated
+        assert fr_path.read_bytes() == before  # existing catalog left intact
