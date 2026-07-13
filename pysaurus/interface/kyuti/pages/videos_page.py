@@ -586,7 +586,6 @@ class VideosPage(QWidget):
         self.search_input.setToolTip(say("Search videos (Ctrl+F)"))
         self.search_input.returnPressed.connect(self._on_search)
         self.search_input.textChanged.connect(self._on_search_text_changed)
-        self.search_input.installEventFilter(self)
         search_layout.addWidget(self.search_input)
 
         # First row: AND, OR buttons
@@ -1335,12 +1334,6 @@ class VideosPage(QWidget):
             self.search_input.setStyleSheet("QLineEdit { color: #0055cc; }")
         else:
             self.search_input.setStyleSheet("")
-
-    def eventFilter(self, obj, event):
-        if obj is self.search_input and event.type() == QEvent.FocusOut:
-            if self._active_search_text:
-                self.search_input.setText(self._active_search_text)
-        return super().eventFilter(obj, event)
 
     def _highlight_search_mode(self, cond):
         """Bold the active search mode button, unbold the others."""

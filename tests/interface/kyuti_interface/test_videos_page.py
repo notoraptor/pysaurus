@@ -4,7 +4,9 @@ Tests for PySide6 VideosPage.
 Tests the main video browsing page with mock database.
 """
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, Qt
+from PySide6.QtGui import QFocusEvent
+from PySide6.QtWidgets import QApplication
 
 from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
@@ -383,6 +385,30 @@ class TestVideosPageSearchModes:
         page._do_search("and")
 
         assert len(calls) == 0
+
+    def test_search_button_uses_visible_text_after_focus_loss(
+        self, qtbot, mock_context
+    ):
+        """Typing a new query over an active search, then clicking a mode
+        button, must search the VISIBLE text. Clicking a button pulls focus off
+        the field first (FocusOut); that must not revert the field to the
+        previous search text before the click is handled."""
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._active_search_text = "abc"  # a previous search is active
+        page.search_input.setText("xyz")  # user types a new query
+
+        calls = []
+        mock_context.set_search = lambda text, cond: calls.append((text, cond))
+
+        # Reproduce the real event order of a button click while the field has
+        # focus: FocusOut is delivered before the button's clicked handler runs.
+        QApplication.sendEvent(page.search_input, QFocusEvent(QEvent.Type.FocusOut))
+        page._on_search_or()
+
+        assert calls == [("xyz", "or")]
 
     def test_search_clears_focus_so_shortcuts_work_after(self, qtbot, mock_context):
         """After a search runs, search_input must release focus so a
