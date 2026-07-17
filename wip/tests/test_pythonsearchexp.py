@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 from searchexp import FieldType, SetType
 
-from pysaurus.core.pythonsearchexp import PythonSearchExp
+from wip.pythonsearchexp import PythonSearchExp
 
 # ---------------------------------------------------------------------------
 # Helpers

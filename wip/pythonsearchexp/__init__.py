@@ -9,7 +9,7 @@ from searchexp import (
     fields_from_class,
 )
 
-from pysaurus.core.pythonsearchexp.evaluator import ExpressionEvaluator
+from wip.pythonsearchexp.evaluator import ExpressionEvaluator
 
 
 class PythonSearchExp:
