@@ -1535,7 +1535,7 @@ class VideosPage(QWidget):
         menu.addAction(say("Move to..."), lambda: self._move_video(video_id))
         menu.addSeparator()
 
-        # Similarity actions (for both similarity_id and similarity_id_reencoded)
+        # Similarity actions, grouped per field into a submenu
         video = self._get_video_by_id(video_id)
         has_sim_actions = False
         if video:
@@ -1546,31 +1546,33 @@ class VideosPage(QWidget):
                 sim_val = getattr(video, sim_field, None)
                 if sim_val is not None:
                     has_sim_actions = True
+                    sim_menu = menu.addMenu(sim_label)
                     if sim_val >= 0:
-                        menu.addAction(
-                            say("Dismiss {label}", label=sim_label),
+                        sim_menu.addAction(
+                            say("Dismiss"),
                             lambda f=sim_field: self._dismiss_similarity(
                                 video_id, field=f
                             ),
                         )
-                    menu.addAction(
-                        say("Reset {label}", label=sim_label),
+                    sim_menu.addAction(
+                        say("Reset"),
                         lambda f=sim_field: self._reset_similarity(video_id, field=f),
                     )
-            # Generalize title actions (only when grouped by a similarity field)
+            # Generalize actions (only when grouped by a similarity field)
             if self._grouped_by_similarity and len(self._videos) > 1:
                 menu.addSeparator()
+                title_menu = menu.addMenu(say("Generalize title"))
+                title_menu.addAction(
+                    say("File title"),
+                    lambda: self._generalize_title_to_property(video_id, "file_title"),
+                )
                 if video.meta_title:
-                    menu.addAction(
-                        say("Generalize meta title into property..."),
+                    title_menu.addAction(
+                        say("Meta title"),
                         lambda: self._generalize_title_to_property(
                             video_id, "meta_title"
                         ),
                     )
-                menu.addAction(
-                    say("Generalize file title into property..."),
-                    lambda: self._generalize_title_to_property(video_id, "file_title"),
-                )
                 self._add_generalize_property_menu(menu, video)
             if has_sim_actions:
                 menu.addSeparator()
@@ -1592,9 +1594,14 @@ class VideosPage(QWidget):
         menu.addAction(
             say("Delete from database"), lambda: self._delete_video(video_id)
         )
-        menu.addAction(say("Move to Trash"), lambda: self._trash_video(video_id))
         menu.addAction(
-            say("Delete permanently"), lambda: self._delete_video_file(video_id)
+            say("Move to Trash"), lambda: self._trash_video(video_id), danger=True
+        )
+        menu.addAction(
+            say("Delete permanently"),
+            lambda: self._delete_video_file(video_id),
+            danger=True,
+            bold=True,
         )
 
         menu.exec(pos)

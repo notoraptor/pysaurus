@@ -9,6 +9,7 @@ from PySide6.QtGui import QFocusEvent
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from pysaurus.interface.kyuti.pages.videos_page import VideosPage
+from pysaurus.interface.kyuti.widgets.left_click_menu import LeftClickMenu
 
 
 class TestVideosPageCreation:
@@ -685,3 +686,63 @@ class TestVideosPageGeneralizeProperty:
 
         assert set(mock_database.videos_tag_get("genre")[5]) == {"action", "comedy"}
         assert mock_database.videos_tag_get("rating")[5] == [8]
+
+
+class TestVideosPageContextMenu:
+    """The compacted context menu: similarity actions and title generalization
+    are grouped into submenus."""
+
+    def _submenus(self, page, video_id, monkeypatch):
+        """Build the context menu and return {submenu title: [item texts]}.
+
+        Everything is read into plain strings while the menu is alive; Qt
+        deletes the child submenus once the parent goes out of scope.
+        """
+        captured = {}
+        monkeypatch.setattr(
+            LeftClickMenu,
+            "exec",
+            lambda self, *a, **k: captured.setdefault("menu", self),
+        )
+        page._on_video_context_menu(video_id, None)
+        menu = captured["menu"]
+        return {
+            a.text(): [sub.text() for sub in a.menu().actions()]
+            for a in menu.actions()
+            if a.menu() is not None
+        }
+
+    def test_similarity_actions_grouped_into_submenu(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        # Video 3 has similarity_id=1 (>=0) -> a "Similarity" submenu (no
+        # re-encoded one), holding Dismiss then Reset.
+        submenus = self._submenus(page, 3, monkeypatch)
+        assert "Similarity" in submenus
+        assert "Similarity (re-encoded)" not in submenus
+        assert submenus["Similarity"] == ["Dismiss", "Reset"]
+
+    def test_generalize_submenus_when_grouped_by_similarity(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        mock_context.set_groups(
+            field="similarity_id",
+            is_property=False,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
+        )
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+        assert page._grouped_by_similarity
+
+        # Video 3 has an empty meta_title, so only "File title" shows.
+        submenus = self._submenus(page, 3, monkeypatch)
+        assert "Generalize title" in submenus
+        assert "Generalize property" in submenus
+        assert submenus["Generalize title"] == ["File title"]

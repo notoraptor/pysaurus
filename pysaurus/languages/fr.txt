@@ -290,10 +290,10 @@ Delete_dd094ca8b6186454
 	Supprimer
 Disabled_2a7b76aeb356bef5
 	désactivé
-DismissLabel_feb8fdf19ce9542f
-	Rejeter {label}
 DismissSimilarity_f2dff3dde1309538
 	Rejeter la similarité
+Dismiss_9e02757b7d1bb2af
+	Rejeter
 Duration_7110eeef2b779601
 	Durée :
 EGWidth1080AndFoundAndEngInAudioLanguages_2bec0a6c0e302eff
@@ -395,6 +395,8 @@ FatalError_4b284ae34b81bd8f
 	Erreur fatale
 Field_e67fc2f2510220db
 	Champ :
+FileTitle_65bfa27b5cbf29c1
+	Titre du fichier
 File_ed69627e452fef2b
 	Fichier
 Filename_8cf4f0afd0b7c430
@@ -449,13 +451,11 @@ Fps2FFps_f43a19aa4eef0543
 	{fps:.2f} fps
 FrameRate_de97ebf954c74684
 	Fréquence d'images :
-GeneralizeFileTitleIntoProperty_def889ce48f622aa
-	Généraliser le titre du fichier dans une propriété...
-GeneralizeMetaTitleIntoProperty_ee5bf0fa2be16a15
-	Généraliser le méta-titre dans une propriété...
 GeneralizeProperty_d97a1fabaab24ad2
 	Généraliser une propriété
 GeneralizeTitle_7b6ca5c695678f55
+	Généraliser le titre
+GeneralizeTitle_a5faa6d296d80375
 	Généraliser le titre
 GeneralizedPropsToCountVideoS_5a16678f41f7383c
 	Généralisé {props} sur {count} vidéo(s)
@@ -524,6 +524,8 @@ MarkThisVideoAsHavingNoSimilarMatchesTheVideoWillBeExcludedFromFutureSimilarityS
 	La vidéo sera exclue des futures recherches de similarité.
 MergeValues_2dc7a901888c8177
 	Fusionner les valeurs
+MetaTitle_753559d55da8d620
+	Méta-titre
 MoveAllCurrentValuesToAddList_e5ce3db8c20ce890
 	Déplacer toutes les valeurs actuelles vers la liste d'ajout
 MoveAllCurrentValuesToRemoveList_d05485e014c7c5c9
@@ -804,8 +806,6 @@ RescanFoldersAndUpdateTheDatabaseThisMayTakeAWhileDependingOnTheNumberOfVideos_3
 	Cela peut prendre du temps selon le nombre de vidéos.
 RescanFolders_6f9f330a49ead4da
 	Réanalyser les dossiers
-ResetLabel_110c73e7b1e8a9b6
-	Réinitialiser {label}
 ResetSimilarityStatusForThisVideoTheVideoWillBeReEvaluatedInTheNextSimilaritySearch_7b94c41fbe58f9b6
 	Réinitialiser le statut de similarité de cette vidéo ?
 	

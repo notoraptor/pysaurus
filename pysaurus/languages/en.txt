@@ -290,10 +290,10 @@ Delete_dd094ca8b6186454
 	Delete
 Disabled_2a7b76aeb356bef5
 	disabled
-DismissLabel_feb8fdf19ce9542f
-	Dismiss {label}
 DismissSimilarity_f2dff3dde1309538
 	Dismiss Similarity
+Dismiss_9e02757b7d1bb2af
+	Dismiss
 Duration_7110eeef2b779601
 	Duration:
 EGWidth1080AndFoundAndEngInAudioLanguages_2bec0a6c0e302eff
@@ -395,6 +395,8 @@ FatalError_4b284ae34b81bd8f
 	Fatal Error
 Field_e67fc2f2510220db
 	Field:
+FileTitle_65bfa27b5cbf29c1
+	File title
 File_ed69627e452fef2b
 	File
 Filename_8cf4f0afd0b7c430
@@ -449,14 +451,12 @@ Fps2FFps_f43a19aa4eef0543
 	{fps:.2f} fps
 FrameRate_de97ebf954c74684
 	Frame Rate:
-GeneralizeFileTitleIntoProperty_def889ce48f622aa
-	Generalize file title into property...
-GeneralizeMetaTitleIntoProperty_ee5bf0fa2be16a15
-	Generalize meta title into property...
 GeneralizeProperty_d97a1fabaab24ad2
 	Generalize property
 GeneralizeTitle_7b6ca5c695678f55
 	Generalize Title
+GeneralizeTitle_a5faa6d296d80375
+	Generalize title
 GeneralizedPropsToCountVideoS_5a16678f41f7383c
 	Generalized {props} to {count} video(s)
 GeneralizingWillOverwriteExistingValuesOnTheOtherVideosInThisGroupForPropsContinue_cda08d6b967a733b
@@ -524,6 +524,8 @@ MarkThisVideoAsHavingNoSimilarMatchesTheVideoWillBeExcludedFromFutureSimilarityS
 	The video will be excluded from future similarity searches.
 MergeValues_2dc7a901888c8177
 	Merge Values
+MetaTitle_753559d55da8d620
+	Meta title
 MoveAllCurrentValuesToAddList_e5ce3db8c20ce890
 	Move all current values to add list
 MoveAllCurrentValuesToRemoveList_d05485e014c7c5c9
@@ -804,8 +806,6 @@ RescanFoldersAndUpdateTheDatabaseThisMayTakeAWhileDependingOnTheNumberOfVideos_3
 	This may take a while depending on the number of videos.
 RescanFolders_6f9f330a49ead4da
 	Rescan folders
-ResetLabel_110c73e7b1e8a9b6
-	Reset {label}
 ResetSimilarityStatusForThisVideoTheVideoWillBeReEvaluatedInTheNextSimilaritySearch_7b94c41fbe58f9b6
 	Reset similarity status for this video?
 	
