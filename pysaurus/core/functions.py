@@ -1,9 +1,7 @@
 import logging
 import re
-import sys
 import tempfile
 import threading
-from typing import Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -49,21 +47,6 @@ def string_to_pieces(the_string) -> list[str]:
     return [piece.lower() for piece in REGEX_NO_WORD.sub(" ", the_string).split()]
 
 
-def _pgcd(a: int, b: int) -> int:
-    return a if not b else _pgcd(b, a % b)
-
-
-def pgcd(a: int, b: int) -> int:
-    """'Plus grand commun diviseur' (Greatest Common Divider)"""
-    if a < 0:
-        a = -a
-    if b < 0:
-        b = -b
-    if a < b:
-        a, b = b, a
-    return _pgcd(a, b)
-
-
 def launch_thread(function, *args, **kwargs):
     thread = threading.Thread(
         target=function, args=args, kwargs=kwargs, name=function.__name__
@@ -80,76 +63,12 @@ def do_nothing(*args, **kwargs):
     pass
 
 
-def class_get_public_attributes(cls: type, exclude=(), wrapper=sorted):
-    fields = {
-        field
-        for field in dir(cls)
-        if "a" <= field[0] <= "z" and not callable(getattr(cls, field))
-    }
-    fields.difference_update(exclude)
-    fields.difference_update(getattr(cls, "__protected__", ()))
-    return fields if wrapper is set else wrapper(fields)
-
-
 def compute_nb_pages(count, page_size):
     return (count // page_size) + bool(count % page_size)
 
 
 def get_default(value, default):
     return default if value is None else value
-
-
-def fatal(exception: Exception, code=1):
-    print(f"{type(exception).__name__}:", exception, file=sys.stderr)
-    exit(code)
-
-
-def object_to_dict(obj, value_wrapper=identity):
-    cls = obj if isinstance(obj, type) else type(obj)
-    return {
-        key: value_wrapper(getattr(obj, key))
-        for key in class_get_public_attributes(cls)
-    }
-
-
-def apply_selector(selector: dict, data: Iterable, key: str, return_data=False):
-    """Filter data using given selector.
-
-    `selector` is a dictionary defining how to select data.
-
-    It must contain a boolean key 'all' telling to take all data or not.
-    - If 'all' is True, then a list key 'exclude' must be specified
-      to list data to exclude.
-      - 'exclude' can be an empty list to exclude nothing.
-        Then all data will be selected.
-    - If 'all' is False, then a list key 'include' must be specified
-      to list data to include.
-      - 'include' can be an empty list to include nothing.
-        Then no data will be selected.
-
-    'include' and 'exclude' must list attribute values to be taken in data objects
-    to select them. The name of attribute to check is specified in `key` parameter.
-
-    `data` is the iterable of data to filter.
-
-    If `return_data` is True, then filtered data will be returned.
-    Otherwise, data attribute values will be returned.
-    """
-    if selector["all"]:
-        exclude = set(selector["exclude"])
-        output = [
-            (element if return_data else getattr(element, key))
-            for element in data
-            if getattr(element, key) not in exclude
-        ]
-    else:
-        include = set(selector["include"])
-        output = (
-            [element for element in data if getattr(element, key) in include]
-            if return_data
-            else include
-        )
-    return output
 
 
 def generate_temporary_file(basename="pysaurus", suffix=".pkl"):

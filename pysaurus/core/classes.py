@@ -181,24 +181,6 @@ class Runnable:
         return decorator
 
 
-class DecoratingMethod:
-    __slots__ = ("_method_name",)
-
-    def __init__(self, method_name: str):
-        self._method_name = method_name
-
-    def __call__(self_, function):
-        method_name = self_._method_name
-
-        @functools.wraps(function)
-        def wrapper(self, *args, **kwargs):
-            ret = function(self, *args, **kwargs)
-            getattr(self, method_name)()
-            return ret
-
-        return wrapper
-
-
 class Selector:
     __slots__ = ("_to_exclude", "_selection")
 
@@ -282,35 +264,3 @@ class Selector:
             to_exclude = False
             selection = set(selector["include"])
         return cls(to_exclude, selection)
-
-
-class Procedure:
-    """
-    Helper class to prepare a call to a function.
-
-    Example:
-        # Create procedure
-        proc = Procedure(function, 1, 2, 3, a=4, b=5)
-        # Call procedure
-        proc()  # function(1, 2, 3, a=4, b=5)
-        # Procedure can be called with or without arguments
-        # Passed arguments will be ignored
-        proc(5, 6, 7, a=8, b=9)  # still: function(1, 2, 3, a=4, b=5)
-    """
-
-    __slots__ = ("function", "args", "kwargs")
-
-    def __init__(self, function, *args, **kwargs):
-        """Prepare a call to a function."""
-        self.function = function
-        self.args = args
-        self.kwargs = kwargs
-
-    def __call__(self, *ignored_args, **ignored_kwargs):
-        """
-        Call the function with pre-registered arguments.
-        Arguments passed here will be ignored.
-        They are just a placeholder to make the call look like a procedure,
-        and make sure calling this object will work with or without arguments.
-        """
-        return self.function(*self.args, **self.kwargs)

@@ -4,7 +4,8 @@ from pysaurus.core.graph import Graph
 from pysaurus.core.informer import Information
 from pysaurus.core.miniature import Miniature, NumpyMiniature
 from pysaurus.imgsimsearch.backend_numpy import SimilarityComparator
-from pysaurus.imgsimsearch.common import THUMBNAIL_DIMENSION
+
+THUMBNAIL_DIMENSION = 32
 
 
 def compare_miniatures(

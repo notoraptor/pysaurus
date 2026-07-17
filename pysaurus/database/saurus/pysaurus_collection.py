@@ -35,13 +35,6 @@ logger = logging.getLogger(__name__)
 DB_SQL_PATH = Basename("sql_path", "full.db")
 
 
-PREFIX = {"thumbnail": "", "with_thumbnails": ""}
-
-
-def get_sql_prefix(field: str) -> str:
-    return PREFIX.get(field, "v.")
-
-
 class PysaurusCollection(AbstractDatabase):
     __slots__ = ("db",)
 

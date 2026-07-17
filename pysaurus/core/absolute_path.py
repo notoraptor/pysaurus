@@ -202,31 +202,6 @@ class AbsolutePath(os.PathLike[str]):
             raise core_exceptions.UnsupportedSystemError(System.platform())
         return self
 
-    def _locate_file_old(self):
-        # NB: Windows: does not work with very long paths in exFAT file systems.
-        command: str | list[str]
-        if System.is_windows():
-            command = f'explorer /select,"{self.__path}"'
-        elif System.is_mac():
-            # TODO not tested
-            command = ["open", "-R", self.__path]
-        elif System.is_linux():
-            # TODO not tested
-            command = ["nautilus", self.__path]
-        else:
-            raise core_exceptions.UnsupportedSystemError(System.platform())
-        process = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        stdout, stderr = process.communicate()
-        if stdout or stderr:
-            return OSError(
-                f"""Unable to locate file: {self.__path}
-STDOUT: {stdout.decode().strip()}
-STDERR: {stderr.decode().strip()}"""
-            )
-        return self.get_directory()
-
     def locate_file(self):
         # https://pypi.org/project/show-in-file-manager/
         # Local import: rarely used, and avoids probing for a file manager

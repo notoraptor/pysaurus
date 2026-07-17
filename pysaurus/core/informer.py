@@ -3,13 +3,11 @@ import sys
 import threading
 from typing import Callable
 
+from pysaurus.core.console_notification_printer import ConsoleNotificationPrinter
 from pysaurus.core.datestring import Date
 from pysaurus.core.functions import do_nothing
 from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.core.notifications import Notification
-from pysaurus.interface.api.api_utils.console_notification_printer import (
-    ConsoleNotificationPrinter,
-)
 
 
 class _InformationNotifier(AbstractNotifier):

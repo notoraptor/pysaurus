@@ -1,4 +1,16 @@
-from pysaurus.core.functions import pgcd
+def _gcd(a: int, b: int) -> int:
+    return a if not b else _gcd(b, a % b)
+
+
+def gcd(a: int, b: int) -> int:
+    """'Plus grand commun diviseur' (Greatest Common Divider)"""
+    if a < 0:
+        a = -a
+    if b < 0:
+        b = -b
+    if a < b:
+        a, b = b, a
+    return _gcd(a, b)
 
 
 class Fraction:
@@ -25,7 +37,7 @@ class Fraction:
             self.sign = -1
             self.num = abs(a)
             self.den = abs(b)
-        d = pgcd(self.num, self.den)
+        d = gcd(self.num, self.den)
         self.num //= d
         self.den //= d
 
