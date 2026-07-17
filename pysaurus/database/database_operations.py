@@ -219,6 +219,30 @@ class DatabaseOperations:
         )
         self.db._notify_fields_modified([name], is_property=True)
 
+    def generalize_properties_for_videos(
+        self, video_indices: list[int], values_by_prop: dict[str, Collection]
+    ) -> int:
+        """Assign the same property values to every given video, in one save.
+
+        For each property, multiple-valued properties merge the values with the
+        existing ones (union), single-valued ones replace the existing value.
+        Empty value lists are skipped (so this never clears a property).
+
+        Used to "generalize" one video's property values across a similarity
+        group. Returns the number of targeted videos.
+        """
+        with self.db.to_save():
+            for name, values in values_by_prop.items():
+                if not values:
+                    continue
+                (prop_type,) = self.db.get_prop_types(name=name)
+                self.set_property_for_videos(
+                    name,
+                    {video_id: values for video_id in video_indices},
+                    merge=prop_type.multiple,
+                )
+        return len(video_indices)
+
     def validate_prop_values(self, name, values: list) -> list[PropUnitType]:
         """Validate property values according to property type."""
         (prop_type,) = self.db.get_prop_types(name=name)

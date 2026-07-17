@@ -266,6 +266,66 @@ class TestVideoPropertyOperations:
         assert tags_b[video_id] == ["z"]
 
 
+class TestGeneralizePropertiesForVideos:
+    """db.ops.generalize_properties_for_videos: spread one video's property
+    values onto other videos - merge for multiple-valued, replace for
+    single-valued - in a single save, returning the number of targeted videos.
+    """
+
+    def test_merges_multiple_valued_property(self, db):
+        db.prop_type_add("tags", "str", "", True)
+        ids = [v.video_id for v in db.get_videos(include=["video_id"])[:3]]
+        # Give the targets a pre-existing value: a multiple property must be
+        # merged (union), never overwritten.
+        db.videos_tag_set("tags", {ids[1]: ["keep"], ids[2]: ["keep"]})
+
+        count = db.ops.generalize_properties_for_videos(
+            [ids[1], ids[2]], {"tags": ["a", "b"]}
+        )
+
+        assert count == 2
+        for vid in (ids[1], ids[2]):
+            assert sorted(db.videos_tag_get("tags", indices=[vid])[vid]) == [
+                "a",
+                "b",
+                "keep",
+            ]
+
+    def test_replaces_single_valued_property(self, db):
+        # The case update_property_for_videos (union) cannot handle: a unique
+        # property whose targets already hold a *different* value.
+        db.prop_type_add("cat", "str", "", False)
+        ids = [v.video_id for v in db.get_videos(include=["video_id"])[:2]]
+        db.videos_tag_set("cat", {ids[0]: ["old"], ids[1]: ["old"]})
+
+        count = db.ops.generalize_properties_for_videos(ids, {"cat": ["new"]})
+
+        assert count == 2
+        for vid in ids:
+            assert db.videos_tag_get("cat", indices=[vid])[vid] == ["new"]
+
+    def test_applies_several_properties_at_once(self, db):
+        db.prop_type_add("tags", "str", "", True)
+        db.prop_type_add("cat", "str", "", False)
+        ids = [v.video_id for v in db.get_videos(include=["video_id"])[:2]]
+
+        db.ops.generalize_properties_for_videos(ids, {"tags": ["x", "y"], "cat": ["c"]})
+
+        for vid in ids:
+            assert sorted(db.videos_tag_get("tags", indices=[vid])[vid]) == ["x", "y"]
+            assert db.videos_tag_get("cat", indices=[vid])[vid] == ["c"]
+
+    def test_empty_values_are_skipped(self, db):
+        db.prop_type_add("cat", "str", "", False)
+        video_id = db.get_videos(include=["video_id"])[0].video_id
+        db.videos_tag_set("cat", {video_id: ["keep"]})
+
+        # An empty value list must not clear the existing value.
+        db.ops.generalize_properties_for_videos([video_id], {"cat": []})
+
+        assert db.videos_tag_get("cat", indices=[video_id])[video_id] == ["keep"]
+
+
 # =============================================================================
 # videos_tag_get / videos_tag_set chunking
 # =============================================================================

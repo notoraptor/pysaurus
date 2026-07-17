@@ -444,6 +444,26 @@ class MockDatabase:
                         modified += 1
             return modified
 
+        elif fn_name == "generalize_properties_for_videos":
+            values_by_prop = fn_args[0] if fn_args else {}
+            multiple_by_name = {pt.name: pt.multiple for pt in self.get_prop_types()}
+            for name, values in values_by_prop.items():
+                if not values:
+                    continue
+                merge = multiple_by_name.get(name, False)
+                for video in self._videos:
+                    if video["video_id"] in video_ids:
+                        props = video.setdefault("properties", {})
+                        if merge:
+                            merged = list(props.get(name, []))
+                            for val in values:
+                                if val not in merged:
+                                    merged.append(val)
+                            props[name] = merged
+                        else:
+                            props[name] = list(values)
+            return len(video_ids)
+
         return {"applied": True, "fn_name": fn_name}
 
     def _get_video(self, video_id: int) -> dict | None:

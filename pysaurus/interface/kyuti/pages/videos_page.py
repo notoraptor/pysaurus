@@ -1571,6 +1571,7 @@ class VideosPage(QWidget):
                     say("Generalize file title into property..."),
                     lambda: self._generalize_title_to_property(video_id, "file_title"),
                 )
+                self._add_generalize_property_menu(menu, video)
             if has_sim_actions:
                 menu.addSeparator()
 
@@ -1752,8 +1753,10 @@ class VideosPage(QWidget):
             )
             return
 
-        # Ask user to pick a property via a custom dialog with wrapping text
-        nb_others = len(self._videos) - 1
+        # Ask user to pick a property via a custom dialog with wrapping text.
+        # nb_others counts the whole similarity group (view_count, computed
+        # without the selector), not just the current page.
+        nb_others = max(0, self._view_count - 1)
         dialog = QDialog(self)
         dialog.setWindowTitle(say("Generalize Title"))
         layout = QVBoxLayout(dialog)
@@ -1788,18 +1791,129 @@ class VideosPage(QWidget):
 
         prop_name = combo.currentText()
 
-        # Add property value for all other videos in the group (merges with existing)
-        other_ids = [v.video_id for v in self._videos if v.video_id != video_id]
-        self.ctx.add_property_value_for_videos(other_ids, prop_name, [title_value])
+        # Copy the title into the property for the WHOLE similarity group (all
+        # pages), not just the current page: resolve "everything in the view
+        # except this video" with a selector, applied backend-side - the same
+        # mechanism as "select all in view".
+        count = self.ctx.apply_on_view(
+            Selector(True, {video_id}).to_dict(),
+            "generalize_properties_for_videos",
+            {prop_name: [title_value]},
+        )
         self.status_message_requested.emit(
             say(
                 'Property "{name}" set to "{value}" for {count} video(s)',
                 name=prop_name,
                 value=title_value,
-                count=len(other_ids),
+                count=count or 0,
             ),
             5000,
         )
+
+    def _add_generalize_property_menu(self, menu, video):
+        """Add a 'Generalize property' submenu listing the video's set properties.
+
+        Each entry copies the video's values for one property to the rest of the
+        similarity group; when the video has several set properties, a first
+        entry copies them all at once.
+        """
+        props_with_values = [
+            (p, video.properties.get(p.name)) for p in self.ctx.get_prop_types()
+        ]
+        props_with_values = [(p, vals) for p, vals in props_with_values if vals]
+        if not props_with_values:
+            return
+        video_id = video.video_id
+        gen_menu = menu.addMenu(say("Generalize property"))
+        if len(props_with_values) > 1:
+            gen_menu.addAction(
+                say("All properties"),
+                lambda: self._generalize_all_properties_to_group(video_id),
+            )
+            gen_menu.addSeparator()
+        for prop, vals in props_with_values:
+            preview = ", ".join(str(v) for v in vals)
+            if len(preview) > 50:
+                preview = preview[:49] + "…"
+            gen_menu.addAction(
+                f"{prop.name}: {preview}",
+                lambda n=prop.name: self._generalize_property_to_group(video_id, n),
+            )
+
+    def _generalize_property_to_group(self, video_id: int, prop_name: str):
+        """Copy one property's values from a video to the rest of the group."""
+        video = self._get_video_by_id(video_id)
+        if not video:
+            return
+        values = video.properties.get(prop_name)
+        if not values:
+            return
+        prop_type = next(
+            (p for p in self.ctx.get_prop_types() if p.name == prop_name), None
+        )
+        if prop_type is None:
+            return
+        if not prop_type.multiple and not self._confirm_generalize_overwrite(
+            [prop_name]
+        ):
+            return
+        self._run_generalize(video_id, {prop_name: values})
+
+    def _generalize_all_properties_to_group(self, video_id: int):
+        """Copy all of a video's set properties to the rest of the group."""
+        video = self._get_video_by_id(video_id)
+        if not video:
+            return
+        prop_types = self.ctx.get_prop_types()
+        values_by_prop = {
+            p.name: video.properties.get(p.name)
+            for p in prop_types
+            if video.properties.get(p.name)
+        }
+        if not values_by_prop:
+            return
+        unique = [
+            p.name for p in prop_types if not p.multiple and p.name in values_by_prop
+        ]
+        if unique and not self._confirm_generalize_overwrite(unique):
+            return
+        self._run_generalize(video_id, values_by_prop)
+
+    def _run_generalize(self, video_id: int, values_by_prop: dict):
+        """Generalize the given property values to every other video in the group.
+
+        The selector "all in view except this video" is resolved backend-side
+        against the current similarity group (all pages), so the result never
+        depends on pagination.
+        """
+        count = self.ctx.apply_on_view(
+            Selector(True, {video_id}).to_dict(),
+            "generalize_properties_for_videos",
+            values_by_prop,
+        )
+        self.status_message_requested.emit(
+            say(
+                "Generalized {props} to {count} video(s)",
+                props=", ".join(sorted(values_by_prop)),
+                count=count or 0,
+            ),
+            5000,
+        )
+
+    def _confirm_generalize_overwrite(self, prop_names: list[str]) -> bool:
+        """Confirm overwriting single-valued properties on the other group videos."""
+        reply = QMessageBox.question(
+            self,
+            say("Generalize property"),
+            say(
+                "Generalizing will overwrite existing values on the other videos "
+                "in this group for:\n\n{props}\n\nContinue?",
+                props=", ".join(prop_names),
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        return reply == QMessageBox.StandardButton.Yes
 
     def _confirm_move(self, src_video_id: int, dst_video_id: int):
         """Confirm a video move (transfer metadata from source to destination)."""

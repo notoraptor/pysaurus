@@ -40,6 +40,8 @@ AllCountFileSWithNoExtension_7a135ec88ea754ff
 	all {count} file(s) with no extension
 AllFiles_eb285c6c53b36f6b
 	All files
+AllProperties_1eb76e260826dea9
+	All properties
 AllReadable_3f4263d268871dbe
 	All readable
 AllSources_7db34dbbad1aab80
@@ -451,8 +453,18 @@ GeneralizeFileTitleIntoProperty_def889ce48f622aa
 	Generalize file title into property...
 GeneralizeMetaTitleIntoProperty_ee5bf0fa2be16a15
 	Generalize meta title into property...
+GeneralizeProperty_d97a1fabaab24ad2
+	Generalize property
 GeneralizeTitle_7b6ca5c695678f55
 	Generalize Title
+GeneralizedPropsToCountVideoS_5a16678f41f7383c
+	Generalized {props} to {count} video(s)
+GeneralizingWillOverwriteExistingValuesOnTheOtherVideosInThisGroupForPropsContinue_cda08d6b967a733b
+	Generalizing will overwrite existing values on the other videos in this group for:
+	
+	{props}
+	
+	Continue?
 GeneratePlaylistCtrlL_e558d17081447c15
 	&Generate Playlist (Ctrl+L)
 GeneratingMiniatures_8110d724ea222712

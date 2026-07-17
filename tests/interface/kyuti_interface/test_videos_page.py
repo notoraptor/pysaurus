@@ -6,7 +6,7 @@ Tests the main video browsing page with mock database.
 
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QFocusEvent
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
@@ -615,3 +615,73 @@ class TestVideosPageSelectionLabel:
         page._update_selection_display()
 
         assert "1 selected" in page.selection_label.text()
+
+
+class TestVideosPageGeneralizeProperty:
+    """Generalize a video's property values onto the rest of its group.
+
+    Mock data (tests/mocks/test_data.json): video 1 has genre=[action, comedy]
+    (multiple) and rating=[8] (single); videos 2-4 have their own values;
+    video 5 has none. The mock's apply_on_view resolves the selector against
+    every video, so "all except the source" is videos 2-5.
+    """
+
+    def _patch_confirm(self, monkeypatch, answer):
+        monkeypatch.setattr(
+            "pysaurus.interface.kyuti.pages.videos_page.QMessageBox.question",
+            lambda *a, **k: answer,
+        )
+
+    def test_multiple_property_merges_without_confirmation(
+        self, qtbot, mock_context, mock_database
+    ):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._generalize_property_to_group(1, "genre")
+
+        tags = mock_database.videos_tag_get("genre")
+        assert set(tags[2]) == {"drama", "action", "comedy"}  # merged, kept drama
+        assert set(tags[5]) == {"action", "comedy"}  # had none
+        assert set(tags[1]) == {"action", "comedy"}  # source untouched
+
+    def test_single_property_replaces_when_confirmed(
+        self, qtbot, mock_context, mock_database, monkeypatch
+    ):
+        self._patch_confirm(monkeypatch, QMessageBox.StandardButton.Yes)
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._generalize_property_to_group(1, "rating")
+
+        ratings = mock_database.videos_tag_get("rating")
+        assert ratings[2] == [8] and ratings[3] == [8] and ratings[4] == [8]
+
+    def test_single_property_cancelled_changes_nothing(
+        self, qtbot, mock_context, mock_database, monkeypatch
+    ):
+        self._patch_confirm(monkeypatch, QMessageBox.StandardButton.No)
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._generalize_property_to_group(1, "rating")
+
+        ratings = mock_database.videos_tag_get("rating")
+        assert ratings[2] == [9] and ratings[3] == [7] and ratings[4] == [6]
+
+    def test_all_properties_generalizes_every_set_property(
+        self, qtbot, mock_context, mock_database, monkeypatch
+    ):
+        # "All" includes the single-valued "rating", so it asks for confirmation.
+        self._patch_confirm(monkeypatch, QMessageBox.StandardButton.Yes)
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._generalize_all_properties_to_group(1)
+
+        assert set(mock_database.videos_tag_get("genre")[5]) == {"action", "comedy"}
+        assert mock_database.videos_tag_get("rating")[5] == [8]
