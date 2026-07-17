@@ -213,8 +213,8 @@ Kyuti is the mature PySide6/Qt GUI frontend. All calls go through the **`AppCont
 - pytest with `asyncio_mode = "auto"`
 - Test fixtures (all defined in `tests/conftest.py`):
   - **Fast mock**: `mock_database` — pure in-memory mock, no I/O (data from `tests/mocks/test_data.json`)
-  - **Saurus SQL, test_database** (small): `fake_saurus_database` and `mem_saurus_database` — both in-memory copies via `PysaurusConnection(None)` + `copy_from()`; identical for SQL since every fixture is an in-memory copy, so there is no separate read-only/writable pair
-  - **Saurus SQL, example_db_in_pysaurus** (90 videos with properties): `example_saurus_database` (read-only, on-disk) and `example_saurus_database_memory` (in-memory copy for writes)
+  - **Saurus SQL, test_database** (small): `fake_saurus_database` and `mem_saurus_database` — both in-memory copies built from a **read-only** (`immutable=1`) open of the shared on-disk DB (`tests/utils.py::get_saurus_sql_database`), so concurrent xdist workers never write to the fixture file; identical for SQL since every fixture is an in-memory copy, so there is no separate read-only/writable pair
+  - **Saurus SQL, example_db_in_pysaurus** (90 videos with properties): `example_saurus_database` and `example_saurus_database_memory` — both in-memory copies (same read-only-source mechanism); the two names are kept only to signal read-only vs write-test intent
 - SQL fixtures do not need `tmp_path` — in-memory SQLite is used directly
 - Two test databases in `tests/home_dir_test/.Pysaurus/databases/`: `test_database` (small) and `example_db_in_pysaurus` (90 videos with properties)
 - Qt tests use `QT_QPA_PLATFORM=offscreen` (set in `tests/interface/kyuti_interface/conftest.py`)

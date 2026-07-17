@@ -39,8 +39,14 @@ def mem_saurus_database() -> PysaurusCollection:
 
 @pytest.fixture
 def example_saurus_database() -> PysaurusCollection:
-    """Saurus SQL database from example_db_in_pysaurus (read-only, on disk)."""
-    return PysaurusCollection(EXAMPLE_DB_FOLDER)
+    """Saurus SQL database from example_db_in_pysaurus (in-memory copy of the disk DB).
+
+    Like every SQL fixture, this is an in-memory copy built from a read-only open
+    of the shared on-disk fixture, so concurrent xdist workers never write to it.
+    Used for read-only tests; `example_saurus_database_memory` is its twin for
+    write tests.
+    """
+    return get_saurus_sql_database(EXAMPLE_DB_FOLDER)
 
 
 @pytest.fixture
