@@ -160,7 +160,12 @@ class PythonVideoRaptor:
         if not _video_streams:
             raise NoVideoStream()
         video_stream = _video_streams[0]
-        # video_stream.codec_context.skip_frame = "NONKEY"
+        # Reset skip_frame to its default: this container (and its decoder) may be
+        # reused right after _get_info_from_container(), which sets skip_frame="NONKEY".
+        # A leftover "NONKEY" combined with the backward seek below makes
+        # avcodec_send_packet() raise InvalidDataError on some videos (GOP-dependent).
+        # The backward seek already guarantees a keyframe, so "NONKEY" is useless here.
+        video_stream.codec_context.skip_frame = "DEFAULT"
         if video_stream.duration is not None:
             container.seek(
                 offset=video_stream.duration // 2,
