@@ -1,5 +1,5 @@
 from pysaurus.core.functions import string_to_pieces
-from pysaurus.core.semantic_text import pad_numbers_in_string
+from pysaurus.core.semantic_text import encode_numbers_for_sort
 
 
 def pysaurus_text_to_fts(text: str) -> str | None:
@@ -17,5 +17,5 @@ def pysaurus_text_to_fts(text: str) -> str | None:
     return " ".join(pieces)
 
 
-def pysaurus_text_with_numbers(text: str, padding: int) -> str:
-    return pad_numbers_in_string(text, padding)
+def pysaurus_text_with_numbers(text: str) -> str:
+    return encode_numbers_for_sort(text)

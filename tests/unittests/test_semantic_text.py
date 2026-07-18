@@ -1,9 +1,4 @@
-from pysaurus.core.semantic_text import (
-    CharClass,
-    SemanticText,
-    get_longest_number_in_string,
-    pad_numbers_in_string,
-)
+from pysaurus.core.semantic_text import CharClass, SemanticText, encode_numbers_for_sort
 
 
 class TestSemanticTextNaturalSort:
@@ -117,48 +112,69 @@ class TestCharClass:
         assert not CharClass("a").is_digit()
 
 
-class TestGetLongestNumberInString:
-    def test_no_numbers(self):
-        assert get_longest_number_in_string("hello") == 0
+class TestEncodeNumbersForSort:
+    def test_digit_run_becomes_length_prefixed_key(self):
+        assert encode_numbers_for_sort("file2") == "file 000012 "
+        assert encode_numbers_for_sort("e100") == "e 00003100 "
 
-    def test_single_number(self):
-        assert get_longest_number_in_string("file123.txt") == 3
-
-    def test_multiple_numbers_returns_longest(self):
-        assert get_longest_number_in_string("s2e10 part1000") == 4
-
-    def test_superscript_digits(self):
-        assert get_longest_number_in_string("x\u00b2\u00b3") == 2
-
-    def test_subscript_digits(self):
-        assert get_longest_number_in_string("H\u2082O") == 1
-
-    def test_empty_string(self):
-        assert get_longest_number_in_string("") == 0
-
-
-class TestPadNumbersInString:
-    def test_pads_numbers_with_zeros(self):
-        result = pad_numbers_in_string("file2", 4)
-        assert result == "file 0002 "
-
-    def test_padding_makes_sort_correct(self):
+    def test_sort_is_natural_without_any_global_padding(self):
         items = ["file2", "file10", "file1"]
-        pad = 2
-        result = sorted(items, key=lambda s: pad_numbers_in_string(s, pad))
+        result = sorted(items, key=encode_numbers_for_sort)
         assert result == ["file1", "file2", "file10"]
 
-    def test_superscript_digits_converted_to_padded_numbers(self):
-        # x² → x 02
-        result = pad_numbers_in_string("x\u00b2", 4)
-        assert "0002" in result
+    def test_longer_number_added_later_still_sorts_correctly(self):
+        # The old fixed-padding scheme broke as soon as a number longer than
+        # the padding appeared; the length prefix is per-value and cannot.
+        items = ["e2", "e100"]
+        assert sorted(items, key=encode_numbers_for_sort) == ["e2", "e100"]
+        items.append("e10000000")
+        assert sorted(items, key=encode_numbers_for_sort) == ["e2", "e100", "e10000000"]
 
-    def test_subscript_digits_converted_to_padded_numbers(self):
-        # H₁₂ → H 0012
-        result = pad_numbers_in_string("H\u2081\u2082", 4)
-        assert "0012" in result
+    def test_leading_zeros_compare_equal_to_plain_number(self):
+        assert encode_numbers_for_sort("e007") == encode_numbers_for_sort("e7")
+        assert encode_numbers_for_sort("v000") == encode_numbers_for_sort("v0")
+
+    def test_zero_stripping_beats_textual_length(self):
+        # "07" has more characters than "8" but is the smaller number.
+        assert encode_numbers_for_sort("e07") < encode_numbers_for_sort("e8")
+
+    def test_numbers_sort_before_other_characters(self):
+        # The leading space of the key ranks digit runs before any printable.
+        items = ["a!", "a1", "a b"]
+        assert sorted(items, key=encode_numbers_for_sort) == ["a1", "a b", "a!"]
+
+    def test_superscript_digits_converted(self):
+        # x² -> x 000012
+        assert encode_numbers_for_sort("x\u00b2") == "x 000012 "
+
+    def test_subscript_digits_converted(self):
+        # H₁₂ -> H 0000212
+        assert encode_numbers_for_sort("H\u2081\u2082") == "H 0000212 "
 
     def test_multiple_spaces_collapsed(self):
-        result = pad_numbers_in_string("a  1  b", 2)
-        # Numbers get padded with spaces around them; consecutive spaces collapse
-        assert "  " not in result
+        assert "  " not in encode_numbers_for_sort("a  1  b")
+
+    def test_order_matches_semantic_text(self):
+        # Same lowercase corpus sorted by encoded key and by SemanticText
+        # comparison must agree (case handling is where the two differ on
+        # purpose: SQL sorting compares letters byte-wise).
+        corpus = [
+            "e1",
+            "e2",
+            "e10",
+            "e100",
+            "e007",
+            "e9",
+            "s2e10",
+            "s2e2",
+            "s10e1",
+            "episode 9.mkv",
+            "episode 10.mkv",
+            "part1000",
+            "part999",
+            "0",
+            "42",
+        ]
+        by_key = sorted(corpus, key=encode_numbers_for_sort)
+        by_semantic = [st.value for st in sorted(SemanticText(f) for f in corpus)]
+        assert by_key == by_semantic

@@ -3,8 +3,8 @@
 Provides two complementary strategies:
 - SemanticText: wraps a string for Python-side comparison (file2 < file10).
   Also handles Unicode superscript/subscript digits.
-- pad_numbers_in_string: transforms a string for SQL ORDER BY by zero-padding
-  numbers so that alphabetical sort equals natural sort.
+- encode_numbers_for_sort: transforms a string for SQL ORDER BY so that
+  alphabetical sort equals natural sort.
 
 Alternative: the `natsort` package (pip install natsort) covers the Python-side
 comparison use case, but does not handle superscript/subscript digits natively.
@@ -169,26 +169,28 @@ RE_SUB_DIGITS = re.compile(f"([{CharClass.SUB_DIGITS}]+)")
 RE_EMPTY = re.compile(r" {2,}")
 
 
-def get_longest_number_in_string(text: str) -> int:
-    return max(
-        (
-            len(m)
-            for r in (RE_DIGITS, RE_SUP_DIGITS, RE_SUB_DIGITS)
-            for m in r.findall(text)
-        ),
-        default=0,
-    )
+def _encode_digit_run(digits: str) -> str:
+    digits = digits.lstrip("0") or "0"
+    return f" {len(digits):05d}{digits} "
 
 
-def pad_numbers_in_string(text: str, pad: int) -> str:
-    text = RE_DIGITS.sub(lambda s: f" {s.group(1).rjust(pad, '0')} ", text)
+def encode_numbers_for_sort(text: str) -> str:
+    """Replace each digit run with a self-delimiting sort key.
+
+    Each run of digits (leading zeros stripped, superscript/subscript digits
+    converted) becomes " NNNNNdigits ", where NNNNN is the digit count
+    left-padded to 5. Lexicographic order of the encoded strings then matches
+    natural order without any dataset-wide knowledge: between two numbers,
+    the length prefix compares first (after zero-stripping, more digits means
+    a greater number), and at equal length the digits themselves compare
+    numerically. Five length digits cover any digit run that fits in a
+    Windows long path (32767 characters).
+    """
+    text = RE_DIGITS.sub(lambda s: _encode_digit_run(s.group(1)), text)
     text = RE_SUP_DIGITS.sub(
-        lambda s: f" {str(CharClass.parse_sup_digits(s.group(1))).rjust(pad, '0')} ",
-        text,
+        lambda s: _encode_digit_run(str(CharClass.parse_sup_digits(s.group(1)))), text
     )
     text = RE_SUB_DIGITS.sub(
-        lambda s: f" {str(CharClass.parse_sub_digits(s.group(1))).rjust(pad, '0')} ",
-        text,
+        lambda s: _encode_digit_run(str(CharClass.parse_sub_digits(s.group(1)))), text
     )
-    text = RE_EMPTY.sub(" ", text)
-    return text
+    return RE_EMPTY.sub(" ", text)

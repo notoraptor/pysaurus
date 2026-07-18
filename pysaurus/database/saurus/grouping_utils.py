@@ -1,6 +1,3 @@
-from pysaurus.core.semantic_text import get_longest_number_in_string
-from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
-
 FORMATTED_DURATION_TIME_BASE = "COALESCE(NULLIF(v.duration_time_base, 0), 1)"
 SQL_LENGTH = f"(v.duration * 1.0 / {FORMATTED_DURATION_TIME_BASE})"
 
@@ -39,42 +36,8 @@ class SqlField:
         return cls(title or name, [f"{table_name}.{name}"])
 
 
-class SemanticField(SqlField):
-    def __init__(self, name: str, field: str, padding: int, sortable=True):
-        field = field.format(padding=padding)
-        super().__init__(name, [field], sortable)
-
-
 class SqlFieldFactory:
-    # Per-database padding cache to avoid scanning all filenames every time
-    _padding_cache: dict[str, int] = {}
-
-    def __init__(self, connection: PysaurusConnection):
-        # Use cache if available
-        db_path = connection.db_path or ":memory:"
-        if db_path not in self._padding_cache:
-            # Compute padding only if not cached
-            with connection:
-                padding_filenames = max(
-                    (
-                        get_longest_number_in_string(row[0])
-                        for row in connection.query("SELECT filename FROM video")
-                    ),
-                    default=0,
-                )
-                padding_meta_titles = max(
-                    (
-                        get_longest_number_in_string(row[0])
-                        for row in connection.query(
-                            "SELECT meta_title FROM video WHERE meta_title != ''"
-                        )
-                    ),
-                    default=0,
-                )
-            self._padding_cache[db_path] = max(padding_filenames, padding_meta_titles)
-
-        padding = self._padding_cache[db_path]
-        self.connection = connection
+    def __init__(self):
         self.fields: dict[str, SqlField] = {
             df.name: df
             for df in (
@@ -113,25 +76,22 @@ class SqlFieldFactory:
                 SqlField("disk", ["v.driver_id"]),
                 SqlField.auto("extension"),
                 SqlField.auto("file_title"),
-                SemanticField(
-                    "file_title_numeric",
-                    "pysaurus_text_with_numbers(v.file_title, {padding})",
-                    padding,
+                SqlField(
+                    "file_title_numeric", ["pysaurus_text_with_numbers(v.file_title)"]
                 ),
-                SemanticField(
-                    "filename_numeric",
-                    "pysaurus_text_with_numbers(v.filename, {padding})",
-                    padding,
+                SqlField(
+                    "filename_numeric", ["pysaurus_text_with_numbers(v.filename)"]
                 ),
                 SqlField("move_id", ["v.file_size", SQL_LENGTH]),
                 SqlField("size_length", ["v.file_size", SQL_LENGTH]),
                 SqlField(
                     "title", ["IIF(v.meta_title = '', v.file_title, v.meta_title)"]
                 ),
-                SemanticField(
+                SqlField(
                     "title_numeric",
-                    "pysaurus_text_with_numbers(IIF(v.meta_title = '', v.file_title, v.meta_title), {padding})",
-                    padding,
+                    [
+                        "pysaurus_text_with_numbers(IIF(v.meta_title = '', v.file_title, v.meta_title))"
+                    ],
                 ),
             )
         }

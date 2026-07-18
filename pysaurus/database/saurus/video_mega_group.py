@@ -71,7 +71,7 @@ def _build_view_where(
         query_maker.where.append_field(field_video_id, int(search.text))
         return query_maker, output_groups, group
 
-    field_factory = SqlFieldFactory(sql_db)
+    field_factory = SqlFieldFactory()
     if source_expression:
         source_query, source_params = _compile_source_expression(
             sql_db, source_expression
@@ -204,7 +204,7 @@ def video_mega_group(
         result_groups=output_groups,
     )
 
-    field_factory = SqlFieldFactory(sql_db)
+    field_factory = SqlFieldFactory()
     sql_sorting = [
         field_factory.get_sorting(field, reverse)
         for field, reverse in VideoSorting(sorting)
