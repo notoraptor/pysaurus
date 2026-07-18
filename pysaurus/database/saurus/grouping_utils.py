@@ -111,11 +111,11 @@ class SqlFieldFactory:
                 SqlField.auto(title="length", name="length_seconds"),
                 # Special fields
                 SqlField("disk", ["v.driver_id"]),
-                SqlField("extension", ["pysaurus_get_extension(v.filename)"]),
-                SqlField("file_title", ["pysaurus_get_file_title(v.filename)"]),
+                SqlField.auto("extension"),
+                SqlField.auto("file_title"),
                 SemanticField(
                     "file_title_numeric",
-                    "pysaurus_text_with_numbers(pysaurus_get_file_title(v.filename), {padding})",
+                    "pysaurus_text_with_numbers(v.file_title, {padding})",
                     padding,
                 ),
                 SemanticField(
@@ -125,10 +125,12 @@ class SqlFieldFactory:
                 ),
                 SqlField("move_id", ["v.file_size", SQL_LENGTH]),
                 SqlField("size_length", ["v.file_size", SQL_LENGTH]),
-                SqlField("title", ["pysaurus_get_title(v.filename, v.meta_title)"]),
+                SqlField(
+                    "title", ["IIF(v.meta_title = '', v.file_title, v.meta_title)"]
+                ),
                 SemanticField(
                     "title_numeric",
-                    "pysaurus_text_with_numbers(pysaurus_get_title(v.filename, v.meta_title), {padding})",
+                    "pysaurus_text_with_numbers(IIF(v.meta_title = '', v.file_title, v.meta_title), {padding})",
                     padding,
                 ),
             )

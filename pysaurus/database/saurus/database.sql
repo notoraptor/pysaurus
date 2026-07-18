@@ -72,16 +72,20 @@ CREATE TABLE IF NOT EXISTS video (
 			)
 		)
 	) STORED,
+	-- A run of leading dots followed by a dot-free remainder (e.g. ".gitignore",
+	-- "..backup") is never an extension separator, however many dots there are:
+	-- it is stripped entirely from file_title, and extension is empty. Otherwise,
+	-- the *last* dot in _basename splits file_title/extension, regardless of any
+	-- other dots (e.g. ".a.b" -> file_title=".a", extension="b").
 	extension TEXT GENERATED ALWAYS AS (
 		CASE
-			WHEN RTRIM(_basename, REPLACE(_basename, '.', '')) = '' OR LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) = 1 THEN ''
+			WHEN REPLACE(RTRIM(_basename, REPLACE(_basename, '.', '')), '.', '') = '' THEN ''
 			ELSE LOWER(SUBSTR(_basename, LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) + 1))
 		END
 	) STORED,
 	file_title TEXT GENERATED ALWAYS AS (
 		CASE
-			WHEN RTRIM(_basename, REPLACE(_basename, '.', '')) = '' THEN _basename
-			WHEN LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) = 1 THEN SUBSTR(_basename, 2)
+			WHEN REPLACE(RTRIM(_basename, REPLACE(_basename, '.', '')), '.', '') = '' THEN SUBSTR(_basename, LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) + 1)
 			ELSE SUBSTR(_basename, 1, LENGTH(RTRIM(_basename, REPLACE(_basename, '.', ''))) - 1)
 		END
 	) STORED,

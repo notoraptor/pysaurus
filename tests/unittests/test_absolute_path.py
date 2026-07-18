@@ -89,3 +89,55 @@ class TestGetMountPoint:
         ap1 = AbsolutePath(__file__)
         ap2 = AbsolutePath(os.path.dirname(__file__))
         assert ap1.get_mount_point() == ap2.get_mount_point()
+
+
+class TestFileTitleAndExtension:
+    def _basename(self, name: str) -> AbsolutePath:
+        folder = "C:\\videos\\folder" if sys.platform == "win32" else "/videos/folder"
+        return AbsolutePath(f"{folder}{os.sep}{name}")
+
+    def test_classic_title_and_extension(self):
+        ap = self._basename("video.mp4")
+        assert ap.file_title == "video"
+        assert ap.extension == "mp4"
+
+    def test_extension_is_lowercased(self):
+        ap = self._basename("VIDEO.MP4")
+        assert ap.extension == "mp4"
+
+    def test_no_dot_at_all(self):
+        ap = self._basename("noext")
+        assert ap.file_title == "noext"
+        assert ap.extension == ""
+
+    def test_multiple_extensions_split_on_last_dot(self):
+        ap = self._basename("archive.tar.gz")
+        assert ap.file_title == "archive.tar"
+        assert ap.extension == "gz"
+
+    def test_single_leading_dot_has_no_extension(self):
+        ap = self._basename(".gitignore")
+        assert ap.file_title == "gitignore"
+        assert ap.extension == ""
+
+    def test_multiple_leading_dots_have_no_extension(self):
+        # A run of leading dots with nothing after but a dot-free remainder
+        # is not an extension separator, regardless of how many dots.
+        ap = self._basename("..backup")
+        assert ap.file_title == "backup"
+        assert ap.extension == ""
+
+        ap = self._basename("...hidden")
+        assert ap.file_title == "hidden"
+        assert ap.extension == ""
+
+    def test_leading_dots_with_a_later_dot_do_have_an_extension(self):
+        # As soon as a second, non-leading dot appears, the leading dots no
+        # longer protect the name: the last dot in the whole name wins.
+        ap = self._basename(".a.b")
+        assert ap.file_title == ".a"
+        assert ap.extension == "b"
+
+        ap = self._basename("..a...b")
+        assert ap.file_title == "..a.."
+        assert ap.extension == "b"

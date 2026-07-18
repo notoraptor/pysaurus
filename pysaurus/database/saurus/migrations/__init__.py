@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 from pysaurus.database.saurus.migrations import (
     m0002_baseline,
     m0003_stored_filename_columns,
+    m0004_generalize_leading_dots,
 )
 
 # Registry: target_version -> migrate(db) function.
@@ -24,6 +25,7 @@ from pysaurus.database.saurus.migrations import (
 MIGRATIONS: dict[int, Callable[[Skullite], None]] = {
     2: m0002_baseline.migrate,
     3: m0003_stored_filename_columns.migrate,
+    4: m0004_generalize_leading_dots.migrate,
 }
 
 LATEST_VERSION: int = max(MIGRATIONS)

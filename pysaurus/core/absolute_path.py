@@ -69,15 +69,23 @@ class AbsolutePath(os.PathLike[str]):
         You can use it instead of `self.title` if you are already sure that
         this path leads to a file and not a directory.
         """
-        basename = os.path.basename(self.__path)
-        index_dot = basename.rfind(".")
-        if index_dot == 0:
-            return basename[1:]
-        return basename if index_dot < 0 else basename[:index_dot]
+        return self.__file_title_and_extension()[0]
 
     @property
     def extension(self) -> str:
-        return os.path.splitext(self.__path)[1][1:].lower()
+        return self.__file_title_and_extension()[1]
+
+    def __file_title_and_extension(self) -> tuple[str, str]:
+        # A run of leading dots followed by a dot-free remainder (e.g.
+        # ".gitignore", "..backup") is never an extension separator: it is
+        # stripped entirely from the title, and there is no extension.
+        # Otherwise, the *last* dot in the basename splits title/extension,
+        # regardless of any other dots (e.g. ".a.b" -> title=".a", ext="b").
+        basename = os.path.basename(self.__path)
+        title, ext = os.path.splitext(basename)
+        if not ext:
+            return title.lstrip("."), ""
+        return title, ext[1:].lower()
 
     def __str__(self):
         return self.standard_path
