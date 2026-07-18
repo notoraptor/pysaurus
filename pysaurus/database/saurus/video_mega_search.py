@@ -83,6 +83,39 @@ def video_mega_count(db: PysaurusConnection, *, where: dict | None = None) -> in
     return result[0] if result else 0
 
 
+def video_mega_source_count(
+    db: PysaurusConnection, *, sources: Sequence[Sequence[str]]
+) -> int:
+    """Count distinct videos covered by the union of the given sources.
+
+    Each source is a set of flags ANDed together; sources are ORed, and
+    videos matching more than one source are counted once (COUNT DISTINCT).
+    """
+    if not sources:
+        return 0
+    builders = [
+        _build_where_clause({flag: True for flag in source}) for source in sources
+    ]
+    combined = SQLWhereBuilder.combine(builders, use_or=True)
+    where_clause = combined.get_where_clause()
+    params = combined.get_parameters()
+
+    needs_thumbnail = any(
+        "with_thumbnails" in source or "without_thumbnails" in source
+        for source in sources
+    )
+    if needs_thumbnail:
+        query = f"""
+        SELECT COUNT(DISTINCT v.video_id) FROM video AS v
+        LEFT JOIN video_thumbnail AS t ON v.video_id = t.video_id
+        {where_clause}
+        """
+    else:
+        query = f"SELECT COUNT(DISTINCT v.video_id) FROM video AS v {where_clause}"
+    result = db.query_one(query, params)
+    return result[0] if result else 0
+
+
 def video_mega_search(
     db: PysaurusConnection,
     *,

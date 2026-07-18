@@ -21,6 +21,7 @@ from pysaurus.database.saurus.video_mega_search import (
     video_mega_count,
     video_mega_exists,
     video_mega_search,
+    video_mega_source_count,
 )
 from pysaurus.database.saurus.video_mega_utils import _chunk_ids, _get_video_moves
 from pysaurus.dbview.field_stat import FieldStat
@@ -97,15 +98,7 @@ class PysaurusCollection(AbstractDatabase):
             for group in output.result_groups
         ]
         # Compute source count
-        output.source_count = len(
-            {
-                video.video_id
-                for source in view.sources
-                for video in self.get_videos(
-                    include=(), where={flag: True for flag in source}
-                )
-            }
-        )
+        output.source_count = video_mega_source_count(self.db, sources=view.sources)
         return output
 
     def get_view_video_ids(
