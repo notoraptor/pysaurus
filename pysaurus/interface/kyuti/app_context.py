@@ -311,6 +311,13 @@ class AppContext(QObject):
         self._view.group = result.group_id
         return result
 
+    def get_all_view_ids(self) -> list[int]:
+        """All video ids of the current view (every page), for selection
+        reconciliation and whole-view actions."""
+        if not self._database:
+            return []
+        return self._database.get_view_video_ids(self._view)
+
     def close_database(self) -> None:
         """Close the database."""
         self._api.close_database()

@@ -403,6 +403,39 @@ class TestSelection:
         page._reload()
         assert page._selector.contains(video.video_id)
 
+    def test_data_change_purges_stale_selection(self, vp):
+        # The original bug scenario: select a video inside a property group,
+        # then remove that property value - the video leaves the view WITHOUT
+        # any view-parameter change (the generation does not move), so the
+        # reload must reconcile the selection against the actual view content.
+        app, _, page = vp
+        ctx = app.context
+        db = ctx._api.database
+        ctx.create_prop_type("tag", "str", "", True)
+        vids = [v.video_id for v in ctx.get_videos(2, 0).result]
+        with db.to_save():
+            db.videos_tag_set("tag", {vids[0]: ["x"], vids[1]: ["x"]})
+        ctx.set_groups("tag", is_property=True)
+        page._reload()
+        stats = page._context.classifier_stats or []
+        idx = next(i for i, s in enumerate(stats) if str(s.value) == "x")
+        page._select_group(idx)  # set_group + reload (generation synced)
+        assert {v.video_id for v in page._context.result} >= {vids[0], vids[1]}
+
+        page._selector.include(vids[0])
+        page._reload()
+        assert page._selector.contains(vids[0])
+
+        # Remove the value: vids[0] leaves the "x" group; the group itself
+        # survives (vids[1] is still tagged) and the generation is untouched.
+        with db.to_save():
+            db.videos_tag_set("tag", {vids[0]: []})
+        page._reload()
+
+        assert vids[0] not in {v.video_id for v in page._context.result}
+        assert not page._selector.contains(vids[0])
+        assert not page._selector.has_marks()
+
 
 class TestVideoActions:
     def test_open_and_folder_and_copy(self, vp, monkeypatch):

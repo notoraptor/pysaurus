@@ -657,6 +657,35 @@ class TestFeatureAPIProvider:
         # Only b (the group's other member) is tagged; nothing outside the group.
         assert set(api.database.videos_tag_get("spread")) == {b}
 
+    def test_apply_on_view_include_ignores_ids_outside_view(self, feature_api_with_db):
+        """A frontend selection can go stale (data writes may remove videos
+        from the view without any view-parameter change): included ids that
+        are no longer in the view must not be acted upon."""
+        api = feature_api_with_db
+        videos = api.database.get_videos()
+        assert len(videos) >= 3
+        a, b, c = (v.video_id for v in videos[:3])
+        # Build a controlled 2-video similarity group: the view is {a, b}.
+        api.__run_feature__("set_similarities", [a, b], [424242, 424242])
+        api.database.prop_type_add("spread", "str", "", True)
+
+        api.__run_feature__("set_groups", "similarity_id", False, "count", True, True)
+        result = api.database.query_videos(api.view, 1, 0)
+        api.__run_feature__("set_group", result.result_groups.lookup_index(424242))
+        assert set(api.database.get_view_video_ids(api.view)) == {a, b}
+
+        # The selection includes b (in view) and c (stale, outside the view).
+        selector = {"all": False, "include": [b, c], "exclude": []}
+        count = api.__run_feature__(
+            "apply_on_view",
+            selector,
+            "generalize_properties_for_videos",
+            {"spread": ["g"]},
+        )
+
+        assert count == 1
+        assert set(api.database.videos_tag_get("spread")) == {b}
+
     def test_open_random_video(self, feature_api_with_db):
         """Test opening random video."""
         api = feature_api_with_db

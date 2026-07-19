@@ -143,17 +143,14 @@ class FeatureAPI:
 
     def apply_on_view(self, selector, db_fn_name, *db_fn_args):
         assert self.database is not None
-        if selector["all"]:
-            # "Select all in view except excluded": the excluded ids alone
-            # don't tell us what's IN the selection, so the view must be
-            # queried (lean: ids only, honors the current sources/search/
-            # grouping and the selector, no thumbnail/property hydration).
-            video_indices = self.database.get_view_video_ids(
-                self.view, Selector.parse_dict(selector)
-            )
-        else:
-            # Manual selection: the included ids already ARE the answer.
-            video_indices = selector["include"]
+        # Both modes resolve against the current view (lean: ids only, honors
+        # the current sources/search/grouping and the selector, no thumbnail/
+        # property hydration). Included ids are not trusted as-is: data
+        # writes can remove videos from the view without any view-parameter
+        # change, leaving stale ids in a frontend's selection.
+        video_indices = self.database.get_view_video_ids(
+            self.view, Selector.parse_dict(selector)
+        )
         ops = Ops(self.database)
         callable_methods = {
             "count_property_values": ops.count_property_for_videos,

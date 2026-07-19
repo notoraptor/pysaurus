@@ -392,6 +392,15 @@ class MockDatabase:
                     stats[val] = stats.get(val, 0) + 1
         return stats
 
+    def get_view_video_ids(self, view, selector=None) -> list[int]:
+        """Return every video_id matching the given view (and optional
+        selector), like AbstractDatabase.get_view_video_ids."""
+        videos = self._filter_videos(view.sources, view.search)
+        ids = [v["video_id"] for v in videos]
+        if selector is not None:
+            ids = selector.filter(ids)
+        return ids
+
     def apply_on_view(self, selector: dict, fn_name: str, *fn_args):
         """Apply a function on selected videos."""
         all_ids = [v["video_id"] for v in self._videos]

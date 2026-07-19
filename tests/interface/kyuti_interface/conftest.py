@@ -151,6 +151,11 @@ class MockAppContext:
         self._view.group = self._last_result.group_id
         return self._last_result
 
+    def get_all_view_ids(self) -> list[int]:
+        if not self._database:
+            return []
+        return self._database.get_view_video_ids(self._view)
+
     def set_group(self, group_id) -> None:
         if self._database:
             self._view.set_group(group_id)

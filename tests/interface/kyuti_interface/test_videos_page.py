@@ -125,6 +125,42 @@ class TestVideosPageSelection:
 
         assert video_id in page._selector._selection
 
+    def test_refresh_purges_stale_included_ids(self, qtbot, mock_context):
+        """Data writes can remove videos from the view without bumping the
+        view generation (e.g. dropping the property value the view is
+        grouped on); refresh must drop those ids from the selection."""
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        real_id = page._videos[0].video_id
+        page._on_video_selection_changed(real_id, True)
+        # Simulate a stale id: marked while visible, then removed from the
+        # view by a data write. 99999 does not exist in the mock database.
+        page._selector.include(99999)
+        assert page._selector._selection == {real_id, 99999}
+
+        page.refresh()
+
+        assert page._selector._selection == {real_id}
+
+    def test_refresh_purges_stale_excluded_ids(self, qtbot, mock_context):
+        """In exclude mode, a stale excluded id distorts the selection count
+        (it keeps being subtracted from a total it no longer belongs to)."""
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        page._select_all_in_view()
+        real_id = page._videos[0].video_id
+        page._on_video_selection_changed(real_id, False)
+        page._selector.exclude(99999)
+
+        page.refresh()
+
+        assert page._selector._selection == {real_id}
+        assert page._selector.size_from(page._view_count) == len(page._videos) - 1
+
     def test_selection_buttons_visibility(self, qtbot, mock_context):
         """Hide "Page" on a single page; hide both when the view is empty."""
         page = VideosPage(mock_context)

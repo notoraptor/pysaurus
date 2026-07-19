@@ -222,6 +222,19 @@ class Selector:
         self._selection.clear()
         self._to_exclude = False
 
+    def has_marks(self) -> bool:
+        """True if any id is individually marked (included or excluded)."""
+        return bool(self._selection)
+
+    def restrict_to(self, values: set[Any]) -> None:
+        """Drop marked ids absent from values (e.g. ids that left the view).
+
+        Reconciles the selection with the current view content: stale
+        included ids would silently target invisible videos, and stale
+        excluded ids would distort size_from().
+        """
+        self._selection &= values
+
     def contains(self, value) -> bool:
         if self._to_exclude:
             return value not in self._selection

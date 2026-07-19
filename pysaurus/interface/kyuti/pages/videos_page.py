@@ -1102,8 +1102,16 @@ class VideosPage(QWidget):
             self._is_classifying = False
             self.classifier_section.setVisible(False)
 
+        # Same view parameters, but data writes can still remove videos from
+        # the view (e.g. dropping the property value the view is grouped on),
+        # leaving stale ids in the selection: stale includes would target
+        # invisible videos, stale excludes would distort the count.
+        if self._selector.has_marks():
+            self._selector.restrict_to(set(self.ctx.get_all_view_ids()))
+
         # Display videos
         self._display_videos(context.result)
+        self._update_selection_display()
 
         # Record the generation as of this refresh (after any internal
         # mutation above, e.g. auto-selecting the first group) so the next
