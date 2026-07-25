@@ -166,24 +166,39 @@ class PythonVideoRaptor:
         # avcodec_send_packet() raise InvalidDataError on some videos (GOP-dependent).
         # The backward seek already guarantees a keyframe, so "NONKEY" is useless here.
         video_stream.codec_context.skip_frame = "DEFAULT"
+
+        start = video_stream.start_time or 0
         if video_stream.duration is not None:
-            container.seek(
-                offset=video_stream.duration // 2,
-                any_frame=False,
-                backward=True,
-                stream=video_stream,
-            )
+            span = video_stream.duration
+        elif container.duration is not None:
+            # container.duration is expressed in av.time_base (microseconds).
+            # Convert it to the stream time base so it can be compared to PTS.
+            span = int(container.duration / av.time_base / video_stream.time_base)
         else:
-            container.seek(
-                offset=container.duration // 2, any_frame=False, backward=True
-            )
-        for frame in container.decode(video_stream):
-            image: Image.Image = frame.to_image()
-            image.thumbnail((thumb_size, thumb_size))
-            image.save(thumb_path, format="JPEG")
-            break
+            span = None
+
+        chosen = None
+        if span is None:
+            # No duration at all: fall back to the very first decodable frame.
+            for frame in container.decode(video_stream):
+                chosen = frame
+                break
         else:
+            # A backward seek lands on the keyframe *preceding* the target, which
+            # can be a whole GOP away. Keep decoding until the target PTS is
+            # reached, so two encodings of the same content yield the same instant.
+            target = start + span // 2
+            container.seek(target, any_frame=False, backward=True, stream=video_stream)
+            for frame in container.decode(video_stream):
+                chosen = frame  # keep the last decoded frame as a fallback
+                if frame.pts is not None and frame.pts >= target:
+                    break
+
+        if chosen is None:
             raise NoFrameFoundInMiddleOfVideo()
+        image: Image.Image = chosen.to_image()
+        image.thumbnail((thumb_size, thumb_size))
+        image.save(thumb_path, format="JPEG")
         return thumb_path
 
     @classmethod
