@@ -136,12 +136,21 @@ RGB = namedtuple("RGB", ("r", "g", "b"))
 
 
 def np_dst(rgb1, rgb2):
-    return np.nan_to_num(
-        moderate(
-            np.abs(rgb1.r - rgb2.r) + np.abs(rgb1.g - rgb2.g) + np.abs(rgb1.b - rgb2.b)
-        ),
-        nan=np.inf,
-    )
+    # Borders are filled with inf (see the shift_* functions), so the sum is inf
+    # there and moderate() ends up dividing inf by inf, which numpy flags as an
+    # invalid value. That NaN is the intent, not an accident: nan_to_num turns
+    # it straight back into the inf sentinel that keeps a border neighbour from
+    # ever winning the minimum in compare_faster. Silenced for this expression
+    # only, so a genuine NaN appearing anywhere else still gets reported.
+    with np.errstate(invalid="ignore"):
+        return np.nan_to_num(
+            moderate(
+                np.abs(rgb1.r - rgb2.r)
+                + np.abs(rgb1.g - rgb2.g)
+                + np.abs(rgb1.b - rgb2.b)
+            ),
+            nan=np.inf,
+        )
 
 
 def compare_faster(p1: NumpyMiniature, p2: NumpyMiniature, maximum_distance_score: int):

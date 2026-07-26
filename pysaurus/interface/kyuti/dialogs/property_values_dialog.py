@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
 
 from pysaurus.core.language import say
 from pysaurus.interface.kyuti.widgets.left_click_menu import LeftClickMenu
-from pysaurus.properties.properties import PropType
+from pysaurus.properties.properties import PROP_UNIT_CONVERTER, PropType, PropUnitType
 from pysaurus.properties.property_value_modifier import PropertyValueModifier
 
 
@@ -41,7 +41,7 @@ class PropertyValuesDialog(QDialog):
         self.prop_name = prop_name
         self.prop_type = prop_type
         self.ctx = ctx
-        self._values_count: dict[str, int] = {}
+        self._values_count: dict[PropUnitType, int] = {}
         self._modified = False
 
         self.setWindowTitle(say("Values - {prop_name}", prop_name=prop_name))
@@ -99,19 +99,24 @@ class PropertyValuesDialog(QDialog):
         self.btn_rename.clicked.connect(self._on_rename)
         actions_layout.addWidget(self.btn_rename)
 
-        actions_layout.addSpacing(20)
-        actions_layout.addWidget(QLabel(say("Apply to all values:")))
-
-        # Get available modifiers from PropertyValueModifier
+        # Modifiers are text transforms (lowercase, strip...), so they are only
+        # offered for str properties.
         self._modifier_buttons: list[QPushButton] = []
-        modifiers = PropertyValueModifier.get_modifiers()
-        for mod_name in modifiers:
-            btn = QPushButton(mod_name.replace("_", " ").title())
-            btn.setToolTip(say("Apply '{mod_name}' to all values", mod_name=mod_name))
-            btn.setProperty("mod_name", mod_name)
-            btn.clicked.connect(self._on_modifier_clicked)
-            actions_layout.addWidget(btn)
-            self._modifier_buttons.append(btn)
+        if self.prop_type.type == "str":
+            actions_layout.addSpacing(20)
+            actions_layout.addWidget(QLabel(say("Apply to all values:")))
+
+            # Get available modifiers from PropertyValueModifier
+            modifiers = PropertyValueModifier.get_modifiers()
+            for mod_name in modifiers:
+                btn = QPushButton(mod_name.replace("_", " ").title())
+                btn.setToolTip(
+                    say("Apply '{mod_name}' to all values", mod_name=mod_name)
+                )
+                btn.setProperty("mod_name", mod_name)
+                btn.clicked.connect(self._on_modifier_clicked)
+                actions_layout.addWidget(btn)
+                self._modifier_buttons.append(btn)
 
         actions_layout.addStretch()
 
@@ -250,18 +255,38 @@ class PropertyValuesDialog(QDialog):
 
     def _rename_value(self, old_value):
         """Rename a value (merges if target exists)."""
-        new_value, ok = QInputDialog.getText(
+        text, ok = QInputDialog.getText(
             self,
             say("Rename Value"),
             say("Rename '{old_value}' to:", old_value=old_value),
             text=str(old_value),
         )
 
-        if not ok or not new_value.strip():
+        if not ok or not text.strip():
             return
 
-        new_value = new_value.strip()
-        if new_value == str(old_value):
+        text = text.strip()
+        if text == str(old_value):
+            return
+
+        # The backend validates values against the property type, so the typed
+        # text has to be converted before it is sent (and before it is compared
+        # to the existing, already-typed values).
+        try:
+            new_value = PROP_UNIT_CONVERTER[self.prop_type.type](text)
+        except ValueError:
+            QMessageBox.warning(
+                self,
+                say("Error"),
+                say(
+                    "Invalid value for type {prop_type}: {value}",
+                    prop_type=self.prop_type.type,
+                    value=text,
+                ),
+            )
+            return
+
+        if new_value == old_value:
             return
 
         # Check if merging

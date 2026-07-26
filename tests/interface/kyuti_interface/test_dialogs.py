@@ -6,7 +6,7 @@ Tests BatchEditPropertyDialog and VideoPropertiesDialog.
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QPushButton, QTabWidget
+from PySide6.QtWidgets import QLabel, QPushButton, QTabWidget
 
 from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
     BatchEditPropertyDialog,
@@ -43,6 +43,33 @@ class TestBatchEditPropertyDialog:
 
         assert dialog.prop_name == "genre"
         assert dialog.nb_videos == 5
+
+    def test_bool_combo_is_built_from_the_implicit_domain(self, qtbot):
+        """A bool carries no enumeration, yet still offers a constrained choice.
+
+        The combo used to hardcode its own "true"/"false" items; it now reads
+        PropType.possible_values, like any enumerated property.
+        """
+        prop_type = PropType.define("watched", "bool", False, False)
+        dialog = BatchEditPropertyDialog("watched", prop_type, 5, [[True, 2]])
+        qtbot.addWidget(dialog)
+
+        combo = dialog.value_input
+        labels = [combo.itemText(i) for i in range(combo.count())]
+        data = [combo.itemData(i) for i in range(combo.count())]
+        # Picked, so the Yes/No register -- in domain order, False first.
+        assert labels == ["No", "Yes"]
+        assert data == [False, True]
+
+    def test_bool_values_are_listed_in_the_picked_register(self, qtbot):
+        """The current-values list shows "Yes (2)", not "True (2)"."""
+        prop_type = PropType.define("watched", "bool", False, False)
+        dialog = BatchEditPropertyDialog("watched", prop_type, 5, [[True, 2]])
+        qtbot.addWidget(dialog)
+
+        assert dialog.current_list.count() == 1
+        labels = dialog.current_list.findChildren(QLabel)
+        assert any(label.text() == "Yes (2)" for label in labels)
 
     def test_dialog_shows_current_values(
         self, qtbot, prop_type_string_multiple, values_and_counts

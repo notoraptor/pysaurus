@@ -557,9 +557,12 @@ class MockDatabase:
                 "definition": {
                     "type": prop_type,
                     "enumeration": definition if isinstance(definition, list) else None,
+                    # `is not None`, not truthiness: False, 0 and "" are real
+                    # defaults, and dropping them diverged from the SQL backend
+                    # (PropType.define always keeps a non-list definition).
                     "defaultValues": (
                         [definition]
-                        if definition and not isinstance(definition, list)
+                        if definition is not None and not isinstance(definition, list)
                         else []
                     ),
                 },

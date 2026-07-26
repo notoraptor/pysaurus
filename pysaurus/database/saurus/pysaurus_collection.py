@@ -365,6 +365,9 @@ class PysaurusCollection(AbstractDatabase):
         props = self.get_prop_types(name=name)
         if props:
             (pt,) = props
+            if multiple and pt.type == "bool":
+                # Guarded here too: this path bypasses PropType.define.
+                raise exceptions.BooleanPropertyCannotBeMultiple(name)
             if bool(pt.multiple) is bool(multiple):
                 raise exceptions.PropertyAlreadyMultiple(name, multiple)
             if not multiple:

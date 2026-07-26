@@ -23,7 +23,10 @@ class AbstractApproximateComparator(ABC):
             self.notifier.tasks(imp.items(), "get vectors", imp.count())
         ):
             thumbnail = image.resize(self.SIZE)
-            vector = [v for pixel in thumbnail.getdata() for v in pixel] + (
+            # tobytes() is the interleaved r,g,b,r,g,b... getdata() flattened
+            # to, extracted in C, and getdata() goes away in Pillow 14. The
+            # assert below keeps guarding the three-channel assumption.
+            vector = list(thumbnail.tobytes()) + (
                 [imp.length(identifier)] * weight_length
             )
             assert len(vector) == vector_size

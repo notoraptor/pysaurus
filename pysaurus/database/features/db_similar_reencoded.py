@@ -4,7 +4,7 @@ from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.video.video_pattern import VideoPattern
 
 FIELD = "similarity_id_reencoded"
-MAX_DURATION_DIFF = 0.25  # seconds
+MAX_DURATION_DIFF = 0.5  # seconds
 MAX_TITLE_DIFF_RATIO = 0.5  # suffix/prefix length < 50% of shorter title
 MIN_TITLE_DIFF = 8  # absolute minimum allowed difference in characters
 

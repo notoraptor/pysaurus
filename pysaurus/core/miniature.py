@@ -1,6 +1,6 @@
 import base64
 from io import BytesIO
-from typing import Any, Iterable, cast
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -99,14 +99,11 @@ class Miniature(AbstractMatrix):
     ) -> "Miniature":
         thumbnail = image.resize(dimensions)
         width, height = dimensions
-        size = width * height
-        red = bytearray(size)
-        green = bytearray(size)
-        blue = bytearray(size)
-        for i, (r, g, b) in enumerate(cast(Iterable, thumbnail.getdata())):
-            red[i] = r
-            green[i] = g
-            blue[i] = b
+        # split() + tobytes() instead of a Python loop over getdata(): same
+        # bytes, extracted in C, and getdata() goes away in Pillow 14. RGB mode
+        # is guaranteed by ImageUtils.open_rgb_image, so there are exactly
+        # three bands. Same idiom as from_image() below.
+        red, green, blue = (band.tobytes() for band in thumbnail.split())
         return Miniature(red, green, blue, width, height, identifier)
 
     @staticmethod

@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.language import say
+from pysaurus.interface.kyuti.widgets.bool_value_widget import BoolValueWidget
 from pysaurus.properties.properties import PropType
 
 
@@ -302,7 +303,12 @@ class BatchEditDialog(QDialog):
                 input_widget.addItem(str(value), value)
             input_widget.setEnabled(False)
         elif ptype == "bool":
-            input_widget = QCheckBox(say("Yes"))
+            # No "not set" state here: the checkbox on the left already says
+            # whether this property is touched at all.
+            input_widget = BoolValueWidget(with_undefined=False)
+            # default is typed as PropUnitType; on a bool property it is a bool,
+            # and a missing one starts the widget on False either way.
+            input_widget.set_value(bool(default))
             input_widget.setEnabled(False)
         elif ptype == "int":
             input_widget = QSpinBox()
@@ -362,8 +368,8 @@ class BatchEditDialog(QDialog):
                     assert isinstance(widget, QComboBox)
                     new_value = widget.currentData()
                 elif ptype == "bool":
-                    assert isinstance(widget, QCheckBox)
-                    new_value = widget.isChecked()
+                    assert isinstance(widget, BoolValueWidget)
+                    new_value = widget.value()
                 elif ptype == "int":
                     assert isinstance(widget, QSpinBox)
                     new_value = widget.value()

@@ -33,6 +33,23 @@ class PropertyToUniqueError(PysaurusError):
     pass
 
 
+class BooleanPropertyCannotBeMultiple(PysaurusError):
+    """A bool property is always unique.
+
+    Its domain is exactly {False, True}, so holding several values at once
+    could only ever mean "the whole domain", which carries no information.
+    """
+
+
+class BooleanPropertyCannotBeEnumerated(PysaurusError):
+    """A bool property carries no stored enumeration.
+
+    Its domain is implied by the type itself (see PropType.possible_values),
+    so it is never spelled out in property_enumeration -- that table holds
+    only its default value.
+    """
+
+
 class PropertyNotFound(PysaurusError):
     pass
 

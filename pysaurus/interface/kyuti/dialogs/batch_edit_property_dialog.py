@@ -31,7 +31,8 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.language import say
-from pysaurus.properties.properties import PropType
+from pysaurus.interface.common.prop_format import format_prop_value
+from pysaurus.properties.properties import PropType, PropUnitType
 
 _BTN_STYLE = (
     "QPushButton { padding: 1px 5px; min-width: 20px; }"
@@ -127,7 +128,6 @@ class BatchEditPropertyDialog(QDialog):
         self.prop_type = prop_type
         self.ptype = prop_type.type
         self.is_multiple = prop_type.multiple
-        self.enumeration = prop_type.enumeration
         self.nb_videos = nb_videos
 
         # Build value -> count mapping
@@ -214,13 +214,14 @@ class BatchEditPropertyDialog(QDialog):
         input_layout = QHBoxLayout()
         input_layout.addWidget(QLabel(say("New value:")))
 
-        if self.enumeration:
+        # One branch for every constrained property: an explicit enumeration and
+        # the implicit two-value domain of a bool are the same thing here.
+        possible_values = self.prop_type.possible_values
+        if possible_values:
             self.value_input = QComboBox()
-            self.value_input.addItems([str(v) for v in self.enumeration])
-            input_layout.addWidget(self.value_input, 1)
-        elif self.ptype == "bool":
-            self.value_input = QComboBox()
-            self.value_input.addItems(["true", "false"])
+            # Values are carried as item data, so they need no reparsing later.
+            for value in possible_values:
+                self.value_input.addItem(self._label(value), value)
             input_layout.addWidget(self.value_input, 1)
         elif self.ptype == "int":
             self.value_input = QSpinBox()
@@ -264,13 +265,17 @@ class BatchEditPropertyDialog(QDialog):
         self._populate_current_list()
         self._populate_add_list()
 
+    def _label(self, value: PropUnitType) -> str:
+        """Render a value the way the user picks it (a bool reads Yes/No)."""
+        return format_prop_value(self.prop_type, value)
+
     def _populate_remove_list(self):
         """Populate the remove list with restore buttons."""
         self.remove_list.clear()
         for value in self._to_remove:
             count = self._value_counts.get(value, 0)
             widget = _make_entry_widget(
-                f"{value} ({count})",
+                f"{self._label(value)} ({count})",
                 value,
                 [("→", say("Restore to current"), self._on_restore_clicked)],
             )
@@ -282,7 +287,7 @@ class BatchEditPropertyDialog(QDialog):
         for value in self._current:
             count = self._value_counts.get(value, 0)
             widget = _make_entry_widget(
-                f"{value} ({count})",
+                f"{self._label(value)} ({count})",
                 value,
                 [
                     ("←", say("Remove"), self._on_remove_clicked),
@@ -297,9 +302,9 @@ class BatchEditPropertyDialog(QDialog):
         for value in self._to_add:
             count = self._value_counts.get(value, 0)
             if count > 0:
-                label = f"{value} ({count})"
+                label = f"{self._label(value)} ({count})"
             else:
-                label = say("{value} (new)", value=value)
+                label = say("{value} (new)", value=self._label(value))
             widget = _make_entry_widget(
                 label, value, [("←", say("Cancel"), self._on_cancel_clicked)]
             )
@@ -414,17 +419,10 @@ class BatchEditPropertyDialog(QDialog):
         """Add a new value to the add list."""
         try:
             if isinstance(self.value_input, QComboBox):
-                text = self.value_input.currentText().strip()
-                if not text:
+                # Both combos carry the typed value as item data.
+                value = self.value_input.currentData()
+                if value is None:
                     return
-                if self.ptype == "bool":
-                    value = text == "true"
-                elif self.ptype == "int":
-                    value = int(text)
-                elif self.ptype == "float":
-                    value = float(text)
-                else:
-                    value = text
             elif isinstance(self.value_input, QSpinBox):
                 value = self.value_input.value()
             elif isinstance(self.value_input, QDoubleSpinBox):

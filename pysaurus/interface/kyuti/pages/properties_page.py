@@ -25,11 +25,22 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.language import say
+from pysaurus.interface.common.prop_format import (
+    format_prop_domain,
+    format_prop_literal,
+)
 from pysaurus.interface.kyuti.app_context import AppContext
 from pysaurus.interface.kyuti.dialogs.fill_property_dialog import FillPropertyDialog
 from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
 from pysaurus.interface.kyuti.dialogs.property_values_dialog import PropertyValuesDialog
-from pysaurus.properties.properties import PropType
+from pysaurus.interface.kyuti.widgets.bool_value_widget import BoolValueWidget
+from pysaurus.properties.properties import (
+    OPEN_DOMAIN_PROP_TYPES,
+    PROP_UNIT_CONVERTER,
+    PropRawType,
+    PropType,
+    PropUnitType,
+)
 
 
 class PropertiesPage(QWidget):
@@ -187,9 +198,10 @@ class PropertiesPage(QWidget):
         self.multiple_check.setToolTip(
             say(
                 "If enabled, videos can have multiple values for this property.\n"
-                "Only available for string type."
+                "Not available for boolean properties."
             )
         )
+        self.multiple_check.toggled.connect(self._update_default_field)
         layout.addWidget(self.multiple_check)
 
         # Enumeration
@@ -197,18 +209,18 @@ class PropertiesPage(QWidget):
         self.enum_check.setToolTip(
             say(
                 "If enabled, only predefined values can be used.\n"
-                "Enter values below, one per line."
+                "The first value entered below becomes the default one.\n"
+                "Not available for boolean properties."
             )
         )
         self.enum_check.toggled.connect(self._on_enum_toggled)
         layout.addWidget(self.enum_check)
 
         # Enum values
-        self._enum_label = QLabel(say("Enum values (one per line):"))
+        self._enum_label = QLabel(say("Enum values (comma-separated):"))
         layout.addWidget(self._enum_label)
 
         self.enum_input = QLineEdit()
-        self.enum_input.setPlaceholderText(say("value1, value2, value3"))
         self.enum_input.setEnabled(False)
         layout.addWidget(self.enum_input)
 
@@ -217,9 +229,16 @@ class PropertiesPage(QWidget):
         self._default_label = QLabel(say("Default:"))
         default_layout.addWidget(self._default_label)
         self.default_input = QLineEdit()
-        self.default_input.setPlaceholderText(say("Default value"))
         default_layout.addWidget(self.default_input)
+        # A bool picks its default out of its implicit two-value domain instead
+        # of typing it: reading a bool back from free text would have to match
+        # the language the user typed in. Only one of the two is ever shown.
+        self.default_bool_input = BoolValueWidget(with_undefined=False)
+        default_layout.addWidget(self.default_bool_input)
         layout.addLayout(default_layout)
+
+        # Type drives which options are offered; apply it to the initial type.
+        self._on_type_changed(self.type_combo.currentText())
 
         layout.addStretch()
 
@@ -278,20 +297,22 @@ class PropertiesPage(QWidget):
         self.multiple_check.setToolTip(
             say(
                 "If enabled, videos can have multiple values for this property.\n"
-                "Only available for string type."
+                "Not available for boolean properties."
             )
         )
         self.enum_check.setText(say("Use enumeration"))
         self.enum_check.setToolTip(
             say(
                 "If enabled, only predefined values can be used.\n"
-                "Enter values below, one per line."
+                "The first value entered below becomes the default one.\n"
+                "Not available for boolean properties."
             )
         )
-        self._enum_label.setText(say("Enum values (one per line):"))
-        self.enum_input.setPlaceholderText(say("value1, value2, value3"))
+        self._enum_label.setText(say("Enum values (comma-separated):"))
         self._default_label.setText(say("Default:"))
-        self.default_input.setPlaceholderText(say("Default value"))
+        # Both placeholders depend on the form state, not only on the language.
+        self._update_enum_placeholder()
+        self._update_default_field()
         self.btn_reset.setText(say("Reset"))
         self.btn_create.setText(say("Create Property"))
 
@@ -303,21 +324,64 @@ class PropertiesPage(QWidget):
         super().changeEvent(event)
 
     def _on_type_changed(self, type_name: str):
-        """Handle type change - enable/disable multiple option."""
-        # Multiple only makes sense for str
-        is_string = type_name == "str"
-        self.multiple_check.setEnabled(is_string)
-        if not is_string:
+        """Handle type change - offer multiple/enumeration where they apply."""
+        # Both options only carry information for open-domain types (str, int,
+        # float); a bool already *is* its own two-value enumeration.
+        open_domain = type_name in OPEN_DOMAIN_PROP_TYPES
+        self.multiple_check.setEnabled(open_domain)
+        self.enum_check.setEnabled(open_domain)
+        if not open_domain:
             self.multiple_check.setChecked(False)
-
-        # Enum only for str
-        self.enum_check.setEnabled(is_string)
-        if not is_string:
             self.enum_check.setChecked(False)
+
+        self._update_enum_placeholder()
+        self._update_default_field()
 
     def _on_enum_toggled(self, checked: bool):
         """Handle enum checkbox toggle."""
         self.enum_input.setEnabled(checked)
+        self._update_default_field()
+
+    def _update_enum_placeholder(self):
+        """Show an example matching the selected type in the enum field."""
+        examples = {
+            "str": say("value1, value2, value3"),
+            "int": "1, 2, 3",
+            "float": "1.5, 2.5",
+        }
+        self.enum_input.setPlaceholderText(
+            examples.get(self.type_combo.currentText(), "")
+        )
+
+    def _update_default_field(self):
+        """Only let the default be typed in when it is actually used.
+
+        A multiple property has no default (PropType.define forces an empty
+        list), and an enumerated one takes its first enum value as default. In
+        both cases the field would be silently ignored, so it is cleared and
+        disabled instead, with a placeholder saying where the default comes from.
+        """
+        multiple = self.multiple_check.isChecked()
+        enumerated = self.enum_check.isChecked()
+        # A bool is never multiple nor enumerated, so its picker is always the
+        # one shown, and always usable.
+        is_bool = self.type_combo.currentText() == "bool"
+        self.default_input.setVisible(not is_bool)
+        self.default_bool_input.setVisible(is_bool)
+
+        if multiple:
+            self.default_input.setPlaceholderText(
+                say("No default value for a multiple property")
+            )
+        elif enumerated:
+            self.default_input.setPlaceholderText(say("First enumeration value"))
+        else:
+            self.default_input.setPlaceholderText(say("Default value"))
+
+        editable = not multiple and not enumerated
+        if not editable:
+            self.default_input.clear()
+        self.default_input.setEnabled(editable)
 
     def _reset_form(self):
         """Reset the new property form."""
@@ -327,6 +391,7 @@ class PropertiesPage(QWidget):
         self.enum_check.setChecked(False)
         self.enum_input.clear()
         self.default_input.clear()
+        self.default_bool_input.set_value(False)
 
     def refresh(self):
         """Refresh the properties list."""
@@ -342,7 +407,6 @@ class PropertiesPage(QWidget):
             default_values = prop_type.default
             default = default_values[0] if default_values else None
             multiple = prop_type.multiple
-            enumeration = prop_type.enumeration
 
             # Name
             name_item = QTableWidgetItem(name)
@@ -355,7 +419,9 @@ class PropertiesPage(QWidget):
             self.props_table.setItem(i, 1, type_item)
 
             # Default
-            default_str = str(default) if default is not None else ""
+            default_str = (
+                format_prop_literal(prop_type, default) if default is not None else ""
+            )
             default_item = QTableWidgetItem(default_str)
             default_item.setFlags(default_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.props_table.setItem(i, 2, default_item)
@@ -367,11 +433,13 @@ class PropertiesPage(QWidget):
                 multiple_item.setForeground(Qt.GlobalColor.darkGreen)
             self.props_table.setItem(i, 3, multiple_item)
 
-            # Enum
-            if enumeration:
-                enum_str = ", ".join(str(v) for v in enumeration[:3])
-                if len(enumeration) > 3:
-                    enum_str += f"... ({len(enumeration)})"
+            # Enum: a bool has no stored enumeration but still has a domain,
+            # so this shows the implicit one rather than a dash.
+            domain = format_prop_domain(prop_type)
+            if domain:
+                enum_str = ", ".join(domain[:3])
+                if len(domain) > 3:
+                    enum_str += f"... ({len(domain)})"
             else:
                 enum_str = "-"
             enum_item = QTableWidgetItem(enum_str)
@@ -395,14 +463,17 @@ class PropertiesPage(QWidget):
         ptype = prop_type.type  # String like "str", "int", etc.
         multiple = prop_type.multiple
         is_string = ptype == "str"
+        # A bool has nothing to manage or convert: no value set to curate, and
+        # "multiple" is not offered for it (see OPEN_DOMAIN_PROP_TYPES).
+        open_domain = ptype in OPEN_DOMAIN_PROP_TYPES
 
         # Create dropdown button with menu
         btn_actions = QPushButton(say("Actions"))
 
         menu = QMenu(btn_actions)
 
-        # Values action (only for string properties)
-        if is_string:
+        # Values action (only for open-domain properties)
+        if open_domain:
             action_values = menu.addAction(say("Manage Values..."))
             action_values.setProperty("prop_name", name)
             action_values.triggered.connect(self._on_action_manage_values)
@@ -412,8 +483,8 @@ class PropertiesPage(QWidget):
         action_rename.setProperty("prop_name", name)
         action_rename.triggered.connect(self._on_action_rename)
 
-        # Convert action (only for string properties)
-        if is_string:
+        # Convert action (only for open-domain properties)
+        if open_domain:
             convert_text = (
                 say("Convert to Single Value")
                 if multiple
@@ -424,7 +495,8 @@ class PropertiesPage(QWidget):
             action_convert.setProperty("currently_multiple", multiple)
             action_convert.triggered.connect(self._on_action_convert)
 
-        # Move values action (only for string-multiple)
+        # Move values action (only for string-multiple: DatabaseAlgorithms
+        # .move_property_values asserts a str target and joins values as text)
         if is_string and multiple:
             action_move = menu.addAction(say("Move Values..."))
             action_move.setProperty("prop_name", name)
@@ -467,6 +539,58 @@ class PropertiesPage(QWidget):
         if hasattr(main_window, "show_videos_page"):
             main_window.show_videos_page()
 
+    def _read_definition(self, prop_type: str) -> PropRawType:
+        """Build the definition to hand to the backend.
+
+        That is either the enumeration (typed, first value being the default) or
+        a single default value. Raises ValueError carrying a translated,
+        user-facing message when the form holds invalid input.
+        """
+        if self.enum_check.isChecked():
+            return self._read_enumeration(prop_type)
+        return self._read_default(prop_type)
+
+    def _read_enumeration(self, prop_type: str) -> list[PropUnitType]:
+        """Parse the comma-separated enum field into typed, distinct values."""
+        convert = PROP_UNIT_CONVERTER[prop_type]
+        values: list[PropUnitType] = []
+        for token in self.enum_input.text().split(","):
+            token = token.strip()
+            if not token:
+                continue
+            try:
+                value = convert(token)
+            except ValueError:
+                raise ValueError(
+                    say(
+                        "Invalid enumeration value for type {prop_type}: {value}",
+                        prop_type=prop_type,
+                        value=token,
+                    )
+                ) from None
+            # Keep the order typed in: the first value becomes the default.
+            if value not in values:
+                values.append(value)
+        if len(values) < 2:
+            raise ValueError(say("An enumeration needs at least two distinct values."))
+        return values
+
+    def _read_default(self, prop_type: str) -> PropUnitType:
+        """Parse the default field, falling back to the type's empty value."""
+        if prop_type == "bool":
+            # Picked, never typed: the widget always has one state checked, so
+            # value() is never None here -- bool() is only for the type checker.
+            return bool(self.default_bool_input.value())
+        default_text = self.default_input.text().strip()
+        if not default_text:
+            return {"int": 0, "float": 0.0, "str": ""}[prop_type]
+        try:
+            return PROP_UNIT_CONVERTER[prop_type](default_text)
+        except ValueError:
+            raise ValueError(
+                say("Invalid default value for type {prop_type}.", prop_type=prop_type)
+            ) from None
+
     def _on_create(self):
         """Create a new property."""
         name = self.name_input.text().strip()
@@ -480,37 +604,11 @@ class PropertiesPage(QWidget):
 
         multiple = self.multiple_check.isChecked()
 
-        # Parse default value
-        default_text = self.default_input.text().strip()
         try:
-            if prop_type == "bool":
-                default = (
-                    default_text.lower() in ("true", "1", "yes")
-                    if default_text
-                    else False
-                )
-            elif prop_type == "int":
-                default = int(default_text) if default_text else 0
-            elif prop_type == "float":
-                default = float(default_text) if default_text else 0.0
-            else:
-                default = default_text
-        except ValueError:
-            QMessageBox.warning(
-                self,
-                say("Error"),
-                say("Invalid default value for type {prop_type}.", prop_type=prop_type),
-            )
+            definition = self._read_definition(prop_type)
+        except ValueError as exc:
+            QMessageBox.warning(self, say("Error"), str(exc))
             return
-
-        # Handle enumeration
-        definition = default
-        if self.enum_check.isChecked() and prop_type == "str":
-            enum_text = self.enum_input.text().strip()
-            if enum_text:
-                enum_values = [v.strip() for v in enum_text.split(",") if v.strip()]
-                if enum_values:
-                    definition = enum_values
 
         self.btn_create.setEnabled(False)
         try:

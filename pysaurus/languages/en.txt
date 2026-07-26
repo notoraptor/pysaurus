@@ -54,6 +54,8 @@ AllowSingletons_9cef7b685c53d54a
 	Allow singletons
 AlreadyInList_6f6c0d4612a8e3d0
 	Already in List
+AnEnumerationNeedsAtLeastTwoDistinctValues_87739ef49a364f00
+	An enumeration needs at least two distinct values.
 AnUnexpectedErrorOccurredNameMessage_b791a25984b991a8
 	An unexpected error occurred:
 	
@@ -332,8 +334,8 @@ EnterValue_375e8356bd51eb14
 	Enter value...
 Entry_960e72a88d48ae8a
 	(entry)
-EnumValuesOnePerLine_cd2fc280ad9290a4
-	Enum values (one per line):
+EnumValuesCommaSeparated_3089d84fd2a8c932
+	Enum values (comma-separated):
 Enum_dbd907ee9336202
 	enum
 Enum_f7b4707e4b7a5662
@@ -391,6 +393,8 @@ FailedToRenameValueError_47ea68beb6fbd6f8
 FailedToUpdateFoldersError_ff0c153f3fb07059
 	Failed to update folders:
 	{error}
+False_8cbd29bb83d5daa
+	false
 FatalError_4b284ae34b81bd8f
 	Fatal Error
 Field_e67fc2f2510220db
@@ -433,6 +437,8 @@ FindingReEncodedVideos_3580906b92ab48e
 	Finding Re-encoded Videos
 FindingSimilarVideos_50b3c0fa521a4f91
 	Finding Similar Videos
+FirstEnumerationValue_18e1f3334aa66d3b
+	First enumeration value
 FirstGroup_9a47aa25bb582408
 	First group
 FirstPageHome_a15d601c1a2ec05c
@@ -494,12 +500,13 @@ IfCheckedAllSelectedValuesWillBeJoinedWithSpacesIntoASingleValueInTheTargetPrope
 	into a single value in the target property.
 IfCheckedOnlyVideosThatDonTHaveAnyValuesForThisPropertyWillBeFilledExistingValuesWillNot..._1d34f8d46ac81641
 	If checked, only videos that don't have any values for this property will be filled. Existing values will not be modified.
-IfEnabledOnlyPredefinedValuesCanBeUsedEnterValuesBelowOnePerLine_972634b4a32302bf
+IfEnabledOnlyPredefinedValuesCanBeUsedTheFirstValueEnteredBelowBecomesTheDefaultOneNotAvailableFor..._c5c2cf2726480a33
 	If enabled, only predefined values can be used.
-	Enter values below, one per line.
-IfEnabledVideosCanHaveMultipleValuesForThisPropertyOnlyAvailableForStringType_44b5ff96cb20791c
+	The first value entered below becomes the default one.
+	Not available for boolean properties.
+IfEnabledVideosCanHaveMultipleValuesForThisPropertyNotAvailableForBooleanProperties_70481f970280001f
 	If enabled, videos can have multiple values for this property.
-	Only available for string type.
+	Not available for boolean properties.
 IndexedCount_4798684b91fc1cb2
 	Indexed (count)
 IndexedSize_c3e03c49849a6294
@@ -508,6 +515,10 @@ Info_d3acbd7e36ad7e89
 	Info
 InvalidDefaultValueForTypePropType_e2fc4b825a69c45
 	Invalid default value for type {prop_type}.
+InvalidEnumerationValueForTypePropTypeValue_fd477024cb7ac6a0
+	Invalid enumeration value for type {prop_type}: {value}
+InvalidValueForTypePropTypeValue_c32df512838e20ed
+	Invalid value for type {prop_type}: {value}
 Language_c9b2abbb5447bff
 	&Language
 LastGroup_e2e13091b918e83c
@@ -590,6 +601,8 @@ NoCustomPropertiesDefinedCreatePropertiesInThePropertiesPageFirst_8d2d3aa616a897
 	Create properties in the Properties page first.
 NoCustomPropertiesDefined_570e33de412afd17
 	No custom properties defined.
+NoDefaultValueForAMultipleProperty_361a4f191e1e553
+	No default value for a multiple property
 NoEligibleProperties_e137cfef3ff4f201
 	(No eligible properties)
 NoEligibleTargetProperties_bee2775786625f48
@@ -630,6 +643,8 @@ NotFound_cce592bae33191bc
 	Not Found
 NotFound_f38b8a623dcf0c3c
 	NOT FOUND
+NotSet_5f1a0162ba74d300
+	Not set
 NumpyImagesComparison_913b9ae4ae91effb
 	Numpy images comparison
 Ok_8323907b4eae9fb
@@ -1017,6 +1032,8 @@ TrashAll_c8994130b00fc498
 	Trash all
 TrashCompletedWithErrors_320ca9d8af632007
 	Trash completed with errors
+True_8bcf397e9f9b3cc1
+	true
 Type_2d126f1d4bd6b8fd
 	Type:
 Type_75d7147e01f09a9d

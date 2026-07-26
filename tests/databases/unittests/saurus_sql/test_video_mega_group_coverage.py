@@ -309,6 +309,60 @@ class TestVideoMegaGroupEdgeCases:
         assert len(indices) > 0
 
 
+class TestDefaultValueGroupSelection:
+    """Clicking the group holding a unique property's default value.
+
+    The group counts COALESCE missing rows to the property's default, so that
+    group also counts the videos holding the default *implicitly* (no stored
+    row). Selecting the group must list those same videos. The guard picking
+    the include-implicit branch used to compare the group's converted value
+    (False, 5) to the raw enum text ("0", "5"): never equal for any non-str
+    property, so the group showed a count but listed nothing when clicked.
+    """
+
+    @pytest.mark.parametrize(
+        "prop_type,default,explicit",
+        [
+            ("bool", False, True),
+            ("int", 0, 5),
+            ("float", 0.0, 2.5),
+            # str compared equal even against the raw text: non-regression.
+            ("str", "unrated", "good"),
+        ],
+    )
+    def test_default_group_lists_implicitly_valued_videos(
+        self, saurus_database, prop_type, default, explicit
+    ):
+        db = saurus_database
+        name = f"dg_{prop_type}"
+        db.prop_type_add(name, prop_type, default, False)
+
+        view = ViewContext()
+        in_view = [v.video_id for v in db.query_videos(view, None, None).result]
+        tagged = set(in_view[:2])
+        db.videos_tag_set(name, {vid: [explicit] for vid in tagged})
+
+        view.set_grouping(name, is_property=True, allow_singletons=True)
+        stats = db.query_videos(view, 1, 0).classifier_stats
+        groups = {s.value: (i, s.count) for i, s in enumerate(stats)}
+        assert set(groups) == {default, explicit}
+
+        # A unique property puts every video of the view in exactly one group.
+        default_index, default_count = groups[default]
+        assert default_count == len(in_view) - len(tagged)
+
+        view.group = default_index
+        listed = {v.video_id for v in db.query_videos(view, None, None).result}
+        assert len(listed) == default_count  # the count the user clicked on
+        assert listed.isdisjoint(tagged)
+
+        explicit_index, explicit_count = groups[explicit]
+        view.group = explicit_index
+        listed = {v.video_id for v in db.query_videos(view, None, None).result}
+        assert explicit_count == len(tagged)
+        assert listed == tagged
+
+
 class TestGetViewVideoIds:
     """Tests for get_view_video_ids() / video_mega_ids(), the ids-only
     counterpart to query_videos() used by apply_on_view() and playlist().

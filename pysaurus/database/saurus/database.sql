@@ -118,6 +118,8 @@ CREATE TABLE IF NOT EXISTS property (
 	multiple INTEGER NOT NULL DEFAULT 0,
 	CHECK (type IN ("bool", "int", "float", "str")),
 	CHECK (multiple IN (0, 1)),
+	-- A bool is its own two-value domain, so it can only ever hold one value.
+	CHECK (type != 'bool' OR multiple = 0),
 	UNIQUE (name)
 );
 CREATE TABLE IF NOT EXISTS property_enumeration (

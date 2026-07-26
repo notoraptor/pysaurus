@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.language import say
+from pysaurus.interface.kyuti.widgets.bool_value_widget import BoolValueWidget
 from pysaurus.properties.properties import PropType
 from pysaurus.video.video_pattern import VideoPattern
 
@@ -651,8 +652,8 @@ class VideoPropertiesDialog(QDialog):
             return widget
 
         if ptype == "bool":
-            widget = QCheckBox()
-            widget.clicked.connect(lambda _checked, n=name: self._on_widget_changed(n))
+            widget = BoolValueWidget()
+            widget.changed.connect(lambda n=name: self._on_bool_changed(n))
             return widget
         if ptype == "int":
             widget = ScrollSafeSpinBox()
@@ -674,6 +675,19 @@ class VideoPropertiesDialog(QDialog):
         self._cleared.discard(name)
         self._update_prop_style(name)
 
+    def _on_bool_changed(self, name: str):
+        """Handle a click on a bool radio button.
+
+        "Not set" is the absence of a value, not a third value, so picking it
+        clears the property -- exactly what the Clear button does.
+        """
+        if self._loading:
+            return
+        if self._property_widgets[name].value() is None:
+            self._on_clear_property(name)
+        else:
+            self._on_widget_changed(name)
+
     def _on_reset_property(self, name: str):
         """Handle Reset button click: restore initial value."""
         self._user_modified.discard(name)
@@ -685,11 +699,12 @@ class VideoPropertiesDialog(QDialog):
 
         self._loading = True
         try:
-            if prop_type.enumeration:
+            if prop_type.type == "bool":
+                # initial is None when the video had no value: back to "not set"
+                widget.set_value(initial)
+            elif prop_type.enumeration:
                 index = widget.findData(initial) if initial is not None else 0
                 widget.setCurrentIndex(max(index, 0))
-            elif prop_type.type == "bool":
-                widget.setChecked(bool(initial) if initial is not None else False)
             elif prop_type.type == "int":
                 widget.setValue(int(initial) if initial is not None else 0)
             elif prop_type.type == "float":
@@ -714,11 +729,12 @@ class VideoPropertiesDialog(QDialog):
 
         self._loading = True
         try:
-            if prop_type.enumeration:
+            if prop_type.type == "bool":
+                # Cleared means no value at all, which is what "not set" shows.
+                widget.set_value(None)
+            elif prop_type.enumeration:
                 index = widget.findData(default) if default is not None else 0
                 widget.setCurrentIndex(max(index, 0))
-            elif prop_type.type == "bool":
-                widget.setChecked(bool(default) if default is not None else False)
             elif prop_type.type == "int":
                 widget.setValue(int(default) if default is not None else 0)
             elif prop_type.type == "float":
@@ -767,10 +783,10 @@ class VideoPropertiesDialog(QDialog):
         ptype = prop_type.type
         if prop_type.multiple:
             return widget.get_values()
+        if ptype == "bool":
+            return widget.value()  # None when "not set" is selected
         if prop_type.enumeration:
             return widget.currentData()
-        if ptype == "bool":
-            return widget.isChecked()
         if ptype == "int":
             return widget.value()
         if ptype == "float":
@@ -834,7 +850,10 @@ class VideoPropertiesDialog(QDialog):
                 # Handle simple types
                 if not enumeration:
                     if ptype == "bool":
-                        widget.setChecked(bool(value))
+                        # "Not set" whenever the video carries no value: for a
+                        # bool the default would otherwise be indistinguishable
+                        # from an explicit False.
+                        widget.set_value(value if is_defined else None)
                     elif ptype == "int":
                         widget.setValue(int(value) if value is not None else 0)
                     elif ptype == "float":

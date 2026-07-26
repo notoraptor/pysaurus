@@ -9,6 +9,7 @@ The test verifies that all features exposed by FeatureAPI work correctly,
 regardless of the internal architecture.
 """
 
+import inspect
 import shutil
 
 import pytest
@@ -18,9 +19,20 @@ from pysaurus.application.application import Application
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.language import say
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.database.algorithms import miniatures as miniatures_module
+from pysaurus.database.algorithms.miniatures import Miniatures
+from pysaurus.database.database_algorithms import DatabaseAlgorithms
 from pysaurus.database.database_operations import DatabaseOperations
 from pysaurus.interface.api.feature_api import FeatureAPI
 from tests.utils import TEST_HOME_DIR
+
+# The miniatures file is 40 MB of the 73 MB test home, and copying it per test
+# added up to gigabytes across a run. It is left out because nothing needs it
+# by default: Miniatures.read_miniatures_file returns {} when the file is
+# missing, and DatabaseAlgorithms.ensure_miniatures rebuilds the whole thing in
+# a few seconds from the thumbnails already stored in the database (no video
+# file involved). A test that wants them asks for feature_api_with_miniatures.
+_IGNORED_IN_COPY = shutil.ignore_patterns("*.miniatures.json")
 
 
 @pytest.fixture
@@ -31,10 +43,19 @@ def feature_api():
 
 @pytest.fixture
 def feature_api_with_db(feature_api, tmp_path):
-    """Create FeatureAPI with an opened test database."""
-    # Copy test database to temp directory
+    """Create FeatureAPI with an opened test database.
+
+    Unlike the database-layer fixtures (tests/utils.py), which hand out
+    in-memory copies, this one needs a real writable home on disk: Application
+    mkdir's its app/databases folders and scans them for names, and the
+    database it opens is the production one, which writes on open. Pointing
+    every xdist worker at the shared tests/home_dir_test would make those
+    writes race on the committed fixture.
+
+    The copy deliberately leaves the miniatures out -- see _IGNORED_IN_COPY.
+    """
     temp_home = tmp_path / "home_dir_test"
-    shutil.copytree(TEST_HOME_DIR, temp_home)
+    shutil.copytree(TEST_HOME_DIR, temp_home, ignore=_IGNORED_IN_COPY)
 
     # Open database using Application directly
     # (FeatureAPI doesn't have open_database, it's in GuiAPI)
@@ -48,6 +69,42 @@ def feature_api_with_db(feature_api, tmp_path):
     # Cleanup
     if feature_api.database:
         feature_api.database.__close__()
+
+
+def _parallelize_in_process(function, tasks, **_kwargs):
+    """Serial stand-in for parallelize: same results, no process spawned.
+
+    Mirrors the one calling convention miniatures use -- a function of several
+    parameters fed with tuples to expand. Progress notifications are dropped;
+    a fixture has no progress to report.
+    """
+    nb_params = len(inspect.signature(function).parameters)
+    for task in tasks:
+        yield function(*task) if nb_params > 1 else function(task)
+
+
+@pytest.fixture
+def feature_api_with_miniatures(feature_api_with_db, monkeypatch):
+    """Same, plus the miniatures the copy leaves out.
+
+    Generation is forced in-process. Miniatures.get_miniatures goes through
+    parallelize(), which opens a multiprocessing Pool -- and inside a
+    pytest-xdist worker that nests a second process fan-out within the first
+    (N workers x M children), children that outlive the run whenever it is
+    interrupted. Even cpu_count=1 would still spawn one. A fixture has no
+    business spawning processes at all, so parallelize is replaced here, for
+    miniature generation only.
+
+    The pool buys little anyway: 10 000 miniatures take ~4.5s serially against
+    ~2.5s parallel, the work being dominated by pool setup and by shipping the
+    thumbnail bytes to the children.
+
+    Still writes a 40 MB JSON into the test's own tmp_path, so only ask for
+    this when the miniatures are the thing under test.
+    """
+    monkeypatch.setattr(miniatures_module, "parallelize", _parallelize_in_process)
+    DatabaseAlgorithms(feature_api_with_db.database).ensure_miniatures()
+    return feature_api_with_db
 
 
 class TestFeatureAPIConstants:
@@ -749,3 +806,28 @@ class TestFeatureAPIFeatureList:
         api_str = str(feature_api)
         assert "FeatureAPI" in api_str
         assert len(api_str) > 0
+
+
+class TestMiniaturesAreOptional:
+    """The copied home leaves the miniatures out; asking for them rebuilds them.
+
+    Without this, feature_api_with_miniatures would be a fixture nobody
+    exercises, and nothing would catch it rotting.
+    """
+
+    def test_absent_by_default(self, feature_api_with_db):
+        """Not copied, and nothing minds: an absent file reads as no miniature."""
+        db = feature_api_with_db.database
+        assert not db.get_miniatures_path().exists()
+        assert Miniatures.read_miniatures_file(db.get_miniatures_path()) == {}
+
+    def test_rebuilt_on_demand(self, feature_api_with_miniatures):
+        """Rebuilt from the thumbnails in the database, no video file needed."""
+        db = feature_api_with_miniatures.database
+        assert db.get_miniatures_path().exists()
+        nb_thumbnails = db.db.query_all("SELECT COUNT(*) AS nb FROM video_thumbnail")[
+            0
+        ]["nb"]
+        assert len(Miniatures.read_miniatures_file(db.get_miniatures_path())) == (
+            nb_thumbnails
+        )

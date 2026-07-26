@@ -81,6 +81,11 @@ exclude_also = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# tmp_path defaults to keeping the last 3 runs, passing tests included. The
+# feature_api fixture copies a 93 MB home directory per test, so a green run
+# leaves ~3.7 GB behind and three of them fill a disk. Keep only what is
+# actually useful to inspect: the directories of tests that failed.
+tmp_path_retention_policy = "failed"
 
 [tool.poe.tasks]
 format = "ruff format"

@@ -9,13 +9,14 @@ NonSubmittingLineEdit.
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QCheckBox, QComboBox, QLineEdit, QSpinBox
+from PySide6.QtWidgets import QComboBox, QLineEdit, QSpinBox
 
 from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
     BatchEditDialog,
     MultipleValuesWidget,
     NonSubmittingLineEdit,
 )
+from pysaurus.interface.kyuti.widgets.bool_value_widget import BoolValueWidget
 from pysaurus.properties.properties import PropType
 
 # -- Fixtures --
@@ -343,12 +344,15 @@ class TestBatchEditDialogCreation:
 
 
 class TestBatchEditDialogPropertyGroups:
-    def test_bool_property_creates_checkbox(self, qtbot, bool_prop, mock_context):
+    def test_bool_property_creates_radio_buttons(self, qtbot, bool_prop, mock_context):
         dialog = BatchEditDialog([1], [bool_prop], mock_context)
         qtbot.addWidget(dialog)
 
         _, widget = dialog._property_widgets["watched"]
-        assert isinstance(widget, QCheckBox)
+        assert isinstance(widget, BoolValueWidget)
+        # No "not set" here: the arming checkbox already says whether the
+        # property is touched at all.
+        assert widget.value() is False
 
     def test_int_property_creates_spinbox(self, qtbot, int_prop, mock_context):
         dialog = BatchEditDialog([1], [int_prop], mock_context)
@@ -477,7 +481,7 @@ class TestBatchEditDialogAccept:
 
         checkbox, widget = dialog._property_widgets["watched"]
         checkbox.setChecked(True)
-        widget.setChecked(True)
+        widget.set_value(True)
 
         calls = []
         mock_context.set_video_properties = lambda vid, props: calls.append(

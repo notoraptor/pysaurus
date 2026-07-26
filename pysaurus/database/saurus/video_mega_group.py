@@ -141,9 +141,10 @@ def _build_view_where(
         selected_group = output_groups[group]
         if grouping.is_property:
             assert prop_meta is not None
+            assert prop_value_converter is not None
             (field_value,) = selected_group.value
             where_group_query, where_group_params = _filter_by_selected_property_group(
-                grouping, classifier, field_value, prop_meta
+                grouping, classifier, field_value, prop_meta, prop_value_converter
             )
         else:
             where_group_query, where_group_params = _filter_by_selected_field_group(
@@ -579,6 +580,7 @@ def _filter_by_selected_property_group(
     classifier: Sequence[str],
     field_value,
     prop_meta: tuple[int, bool, str | None],
+    value_converter: Callable,
 ) -> tuple[str, list]:
     prop_id, is_multiple, default_value = prop_meta
 
@@ -604,7 +606,16 @@ def _filter_by_selected_property_group(
         )
         """
         params = [prop_id]
-    elif not is_multiple and field_value == default_value:
+    elif (
+        not is_multiple
+        and default_value is not None
+        # default_value is the raw enum text (see _get_property_metadata: the
+        # group-counting COALESCE needs it that way), while field_value has
+        # been through the group converter (e.g. bool False, int 5). Compare
+        # in the converted world, or this branch is unreachable for every
+        # non-str property and the default group lists only explicit rows.
+        and field_value == value_converter(default_value)
+    ):
         query = """
         SELECT video_id FROM video_property_value
         WHERE property_id = ? AND property_value = ?

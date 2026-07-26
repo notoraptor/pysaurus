@@ -12,10 +12,18 @@ All_d86fc8186b52d80e
 	Tout
 DismissLabel_feb8fdf19ce9542f
 	Rejeter {label}
+EnumValuesOnePerLine_cd2fc280ad9290a4
+	Valeurs de l'énumération (une par ligne) :
 GeneralizeFileTitleIntoProperty_def889ce48f622aa
 	Généraliser le titre du fichier dans une propriété...
 GeneralizeMetaTitleIntoProperty_ee5bf0fa2be16a15
 	Généraliser le méta-titre dans une propriété...
+IfEnabledOnlyPredefinedValuesCanBeUsedEnterValuesBelowOnePerLine_972634b4a32302bf
+	Si activé, seules des valeurs prédéfinies peuvent être utilisées.
+	Saisissez les valeurs ci-dessous, une par ligne.
+IfEnabledVideosCanHaveMultipleValuesForThisPropertyOnlyAvailableForStringType_44b5ff96cb20791c
+	Si activé, les vidéos peuvent avoir plusieurs valeurs pour cette propriété.
+	Disponible uniquement pour le type chaîne.
 LanguageChangedSomeElementsWillFullyUpdateAfterRestartingPysaurus_aebc685db3ccbc0a
 	Langue modifiée. Certains éléments ne seront pleinement mis à jour qu'après le redémarrage de Pysaurus.
 Language_b52cf743a80759db
