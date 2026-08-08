@@ -1,10 +1,21 @@
 """
-Collect non-video file statistics for database folders.
+Threaded file scan shared by the "db file stats" page and the database update.
 
-Scans every file (video and non-video) inside the database's source folders,
-classified by extension. Feeds the "db file stats" page: bulk cleanup of
-orphan/junk files (thumbnails, .nfo, .torrent, .part, etc.) accumulating in
-the folders managed by Pysaurus.
+Scans every file inside the database's source folders, classified by
+extension. Two consumers:
+
+- the "files" page: every file (video and non-video), for bulk cleanup of
+  orphan/junk files (thumbnails, .nfo, .torrent, .part, etc.) accumulating
+  in the folders managed by Pysaurus;
+- the database update (``Videos.get_runtime_info_from_paths``): video files
+  only (``extensions`` filter), with size/mtime read for free from scandir
+  entries and the mount point recorded as ``driver_id``.
+
+A source may also be a plain file path (the database accepts file sources):
+it is then collected directly instead of being walked. ``follow_links``
+controls whether directory links (symlinks/junctions) are walked into: the
+files page keeps them out, the update follows them (legacy behavior, so
+videos behind junctions stay indexed).
 
 Parallelization: one worker thread per mount point (the scan is I/O-bound,
 so threads win over processes — no pickling, shared counters are simple).
@@ -39,6 +50,8 @@ class FileInfo:
     path: AbsolutePath
     extension: str
     size: int
+    mtime: float = 0.0
+    driver_id: str | None = None
 
 
 @dataclass(slots=True)
@@ -65,9 +78,14 @@ class FolderScanProgress(Notification):
 
 
 class FolderScanner:
-    """Walk a set of folders, one worker thread per mount point."""
+    """Walk a set of folders, one worker thread per mount point.
 
-    __slots__ = ("folders", "indexed", "notifier")
+    ``extensions`` restricts collection to the given (lowercase, dot-free)
+    file extensions; ``None`` collects every file. ``follow_links`` makes the
+    walk enter directory links (symlinks/junctions) and stat link targets.
+    """
+
+    __slots__ = ("folders", "indexed", "extensions", "follow_links", "notifier")
     PROGRESS_INTERVAL_S = 0.2
     COUNTER_BATCH = 50
 
@@ -76,11 +94,17 @@ class FolderScanner:
         folders: Iterable[AbsolutePath],
         indexed: Iterable[AbsolutePath] = (),
         notifier=DEFAULT_NOTIFIER,
+        extensions: Iterable[str] | None = None,
+        follow_links: bool = False,
     ):
         self.folders: list[AbsolutePath] = [AbsolutePath.ensure(f) for f in folders]
         self.indexed: frozenset[AbsolutePath] = frozenset(
             AbsolutePath.ensure(p) for p in indexed
         )
+        self.extensions: frozenset[str] | None = (
+            None if extensions is None else frozenset(extensions)
+        )
+        self.follow_links = follow_links
         self.notifier = notifier
 
     def scan(self) -> FolderScanResult:
@@ -100,8 +124,8 @@ class FolderScanner:
             per_mount: list[dict[str, list[FileInfo]]] = []
             with ThreadPoolExecutor(max_workers=len(groups)) as executor:
                 futures = [
-                    executor.submit(self._scan_mount, seeds, counters)
-                    for seeds in groups.values()
+                    executor.submit(self._scan_mount, mount, seeds, counters)
+                    for mount, seeds in groups.items()
                 ]
                 for fut in futures:
                     per_mount.append(fut.result())
@@ -124,9 +148,10 @@ class FolderScanner:
         return groups
 
     def _scan_mount(
-        self, seed_folders: list[AbsolutePath], counters: "_ScanCounters"
+        self, mount: str, seed_folders: list[AbsolutePath], counters: "_ScanCounters"
     ) -> dict[str, list[FileInfo]]:
         by_ext: dict[str, list[FileInfo]] = {}
+        follow = self.follow_links
         stack: list[AbsolutePath] = list(seed_folders)
         local_done = local_discovered = local_files = 0
         while stack:
@@ -140,19 +165,35 @@ class FolderScanner:
                     for entry in iterator:
                         had_entry = True
                         try:
-                            if entry.is_dir(follow_symlinks=False):
+                            if entry.is_dir(follow_symlinks=follow):
                                 stack.append(AbsolutePath(entry.path))
                                 local_discovered += 1
-                            elif entry.is_file(follow_symlinks=False):
-                                size = entry.stat(follow_symlinks=False).st_size
+                            elif entry.is_file(follow_symlinks=follow):
                                 path = AbsolutePath(entry.path)
                                 ext = path.extension
+                                if (
+                                    self.extensions is not None
+                                    and ext not in self.extensions
+                                ):
+                                    continue
+                                stat = entry.stat(follow_symlinks=follow)
                                 by_ext.setdefault(ext, []).append(
-                                    FileInfo(path, ext, size)
+                                    FileInfo(
+                                        path, ext, stat.st_size, stat.st_mtime, mount
+                                    )
                                 )
                                 local_files += 1
                         except OSError as exc:
                             logger.debug("Skipping entry %s: %s", entry.path, exc)
+            except NotADirectoryError:
+                # A database source may be a plain file path: collect it
+                # directly. Only seeds can be files (the walk itself only
+                # stacks directories). Never reported as an empty folder.
+                access_ok = False
+                info = self._collect_file(current, mount)
+                if info is not None:
+                    by_ext.setdefault(info.extension, []).append(info)
+                    local_files += 1
             except OSError as exc:
                 logger.debug("Skipping folder %s: %s", current, exc)
                 access_ok = False
@@ -161,7 +202,7 @@ class FolderScanner:
             # empty folder is a typical leftover after files were removed.
             if access_ok and not had_entry:
                 by_ext.setdefault(EMPTY_FOLDER_EXT, []).append(
-                    FileInfo(current, EMPTY_FOLDER_EXT, 0)
+                    FileInfo(current, EMPTY_FOLDER_EXT, 0, 0.0, mount)
                 )
             if local_done + local_discovered + local_files >= self.COUNTER_BATCH:
                 counters.update(
@@ -170,6 +211,18 @@ class FolderScanner:
                 local_done = local_discovered = local_files = 0
         counters.update(done=local_done, discovered=local_discovered, files=local_files)
         return by_ext
+
+    def _collect_file(self, path: AbsolutePath, mount: str) -> FileInfo | None:
+        """Collect a source that is a plain file, honoring the extension filter."""
+        ext = path.extension
+        if self.extensions is not None and ext not in self.extensions:
+            return None
+        try:
+            stat = os.stat(path.path)
+        except OSError as exc:
+            logger.debug("Skipping file %s: %s", path, exc)
+            return None
+        return FileInfo(path, ext, stat.st_size, stat.st_mtime, mount)
 
     def _emit_progress_loop(
         self, counters: "_ScanCounters", stop: threading.Event

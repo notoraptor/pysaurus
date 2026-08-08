@@ -5,9 +5,6 @@ from typing import Any, Callable
 import filedial
 import pyperclip
 
-from pysaurus.database.database_algorithms import DatabaseAlgorithms
-from pysaurus.database.database_operations import DatabaseOperations
-
 
 class ProxyFeature:
     __slots__ = ("proxy",)
@@ -78,9 +75,7 @@ class FromOps(ProxyFeature):
 
     def __init__(self, api, method, returns=False):
         super().__init__(
-            getter=lambda: DatabaseOperations(api.database),
-            method=method,
-            returns=returns,
+            getter=lambda: api.database.ops, method=method, returns=returns
         )
 
 
@@ -88,8 +83,8 @@ class FromAlgo(ProxyFeature):
     __slots__ = ()
 
     def __init__(self, api, method, returns=False):
+        # Go through the property so a backend that overrides `algos` with an
+        # optimized subclass (e.g. SaurusDatabaseAlgorithms) is not bypassed.
         super().__init__(
-            getter=lambda: DatabaseAlgorithms(api.database),
-            method=method,
-            returns=returns,
+            getter=lambda: api.database.algos, method=method, returns=returns
         )

@@ -1,5 +1,5 @@
 """
-Tests for FolderScanner (collect non-video file stats for DB folders).
+Tests for FolderScanner (shared scan engine: files page + database update).
 """
 
 import os
@@ -7,6 +7,7 @@ import os
 import pytest
 
 from pysaurus.application.application import Application
+from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.database.algorithms.folder_scan import (
@@ -15,6 +16,7 @@ from pysaurus.database.algorithms.folder_scan import (
     FolderScanProgress,
     FolderScanResult,
 )
+from pysaurus.database.algorithms.videos import Videos
 
 
 class CapturingNotifier(AbstractNotifier):
@@ -220,6 +222,107 @@ class TestGroupByMount:
     def test_single_mount(self, tmp_path):
         groups = FolderScanner._group_by_mount([AbsolutePath.ensure(str(tmp_path))])
         assert len(groups) == 1
+
+
+class TestExtensionsFilter:
+    def test_only_matching_extensions_collected(self, tree):
+        scanner = FolderScanner(
+            [AbsolutePath.ensure(str(tree))], extensions={"mp4", "avi"}
+        )
+        result = scanner.scan()
+        assert set(result.videos_unknown) == {"mp4", "avi"}
+        assert not result.videos_indexed
+        # mkv filtered out, junk files (jpg, nfo, part) filtered out.
+        assert not result.others
+
+    def test_progress_counts_only_collected_files(self, tree):
+        notifier = CapturingNotifier()
+        scanner = FolderScanner(
+            [AbsolutePath.ensure(str(tree))], notifier=notifier, extensions={"mp4"}
+        )
+        scanner.scan()
+        progress = [
+            n for n in notifier.notifications if isinstance(n, FolderScanProgress)
+        ]
+        assert progress[-1].files_found == 1
+
+
+class TestFileSources:
+    def test_video_file_source_is_collected(self, tree):
+        target = AbsolutePath.ensure(str(tree / "v1.mp4"))
+        scanner = FolderScanner([target])
+        result = scanner.scan()
+        (info,) = result.videos_unknown["mp4"]
+        assert info.path == target
+        assert info.size == 100
+        assert info.mtime == os.path.getmtime(str(tree / "v1.mp4"))
+        assert info.driver_id == target.get_mount_point()
+        # A file source is never reported as an empty folder.
+        assert EMPTY_FOLDER_EXT not in result.others
+
+    def test_file_source_respects_extensions_filter(self, tree):
+        target = AbsolutePath.ensure(str(tree / "thumb.jpg"))
+        scanner = FolderScanner([target], extensions={"mp4"})
+        assert scanner.scan() == FolderScanResult()
+
+
+class TestRuntimeMetadata:
+    def test_mtime_and_driver_id_recorded(self, tree):
+        scanner = FolderScanner([AbsolutePath.ensure(str(tree))])
+        result = scanner.scan()
+        (info,) = result.videos_unknown["mp4"]
+        assert info.mtime == os.path.getmtime(str(tree / "v1.mp4"))
+        assert info.driver_id == AbsolutePath.ensure(str(tree)).get_mount_point()
+
+
+class TestFollowLinks:
+    def test_follow_links_walks_into_directory_symlinks(self, tmp_path):
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        (outside / "reached.jpg").write_bytes(b"x")
+        scanned = tmp_path / "scanned"
+        scanned.mkdir()
+        try:
+            os.symlink(
+                str(outside), str(scanned / "link_to_outside"), target_is_directory=True
+            )
+        except (OSError, NotImplementedError):
+            pytest.skip("symlink creation not permitted here")
+        scanner = FolderScanner([AbsolutePath.ensure(str(scanned))], follow_links=True)
+        result = scanner.scan()
+        assert "jpg" in result.others
+        assert {f.path.title for f in result.others["jpg"]} == {"reached"}
+
+
+class TestGetRuntimeInfoFromPaths:
+    def test_collects_video_runtime_info(self, tree):
+        notifier = CapturingNotifier()
+        paths = Videos.get_runtime_info_from_paths(
+            [AbsolutePath.ensure(str(tree))], notifier=notifier
+        )
+        expected = {
+            AbsolutePath.ensure(str(tree / "v1.mp4")),
+            AbsolutePath.ensure(str(tree / "v2.mkv")),
+            AbsolutePath.ensure(str(tree / "sub" / "v3.avi")),
+        }
+        assert set(paths) == expected
+        info = paths[AbsolutePath.ensure(str(tree / "v1.mp4"))]
+        assert info.size == 100
+        assert info.is_file
+        assert info.driver_id == AbsolutePath.ensure(str(tree)).get_mount_point()
+        assert any(
+            isinstance(n, notifications.FinishedCollectingVideos)
+            for n in notifier.notifications
+        )
+
+    def test_video_file_as_source(self, tree):
+        """A source may be a direct video file path (legacy behavior)."""
+        target = AbsolutePath.ensure(str(tree / "v1.mp4"))
+        paths = Videos.get_runtime_info_from_paths(
+            [target], notifier=CapturingNotifier()
+        )
+        assert set(paths) == {target}
+        assert paths[target].size == 100
 
 
 class TestDatabaseAlgorithmsIntegration:
