@@ -7,33 +7,34 @@ from typing import Self
 
 from pysaurus.core import core_exceptions
 from pysaurus.core.datestring import Date
+from pysaurus.core.fs_utils import (
+    WIN_PREFIX,
+    add_win_prefix,
+    normalize_mount_point,
+    strip_win_prefix,
+)
 from pysaurus.core.modules import System
 
 logger = logging.getLogger(__name__)
 
 
 class AbsolutePath(os.PathLike[str]):
-    WIN_PREFIX = "\\\\?\\"
-    LEN_WIN_PREFIX = len(WIN_PREFIX)
     __slots__ = ("__path",)
 
     def __init__(self, path: str):
         path = os.path.abspath(path)
-        if (
-            len(path) >= 260
-            and System.is_windows()
-            and not path.startswith(self.WIN_PREFIX)
-        ):
-            path = self.WIN_PREFIX + path
+        if System.is_windows():
+            if len(path) >= 260:
+                path = add_win_prefix(path)
+            path = normalize_mount_point(path)
         self.__path = path
 
     @property
     def standard_path(self) -> str:
-        return (
-            self.__path[self.LEN_WIN_PREFIX :]
-            if self.__path.startswith(self.WIN_PREFIX)
-            else self.__path
-        )
+        # Called on every comparison and every hash, so no lazy import here:
+        # these are pure string helpers, they live in fs_utils rather than in
+        # the ctypes-only core.windows precisely so they can be imported once.
+        return strip_win_prefix(self.__path) if System.is_windows() else self.__path
 
     @property
     def best_path(self) -> str | None:
@@ -198,7 +199,7 @@ class AbsolutePath(os.PathLike[str]):
         elif System.is_mac():
             subprocess.run(["open", self.__path])
         elif System.is_windows():
-            if self.__path.startswith(self.WIN_PREFIX):
+            if self.__path.startswith(WIN_PREFIX):
                 path = self.best_path
                 if path is None:
                     raise core_exceptions.NoShortPathError(self.__path)

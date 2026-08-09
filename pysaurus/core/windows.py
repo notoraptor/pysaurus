@@ -1,32 +1,13 @@
 import ctypes
 from ctypes import wintypes
 
-MAX_PATH = 260  # Win32 limit, terminal NUL included: usable length is 259.
+from pysaurus.core.fs_utils import add_win_prefix, strip_win_prefix
 
-_WIN_PREFIX = "\\\\?\\"
-_WIN_UNC_PREFIX = "\\\\?\\UNC\\"
+MAX_PATH = 260  # Win32 limit, terminal NUL included: usable length is 259.
 
 _GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
 _GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
 _GetShortPathNameW.restype = wintypes.DWORD
-
-
-def strip_win_prefix(path: str) -> str:
-    """Return path without the ``\\\\?\\`` long-path prefix, if any."""
-    if path.startswith(_WIN_UNC_PREFIX):
-        return "\\\\" + path[len(_WIN_UNC_PREFIX) :]
-    if path.startswith(_WIN_PREFIX):
-        return path[len(_WIN_PREFIX) :]
-    return path
-
-
-def add_win_prefix(path: str) -> str:
-    """Return path with the ``\\\\?\\`` long-path prefix."""
-    if path.startswith(_WIN_PREFIX):
-        return path
-    if path.startswith("\\\\"):
-        return _WIN_UNC_PREFIX + path[2:]
-    return _WIN_PREFIX + path
 
 
 def get_short_path_name(long_name: str) -> str | None:

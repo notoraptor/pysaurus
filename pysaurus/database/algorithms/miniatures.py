@@ -13,19 +13,46 @@ from pysaurus.core.parallelization import parallelize
 class Miniatures:
     @classmethod
     def read_miniatures_file(
-        cls, miniatures_path: AbsolutePath
+        cls, miniatures_path: AbsolutePath, version: int
     ) -> dict[AbsolutePath, Miniature]:
-        miniatures = {}
-        if miniatures_path.exists():
+        """Load the miniatures written for this database version.
+
+        A file stamped with another version is dropped rather than read: it
+        holds paths spelled the way that version stored them (migration m0006
+        rewrites mount points), and a stale spelling is indistinguishable from
+        a valid one. It is only a cache, so ensure_miniatures regenerates what
+        it needs on the next call.
+        """
+        if not miniatures_path.exists():
+            return {}
+        try:
             with open(miniatures_path.assert_file().path) as miniatures_file:
-                json_array = json.load(miniatures_file)
-            if not isinstance(json_array, list):
-                raise exceptions.InvalidMiniaturesJSON(miniatures_path)
-            for dct in json_array:
-                m = Miniature.from_dict(dct)
-                assert m.identifier is not None
-                miniatures[AbsolutePath(m.identifier)] = m
+                content = json.load(miniatures_file)
+        except ValueError:
+            content = None
+        if not isinstance(content, dict) or content.get("version") != version:
+            # Another version, or the pre-versioning format (a bare array).
+            miniatures_path.delete()
+            return {}
+        entries = content.get("miniatures")
+        if not isinstance(entries, list):
+            raise exceptions.InvalidMiniaturesJSON(miniatures_path)
+        miniatures = {}
+        for dct in entries:
+            m = Miniature.from_dict(dct)
+            assert m.identifier is not None
+            miniatures[AbsolutePath(m.identifier)] = m
         return miniatures
+
+    @classmethod
+    def write_miniatures_file(
+        cls, miniatures_path: AbsolutePath, version: int, miniatures
+    ) -> None:
+        with open(miniatures_path.path, "w") as output_file:
+            json.dump(
+                {"version": version, "miniatures": [m.to_dict() for m in miniatures]},
+                output_file,
+            )
 
     @classmethod
     def get_miniatures(

@@ -9,6 +9,7 @@ import pytest
 from pysaurus.application.application import Application
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.fs_utils import normalize_mount_point
 from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.database.algorithms.folder_scan import (
     EMPTY_FOLDER_EXT,
@@ -223,6 +224,72 @@ class TestGroupByMount:
         groups = FolderScanner._group_by_mount([AbsolutePath.ensure(str(tmp_path))])
         assert len(groups) == 1
 
+    @pytest.mark.skipif(
+        os.name != "nt", reason="a POSIX mount point has no trailing separator"
+    )
+    def test_mount_point_ends_with_separator(self, tmp_path):
+        (key,) = FolderScanner._group_by_mount([AbsolutePath.ensure(str(tmp_path))])
+        assert key.endswith(os.sep)
+
+    @pytest.mark.skipif(os.name != "nt", reason="Windows-only drive spelling")
+    def test_drive_spelling_does_not_split_a_mount(self, tmp_path):
+        """Two spellings of one drive must not become two threads / two disks.
+
+        Handled by normalizing the seeds, so _group_by_mount itself never has
+        to know about case.
+        """
+        a, b = tmp_path / "a", tmp_path / "b"
+        a.mkdir()
+        b.mkdir()
+        swapped = str(a)[0].swapcase() + str(a)[1:]
+        scanner = FolderScanner([swapped, str(b)])
+        assert len(FolderScanner._group_by_mount(scanner.folders)) == 1
+
+    @pytest.mark.skipif(os.name != "nt", reason="splitdrive finds no drive on POSIX")
+    def test_fallback_key_keeps_the_mount_point_format(self, tmp_path, monkeypatch):
+        """An unavailable volume must not yield a driver_id of another shape."""
+        monkeypatch.setattr(
+            AbsolutePath,
+            "get_mount_point",
+            lambda self: (_ for _ in ()).throw(OSError("volume unavailable")),
+        )
+        folder = AbsolutePath.ensure(str(tmp_path))
+        (key,) = FolderScanner._group_by_mount([folder])
+        assert key == os.path.splitdrive(folder.standard_path)[0] + os.sep
+        assert key.endswith(os.sep)
+
+
+class TestSeedNormalization:
+    @pytest.mark.skipif(os.name != "nt", reason="Windows-only drive spelling")
+    def test_scanned_paths_carry_a_normalized_mount_point(self, tree):
+        """However the source is spelled, the walk yields comparable paths.
+
+        This is what lets the database (migration m0006) and the scan meet
+        without either side folding case at comparison time.
+        """
+        swapped = str(tree)[0].swapcase() + str(tree)[1:]
+        result = FolderScanner([swapped]).scan()
+        (info,) = result.videos_unknown["mp4"]
+        assert info.path == AbsolutePath.ensure(str(tree / "v1.mp4"))
+        assert info.driver_id == normalize_mount_point(info.driver_id)
+
+    @pytest.mark.skipif(os.name != "nt", reason="Windows-only drive spelling")
+    def test_indexed_matches_a_normalized_database(self, tree):
+        db_paths = [AbsolutePath.ensure(str(tree / "v1.mp4"))]
+        swapped = str(tree)[0].swapcase() + str(tree)[1:]
+        result = FolderScanner([swapped], db_paths).scan()
+        assert [f.path.title for f in result.videos_indexed["mp4"]] == ["v1"]
+        assert "mp4" not in result.videos_unknown
+
+    def test_unrelated_file_stays_unknown(self, tree):
+        scanner = FolderScanner(
+            [AbsolutePath.ensure(str(tree))],
+            [AbsolutePath.ensure(str(tree / "zz.mp4"))],
+        )
+        result = scanner.scan()
+        assert not result.videos_indexed
+        assert [f.path.title for f in result.videos_unknown["mp4"]] == ["v1"]
+
 
 class TestExtensionsFilter:
     def test_only_matching_extensions_collected(self, tree):
@@ -245,6 +312,17 @@ class TestExtensionsFilter:
             n for n in notifier.notifications if isinstance(n, FolderScanProgress)
         ]
         assert progress[-1].files_found == 1
+
+    def test_empty_folders_are_not_reported_under_a_filter(self, tmp_path):
+        """A filter means "collect only these": empty folders are not one."""
+        root = tmp_path / "root"
+        (root / "empty").mkdir(parents=True)
+        (root / "v.mp4").write_bytes(b"x")
+        source = [AbsolutePath.ensure(str(root))]
+        assert EMPTY_FOLDER_EXT in FolderScanner(source).scan().others
+        filtered = FolderScanner(source, extensions={"mp4"}).scan()
+        assert not filtered.others
+        assert set(filtered.videos_unknown) == {"mp4"}
 
 
 class TestFileSources:
@@ -292,6 +370,79 @@ class TestFollowLinks:
         result = scanner.scan()
         assert "jpg" in result.others
         assert {f.path.title for f in result.others["jpg"]} == {"reached"}
+
+    def test_symlink_cycle_terminates(self, tmp_path):
+        """A link pointing back at an ancestor must not loop forever."""
+        root = tmp_path / "root"
+        deep = root / "deep"
+        deep.mkdir(parents=True)
+        (deep / "inside.jpg").write_bytes(b"x")
+        try:
+            os.symlink(str(root), str(deep / "loop"), target_is_directory=True)
+        except (OSError, NotImplementedError):
+            pytest.skip("symlink creation not permitted here")
+        scanner = FolderScanner([AbsolutePath.ensure(str(root))], follow_links=True)
+        result = scanner.scan()
+        # The cycle is cut, and the file behind it is still collected once.
+        assert [f.path.title for f in result.others["jpg"]] == ["inside"]
+
+    def test_two_paths_to_one_folder_are_both_collected(self, tmp_path):
+        """A link to a sibling is not a cycle: both spellings must survive.
+
+        Deduplicating on "have I seen this folder anywhere" drops one of them,
+        and the update then flags every video indexed under the dropped
+        spelling as not found.
+        """
+        root = tmp_path / "root"
+        real = root / "real"
+        real.mkdir(parents=True)
+        (real / "movie.jpg").write_bytes(b"x")
+        try:
+            os.symlink(str(real), str(root / "link"), target_is_directory=True)
+        except (OSError, NotImplementedError):
+            pytest.skip("symlink creation not permitted here")
+        result = FolderScanner(
+            [AbsolutePath.ensure(str(root))], follow_links=True
+        ).scan()
+        assert sorted(f.path.standard_path for f in result.others["jpg"]) == sorted(
+            [
+                AbsolutePath.ensure(str(root / "link" / "movie.jpg")).standard_path,
+                AbsolutePath.ensure(str(real / "movie.jpg")).standard_path,
+            ]
+        )
+
+    def test_mutual_links_terminate(self, tmp_path):
+        """Two folders pointing at each other loop without an ancestor link."""
+        x, y = tmp_path / "x", tmp_path / "y"
+        x.mkdir()
+        y.mkdir()
+        (x / "one.jpg").write_bytes(b"x")
+        (y / "two.jpg").write_bytes(b"x")
+        try:
+            os.symlink(str(y), str(x / "to_y"), target_is_directory=True)
+            os.symlink(str(x), str(y / "to_x"), target_is_directory=True)
+        except (OSError, NotImplementedError):
+            pytest.skip("symlink creation not permitted here")
+        result = FolderScanner([AbsolutePath.ensure(str(x))], follow_links=True).scan()
+        # Terminates. x/to_y reaches two.jpg; x/to_y/to_x is x again, so it is
+        # cut and one.jpg is not collected a second time under that spelling.
+        assert sorted(f.path.standard_path for f in result.others["jpg"]) == sorted(
+            [
+                AbsolutePath.ensure(str(x / "one.jpg")).standard_path,
+                AbsolutePath.ensure(str(x / "to_y" / "two.jpg")).standard_path,
+            ]
+        )
+
+    def test_no_cycle_check_without_follow_links(self, tmp_path, monkeypatch):
+        """The files page must not pay a stat() per directory."""
+        root = tmp_path / "root"
+        (root / "sub").mkdir(parents=True)
+
+        def fail(*args, **kwargs):
+            raise AssertionError("_identity must not run without follow_links")
+
+        monkeypatch.setattr(FolderScanner, "_identity", staticmethod(fail))
+        FolderScanner([AbsolutePath.ensure(str(root))]).scan()
 
 
 class TestGetRuntimeInfoFromPaths:

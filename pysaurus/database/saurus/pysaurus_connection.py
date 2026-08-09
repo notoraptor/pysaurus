@@ -53,7 +53,13 @@ class PysaurusConnection(Skullite):
         """Apply versioned migrations to bring the database up to date.
 
         Reads the current version from the ``collection`` table, applies
-        each migration in order, and updates the stored version.
+        each migration in order, and records each one as it succeeds.
+
+        Recorded one by one, not once at the end: a migration commits as it
+        goes (skullite commits per statement), so a failure halfway through a
+        chain would otherwise leave the stored version behind the schema
+        actually applied, and the next run would replay migrations that had
+        already gone through.
 
         A pre-versioning database (video table exists but no collection
         row) is bootstrapped to version 1 and receives every migration
@@ -70,7 +76,13 @@ class PysaurusConnection(Skullite):
             return
         for target in range(version + 1, LATEST_VERSION + 1):
             MIGRATIONS[target](self)
-        self._set_version(LATEST_VERSION)
+            self._set_version(target)
+
+    def get_version(self) -> int:
+        """Schema version of this database, always set once it is open."""
+        version = self._get_version()
+        assert version is not None
+        return version
 
     def _get_version(self) -> int | None:
         """Read the schema version from the collection table.

@@ -2,14 +2,16 @@ import os
 import sys
 
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.fs_utils import normalize_mount_point
 
 
 def test_absolute_path():
-    wd = os.path.abspath("..")
+    """AbsolutePath is abspath, plus mount-point normalization."""
+    wd = normalize_mount_point(os.path.abspath(".."))
     ap = AbsolutePath("..")
     assert wd == ap.standard_path
 
-    sd = os.path.abspath(__file__)
+    sd = normalize_mount_point(os.path.abspath(__file__))
     sp = AbsolutePath(__file__)
     assert sd == sp.standard_path
 
@@ -81,7 +83,8 @@ class TestGetMountPoint:
         ap = AbsolutePath("C:\\Users\\someone\\file.txt")
         result = ap.get_mount_point()
         assert os.path.ismount(result)
-        # On a standard Windows install, C:\ is a mount point
+        # On a standard Windows install, C:\ is a mount point -- with an
+        # uppercase drive, since AbsolutePath folds it at construction.
         assert result == "C:\\"
 
     def test_different_paths_same_disk_same_mount(self):

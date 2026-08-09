@@ -81,8 +81,8 @@ class FolderScanner:
     """Walk a set of folders, one worker thread per mount point.
 
     ``extensions`` restricts collection to the given (lowercase, dot-free)
-    file extensions; ``None`` collects every file. ``follow_links`` makes the
-    walk enter directory links (symlinks/junctions) and stat link targets.
+    file extensions; ``None`` collects every file and empty folders.
+    ``follow_links`` walks into directory links, with a cycle check.
     """
 
     __slots__ = ("folders", "indexed", "extensions", "follow_links", "notifier")
@@ -141,10 +141,12 @@ class FolderScanner:
         groups: dict[str, list[AbsolutePath]] = {}
         for folder in folders:
             try:
-                key = folder.get_mount_point()
+                mount = folder.get_mount_point()
             except OSError:
-                key = os.path.splitdrive(folder.standard_path)[0]
-            groups.setdefault(key, []).append(folder)
+                # Unavailable volume: fall back on the drive or UNC root.
+                root = os.path.splitdrive(folder.standard_path)[0]
+                mount = root + os.sep if root else folder.standard_path
+            groups.setdefault(mount, []).append(folder)
         return groups
 
     def _scan_mount(
@@ -152,11 +154,21 @@ class FolderScanner:
     ) -> dict[str, list[FileInfo]]:
         by_ext: dict[str, list[FileInfo]] = {}
         follow = self.follow_links
-        stack: list[AbsolutePath] = list(seed_folders)
+        # Each entry carries the identities of the folders walked to reach it.
+        # Cycle guard, useless (and unpaid for) unless links are followed.
+        stack: list[tuple[AbsolutePath, tuple]] = [(f, ()) for f in seed_folders]
         local_done = local_discovered = local_files = 0
         while stack:
-            current = stack.pop()
+            current, ancestors = stack.pop()
             local_done += 1
+            if follow:
+                identity = self._identity(current)
+                if identity is not None:
+                    if identity in ancestors:
+                        # Already inside this folder: a link points back up.
+                        logger.debug("Cycle cut at %s", current)
+                        continue
+                    ancestors = ancestors + (identity,)
             had_entry = False
             access_ok = True
             try:
@@ -166,7 +178,7 @@ class FolderScanner:
                         had_entry = True
                         try:
                             if entry.is_dir(follow_symlinks=follow):
-                                stack.append(AbsolutePath(entry.path))
+                                stack.append((AbsolutePath(entry.path), ancestors))
                                 local_discovered += 1
                             elif entry.is_file(follow_symlinks=follow):
                                 path = AbsolutePath(entry.path)
@@ -200,7 +212,7 @@ class FolderScanner:
             # Report an accessible directory with no entry (neither files nor
             # subdirs) as an empty folder. Useful for bulk cleanup: a physically
             # empty folder is a typical leftover after files were removed.
-            if access_ok and not had_entry:
+            if access_ok and not had_entry and self.extensions is None:
                 by_ext.setdefault(EMPTY_FOLDER_EXT, []).append(
                     FileInfo(current, EMPTY_FOLDER_EXT, 0, 0.0, mount)
                 )
@@ -211,6 +223,25 @@ class FolderScanner:
                 local_done = local_discovered = local_files = 0
         counters.update(done=local_done, discovered=local_discovered, files=local_files)
         return by_ext
+
+    @staticmethod
+    def _identity(path: AbsolutePath) -> tuple[int, int] | None:
+        """Identify a folder, or None when it cannot be identified.
+
+        Compared against the folders walked to reach this one, never against
+        everything seen so far: a junction and its target are the same folder,
+        but reaching a file through both is two legitimate paths, and the
+        database indexes paths. Only re-entering a folder one is already inside
+        is a cycle.
+
+        Needs a real stat(): DirEntry.stat() gives no st_dev/st_ino on Windows.
+        Filesystems reporting no inode (some network shares) opt out.
+        """
+        try:
+            stat = os.stat(path.path)
+        except OSError:
+            return None  # let the walk fail and log where it normally does
+        return (stat.st_dev, stat.st_ino) if stat.st_ino else None
 
     def _collect_file(self, path: AbsolutePath, mount: str) -> FileInfo | None:
         """Collect a source that is a plain file, honoring the extension filter."""

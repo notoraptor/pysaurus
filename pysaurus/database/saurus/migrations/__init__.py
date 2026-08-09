@@ -19,6 +19,7 @@ from pysaurus.database.saurus.migrations import (
     m0003_stored_filename_columns,
     m0004_generalize_leading_dots,
     m0005_bool_properties_are_unique,
+    m0006_normalize_mount_points,
 )
 
 # Registry: target_version -> migrate(db) function.
@@ -28,6 +29,7 @@ MIGRATIONS: dict[int, Callable[[Skullite], None]] = {
     3: m0003_stored_filename_columns.migrate,
     4: m0004_generalize_leading_dots.migrate,
     5: m0005_bool_properties_are_unique.migrate,
+    6: m0006_normalize_mount_points.migrate,
 }
 
 LATEST_VERSION: int = max(MIGRATIONS)

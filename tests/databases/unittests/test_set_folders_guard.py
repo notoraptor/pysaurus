@@ -6,6 +6,8 @@ folder located inside (or equal to) that directory, to avoid indexing
 Pysaurus internal files as video sources.
 """
 
+import os
+
 import pytest
 
 from pysaurus.application.application import Application
@@ -67,6 +69,19 @@ class TestSetFoldersGuard:
         similar.mkdir()
         db.ops.set_folders([similar])
         assert set(db.get_folders()) == {similar}
+
+    @pytest.mark.skipif(os.name != "nt", reason="Windows-only drive spelling")
+    def test_guard_survives_mount_point_normalization(self, app, db):
+        """set_folders normalizes; the guard must normalize app_dir as well.
+
+        Comparing a normalized folder against a raw app_dir makes PathTree miss
+        every time, and the whole guard silently passes.
+        """
+        sneaky = app.app_dir / "sneaky"
+        sneaky.mkdir()
+        swapped = str(sneaky)[0].swapcase() + str(sneaky)[1:]
+        with pytest.raises(ForbiddenSourceFolder):
+            db.ops.set_folders([swapped])
 
     def test_parent_of_app_dir_is_accepted(self, app, db):
         # home_dir contains app_dir but is not itself under app_dir.

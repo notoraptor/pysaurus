@@ -43,6 +43,9 @@ class PysaurusCollection(AbstractDatabase):
     def algos(self) -> SaurusDatabaseAlgorithms:
         return SaurusDatabaseAlgorithms(self)
 
+    def get_version(self) -> int:
+        return self.db.get_version()
+
     def __init__(
         self,
         path,
@@ -125,8 +128,8 @@ class PysaurusCollection(AbstractDatabase):
                 for row in self.db.query("SELECT source FROM collection_source")
             ]
 
-    def _set_folders(self, folders: list[AbsolutePath]) -> None:
-        folders_tree = PathTree(folders)
+    def refresh_discarded(self, folders: list[AbsolutePath] | None = None) -> None:
+        folders_tree = PathTree(self.get_folders() if folders is None else folders)
         videos = self.db.query_all("SELECT video_id, filename FROM video")
         self.db.modify_many(
             "UPDATE video SET discarded = ? WHERE video_id = ?",
@@ -138,6 +141,9 @@ class PysaurusCollection(AbstractDatabase):
                 for video in videos
             ],
         )
+
+    def _set_folders(self, folders: list[AbsolutePath]) -> None:
+        self.refresh_discarded(folders)
         self.db.modify_many(
             "INSERT OR IGNORE INTO collection_source (source) VALUES (?)",
             [(path.path,) for path in folders],

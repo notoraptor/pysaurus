@@ -82,6 +82,11 @@ class AbstractDatabase(ABC):
         return self.ways.get_path(DB_MINIATURES_PATH)
 
     @abstractmethod
+    def get_version(self) -> int:
+        """Schema version, stamped on the caches derived from this database."""
+        raise NotImplementedError()
+
+    @abstractmethod
     def _set_date(self, date: Date):
         raise NotImplementedError()
 
@@ -91,6 +96,17 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def _set_folders(self, folders: list[AbsolutePath]) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def refresh_discarded(self, folders: list[AbsolutePath] | None = None) -> None:
+        """Recompute which videos fall outside the source folders.
+
+        `discarded` is derived from the source folders, not stored by the user,
+        so it can drift whenever either side changes -- and until this was
+        called from update(), changing the folder list was the only thing that
+        recomputed it, which is neither discoverable nor always possible.
+        """
         raise NotImplementedError()
 
     @abstractmethod

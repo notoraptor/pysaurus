@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from pysaurus.database.saurus.migrations import LATEST_VERSION
 from pysaurus.database.saurus.prop_type_search import prop_type_search
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 
@@ -218,7 +219,8 @@ def test_migration_restores_the_dropped_view(legacy_db_path):
 def test_migration_is_idempotent(legacy_db_path):
     PysaurusConnection(str(legacy_db_path))
     db = PysaurusConnection(str(legacy_db_path))  # second open: nothing left to do
-    assert dict(db.query_all("SELECT version FROM collection")[0])["version"] == 5
+    version = dict(db.query_all("SELECT version FROM collection")[0])["version"]
+    assert version == LATEST_VERSION
     assert _property(db)["multiple"] == 0
 
 

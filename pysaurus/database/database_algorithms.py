@@ -11,8 +11,6 @@ import logging
 import tempfile
 from typing import TYPE_CHECKING, Collection, Sequence
 
-import ujson as json
-
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
@@ -120,6 +118,10 @@ class DatabaseAlgorithms:
                 if expected_thumbs:
                     with Profiler(say("save thumbnails to db"), self.db.notifier):
                         self.db._thumbnails_add(expected_thumbs)
+                # After the adds, so new rows are classified too. Cheap next to
+                # the disk scan, and it repairs a flag that has drifted for any
+                # reason instead of waiting for the folder list to change.
+                self.db.refresh_discarded()
 
                 logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
                 # Delete thumbnail files (done at context exit)
@@ -170,7 +172,9 @@ class DatabaseAlgorithms:
     def ensure_miniatures(self) -> list[Miniature]:
         """Generate miniatures for videos with thumbnails."""
         miniatures_path = self.db.get_miniatures_path()
-        prev_miniatures = Miniatures.read_miniatures_file(miniatures_path)
+        prev_miniatures = Miniatures.read_miniatures_file(
+            miniatures_path, self.db.get_version()
+        )
 
         filename_to_video_id: dict[AbsolutePath, int] = {
             row.filename: row.video_id
@@ -212,8 +216,9 @@ class DatabaseAlgorithms:
         }
 
         if len(valid_miniatures) != len(prev_miniatures) or len(added_miniatures):
-            with open(miniatures_path.path, "w") as output_file:
-                json.dump([m.to_dict() for m in m_dict.values()], output_file)
+            Miniatures.write_miniatures_file(
+                miniatures_path, self.db.get_version(), m_dict.values()
+            )
 
         self.db.notifier.notify(notifications.NbMiniatures(len(m_dict)))
 

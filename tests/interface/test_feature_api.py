@@ -819,7 +819,10 @@ class TestMiniaturesAreOptional:
         """Not copied, and nothing minds: an absent file reads as no miniature."""
         db = feature_api_with_db.database
         assert not db.get_miniatures_path().exists()
-        assert Miniatures.read_miniatures_file(db.get_miniatures_path()) == {}
+        stored = Miniatures.read_miniatures_file(
+            db.get_miniatures_path(), db.get_version()
+        )
+        assert stored == {}
 
     def test_rebuilt_on_demand(self, feature_api_with_miniatures):
         """Rebuilt from the thumbnails in the database, no video file needed."""
@@ -828,6 +831,7 @@ class TestMiniaturesAreOptional:
         nb_thumbnails = db.db.query_all("SELECT COUNT(*) AS nb FROM video_thumbnail")[
             0
         ]["nb"]
-        assert len(Miniatures.read_miniatures_file(db.get_miniatures_path())) == (
-            nb_thumbnails
+        stored = Miniatures.read_miniatures_file(
+            db.get_miniatures_path(), db.get_version()
         )
+        assert len(stored) == nb_thumbnails
