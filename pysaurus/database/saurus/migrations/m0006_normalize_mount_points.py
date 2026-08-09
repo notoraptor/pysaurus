@@ -13,57 +13,48 @@ are unaffected. No-op on POSIX, where there is no prefix to normalize -- and on
 a Windows database already spelled the conventional way, since a drive folds to
 uppercase.
 
-Conflicting rows (two spellings of one file, which the very bug being fixed
-used to create) are reported and left alone rather than merged or refused:
-merging picks a winner the user never chose, and refusing would make the
-database unopenable for good, since the only way to merge them is from inside
-the application. They stay exactly as they are today.
+Two spellings of one file would collide on UNIQUE(filename), and merging them
+needs the application, so the migration refuses to run rather than pick a
+winner. This never reaches a new user: a fresh database is created directly at
+LATEST_VERSION, so m0006 only ever runs on databases predating the rule -- ours,
+which `pysaurus.scripts.migrate_databases` reports to be free of conflicts.
 
 Data-only: no schema change, hence no table rebuild.
 """
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
+from pysaurus.application.exceptions import MountPointCaseConflict
 from pysaurus.core.fs_utils import normalize_mount_point
 
 if TYPE_CHECKING:
     from skullite import Skullite
 
-logger = logging.getLogger(__name__)
 
+def _check_no_conflict(connection) -> None:
+    """Refuse the migration if two filenames differ only by their mount point.
 
-def find_filename_conflicts(connection) -> list[list[str]]:
-    """Groups of stored filenames that differ only by their mount point."""
-    grouped: dict[str, list[str]] = {}
+    Runs before any write, so a refusal leaves the database exactly as it was.
+    `pysaurus.scripts.migrate_databases` lists every conflict at once.
+    """
+    seen: dict[str, str] = {}
     for row in connection.query_all("SELECT filename FROM video"):
-        grouped.setdefault(normalize_mount_point(row["filename"]), []).append(
-            row["filename"]
-        )
-    return [sorted(names) for names in grouped.values() if len(names) > 1]
+        filename = row["filename"]
+        normalized = normalize_mount_point(filename)
+        if normalized in seen:
+            raise MountPointCaseConflict(seen[normalized], filename)
+        seen[normalized] = filename
 
 
-def _report_conflicts(conflicts: list[list[str]]) -> None:
-    logger.warning(
-        "%d file(s) are stored under several spellings of their mount point. "
-        "Those rows are left untouched, so the database still opens and behaves "
-        "as before, but they keep the duplicate entries you may already see. "
-        "This migration runs once and will not revisit them:\n%s",
-        len(conflicts),
-        "\n".join("  " + " <-> ".join(names) for names in conflicts),
-    )
-
-
-def _normalize_column(connection, table: str, column: str, skip=()) -> None:
+def _normalize_column(connection, table: str, column: str) -> None:
     """Rewrite every value of `column` whose mount point is not normalized."""
-    skip = frozenset(skip)
     rows = connection.query_all(f"SELECT DISTINCT {column} FROM {table}")
     changes = [
         (new, old)
         for old in (row[column] for row in rows)
-        if old and old not in skip and (new := normalize_mount_point(old)) != old
+        if old and (new := normalize_mount_point(old)) != old
     ]
     if changes:
         connection.modify(
@@ -87,13 +78,8 @@ def _deduplicate_sources(connection) -> None:
 
 def migrate(db: Skullite) -> None:
     with db.connect() as connection:
-        conflicts = find_filename_conflicts(connection)
-        if conflicts:
-            _report_conflicts(conflicts)
-        # Every spelling of a conflict is skipped, not just the losers: folding
-        # any of them would collide with the others on UNIQUE(filename).
-        conflicting = {name for names in conflicts for name in names}
-        _normalize_column(connection, "video", "filename", skip=conflicting)
+        _check_no_conflict(connection)
+        _normalize_column(connection, "video", "filename")
         _normalize_column(connection, "video", "driver_id")
         _deduplicate_sources(connection)
         _normalize_column(connection, "collection_source", "source")

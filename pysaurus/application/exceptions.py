@@ -124,3 +124,11 @@ class ForbiddenVideoFolder(PysaurusError):
 
 class ForbiddenSourceFolder(PysaurusError):
     pass
+
+
+class MountPointCaseConflict(PysaurusError):
+    """Two stored filenames differ only by the case of their mount point.
+
+    Normalizing either would collide with the other on UNIQUE(filename), and
+    only the application can merge them. Args: the two filenames.
+    """
