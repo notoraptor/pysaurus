@@ -9,7 +9,7 @@ This class contains algorithms that:
 
 import logging
 import tempfile
-from typing import TYPE_CHECKING, Collection, Sequence
+from typing import TYPE_CHECKING, Collection, Container, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -188,23 +188,10 @@ class DatabaseAlgorithms:
             and ImageUtils.THUMBNAIL_SIZE == (miniature.width, miniature.height)
         }
 
-        missing_filenames = [
-            video.filename
-            for video in self.db.get_videos(
-                include=["filename"], where={"readable": True, "with_thumbnails": True}
-            )
-            if video.filename not in valid_miniatures
-        ]
+        tasks = self._thumbnails_to_convert(valid_miniatures)
 
         added_miniatures = []
-        if missing_filenames:
-            tasks = [
-                (video.filename, video.thumbnail)
-                for video in self.db.get_videos(
-                    include=("filename", "thumbnail"),
-                    where={"filename": missing_filenames},
-                )
-            ]
+        if tasks:
             with Profiler(say("Generating miniatures."), self.db.notifier):
                 added_miniatures = Miniatures.get_miniatures(tasks)
 
@@ -226,6 +213,19 @@ class DatabaseAlgorithms:
             assert m.identifier is not None
             m.video_id = filename_to_video_id[AbsolutePath.ensure(m.identifier)]
         return list(m_dict.values())
+
+    def _thumbnails_to_convert(
+        self, done: Container[AbsolutePath]
+    ) -> list[tuple[AbsolutePath, bytes]]:
+        """(filename, thumbnail) of readable videos whose miniature is missing."""
+        return [
+            (video.filename, video.thumbnail)
+            for video in self.db.get_videos(
+                include=("filename", "thumbnail"),
+                where={"readable": True, "with_thumbnails": True},
+            )
+            if video.filename not in done
+        ]
 
     def confirm_unique_moves(self) -> int:
         """Confirm all unique video moves."""
