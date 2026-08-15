@@ -76,5 +76,5 @@ def test_a_retry_resumes_where_it_stopped(old_db_path, monkeypatch):
             lambda db, t=target, f=function: (applied.append(t), f(db))[1],
         )
     PysaurusConnection(str(old_db_path))
-    assert applied == [5, 6]
+    assert applied == list(range(5, LATEST_VERSION + 1))
     assert _version(old_db_path) == LATEST_VERSION

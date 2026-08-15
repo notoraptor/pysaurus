@@ -32,6 +32,11 @@ CREATE TABLE IF NOT EXISTS video (
 	frame_rate_num INTEGER NOT NULL DEFAULT 0,
 	height INTEGER NOT NULL DEFAULT 0,
 	meta_title TEXT NOT NULL DEFAULT "",
+	-- Clockwise degrees to apply for display, in [0, 360): from the display matrix.
+	rotation INTEGER NOT NULL DEFAULT 0,
+	-- Pixel aspect ratio. Anything but 1/1 means width is not the displayed width.
+	sample_aspect_ratio_den INTEGER NOT NULL DEFAULT 1,
+	sample_aspect_ratio_num INTEGER NOT NULL DEFAULT 1,
 	sample_rate INTEGER NOT NULL DEFAULT 0,
 	video_codec TEXT NOT NULL DEFAULT "",
 	video_codec_description TEXT NOT NULL DEFAULT "",
@@ -61,6 +66,18 @@ CREATE TABLE IF NOT EXISTS video (
 	day TEXT GENERATED ALWAYS AS (strftime('%Y-%m-%d', datetime(mtime, 'unixepoch'))) VIRTUAL,
 	year TEXT GENERATED ALWAYS AS (strftime('%Y', datetime(mtime, 'unixepoch'))) VIRTUAL,
 	frame_rate DOUBLE GENERATED ALWAYS AS (frame_rate_num * 1.0 / COALESCE(NULLIF(frame_rate_den, 0), 1)) VIRTUAL,
+	-- What a player puts on screen: width unsquished by the sample aspect ratio,
+	-- then swapped with height when the display matrix turns the picture on its
+	-- side. A degenerate ratio falls back to the storage width.
+	_unsquished_width INTEGER GENERATED ALWAYS AS (
+		IIF(
+			sample_aspect_ratio_num > 0 AND sample_aspect_ratio_den > 0,
+			(width * sample_aspect_ratio_num + sample_aspect_ratio_den / 2) / sample_aspect_ratio_den,
+			width
+		)
+	) VIRTUAL,
+	display_width INTEGER GENERATED ALWAYS AS (IIF(rotation % 180 = 0, _unsquished_width, height)) VIRTUAL,
+	display_height INTEGER GENERATED ALWAYS AS (IIF(rotation % 180 = 0, height, _unsquished_width)) VIRTUAL,
 	-- filename-derived stored columns (_basename is a helper for extension/file_title)
 	_basename TEXT GENERATED ALWAYS AS (
 		IIF(

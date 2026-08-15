@@ -296,6 +296,10 @@ DismissSimilarity_f2dff3dde1309538
 	Rejeter la similarité
 Dismiss_9e02757b7d1bb2af
 	Rejeter
+DisplayWidthXHeightRotation_f5375b69711a24b7
+	affichage : {width} x {height} ↻ {rotation}°
+DisplayWidthXHeight_f0d5e9d7147a9ae
+	affichage : {width} x {height}
 DragItIntoAnotherProgram_caae55327446a985
 	Glissez-la vers un autre programme
 Duration_7110eeef2b779601

@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from pysaurus.application.exceptions import MountPointCaseConflict
+from pysaurus.database.saurus.migrations import LATEST_VERSION
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 
 windows_only = pytest.mark.skipif(
@@ -155,10 +156,14 @@ def test_a_refusal_repeats_on_every_open(conflict_db_path):
 def test_migration_is_idempotent(legacy_db_path):
     PysaurusConnection(str(legacy_db_path))
     db = PysaurusConnection(str(legacy_db_path))  # second open: nothing left to do
-    assert db.query_all("SELECT version FROM collection")[0]["version"] == 6
+    assert (
+        db.query_all("SELECT version FROM collection")[0]["version"] == LATEST_VERSION
+    )
     assert len(_filenames(db)) == 3
 
 
 def test_fresh_database_is_at_the_latest_version(tmp_path):
     db = PysaurusConnection(str(tmp_path / "fresh.db"))
-    assert db.query_all("SELECT version FROM collection")[0]["version"] == 6
+    assert (
+        db.query_all("SELECT version FROM collection")[0]["version"] == LATEST_VERSION
+    )

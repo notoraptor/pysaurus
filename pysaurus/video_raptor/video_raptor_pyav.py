@@ -55,6 +55,17 @@ class VideoTaskResult:
         )
 
 
+def _display_rotation(frame) -> int:
+    """Clockwise degrees to apply to a decoded frame for display, in [0, 360).
+
+    The display matrix rides on the frame, not on the stream: PyAV exposes it
+    only as `VideoFrame.rotation`, counter-clockwise in ]-180, 180]. Pysaurus
+    stores and reasons in clockwise degrees, so a portrait phone video reads
+    as 90 -- the same way HandBrake and MediaInfo report it.
+    """
+    return -frame.rotation % 360
+
+
 def open_video(filename: str):
     try:
         return av.open(filename)
@@ -107,10 +118,16 @@ class PythonVideoRaptor:
         video_stream.codec_context.skip_frame = "NONKEY"
 
         end_reachable = False
+        rotation = 0  # stays 0 when the end seek yields no frame to read it from
         container.seek(offset=container.duration - 1)
-        for _ in container.decode(video_stream):
+        for frame in container.decode(video_stream):
             end_reachable = True
+            rotation = _display_rotation(frame)
             break
+
+        # An undefined SAR reads back as None; it means square pixels.
+        sar = video_stream.sample_aspect_ratio
+        sar_num, sar_den = (sar.numerator, sar.denominator) if sar else (1, 1)
 
         average_rate = (
             video_stream.average_rate
@@ -126,6 +143,9 @@ class PythonVideoRaptor:
             file_size=container.size,
             width=video_stream.codec_context.width,
             height=video_stream.codec_context.height,
+            rotation=rotation,
+            sample_aspect_ratio_num=sar_num,
+            sample_aspect_ratio_den=sar_den,
             frame_rate_num=average_rate.numerator,
             frame_rate_den=average_rate.denominator,
             bit_depth=max(
@@ -197,9 +217,30 @@ class PythonVideoRaptor:
         if chosen is None:
             raise NoFrameFoundInMiddleOfVideo()
         image: Image.Image = chosen.to_image()
+        image = cls._to_display_geometry(
+            image, video_stream.sample_aspect_ratio, _display_rotation(chosen)
+        )
         image.thumbnail((thumb_size, thumb_size))
         image.save(thumb_path, format="JPEG")
         return thumb_path
+
+    @classmethod
+    def _to_display_geometry(cls, image: Image.Image, sar, rotation: int):
+        """Turn a decoded frame into what a player would put on screen.
+
+        `to_image()` gives the stored pixels: neither the sample aspect ratio
+        nor the display matrix is applied. A no-op for square pixels with no
+        rotation, which is the common case.
+        """
+        if sar and sar.numerator != sar.denominator:
+            width, height = image.size
+            display_width = max(1, round(width * sar.numerator / sar.denominator))
+            image = image.resize((display_width, height), Image.Resampling.LANCZOS)
+        if rotation:
+            # PIL rotates counter-clockwise, and takes an exact transpose path
+            # for the multiples of 90 a display matrix uses.
+            image = image.rotate(-rotation, expand=True)
+        return image
 
     @classmethod
     def _exc_to_err(cls, exc: Exception, *extra_errors) -> list[str]:

@@ -165,6 +165,22 @@ class VideoPattern(ABC):
 
     @property
     @abstractmethod
+    def rotation(self) -> int:
+        """Clockwise degrees to apply for display, in [0, 360)."""
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def sample_aspect_ratio_num(self) -> int:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def sample_aspect_ratio_den(self) -> int:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
     def discarded(self) -> bool:
         raise NotImplementedError()
 
@@ -273,6 +289,38 @@ class VideoPattern(ABC):
     @property
     def frame_rate(self) -> float:
         return self.frame_rate_num / (self.frame_rate_den or 1)
+
+    @property
+    def _unsquished_width(self) -> int:
+        """Storage width corrected for non-square pixels, rotation aside.
+
+        Mirrors the SQL generated column of the same name, integer arithmetic
+        included, so both round a half-pixel the same way.
+        """
+        num, den = self.sample_aspect_ratio_num, self.sample_aspect_ratio_den
+        if num > 0 and den > 0:
+            return (self.width * num + den // 2) // den
+        return self.width
+
+    @property
+    def display_width(self) -> int:
+        return self.height if self.rotation % 180 else self._unsquished_width
+
+    @property
+    def display_height(self) -> int:
+        return self._unsquished_width if self.rotation % 180 else self.height
+
+    @property
+    def has_display_geometry(self) -> bool:
+        """True when a player shows something else than the stored picture.
+
+        A half-turn keeps the dimensions but still turns the picture over, so
+        it counts too.
+        """
+        return bool(self.rotation) or (self.display_width, self.display_height) != (
+            self.width,
+            self.height,
+        )
 
     @property
     def extension(self) -> str:

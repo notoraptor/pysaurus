@@ -40,9 +40,12 @@ class F:
     video_id = 28
     width = 29
     watched = 30
+    rotation = 31
+    sample_aspect_ratio_den = 32
+    sample_aspect_ratio_num = 33
     # Special fields, not from "video" table
-    thumbnail = 31
-    with_thumbnails = 32
+    thumbnail = 34
+    with_thumbnails = 35
 
 
 def get_video_table_fields() -> Iterable[str]:
@@ -182,6 +185,18 @@ class SQLVideoWrapper(VideoPattern):
     @property
     def width(self):
         return self.data[F.width]
+
+    @property
+    def rotation(self):
+        return self.data[F.rotation]
+
+    @property
+    def sample_aspect_ratio_num(self):
+        return self.data[F.sample_aspect_ratio_num]
+
+    @property
+    def sample_aspect_ratio_den(self):
+        return self.data[F.sample_aspect_ratio_den] or 1
 
     @property
     def errors(self) -> list[str]:

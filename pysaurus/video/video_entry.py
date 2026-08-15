@@ -25,6 +25,9 @@ class VideoEntry:
     frame_rate_num: int = 0
     height: int = 0
     meta_title: str = ""
+    rotation: int = 0  # clockwise degrees to apply for display, in [0, 360)
+    sample_aspect_ratio_den: int = 1
+    sample_aspect_ratio_num: int = 1
     sample_rate: int = 0
     video_codec: str = ""
     video_codec_description: str = ""

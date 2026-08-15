@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.language import say
+from pysaurus.interface.common.common import display_geometry_text
 from pysaurus.interface.kyuti.widgets.bool_value_widget import BoolValueWidget
 from pysaurus.interface.kyuti.widgets.multiple_values_widget import MultipleValuesWidget
 from pysaurus.properties.properties import PropType
@@ -151,9 +152,11 @@ class VideoPropertiesDialog(QDialog):
 
         duration = Duration(int(self.video.duration * 1_000_000))
         video_layout.addRow(say("Duration:"), QLabel(str(duration)))
-        video_layout.addRow(
-            say("Resolution:"), QLabel(f"{self.video.width}x{self.video.height}")
-        )
+        resolution = f"{self.video.width}x{self.video.height}"
+        display_geometry = display_geometry_text(self.video)
+        if display_geometry:
+            resolution = f"{resolution} ({display_geometry})"
+        video_layout.addRow(say("Resolution:"), QLabel(resolution))
         video_layout.addRow(
             say("Codec:"),
             QLabel(

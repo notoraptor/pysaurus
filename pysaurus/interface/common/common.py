@@ -2,7 +2,32 @@ from enum import IntEnum
 from typing import Any
 
 from pysaurus.core.bit_size import BitSize
+from pysaurus.core.language import say
 from pysaurus.dbview.view_tools import GroupDef
+
+
+def display_geometry_text(video) -> str:
+    """On-screen size of a video, empty when it is just width x height.
+
+    Non-square pixels and a display matrix both make a player show something
+    else than the stored dimensions. Spaced around the `x`, like the video list
+    it mostly appears in.
+    """
+    if not video.has_display_geometry:
+        return ""
+    if video.rotation:
+        # U+21BB is absent from Segoe UI but Qt falls back to Segoe UI Symbol.
+        return say(
+            "display: {width} x {height} ↻ {rotation}°",
+            width=video.display_width,
+            height=video.display_height,
+            rotation=video.rotation,
+        )
+    return say(
+        "display: {width} x {height}",
+        width=video.display_width,
+        height=video.display_height,
+    )
 
 
 class GroupPerm(IntEnum):

@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.language import say
+from pysaurus.interface.common.common import display_geometry_text
 from pysaurus.interface.kyuti.widgets.flow_layout import FlowLayout
 from pysaurus.video.video_pattern import VideoPattern
 
@@ -279,6 +280,12 @@ class VideoListItem(QFrame):
         height_html = self._highlight_if_diff(
             "height", f'<b style="color: #006600;">{height}</b>'
         )
+        display_geometry = display_geometry_text(self.video)
+        display_html = (
+            f' <span style="color: #666;">({display_geometry})</span>'
+            if display_geometry
+            else ""
+        )
         frame_rate_html = self._highlight_if_diff(
             "frame_rate", say("{value} fps", value=frame_rate)
         )
@@ -298,7 +305,7 @@ class VideoListItem(QFrame):
 
         video_line = (
             f"{duration_html} | "
-            f"{width_html} x {height_html} "
+            f"{width_html} x {height_html}{display_html} "
             f'@ <span style="color: #666;">{frame_rate_html}, {bit_depth_html}</span> | '
             f'<span style="color: #666;">{sample_rate_html} x {audio_bits_html} '
             f"({channels_html}), {audio_bit_rate_html}</span>"
