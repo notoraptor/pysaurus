@@ -2083,9 +2083,16 @@ class VideosPage(QWidget):
         if not self.ctx.has_database():
             return
 
-        # Get database folders for initial directory
-        folders = self.ctx.get_database_folders()
-        initial_dir = folders[0] if folders else ""
+        video = self.ctx.get_video_by_id(video_id)
+        if not video:
+            return
+
+        # Start from the video own folder, fallback to a database folder
+        if video.filename:
+            initial_dir = str(video.filename.get_directory())
+        else:
+            folders = self.ctx.get_database_folders()
+            initial_dir = folders[0] if folders else ""
 
         # Show folder selection dialog
         directory = QFileDialog.getExistingDirectory(
@@ -2093,11 +2100,6 @@ class VideosPage(QWidget):
         )
 
         if not directory:
-            return
-
-        # Confirm the move
-        video = self.ctx.get_video_by_id(video_id)
-        if not video:
             return
 
         reply = QMessageBox.question(
