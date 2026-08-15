@@ -14,6 +14,7 @@ from pysaurus.core import language
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.language import say
+from pysaurus.core.notifications import End
 from pysaurus.interface.kyuti import main_window as mw_module
 from pysaurus.interface.kyuti.main_window import MainWindow, SessionLogDialog
 from pysaurus.video.video_search_context import VideoSearchContext
@@ -67,6 +68,7 @@ class QMockAppContext(QObject):
         self._database_folders: list[str] = []
         self._database_names = ["test_db", "other_db"]
         self._notification_handler = None
+        self.moved: list[tuple[int, str]] = []
 
     def has_database(self) -> bool:
         return self._has_database
@@ -144,6 +146,9 @@ class QMockAppContext(QObject):
 
     def find_similar_videos_reencoded(self) -> None:
         pass
+
+    def move_video_file(self, video_id: int, directory: str) -> None:
+        self.moved.append((video_id, directory))
 
     def playlist(self) -> str:
         return ""
@@ -395,6 +400,118 @@ class TestProcessPage:
         """Cleanup when no process page should not crash."""
         main_window._cleanup_process_page()
         assert main_window._process_page is None
+
+
+class TestProcessDialog:
+    """Tests for the modal process lifecycle (_run_process_modal)."""
+
+    def test_run_process_modal_creates_dialog_over_current_page(self, main_window):
+        main_window.ctx._simulate_open()
+        main_window.show_videos_page()
+
+        main_window._run_process_modal(
+            title="Moving Video", operation=lambda: None, on_end=lambda end: None
+        )
+
+        dialog = main_window._process_dialog
+        assert dialog is not None
+        assert dialog.isModal()
+        assert main_window._process_page is dialog.page
+        # The page below stays displayed, and the process page is not stacked
+        assert main_window.stack.currentIndex() == MainWindow.PAGE_VIDEOS
+        assert main_window.stack.indexOf(dialog.page) == -1
+
+    def test_run_process_modal_routes_notifications(self, main_window):
+        main_window._run_process_modal(
+            title="Moving Video", operation=lambda: None, on_end=lambda end: None
+        )
+        assert main_window.ctx._notification_handler is main_window._process_page
+
+    def test_run_process_modal_guard_prevents_concurrent(self, main_window):
+        main_window._run_process_modal(
+            title="First", operation=lambda: None, on_end=lambda end: None
+        )
+        first_dialog = main_window._process_dialog
+
+        main_window._run_process_modal(
+            title="Second", operation=lambda: None, on_end=lambda end: None
+        )
+        assert main_window._process_dialog is first_dialog
+
+    def test_continue_ends_process_and_refreshes_page(self, main_window):
+        main_window.ctx._simulate_open()
+        main_window.show_videos_page()
+        main_window._run_process_modal(
+            title="Moving Video",
+            operation=lambda: None,
+            on_end=main_window._on_videos_operation_end,
+        )
+        dialog = main_window._process_dialog
+
+        dialog.page.on_notification(End("Done"))
+        dialog.page.btn_continue.click()
+
+        assert main_window._process_dialog is None
+        assert main_window._process_page is None
+        assert main_window.ctx._notification_handler is None
+        assert not dialog.isVisible()
+        assert main_window.stack.currentIndex() == MainWindow.PAGE_VIDEOS
+
+    def test_close_ignored_while_running(self, main_window):
+        ended = []
+        main_window._run_process_modal(
+            title="Moving Video",
+            operation=lambda: None,
+            on_end=lambda end: ended.append(end),
+        )
+        dialog = main_window._process_dialog
+
+        dialog.close()
+        assert main_window._process_dialog is dialog
+        assert dialog.isVisible()
+
+        # Escape key must not close it either
+        dialog.reject()
+        assert main_window._process_dialog is dialog
+        assert ended == []
+
+    def test_failed_operation_start_closes_dialog(self, main_window):
+        def boom():
+            raise RuntimeError("cannot start")
+
+        with pytest.raises(RuntimeError):
+            main_window._run_process_modal(
+                title="Moving Video", operation=boom, on_end=lambda end: None
+            )
+
+        assert main_window._process_dialog is None
+        assert main_window._process_page is None
+        assert main_window.ctx._notification_handler is None
+
+    def test_close_after_end_acts_as_continue(self, main_window):
+        ended = []
+        main_window._run_process_modal(
+            title="Moving Video",
+            operation=lambda: None,
+            on_end=lambda end: ended.append(end),
+        )
+        dialog = main_window._process_dialog
+
+        dialog.page.on_notification(End("Done"))
+        dialog.close()
+
+        assert len(ended) == 1
+        main_window._cleanup_process_page()
+
+    def test_move_video_uses_modal_process(self, main_window):
+        main_window.ctx._simulate_open()
+        main_window.show_videos_page()
+
+        main_window._on_move_video(1, "/some/folder")
+
+        assert main_window._process_dialog is not None
+        assert main_window.ctx.moved == [(1, "/some/folder")]
+        assert main_window.stack.currentIndex() == MainWindow.PAGE_VIDEOS
 
 
 # =============================================================================

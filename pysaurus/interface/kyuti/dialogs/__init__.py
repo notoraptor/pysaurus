@@ -1,4 +1,8 @@
-"""Dialog components for PySide6 interface."""
+"""Dialog components for PySide6 interface.
+
+ProcessDialog is not re-exported here: it imports a page, and pages import
+this package (circular import).
+"""
 
 from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
 from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (

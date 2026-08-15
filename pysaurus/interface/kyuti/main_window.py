@@ -29,6 +29,7 @@ from pysaurus.core.language import say
 from pysaurus.core.notifications import End
 from pysaurus.interface.kyuti.app_context import AppContext
 from pysaurus.interface.kyuti.dialogs import EditFoldersDialog, RenameDialog
+from pysaurus.interface.kyuti.dialogs.process_dialog import ProcessDialog
 from pysaurus.interface.kyuti.pages import (
     DatabasesPage,
     FilesPage,
@@ -76,6 +77,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.ctx = AppContext()
         self._process_page: ProcessPage | None = None
+        self._process_dialog: ProcessDialog | None = None
         self._session_log: list[str] = []
         self._session_start = datetime.now()
         self._log_session_start()
@@ -390,7 +392,7 @@ class MainWindow(QMainWindow):
 
     def _on_move_video(self, video_id: int, directory: str):
         """Handle move video request."""
-        self._run_process(
+        self._run_process_modal(
             title=say("Moving Video"),
             operation=lambda: self.ctx.move_video_file(video_id, directory),
             on_end=self._on_videos_operation_end,
@@ -426,7 +428,7 @@ class MainWindow(QMainWindow):
     def _on_state_changed(self):
         """Refresh the active page when backend state changes."""
         if self._process_page is not None:
-            return  # a process page is showing; nothing under it to refresh
+            return  # a process is running; pages are refreshed when it ends
         current = self.stack.currentIndex()
         if current == self.PAGE_VIDEOS:
             self.videos_page.refresh()
@@ -545,13 +547,47 @@ class MainWindow(QMainWindow):
         # Start the operation
         operation()
 
+    def _run_process_modal(
+        self, title: str, operation: Callable[[], None], on_end: Callable[[End], None]
+    ):
+        """
+        Run an operation with a ProcessPage hosted in an application-modal dialog.
+
+        Same contract as _run_process(), except the current page stays visible
+        (but inert) below the dialog instead of being swapped out.
+        """
+        if self._process_page is not None:
+            return  # Already running a process
+
+        self._cleanup_process_page()
+
+        self._process_dialog = ProcessDialog(title, callback=on_end, parent=self)
+        self._process_page = self._process_dialog.page
+
+        # Modality already blocks the window below, so menus are left as-is.
+        self.ctx.set_notification_handler(self._process_page)
+        self._process_dialog.show()
+
+        try:
+            operation()
+        except Exception:
+            # No End notification will ever come: close the dialog, else the
+            # modality leaves the whole window stuck.
+            self._cleanup_process_page()
+            raise
+
     def _cleanup_process_page(self):
-        """Remove and clean up the current process page."""
+        """Remove and clean up the current process page (or its modal dialog)."""
         # Clear notification handler
         self.ctx.clear_notification_handler()
 
-        # Remove process page from stack
-        if self._process_page is not None:
+        if self._process_dialog is not None:
+            # hide(), not close(): closeEvent is routed back to Continue.
+            self._process_dialog.hide()
+            self._process_dialog.deleteLater()
+            self._process_dialog = None
+            self._process_page = None
+        elif self._process_page is not None:
             self.stack.removeWidget(self._process_page)
             self._process_page.deleteLater()
             self._process_page = None
