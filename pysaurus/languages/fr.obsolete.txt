@@ -30,5 +30,9 @@ Language_b52cf743a80759db
 	Langue
 Page_96e5bf7e14370d0c
 	Page
+RemoveSelectedValueS_5f87907368fa4759
+	Retirer les valeurs sélectionnées
+RemoveValue_98e8eea6c0a5a2ba
+	Retirer {value}
 ResetLabel_110c73e7b1e8a9b6
 	Réinitialiser {label}

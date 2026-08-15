@@ -2,8 +2,6 @@
 Dialog for batch editing properties of multiple videos.
 """
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -13,8 +11,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QListWidget,
-    QListWidgetItem,
     QPushButton,
     QScrollArea,
     QSpinBox,
@@ -24,174 +20,8 @@ from PySide6.QtWidgets import (
 
 from pysaurus.core.language import say
 from pysaurus.interface.kyuti.widgets.bool_value_widget import BoolValueWidget
+from pysaurus.interface.kyuti.widgets.multiple_values_widget import MultipleValuesWidget
 from pysaurus.properties.properties import PropType
-
-
-class NonSubmittingLineEdit(QLineEdit):
-    """QLineEdit that doesn't propagate Enter key to parent dialog."""
-
-    def keyPressEvent(self, event: QKeyEvent):
-        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            # Emit returnPressed but don't propagate to parent
-            self.returnPressed.emit()
-            event.accept()
-        else:
-            super().keyPressEvent(event)
-
-
-class MultipleValuesWidget(QWidget):
-    """Widget for editing multiple values of a property."""
-
-    def __init__(self, prop_type: PropType, parent=None):
-        super().__init__(parent)
-        self.prop_type = prop_type
-        self.ptype = prop_type.type
-        self.enumeration = prop_type.enumeration
-        self._buttons: list[QPushButton] = []  # Track buttons for enabling/disabling
-
-        self._setup_ui()
-
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
-
-        if self.enumeration:
-            # Enumeration: show checkboxes for each possible value
-            self.checkboxes: dict[str, QCheckBox] = {}
-            for value in self.enumeration:
-                cb = QCheckBox(str(value))
-                cb.setProperty("enum_value", value)
-                self.checkboxes[str(value)] = cb
-                layout.addWidget(cb)
-
-            # Buttons row for enumeration
-            btn_layout = QHBoxLayout()
-            btn_layout.setContentsMargins(0, 0, 0, 0)
-
-            btn_clear = QPushButton(say("Clear"))
-            btn_clear.setToolTip(say("Uncheck all values"))
-            btn_clear.clicked.connect(self._clear_values)
-            btn_layout.addWidget(btn_clear)
-            self._buttons.append(btn_clear)
-
-            btn_layout.addStretch()
-            layout.addLayout(btn_layout)
-        else:
-            # Free-form: show list with add/remove buttons
-            self.list_widget = QListWidget()
-            self.list_widget.setMaximumHeight(80)
-            self.list_widget.setSelectionMode(
-                QListWidget.SelectionMode.ExtendedSelection
-            )
-            layout.addWidget(self.list_widget)
-
-            # Input row
-            input_layout = QHBoxLayout()
-            input_layout.setContentsMargins(0, 0, 0, 0)
-
-            self.input_edit = NonSubmittingLineEdit()
-            self.input_edit.setPlaceholderText(say("Enter value..."))
-            self.input_edit.returnPressed.connect(self._add_value)
-            input_layout.addWidget(self.input_edit)
-
-            btn_add = QPushButton("+")
-            btn_add.setFixedWidth(30)
-            btn_add.setToolTip(say("Add value"))
-            btn_add.clicked.connect(self._add_value)
-            input_layout.addWidget(btn_add)
-            self._buttons.append(btn_add)
-
-            btn_remove = QPushButton("-")
-            btn_remove.setFixedWidth(30)
-            btn_remove.setToolTip(say("Remove selected value(s)"))
-            btn_remove.clicked.connect(self._remove_selected)
-            input_layout.addWidget(btn_remove)
-            self._buttons.append(btn_remove)
-
-            layout.addLayout(input_layout)
-
-            # Buttons row
-            btn_layout = QHBoxLayout()
-            btn_layout.setContentsMargins(0, 0, 0, 0)
-
-            btn_clear = QPushButton(say("Clear"))
-            btn_clear.setToolTip(say("Remove all values"))
-            btn_clear.clicked.connect(self._clear_values)
-            btn_layout.addWidget(btn_clear)
-            self._buttons.append(btn_clear)
-
-            btn_layout.addStretch()
-            layout.addLayout(btn_layout)
-
-    def _add_value(self):
-        """Add a value to the list."""
-        text = self.input_edit.text().strip()
-        if not text:
-            return
-
-        # Validate and convert type
-        try:
-            if self.ptype == "int":
-                value = int(text)
-            elif self.ptype == "float":
-                value = float(text)
-            else:
-                value = text
-
-            # Check for duplicates
-            for i in range(self.list_widget.count()):
-                if self.list_widget.item(i).data(Qt.ItemDataRole.UserRole) == value:
-                    return  # Already exists
-
-            item = QListWidgetItem(str(value))
-            item.setData(Qt.ItemDataRole.UserRole, value)
-            self.list_widget.addItem(item)
-            self.input_edit.clear()
-        except ValueError:
-            pass  # Invalid input
-
-    def _remove_selected(self):
-        """Remove the selected item(s)."""
-        selected = self.list_widget.selectedItems()
-        for item in selected:
-            row = self.list_widget.row(item)
-            self.list_widget.takeItem(row)
-
-    def _clear_values(self):
-        """Clear all values."""
-        if self.enumeration:
-            for cb in self.checkboxes.values():
-                cb.setChecked(False)
-        else:
-            self.list_widget.clear()
-
-    def get_values(self) -> list:
-        """Get the current values."""
-        if self.enumeration:
-            result = []
-            for cb in self.checkboxes.values():
-                if cb.isChecked():
-                    value = cb.property("enum_value")
-                    result.append(value)
-            return result
-        else:
-            result = []
-            for i in range(self.list_widget.count()):
-                result.append(self.list_widget.item(i).data(Qt.ItemDataRole.UserRole))
-            return result
-
-    def setEnabled(self, enabled: bool):
-        """Enable or disable the widget."""
-        super().setEnabled(enabled)
-        if self.enumeration:
-            for cb in self.checkboxes.values():
-                cb.setEnabled(enabled)
-        else:
-            self.list_widget.setEnabled(enabled)
-            self.input_edit.setEnabled(enabled)
-        for btn in self._buttons:
-            btn.setEnabled(enabled)
 
 
 class BatchEditDialog(QDialog):
@@ -295,7 +125,9 @@ class BatchEditDialog(QDialog):
 
         # Create the appropriate input widget based on type
         if is_multiple:
-            input_widget = MultipleValuesWidget(prop_type)
+            # No initial state to compare against here: the checkbox on the left
+            # says whether the property is touched at all.
+            input_widget = MultipleValuesWidget(prop_type, track_changes=False)
             input_widget.setEnabled(False)
         elif enumeration:
             input_widget = QComboBox()

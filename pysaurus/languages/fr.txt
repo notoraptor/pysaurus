@@ -785,8 +785,6 @@ RemoveGroupingCtrlShiftG_2fbf421e92589e09
 	Retirer le regroupement (Ctrl+Shift+G)
 RemoveNameValueFromThisVideo_6faeaf0a85b4387a
 	Retirer la valeur {name} de cette vidéo
-RemoveSelectedValueS_5f87907368fa4759
-	Retirer les valeurs sélectionnées
 RemoveSelectedValuesFromAllVideos_e6f80fd1433ad71d
 	Retirer les valeurs sélectionnées de toutes les vidéos
 RemoveSelected_3cb97df442381ae8

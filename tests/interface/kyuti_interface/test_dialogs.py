@@ -8,12 +8,16 @@ import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QPushButton, QTabWidget
 
+from pysaurus.core.language import say
 from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
     BatchEditPropertyDialog,
 )
 from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
-    MultipleValuesWidget,
     VideoPropertiesDialog,
+)
+from pysaurus.interface.kyuti.widgets.multiple_values_widget import (
+    MODIFIED_COLOR,
+    MultipleValuesWidget,
 )
 from pysaurus.properties.properties import PropType
 from tests.mocks.mock_database import MockVideoPattern
@@ -470,3 +474,70 @@ class TestMultipleValuesWidget:
         widget._reset_values()
 
         assert widget.list_widget.count() == 2
+
+    @staticmethod
+    def _rows(widget) -> list:
+        """The per-value row widgets, top to bottom."""
+        return [
+            widget.list_widget.itemWidget(widget.list_widget.item(i))
+            for i in range(widget.list_widget.count())
+        ]
+
+    def test_remove_value_from_its_own_row(self, qtbot, prop_type_multiple):
+        """A value is removed by the cross on its own row."""
+        widget = MultipleValuesWidget(prop_type_multiple)
+        qtbot.addWidget(widget)
+
+        widget.set_values(["tag1", "tag2", "tag3"])
+        self._rows(widget)[1].remove_button.click()
+
+        assert widget.get_values() == ["tag1", "tag3"]
+
+    def test_removed_value_comes_back_on_reset(self, qtbot, prop_type_multiple):
+        widget = MultipleValuesWidget(prop_type_multiple)
+        qtbot.addWidget(widget)
+
+        widget.set_values(["tag1", "tag2"])
+        self._rows(widget)[0].remove_button.click()
+        widget._reset_values()
+
+        assert widget.get_values() == ["tag1", "tag2"]
+
+    def test_added_value_is_marked_modified(self, qtbot, prop_type_multiple):
+        widget = MultipleValuesWidget(prop_type_multiple)
+        qtbot.addWidget(widget)
+
+        widget.set_values(["tag1"])
+        widget.input_edit.setText("tag2")
+        widget._add_value()
+
+        rows = self._rows(widget)
+        assert rows[0].label.styleSheet() == ""
+        assert MODIFIED_COLOR in rows[1].label.styleSheet()
+
+    def test_untracked_widget_marks_nothing(self, qtbot, prop_type_multiple):
+        """Batch editing has no initial state, hence no Reset and no coloring."""
+        widget = MultipleValuesWidget(prop_type_multiple, track_changes=False)
+        qtbot.addWidget(widget)
+
+        widget.input_edit.setText("tag1")
+        widget._add_value()
+
+        assert self._rows(widget)[0].label.styleSheet() == ""
+        assert not [
+            btn
+            for btn in widget.findChildren(QPushButton)
+            if btn.text() == say("Reset")
+        ]
+
+    def test_long_value_keeps_full_text_in_tooltip(self, qtbot, prop_type_multiple):
+        """The label elides, so the whole value must stay reachable."""
+        long_value = "a very long tag value " * 10
+        widget = MultipleValuesWidget(prop_type_multiple)
+        qtbot.addWidget(widget)
+
+        widget.set_values([long_value])
+
+        row = self._rows(widget)[0]
+        assert row.label.toolTip() == long_value
+        assert widget.get_values() == [long_value]

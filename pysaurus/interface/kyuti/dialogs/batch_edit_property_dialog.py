@@ -32,12 +32,8 @@ from PySide6.QtWidgets import (
 
 from pysaurus.core.language import say
 from pysaurus.interface.common.prop_format import format_prop_value
+from pysaurus.interface.kyuti.widgets.entry_row import make_row_button
 from pysaurus.properties.properties import PropType, PropUnitType
-
-_BTN_STYLE = (
-    "QPushButton { padding: 1px 5px; min-width: 20px; }"
-    "QPushButton:hover { background-color: #0078d4; color: white; }"
-)
 
 
 def _make_entry_widget(
@@ -56,13 +52,7 @@ def _make_entry_widget(
     layout.setContentsMargins(2, 1, 2, 1)
     layout.setSpacing(3)
     for text, tooltip, slot in buttons:
-        btn = QPushButton(text)
-        btn.setToolTip(tooltip)
-        btn.setStyleSheet(_BTN_STYLE)
-        btn.setFixedWidth(24)
-        btn.setProperty("value", value)
-        btn.clicked.connect(slot)
-        layout.addWidget(btn)
+        layout.addWidget(make_row_button(text, tooltip, value, slot))
     label = QLabel(label_text)
     label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
     layout.addWidget(label, 1)

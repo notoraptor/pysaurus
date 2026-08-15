@@ -9,14 +9,14 @@ NonSubmittingLineEdit.
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QComboBox, QLineEdit, QSpinBox
+from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QSpinBox
 
-from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import (
-    BatchEditDialog,
+from pysaurus.interface.kyuti.dialogs.batch_edit_dialog import BatchEditDialog
+from pysaurus.interface.kyuti.widgets.bool_value_widget import BoolValueWidget
+from pysaurus.interface.kyuti.widgets.multiple_values_widget import (
     MultipleValuesWidget,
     NonSubmittingLineEdit,
 )
-from pysaurus.interface.kyuti.widgets.bool_value_widget import BoolValueWidget
 from pysaurus.properties.properties import PropType
 
 # -- Fixtures --
@@ -201,7 +201,10 @@ class TestMultipleValuesWidgetFreeForm:
 
         assert w.get_values() == ["a", "b"]
 
-    def test_remove_selected(self, qtbot, str_multiple_prop):
+    def test_remove_via_row_button(self, qtbot, str_multiple_prop):
+        # Each row carries its own cross: no select-then-click round trip. The
+        # click also deletes the very button that emitted it, so this checks it
+        # does not crash either.
         w = MultipleValuesWidget(str_multiple_prop)
         qtbot.addWidget(w)
 
@@ -210,12 +213,20 @@ class TestMultipleValuesWidgetFreeForm:
         w.input_edit.setText("b")
         w._add_value()
 
-        # Select first item and remove
-        w.list_widget.setCurrentRow(0)
-        w._remove_selected()
+        w.list_widget.itemWidget(w.list_widget.item(0)).remove_button.click()
 
         assert w.list_widget.count() == 1
         assert w.get_values() == ["b"]
+
+    def test_remove_last_row(self, qtbot, str_multiple_prop):
+        w = MultipleValuesWidget(str_multiple_prop)
+        qtbot.addWidget(w)
+
+        w.input_edit.setText("a")
+        w._add_value()
+        w.list_widget.itemWidget(w.list_widget.item(0)).remove_button.click()
+
+        assert w.get_values() == []
 
     def test_clear_values(self, qtbot, str_multiple_prop):
         w = MultipleValuesWidget(str_multiple_prop)
@@ -237,7 +248,7 @@ class TestMultipleValuesWidgetFreeForm:
         w.setEnabled(False)
         assert not w.list_widget.isEnabled()
         assert not w.input_edit.isEnabled()
-        for btn in w._buttons:
+        for btn in w.findChildren(QPushButton):
             assert not btn.isEnabled()
 
         w.setEnabled(True)
