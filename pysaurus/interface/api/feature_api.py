@@ -156,6 +156,7 @@ class FeatureAPI:
             "count_property_values": ops.count_property_for_videos,
             "edit_property_for_videos": ops.update_property_for_videos,
             "generalize_properties_for_videos": ops.generalize_properties_for_videos,
+            "get_video_filenames": ops.get_video_filenames,
         }
         return callable_methods[db_fn_name](video_indices, *db_fn_args)
 

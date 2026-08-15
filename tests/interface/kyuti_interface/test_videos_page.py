@@ -4,8 +4,10 @@ Tests for PySide6 VideosPage.
 Tests the main video browsing page with mock database.
 """
 
-from PySide6.QtCore import QEvent, Qt
-from PySide6.QtGui import QFocusEvent
+from pathlib import Path
+
+from PySide6.QtCore import QEvent, QPointF, Qt
+from PySide6.QtGui import QFocusEvent, QMouseEvent
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from pysaurus.interface.kyuti.pages.videos_page import VideosPage
@@ -782,3 +784,147 @@ class TestVideosPageContextMenu:
         assert "Generalize title" in submenus
         assert "Generalize property" in submenus
         assert submenus["Generalize title"] == ["File title"]
+
+
+class TestVideosPageFileDrag:
+    """Dragging videos out of the list into an external program."""
+
+    def _page(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+        return page
+
+    def _dropped(self, mime_data):
+        return [Path(url.toLocalFile()) for url in mime_data.urls()]
+
+    def _mouse(self, event_type, pos, buttons):
+        return QMouseEvent(
+            event_type,
+            pos,
+            pos,
+            Qt.MouseButton.LeftButton,
+            buttons,
+            Qt.KeyboardModifier.NoModifier,
+        )
+
+    def test_unselected_video_drags_only_itself(self, qtbot, mock_context):
+        page = self._page(qtbot, mock_context)
+        video = page._videos[0]
+
+        mime_data = page._build_drag_mime_data(video.video_id)
+
+        assert self._dropped(mime_data) == [Path(video.filename.standard_path)]
+
+    def test_selected_video_drags_the_whole_selection(self, qtbot, mock_context):
+        page = self._page(qtbot, mock_context)
+        first, second = page._videos[0], page._videos[1]
+        page._selector.include(first.video_id)
+        page._selector.include(second.video_id)
+
+        mime_data = page._build_drag_mime_data(first.video_id)
+
+        assert sorted(self._dropped(mime_data)) == sorted(
+            [Path(first.filename.standard_path), Path(second.filename.standard_path)]
+        )
+
+    def test_unselected_video_ignores_the_selection(self, qtbot, mock_context):
+        """Dragging outside the selection must not carry it along, the way a
+        file manager drags only the item under the cursor."""
+        page = self._page(qtbot, mock_context)
+        first, second = page._videos[0], page._videos[1]
+        page._selector.include(second.video_id)
+
+        mime_data = page._build_drag_mime_data(first.video_id)
+
+        assert self._dropped(mime_data) == [Path(first.filename.standard_path)]
+
+    def test_select_all_drags_the_whole_view(self, qtbot, mock_context):
+        """ "Select all" is view-wide, not page-wide: the drag resolves it
+        backend-side instead of reading the current page."""
+        page = self._page(qtbot, mock_context)
+        page._select_all_in_view()
+
+        mime_data = page._build_drag_mime_data(page._videos[0].video_id)
+
+        dropped = self._dropped(mime_data)
+        assert len(dropped) >= len(page._videos)
+        for video in page._videos:
+            assert Path(video.filename.standard_path) in dropped
+
+    def test_no_database_drags_nothing(self, qtbot, mock_context):
+        page = self._page(qtbot, mock_context)
+        video_id = page._videos[0].video_id
+        mock_context._database = None
+
+        assert page._build_drag_mime_data(video_id) is None
+
+    def test_left_drag_on_the_list_starts_a_file_drag(self, qtbot, mock_context):
+        """VideoListItem ignores mouse presses, so they propagate to the
+        viewport: that is where the gesture must be picked up."""
+        page = self._page(qtbot, mock_context)
+        started = []
+        page._start_file_drag = started.append
+        viewport = page.list_widget.viewport()
+        origin = QPointF(30, 30)
+        far = QPointF(30 + QApplication.startDragDistance() + 10, 30)
+
+        QApplication.sendEvent(
+            viewport,
+            self._mouse(
+                QEvent.Type.MouseButtonPress, origin, Qt.MouseButton.LeftButton
+            ),
+        )
+        QApplication.sendEvent(
+            viewport, self._mouse(QEvent.Type.MouseMove, far, Qt.MouseButton.LeftButton)
+        )
+
+        assert started == [origin.toPoint()]
+
+    def test_small_move_starts_no_drag(self, qtbot, mock_context):
+        """Below the drag threshold the gesture is still a click, not a drag."""
+        page = self._page(qtbot, mock_context)
+        started = []
+        page._start_file_drag = started.append
+        viewport = page.list_widget.viewport()
+
+        QApplication.sendEvent(
+            viewport,
+            self._mouse(
+                QEvent.Type.MouseButtonPress, QPointF(30, 30), Qt.MouseButton.LeftButton
+            ),
+        )
+        QApplication.sendEvent(
+            viewport,
+            self._mouse(
+                QEvent.Type.MouseMove, QPointF(31, 31), Qt.MouseButton.LeftButton
+            ),
+        )
+
+        assert started == []
+
+    def test_move_after_release_starts_no_drag(self, qtbot, mock_context):
+        """Hovering the list with no button held must never start a drag."""
+        page = self._page(qtbot, mock_context)
+        started = []
+        page._start_file_drag = started.append
+        viewport = page.list_widget.viewport()
+        far = QPointF(30 + QApplication.startDragDistance() + 10, 30)
+
+        QApplication.sendEvent(
+            viewport,
+            self._mouse(
+                QEvent.Type.MouseButtonPress, QPointF(30, 30), Qt.MouseButton.LeftButton
+            ),
+        )
+        QApplication.sendEvent(
+            viewport,
+            self._mouse(
+                QEvent.Type.MouseButtonRelease, QPointF(30, 30), Qt.MouseButton.NoButton
+            ),
+        )
+        QApplication.sendEvent(
+            viewport, self._mouse(QEvent.Type.MouseMove, far, Qt.MouseButton.NoButton)
+        )
+
+        assert started == []

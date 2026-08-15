@@ -76,6 +76,20 @@ class DatabaseOperations:
         (row,) = self.db.get_videos(include=["filename"], where={"video_id": video_id})
         return row.filename
 
+    def get_video_filenames(self, video_indices: list[int]) -> list[AbsolutePath]:
+        """Get filenames for given videos, in the given order, in one query."""
+        if not video_indices:
+            return []
+        filenames = {
+            row.video_id: row.filename
+            for row in self.db.get_videos(
+                include=["video_id", "filename"], where={"video_id": video_indices}
+            )
+        }
+        return [
+            filenames[video_id] for video_id in video_indices if video_id in filenames
+        ]
+
     def open_video(self, video_id: int):
         """Open video file and mark as watched."""
         (video,) = self.db.get_videos(

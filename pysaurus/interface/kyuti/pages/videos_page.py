@@ -4,8 +4,8 @@ Videos page for browsing and managing videos.
 
 from html import escape
 
-from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtGui import QCursor, QKeySequence, QShortcut
+from PySide6.QtCore import QEvent, QMimeData, QSize, Qt, QUrl, Signal
+from PySide6.QtGui import QCursor, QDrag, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -101,6 +101,7 @@ class VideosPage(QWidget):
         self._view_count: int = 0  # Total videos in current view (for selector size)
         self._search_mode: str = "and"  # Current search mode
         self._active_search_text: str = ""  # Text of the currently active search
+        self._drag_origin = None  # Left-press position, until a drag starts
         self._setup_ui()
         self._setup_shortcuts()
 
@@ -847,6 +848,9 @@ class VideosPage(QWidget):
         # Without this, Qt sets singleStep based on item height, so the wheel
         # jumps a full item per notch (one viewport-worth for tall items).
         self.list_widget.verticalScrollBar().setSingleStep(20)
+        # VideoListItem widgets ignore mouse presses, so they reach the
+        # viewport: that is where the file drag is detected (see eventFilter).
+        self.list_widget.viewport().installEventFilter(self)
         layout.addWidget(self.list_widget)
 
         # Stats bar (at bottom)
@@ -1475,6 +1479,69 @@ class VideosPage(QWidget):
             widget = self.list_widget.itemWidget(list_item)
             if widget is not None:
                 self._set_size_hint(list_item, widget)
+
+    def eventFilter(self, obj, event):
+        """Turn a left-drag on the video list into a file drag.
+
+        Lets a selection be dropped straight into an external program
+        (HandBrake, VLC...) instead of being opened one file at a time.
+        """
+        if obj is self.list_widget.viewport():
+            if event.type() == QEvent.Type.MouseButtonPress:
+                if event.button() == Qt.MouseButton.LeftButton:
+                    self._drag_origin = event.position().toPoint()
+            elif event.type() == QEvent.Type.MouseButtonRelease:
+                self._drag_origin = None
+            elif (
+                event.type() == QEvent.Type.MouseMove
+                and self._drag_origin is not None
+                and event.buttons() & Qt.MouseButton.LeftButton
+                and (event.position().toPoint() - self._drag_origin).manhattanLength()
+                >= QApplication.startDragDistance()
+            ):
+                origin, self._drag_origin = self._drag_origin, None
+                self._start_file_drag(origin)
+                return True
+        return super().eventFilter(obj, event)
+
+    def _start_file_drag(self, pos):
+        """Run the drag for the video under `pos` (viewport coordinates)."""
+        item = self.list_widget.itemAt(pos)
+        widget = self.list_widget.itemWidget(item) if item is not None else None
+        if widget is None:
+            return
+        mime_data = self._build_drag_mime_data(widget.video.video_id)
+        if mime_data is None:
+            return
+        drag = QDrag(self)
+        drag.setMimeData(mime_data)
+        drag.exec(Qt.DropAction.CopyAction)
+
+    def _build_drag_mime_data(self, video_id: int) -> QMimeData | None:
+        """Build the dragged file list, or None if there is nothing to drag.
+
+        Dragging a selected video carries the whole selection, resolved
+        against the current view like every other batch action; dragging an
+        unselected one carries just it. Paths go out without the long-path
+        prefix, which drop targets do not understand.
+        """
+        if not self.ctx.has_database():
+            return None
+        if self._selector.contains(video_id):
+            filenames = (
+                self.ctx.query_on_view(self._selector.to_dict(), "get_video_filenames")
+                or []
+            )
+        else:
+            video = self._get_video_by_id(video_id)
+            filenames = [video.filename] if video else []
+        if not filenames:
+            return None
+        mime_data = QMimeData()
+        mime_data.setUrls(
+            [QUrl.fromLocalFile(filename.standard_path) for filename in filenames]
+        )
+        return mime_data
 
     def _make_video_list_item(
         self, video: VideoPattern, diff_fields: set[str] | None

@@ -231,6 +231,10 @@ class MockOps:
             return AbsolutePath(video["filename"])
         raise ValueError(f"Video not found: {video_id}")
 
+    def get_video_filenames(self, video_indices: list[int]) -> list[AbsolutePath]:
+        """Get video filenames, in the given order."""
+        return [self.get_video_filename(video_id) for video_id in video_indices]
+
     def set_similarities_from_list(self, similarities: list) -> None:
         """Set similarity IDs from list."""
         pass
@@ -452,6 +456,9 @@ class MockDatabase:
                         props[prop_name] = values
                         modified += 1
             return modified
+
+        elif fn_name == "get_video_filenames":
+            return self.ops.get_video_filenames(video_ids)
 
         elif fn_name == "generalize_properties_for_videos":
             values_by_prop = fn_args[0] if fn_args else {}
