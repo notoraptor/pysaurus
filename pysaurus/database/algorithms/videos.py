@@ -1,3 +1,5 @@
+import os
+from itertools import zip_longest
 from typing import Iterable
 
 from pysaurus.core import notifications
@@ -59,6 +61,7 @@ class Videos:
         filenames: list[AbsolutePath],
         need_thumbs: list[AbsolutePath],
         working_directory: str,
+        runtime_info: dict[AbsolutePath, VideoRuntimeInfo] | None = None,
     ) -> list[VideoTaskResult]:
         hasher = FNV64()
         tasks = []
@@ -89,6 +92,7 @@ class Videos:
         if not tasks:
             return []
 
+        tasks = cls._interleave_by_disk(tasks, runtime_info)
         notifier = Information.notifier()
         raptor = PythonVideoRaptor()
         with Profiler(say("Collect videos info"), notifier=notifier):
@@ -104,3 +108,31 @@ class Videos:
             )
         assert len(results) == len(filenames) + len(filenames_without_thumbs)
         return results
+
+    @staticmethod
+    def _interleave_by_disk(
+        tasks: list[VideoTask],
+        runtime_info: dict[AbsolutePath, VideoRuntimeInfo] | None,
+    ) -> list[VideoTask]:
+        """Round-robin the tasks between mount points.
+
+        Paths arrive sorted, so all the videos of a disk are consecutive: the
+        workers saturate one disk at a time while the others sit idle. Since
+        the collect is I/O bound (a whole-stroke seek dominates every video),
+        spreading the workers over every disk is what actually shortens it.
+        """
+        groups: dict[str, list[VideoTask]] = {}
+        for task in tasks:
+            info = runtime_info.get(task.filename) if runtime_info else None
+            mount = (info.driver_id if info and info.driver_id else None) or (
+                os.path.splitdrive(task.filename.path)[0]
+            )
+            groups.setdefault(mount, []).append(task)
+        if len(groups) < 2:
+            return tasks
+        return [
+            task
+            for row in zip_longest(*groups.values())
+            for task in row
+            if task is not None
+        ]

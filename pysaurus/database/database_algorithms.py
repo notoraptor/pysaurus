@@ -75,7 +75,9 @@ class DatabaseAlgorithms:
             expected_thumbs: dict[str, str] = {}
             thumb_errors: dict[str, Sequence[str]] = {}
             with tempfile.TemporaryDirectory() as tmp_dir:
-                for result in Videos.hunt(files_to_update, needing_thumbs, tmp_dir):
+                for result in Videos.hunt(
+                    files_to_update, needing_thumbs, tmp_dir, all_files
+                ):
                     task = result.task
                     filename = task.filename
                     if task.need_info and task.thumb_path:
