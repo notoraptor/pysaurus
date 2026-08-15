@@ -28,15 +28,14 @@ from PySide6.QtWidgets import (
 from pysaurus.core.language import say
 from pysaurus.core.notifications import End
 from pysaurus.interface.kyuti.app_context import AppContext
-from pysaurus.interface.kyuti.dialogs import EditFoldersDialog, RenameDialog
+from pysaurus.interface.kyuti.dialogs.edit_folders_dialog import EditFoldersDialog
 from pysaurus.interface.kyuti.dialogs.process_dialog import ProcessDialog
-from pysaurus.interface.kyuti.pages import (
-    DatabasesPage,
-    FilesPage,
-    PropertiesPage,
-    VideosPage,
-)
+from pysaurus.interface.kyuti.dialogs.rename_dialog import RenameDialog
+from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
+from pysaurus.interface.kyuti.pages.files_page import FilesPage
 from pysaurus.interface.kyuti.pages.process_page import ProcessPage
+from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
+from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 
 
 class SessionLogDialog(QDialog):

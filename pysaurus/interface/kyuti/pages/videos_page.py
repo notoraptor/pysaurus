@@ -32,15 +32,17 @@ from pysaurus.core.language import say
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.interface.common.common import FIELD_MAP, Uniconst, format_group_value
 from pysaurus.interface.kyuti.app_context import AppContext
-from pysaurus.interface.kyuti.dialogs import (
+from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
     BatchEditPropertyDialog,
-    GoToPageDialog,
-    GroupingDialog,
-    SortingDialog,
-    SourcesDialog,
+)
+from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
+from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
+from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
+from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
+from pysaurus.interface.kyuti.dialogs.video_confirm_dialog import VideoConfirmDialog
+from pysaurus.interface.kyuti.dialogs.video_properties_dialog import (
     VideoPropertiesDialog,
 )
-from pysaurus.interface.kyuti.dialogs.video_confirm_dialog import VideoConfirmDialog
 from pysaurus.interface.kyuti.widgets.left_click_menu import LeftClickMenu
 from pysaurus.interface.kyuti.widgets.video_list_item import VideoListItem
 from pysaurus.properties.properties import PropType
