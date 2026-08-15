@@ -160,9 +160,16 @@ Standalone parser for structured search expressions (e.g. `width > 1080 and "eng
 
 `imgsimsearch/` — uses NumPy for feature extraction and cosine similarity.
 
+### Video Metadata Extraction (`video_raptor/`)
+
+`video_raptor/video_raptor_pyav.py` — `PythonVideoRaptor.capture(VideoTask)` reads metadata
+and/or writes a thumbnail with **PyAV** (ffmpeg bindings, `av` dependency). There is no
+`videoraptor` C++ binary any more. Metadata goes into a `VideoEntry` dataclass
+(`video/video_entry.py`), whose fields map to `video` table columns via `to_table()`.
+
 ### External Editable Dependencies
 
-- `videre` (at `../videre`) — video extraction
+- `videre` (at `../videre`) — GUI toolkit, used by the experimental `videroid` frontend (**not** video extraction, which is PyAV)
 - `skullite` (at `../skullite`) — SQLite wrapper (`PysaurusConnection(None)` = in-memory DB; `copy_from()` = bulk copy)
 
 ### Kyuti (PySide6/Qt) Conventions (`interface/kyuti/`)
