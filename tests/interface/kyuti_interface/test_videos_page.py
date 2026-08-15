@@ -928,3 +928,17 @@ class TestVideosPageFileDrag:
         )
 
         assert started == []
+
+    def test_drag_hint_follows_the_selection(self, qtbot, mock_context):
+        """The gesture has no affordance of its own, so the hint is the only
+        thing announcing it: it must show exactly while a selection exists."""
+        page = self._page(qtbot, mock_context)
+        assert page.drag_hint_label.isHidden()
+
+        page._select_all()
+
+        assert not page.drag_hint_label.isHidden()
+
+        page._clear_selection()
+
+        assert page.drag_hint_label.isHidden()

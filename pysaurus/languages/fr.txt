@@ -296,6 +296,8 @@ DismissSimilarity_f2dff3dde1309538
 	Rejeter la similarité
 Dismiss_9e02757b7d1bb2af
 	Rejeter
+DragItIntoAnotherProgram_caae55327446a985
+	Glissez-la vers un autre programme
 Duration_7110eeef2b779601
 	Durée :
 EGWidth1080AndFoundAndEngInAudioLanguages_2bec0a6c0e302eff

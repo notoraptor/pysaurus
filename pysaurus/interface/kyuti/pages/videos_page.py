@@ -329,6 +329,7 @@ class VideosPage(QWidget):
                 "color: #0078d4; font-style: italic; background: transparent;"
             )
         self.btn_selection_clear.setEnabled(has_selection)
+        self.drag_hint_label.setVisible(has_selection)
 
     def _open_selected(self):
         """Open the selected video(s)."""
@@ -706,6 +707,17 @@ class VideosPage(QWidget):
         )
         selection_row.addWidget(self.selection_label, 1)
         selection_layout.addLayout(selection_row)
+
+        # The drag gesture has no affordance of its own: this hint is the only
+        # thing telling the user a selection can leave the app. Shown only
+        # while a selection is active, the moment the batch use case applies.
+        self.drag_hint_label = QLabel(say("Drag it into another program"))
+        self.drag_hint_label.setWordWrap(True)
+        self.drag_hint_label.setStyleSheet(
+            "color: #555; font-style: italic; font-size: 11px; background: transparent;"
+        )
+        self.drag_hint_label.hide()
+        selection_layout.addWidget(self.drag_hint_label)
         layout.addWidget(selection_section)
 
         # Groups panel (visible only when grouping is active)
@@ -975,6 +987,7 @@ class VideosPage(QWidget):
         self._selection_header_label.setText(say("Selection"))
         self.btn_selection_settings.setToolTip(say("Selection actions"))
         self.btn_selection_clear.setToolTip(say("Clear selection (Escape)"))
+        self.drag_hint_label.setText(say("Drag it into another program"))
         self.btn_select_page.setToolTip(
             say("Select all videos on current page (Ctrl+A)")
         )
