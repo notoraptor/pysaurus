@@ -36,3 +36,5 @@ RemoveValue_98e8eea6c0a5a2ba
 	Retirer {value}
 ResetLabel_110c73e7b1e8a9b6
 	Réinitialiser {label}
+StruckThroughValuesAlreadyAppearInThisVideoSFileTitleOrMetaTitleSoRemovingThemLosesNoInformation..._1cd5e6f82fe21312
+	Les valeurs barrées apparaissent déjà dans le titre du fichier ou le méta-titre de cette vidéo : les supprimer ne perd aucune information. Cliquez sur une valeur pour la conserver malgré tout.

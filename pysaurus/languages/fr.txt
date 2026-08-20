@@ -116,6 +116,8 @@ CheckToSetNameForAllSelectedVideos_c2c87194e7a87a2c
 	Cocher pour définir {name} pour toutes les vidéos sélectionnées
 ClassifierPath_92b466874784457f
 	Chemin du classificateur
+Clean_672072ac7eb4ec6c
+	Nettoyer
 ClearGrouping_f45dccb00f5a0387
 	Effacer le regroupement
 ClearSearchCtrlShiftF_edc110fb736ca76
@@ -216,6 +218,8 @@ CountSources_17b2497302c11220
 	{count} sources
 CountUnknownVideos_7c9330fb255dd764
 	{count} vidéos inconnues
+CountValueSWillBeRemoved_f09a6ca7c12ed842
+	{count} valeur(s) seront supprimées.
 CountVideoSRemovedFromDatabase_cbf87f024b1082ba
 	{count} vidéo(s) retirée(s) de la base de données
 CountVideosSizeDuration_cedc7f3c42eeac6d
@@ -405,8 +409,12 @@ FatalError_4b284ae34b81bd8f
 	Erreur fatale
 Field_e67fc2f2510220db
 	Champ :
+FilePath_f3ae865c4f4ca8fe
+	Chemin du fichier :
 FileTitle_65bfa27b5cbf29c1
 	Titre du fichier
+FileTitle_a3cad89e98d3f2c9
+	Titre du fichier :
 File_ed69627e452fef2b
 	Fichier
 Filename_8cf4f0afd0b7c430
@@ -513,6 +521,8 @@ IfEnabledOnlyPredefinedValuesCanBeUsedTheFirstValueEnteredBelowBecomesTheDefault
 IfEnabledVideosCanHaveMultipleValuesForThisPropertyNotAvailableForBooleanProperties_70481f970280001f
 	Si activé, les vidéos peuvent avoir plusieurs valeurs pour cette propriété.
 	Indisponible pour les propriétés booléennes.
+IncludeTheFullFilePath_ba1c3e374632376e
+	Inclure le chemin complet du fichier
 IndexedCount_4798684b91fc1cb2
 	Indexées (nombre)
 IndexedSize_c3e03c49849a6294
@@ -539,10 +549,14 @@ MarkThisVideoAsHavingNoSimilarMatchesTheVideoWillBeExcludedFromFutureSimilarityS
 	Marquer cette vidéo comme n'ayant aucune correspondance similaire ?
 	
 	La vidéo sera exclue des futures recherches de similarité.
+MatchedAgainst_f09820ad0a93cc52
+	Comparé à
 MergeValues_2dc7a901888c8177
 	Fusionner les valeurs
 MetaTitle_753559d55da8d620
 	Méta-titre
+MetaTitle_d27dc58e25e3d85a
+	Méta-titre :
 MoveAllCurrentValuesToAddList_e5ce3db8c20ce890
 	Déplacer toutes les valeurs actuelles vers la liste d'ajout
 MoveAllCurrentValuesToRemoveList_d05485e014c7c5c9
@@ -623,6 +637,8 @@ NoPropertiesDefined_79a2f2adaa66508f
 	(aucune propriété définie)
 NoProperties_3dbf791f0485b0ab
 	Aucune propriété
+NoRedundantValueFound_bad621bf93c1b24a
+	Aucune valeur redondante trouvée.
 NoSelection_4effb87af82a0776
 	Aucune sélection
 NoSelection_699c3c68e3ab7c36
@@ -692,6 +708,8 @@ PageCurrentTotal_c45ee8b52882590a
 	Page {current}/{total}
 PageSize_eb94aa40282346fb
 	Taille de &page
+ParentFolderNamesAndTheFileExtensionThenCountAsWell_aa0907123b95b8dc
+	Les noms des dossiers parents et l'extension du fichier comptent alors aussi.
 Path_96e5ac7e1436ed48
 	Chemin
 PermanentlyDeleteThisVideoThisActionCannotBeUndoneTheFileWillBeDeletedFromDisk_b38e9db0d26860d5
@@ -789,6 +807,10 @@ RemoveGroupingCtrlShiftG_2fbf421e92589e09
 	Retirer le regroupement (Ctrl+Shift+G)
 RemoveNameValueFromThisVideo_6faeaf0a85b4387a
 	Retirer la valeur {name} de cette vidéo
+RemoveRedundantValues_65c913ea91255462
+	Supprimer les valeurs redondantes...
+RemoveRedundantValues_9803c233570c4a80
+	Supprimer les valeurs redondantes
 RemoveSelectedValuesFromAllVideos_e6f80fd1433ad71d
 	Retirer les valeurs sélectionnées de toutes les vidéos
 RemoveSelected_3cb97df442381ae8
@@ -799,6 +821,8 @@ RemoveThisSourceSource_774820a411d121ec
 	{source}
 Remove_e71387556151e3d1
 	Retirer
+RemovedCountRedundantValueSFromProps_1088be0d6d6b731a
+	{count} valeur(s) redondante(s) supprimée(s) dans {props}
 RenameAValueMergesIfTargetExists_98c61ed40f3b34d3
 	Renommer une valeur (fusionne si la cible existe)
 RenameDatabaseName_11b5b3a289fede87
@@ -982,6 +1006,8 @@ Sources_46526b6c96e78569
 	Sources
 Status_5b7a4177e1b9b193
 	Statut
+StruckThroughValuesAlreadyAppearInTheTextsBelowSoRemovingThemLosesNoInformationClickAValueToKeep..._c1c0d33fa6a36db7
+	Les valeurs barrées apparaissent déjà dans les textes ci-dessous : les supprimer ne perd aucune information. Cliquez sur une valeur pour la conserver malgré tout.
 SubstringMatchOnPath_b1f10a9cdec9e469
 	Correspondance de sous-chaîne sur le chemin
 Subtitles_dc91a773f834306a

@@ -37,6 +37,9 @@ from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
 )
 from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
 from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
+from pysaurus.interface.kyuti.dialogs.redundant_values_dialog import (
+    RedundantValuesDialog,
+)
 from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
 from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
 from pysaurus.interface.kyuti.dialogs.video_confirm_dialog import VideoConfirmDialog
@@ -1680,6 +1683,14 @@ class VideosPage(QWidget):
             menu.addSeparator()
 
         menu.addAction(say("Properties..."), lambda: self._show_properties(video_id))
+        if video and any(
+            prop.type == "str" and video.properties.get(prop.name)
+            for prop in self.ctx.get_prop_types()
+        ):
+            menu.addAction(
+                say("Remove redundant values..."),
+                lambda: self._remove_redundant_values(video_id),
+            )
         menu.addSeparator()
         menu.addAction(
             say("Delete from database"), lambda: self._delete_video(video_id)
@@ -2131,6 +2142,42 @@ class VideosPage(QWidget):
         prop_types = self.ctx.get_prop_types()
         dialog = VideoPropertiesDialog(video, prop_types, self.ctx, self)
         dialog.exec()
+
+    def _remove_redundant_values(self, video_id: int):
+        """Drop the video's property values already found in its own titles."""
+        if not self.ctx.has_database():
+            return
+
+        video = self.ctx.get_video_by_id(video_id)
+        if not video:
+            return
+
+        # Both modes are computed up front so switching in the dialog is instant.
+        in_path = self.ctx.find_redundant_property_values(
+            [video_id], use_full_path=True
+        )
+        in_title = self.ctx.find_redundant_property_values([video_id])
+        dialog = RedundantValuesDialog(
+            video,
+            self.ctx.get_prop_types(),
+            in_path.get(video_id, {}),
+            in_title.get(video_id, {}),
+            self,
+        )
+        if not dialog.exec():
+            return
+        removals = dialog.get_result()
+        if not removals:
+            return
+        count = self.ctx.delete_property_values_for_videos({video_id: removals})
+        self.status_message_requested.emit(
+            say(
+                "Removed {count} redundant value(s) from {props}",
+                count=count,
+                props=", ".join(sorted(removals)),
+            ),
+            5000,
+        )
 
     def _delete_video(self, video_id: int):
         """Delete a single video from the database (with confirmation)."""

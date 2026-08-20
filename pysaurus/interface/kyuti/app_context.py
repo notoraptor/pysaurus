@@ -748,3 +748,21 @@ class AppContext(QObject):
         if self._algos:
             self._algos.fill_property_with_terms(prop_name, only_empty=only_empty)
             self.state_changed.emit()
+
+    def find_redundant_property_values(
+        self, video_indices, prop_names=None, *, use_full_path=False
+    ) -> dict:
+        """Return {video_id: {property: [values]}} already present in the titles."""
+        if self._algos:
+            return self._algos.find_redundant_property_values(
+                video_indices, prop_names, use_full_path=use_full_path
+            )
+        return {}
+
+    def delete_property_values_for_videos(self, removals) -> int:
+        """Remove {video_id: {property: [values]}}. Returns removed value count."""
+        if self._algos:
+            count = self._algos.delete_property_values_for_videos(removals)
+            self.state_changed.emit()
+            return count
+        return 0

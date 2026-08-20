@@ -15,6 +15,7 @@ from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.datestring import Date
+from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.language import say
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
@@ -439,3 +440,95 @@ class DatabaseAlgorithms:
         }
         if modified:
             ops.set_property_for_videos(prop_name, modified, merge=True)
+
+    def find_redundant_property_values(
+        self,
+        video_indices: Sequence[int],
+        prop_names: Sequence[str] | None = None,
+        *,
+        use_full_path: bool = False,
+    ) -> dict[int, dict[str, list[PropUnitType]]]:
+        """Find text property values already carried by a video's own titles.
+
+        A value is redundant when its tokens appear as a contiguous run in the
+        tokens of the file title or of the meta title: dropping it then loses
+        no information. Both sides are cut with `string_to_pieces`, so case and
+        punctuation do not matter but word boundaries do, camel case included:
+        "dicaprio" misses a title spelling it "DiCaprio", erring on keeping.
+
+        Only `str` properties are looked at, and each title is matched on its
+        own, so a value can never straddle the two.
+
+        :param video_indices: videos to inspect.
+        :param prop_names: properties to inspect, all text ones by default.
+        :param use_full_path: match against the whole path instead of the file
+            title, so parent folders and the extension count as well. This is
+            what `fill_property_with_terms` reads from, and it always finds at
+            least as much, a folder name being enough to make a value redundant.
+        :return: {video_id: {property name: [redundant values]}}, with no empty
+            entry.
+        """
+        prop_types = self.db.get_prop_types(with_type=str)
+        if prop_names is not None:
+            wanted = set(prop_names)
+            prop_types = [pt for pt in prop_types if pt.name in wanted]
+        video_indices = list(video_indices)
+        if not prop_types or not video_indices:
+            return {}
+
+        output: dict[int, dict[str, list[PropUnitType]]] = {}
+        for video in self.db.get_videos(
+            include=("properties",), where={"video_id": video_indices}
+        ):
+            haystacks = [
+                string_to_pieces(
+                    str(video.filename) if use_full_path else video.file_title
+                ),
+                string_to_pieces(video.meta_title),
+            ]
+            redundant = {}
+            for prop_type in prop_types:
+                found = [
+                    value
+                    for value in video.properties.get(prop_type.name) or ()
+                    if _is_covered_by(string_to_pieces(str(value)), haystacks)
+                ]
+                if found:
+                    redundant[prop_type.name] = found
+            if redundant:
+                output[video.video_id] = redundant
+        return output
+
+    def delete_property_values_for_videos(
+        self, removals: dict[int, dict[str, Collection[PropUnitType]]]
+    ) -> int:
+        """Remove given property values from given videos, in one save.
+
+        :param removals: {video_id: {property name: [values to remove]}}
+        :return: number of removed values.
+        """
+        by_prop: dict[str, dict[int | None, Collection[PropUnitType]]] = {}
+        for video_id, values_by_prop in removals.items():
+            for name, values in values_by_prop.items():
+                if values:
+                    by_prop.setdefault(name, {})[video_id] = list(values)
+        if not by_prop:
+            return 0
+        with self.db.to_save():
+            for name, updates in by_prop.items():
+                self.db.videos_tag_set(name, updates, action=self.db.action.REMOVE)
+            self.db._notify_fields_modified(list(by_prop), is_property=True)
+        return sum(
+            len(values) for updates in by_prop.values() for values in updates.values()
+        )
+
+
+def _is_covered_by(needle: list[str], haystacks: list[list[str]]) -> bool:
+    """Tell whether `needle` appears as a contiguous run in one of `haystacks`."""
+    if not needle:
+        return False
+    for haystack in haystacks:
+        for start in range(len(haystack) - len(needle) + 1):
+            if haystack[start : start + len(needle)] == needle:
+                return True
+    return False
