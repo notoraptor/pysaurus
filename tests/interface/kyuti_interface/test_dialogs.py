@@ -6,7 +6,8 @@ Tests BatchEditPropertyDialog and VideoPropertiesDialog.
 
 import pytest
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QPushButton, QTabWidget
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QTabWidget
 
 from pysaurus.core.language import say
 from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
@@ -360,6 +361,58 @@ class TestVideoPropertiesDialog:
         # Dialog should have valid size and be properly constructed
         assert dialog.minimumWidth() > 0
         assert dialog.minimumHeight() > 0
+
+    def test_removing_a_value_leaves_focus_in_its_own_property(
+        self, qtbot, mock_context
+    ):
+        """The cross must not take focus, or removal scrolls the form away.
+
+        Every property sits in one shared scroll area. A focused button hands
+        focus to the next widget in the chain when it is destroyed -- the first
+        cross of the *next* property -- and the scroll area then jumps there.
+        """
+        prop_types = [
+            PropType(name=name, type="str", multiple=True, default=[], enumeration=None)
+            for name in ("alpha", "beta")
+        ]
+        video = MockVideoPattern(
+            {
+                "video_id": 1,
+                "filename": "/videos/test.mp4",
+                "file_size": 1,
+                "mtime": 1.0,
+                "duration": 1,
+                "duration_time_base": 1,
+                "height": 1080,
+                "width": 1920,
+                "meta_title": "Test Video",
+                "found": True,
+                "unreadable": False,
+                "watched": False,
+                "with_thumbnails": False,
+                "properties": {"alpha": ["a1", "a2"], "beta": ["b1", "b2"]},
+            }
+        )
+        dialog = VideoPropertiesDialog(video, prop_types, mock_context)
+        qtbot.addWidget(dialog)
+        dialog.show()
+        # Focus is only handed over inside the active window.
+        dialog.activateWindow()
+        QApplication.processEvents()
+
+        alpha = dialog._property_widgets["alpha"]
+        beta = dialog._property_widgets["beta"]
+        alpha.input_edit.setFocus()
+        assert dialog.isActiveWindow()
+
+        last = alpha.list_widget.item(alpha.list_widget.count() - 1)
+        QTest.mouseClick(
+            alpha.list_widget.itemWidget(last).remove_button, Qt.MouseButton.LeftButton
+        )
+
+        assert alpha.get_values() == ["a1"]
+        assert alpha.isAncestorOf(dialog.focusWidget())
+        assert not beta.isAncestorOf(dialog.focusWidget())
 
 
 class TestMultipleValuesWidget:

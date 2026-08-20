@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QPushButton
 
 ROW_BUTTON_STYLE = (
@@ -17,6 +18,9 @@ def make_row_button(text: str, tooltip: str, value, slot: Callable) -> QPushButt
     the row value back with ``self.sender().property("value")``.
     """
     button = QPushButton(text)
+    # Never take focus: destroying a focused row hands focus to the next one,
+    # scrolling the view away from where the user just clicked.
+    button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
     button.setToolTip(tooltip)
     button.setStyleSheet(ROW_BUTTON_STYLE)
     button.setFixedWidth(24)
