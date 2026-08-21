@@ -88,6 +88,12 @@ def _build_view_where(
         source_query = source_query_builder.get_clause()
         source_params = source_query_builder.get_parameters()
 
+    # Group queries inline this right after "v.discarded = 0 AND"; several
+    # sources are joined with an unwrapped OR, which AND would otherwise bind
+    # tighter than.
+    if source_query:
+        source_query = f"({source_query})"
+
     where_group_query = None
     where_group_params = None
     prop_meta = None
@@ -98,7 +104,7 @@ def _build_view_where(
         order_direction = "DESC" if grouping.reverse else "ASC"
         prop_value_converter = None
         if grouping.is_property:
-            order_field = _get_property_order_field(grouping, order_direction)
+            order_field = _get_aliased_order_field(grouping, order_direction)
             prop_value_converter = _get_property_value_converter(sql_db, grouping.field)
             prop_meta = _get_property_metadata(sql_db, grouping.field)
             if classifier:
@@ -343,7 +349,8 @@ def _thumbnail_join_if_needed(source_query: str) -> str:
     return ""
 
 
-def _get_property_order_field(grouping: GroupDef, order_direction: str) -> str:
+def _get_aliased_order_field(grouping: GroupDef, order_direction: str) -> str:
+    """ORDER BY clause for a group query selecting `value` and `size` aliases."""
     if grouping.sorting == grouping.FIELD:
         return f"value {order_direction}"
     elif grouping.sorting == grouping.LENGTH:
@@ -453,6 +460,9 @@ def _query_field_groups(
     grouping: GroupDef,
     field_factory: SqlFieldFactory,
 ) -> Sequence[Sequence]:
+    if grouping.field == "errors":
+        return _query_error_groups(sql_db, source_query, source_params, grouping)
+
     order_direction = "DESC" if grouping.reverse else "ASC"
     field = field_factory.get_field(grouping.field)
     if grouping.sorting == grouping.FIELD:
@@ -488,6 +498,34 @@ def _query_field_groups(
         f"LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id "
         f"WHERE v.discarded = 0 AND {source_query} {where_similarity_id} "
         f"GROUP BY {field} {without_singletons} "
+        f"ORDER BY {order_field}",
+        source_params,
+    )
+
+
+def _query_error_groups(
+    sql_db: PysaurusConnection,
+    source_query: str,
+    source_params: Sequence[Any],
+    grouping: GroupDef,
+) -> Sequence[Sequence]:
+    """Query error groups: one group per distinct error, plus a NULL group for
+    videos without any error.
+
+    `errors` is the only multi-valued *attribute* one can group on, so a video
+    with several errors legitimately shows up in several groups (like a
+    multiple property, without the classifier).
+    """
+    order_direction = "DESC" if grouping.reverse else "ASC"
+    order_field = _get_aliased_order_field(grouping, order_direction)
+    without_singletons = "" if grouping.allow_singletons else "HAVING size > 1"
+    return sql_db.query_all(
+        f"SELECT ve.error AS value, COUNT(DISTINCT v.video_id) AS size "
+        f"FROM video AS v "
+        f"LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id "
+        f"LEFT JOIN video_error AS ve ON v.video_id = ve.video_id "
+        f"WHERE v.discarded = 0 AND {source_query} "
+        f"GROUP BY value {without_singletons} "
         f"ORDER BY {order_field}",
         source_params,
     )
@@ -658,12 +696,22 @@ def _filter_by_no_moves() -> tuple[str, list]:
     return query, []
 
 
+def _filter_by_error(error: str | None) -> tuple[str, list]:
+    """Filter videos having the given error, or having no error at all."""
+    if error is None:
+        return "v.video_id NOT IN (SELECT video_id FROM video_error)", []
+    return ("v.video_id IN (SELECT video_id FROM video_error WHERE error = ?)", [error])
+
+
 def _filter_by_selected_field_group(
     group: GroupCount, grouping: GroupDef, field_factory: SqlFieldFactory
 ) -> tuple[str, Sequence]:
     if grouping.field == "move_id" and group.value is None:
         # Videos without potential moves
         return _filter_by_no_moves()
+
+    if grouping.field == "errors":
+        return _filter_by_error(group.value[0] if group.value else None)
 
     # Extract raw values from FileSize/Date/Duration objects for SQL queries
     def extract_raw(v):

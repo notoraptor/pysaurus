@@ -127,6 +127,7 @@ FIELD_MAP = FieldMap(
         FieldInfo("date_entry_opened", None, GroupPerm.ONLY_MANY, FieldType.SORTABLE),
         FieldInfo("day", "day", GroupPerm.ALL, FieldType.STR),
         FieldInfo("disk", "disk", GroupPerm.ALL, FieldType.STR),
+        FieldInfo("errors", "errors", GroupPerm.ALL, FieldType.UNSORTABLE),
         FieldInfo("extension", "file extension", GroupPerm.ALL, FieldType.STR),
         FieldInfo("file_size", "file size (bytes)", GroupPerm.ONLY_MANY, FieldType.INT),
         FieldInfo("file_title", "file title", GroupPerm.ONLY_MANY, FieldType.STR),

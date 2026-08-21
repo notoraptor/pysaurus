@@ -461,3 +461,172 @@ class TestGetViewVideoIds:
         view = ViewContext()
         selector = Selector(False, set())
         assert saurus_database.get_view_video_ids(view, selector) == []
+
+
+ALL_SOURCES = [["readable"], ["unreadable"]]
+
+
+class TestGroupingByErrors:
+    """Grouping on `errors`, the only multi-valued video *attribute*.
+
+    One group per distinct error plus a NULL group for videos without any
+    error; a video carrying several errors belongs to several groups. Unlike a
+    multiple property, no classifier is involved.
+    """
+
+    def _stats(self, db, view):
+        return db.query_videos(view, 1, 0).classifier_stats
+
+    def _ids(self, db, view) -> set[int]:
+        return {v.video_id for v in db.query_videos(view, None, None).result}
+
+    def _errors_of(self, db, video_id) -> set[str]:
+        return {
+            row[0]
+            for row in db.db.query_all(
+                "SELECT error FROM video_error WHERE video_id = ?", [video_id]
+            )
+        }
+
+    def test_groups_are_no_error_plus_one_per_error(self, saurus_database):
+        view = ViewContext()
+        view.set_sources(ALL_SOURCES)
+        view.set_grouping("errors", allow_singletons=True)
+        stats = self._stats(saurus_database, view)
+
+        assert [s.value for s in stats] == [
+            None,
+            "ERROR_CUSTOM_FORMAT_CONTEXT",
+            "Error while getting input format.",
+        ]
+        assert [s.count for s in stats] == [90, 3, 3]
+
+    def test_null_group_lists_videos_without_error(self, saurus_database):
+        db = saurus_database
+        view = ViewContext()
+        view.set_sources(ALL_SOURCES)
+        view.set_grouping("errors", allow_singletons=True)
+        view.set_group(0)
+        listed = self._ids(db, view)
+
+        assert len(listed) == self._stats(db, view)[0].count
+        assert all(not self._errors_of(db, video_id) for video_id in listed)
+
+    def test_error_group_lists_videos_carrying_that_error(self, saurus_database):
+        db = saurus_database
+        view = ViewContext()
+        view.set_sources(ALL_SOURCES)
+        view.set_grouping("errors", allow_singletons=True)
+        stats = self._stats(db, view)
+
+        for index, stat in enumerate(stats):
+            if stat.value is None:
+                continue
+            view.set_group(index)
+            listed = self._ids(db, view)
+            assert len(listed) == stat.count
+            assert all(stat.value in self._errors_of(db, vid) for vid in listed)
+
+    def test_video_with_several_errors_belongs_to_several_groups(self, saurus_database):
+        db = saurus_database
+        view = ViewContext()
+        view.set_sources(ALL_SOURCES)
+        view.set_grouping("errors", allow_singletons=True)
+        stats = self._stats(db, view)
+
+        groups = {}
+        for index, stat in enumerate(stats):
+            view.set_group(index)
+            groups[stat.value] = self._ids(db, view)
+
+        multi = {
+            vid
+            for vid in groups["ERROR_CUSTOM_FORMAT_CONTEXT"]
+            if vid in groups["Error while getting input format."]
+        }
+        assert multi
+        assert all(len(self._errors_of(db, vid)) == 2 for vid in multi)
+        # ... and the counts sum above the number of videos in the view.
+        assert sum(s.count for s in stats) > len(self._ids(db, ViewContext()))
+
+    def test_singletons_can_be_hidden(self, saurus_database):
+        db = saurus_database
+        readable_id = min(self._ids(db, ViewContext()))
+        db.db.modify(
+            "INSERT INTO video_error (video_id, error) VALUES (?, ?)",
+            [readable_id, "lonely error"],
+        )
+
+        view = ViewContext()
+        view.set_sources(ALL_SOURCES)
+        view.set_grouping("errors", allow_singletons=True)
+        assert "lonely error" in [s.value for s in self._stats(db, view)]
+
+        view.set_grouping("errors", allow_singletons=False)
+        assert "lonely error" not in [s.value for s in self._stats(db, view)]
+
+    def test_sorting_by_count_and_reverse(self, saurus_database):
+        db = saurus_database
+        view = ViewContext()
+        view.set_sources(ALL_SOURCES)
+        view.set_grouping("errors", allow_singletons=True, sorting="count")
+        counts = [s.count for s in self._stats(db, view)]
+        assert counts == sorted(counts)
+
+        view.set_grouping(
+            "errors", allow_singletons=True, sorting="count", reverse=True
+        )
+        counts = [s.count for s in self._stats(db, view)]
+        assert counts == sorted(counts, reverse=True)
+
+        view.set_grouping("errors", allow_singletons=True, reverse=True)
+        values = [s.value for s in self._stats(db, view)]
+        assert values[-1] is None  # no-error group last when reversed
+        assert values[:-1] == sorted(values[:-1], reverse=True)
+
+    def test_get_view_video_ids_matches_query_videos(self, saurus_database):
+        db = saurus_database
+        view = ViewContext()
+        view.set_sources(ALL_SOURCES)
+        view.set_grouping("errors", allow_singletons=True)
+        for index in range(len(self._stats(db, view))):
+            view.set_group(index)
+            assert set(db.get_view_video_ids(view)) == self._ids(db, view)
+
+    def test_no_error_at_all_yields_a_single_group(self, saurus_database):
+        db = saurus_database
+        view = ViewContext()
+        view.set_sources([["readable"]])
+        view.set_grouping("errors", allow_singletons=True)
+        stats = self._stats(db, view)
+        assert [s.value for s in stats] == [None]
+        assert stats[0].count == len(self._ids(db, view))
+
+
+class TestGroupCountsHonorEveryFilter:
+    """Group counts must count exactly the videos of the view.
+
+    Group queries inline the sources clause right after "v.discarded = 0 AND";
+    several sources are joined with an unwrapped OR, so without parentheses
+    AND bound tighter and discarded videos leaked into the counts.
+    """
+
+    @pytest.mark.parametrize("field", ["extension", "errors"])
+    def test_discarded_videos_are_never_counted(self, saurus_database, field):
+        db = saurus_database
+        view_flat = ViewContext()
+        view_flat.set_sources(ALL_SOURCES)
+        in_view = {v.video_id for v in db.query_videos(view_flat, None, None).result}
+
+        view = ViewContext()
+        view.set_sources(ALL_SOURCES)
+        view.set_grouping(field, allow_singletons=True)
+        stats = db.query_videos(view, 1, 0).classifier_stats
+
+        listed = set()
+        for index, stat in enumerate(stats):
+            view.set_group(index)
+            group_ids = {v.video_id for v in db.query_videos(view, None, None).result}
+            assert stat.count == len(group_ids)
+            listed |= group_ids
+        assert listed == in_view
