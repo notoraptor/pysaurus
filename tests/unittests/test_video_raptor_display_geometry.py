@@ -130,3 +130,18 @@ def test_sample_aspect_ratio_and_rotation_combine(tmp_path):
     assert info.rotation == 90
     assert thumbnail.size == (HEIGHT, WIDTH * 2)
     assert _brightest_quadrant(thumbnail) == "top-right"
+
+
+def test_rotation_is_read_without_a_thumbnail(tmp_path):
+    """With a thumbnail, its frame provides the rotation; without one, the info
+    pass decodes its own frame. Both must agree -- every frame of a video
+    carries the same display matrix.
+    """
+    video = tmp_path / "video.mp4"
+    _encode(video, Fraction(1, 1), -90)
+    result = PythonVideoRaptor.capture(
+        VideoTask(AbsolutePath(str(video)), need_info=True)
+    )
+    assert not result.error_info, result.error_info
+    assert result.info is not None
+    assert result.info.rotation == 90

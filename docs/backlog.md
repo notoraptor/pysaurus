@@ -154,6 +154,25 @@ souvent du multi-processus, ce qui rend l'annulation propre difficile à implém
 algorithmes de traitement (`database_algorithms.py`, `imgsimsearch/`), probablement
 via un flag partagé vérifié à chaque étape.
 
+### Vérification approfondie de l'intégrité vidéo
+
+Le contrôle de fin fait au collect (`video_raptor_pyav.py::_tail_reaches_end`) se
+limite au démux : il attrape un fichier dont les données s'arrêtent avant la durée
+annoncée (téléchargement interrompu) pour environ 2 ms par vidéo. Il ne voit pas des
+données présentes mais abîmées ; seul un décodage réel les attrape, et il coûte 1,5 à
+2 s par vidéo — trop cher pour un scan de collection.
+
+**Fonctionnalité attendue** : opération longue explicite, du même type que
+`find_similarities`, lancée sur la vue ou la sélection courante. Par vidéo : seek à
+`fin − 10 s` (marge couvrant le dernier GOP, jusqu'à 5,4 s mesurés en pratique),
+décodage jusqu'à EOF, échec si le décodeur lève ou si la dernière image obtenue
+s'arrête trop tôt. Les vidéos en échec reçoivent une erreur, donc se retrouvent via
+le groupement par erreurs.
+
+**Limite connue** : en MPEG-TS, aucune troncature n'est détectable — le conteneur ne
+déclare pas de durée, ffmpeg la déduit du fichier, donc un fichier coupé est un
+fichier valide plus court.
+
 ---
 
 ## P4 — Optimisations

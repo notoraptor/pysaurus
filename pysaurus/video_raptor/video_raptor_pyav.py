@@ -14,6 +14,15 @@ from pysaurus.video.video_entry import VideoEntry
 logger = logging.getLogger(__name__)
 
 ERROR_SAVE_THUMBNAIL = "ERROR_SAVE_THUMBNAIL"
+ERROR_TRUNCATED_VIDEO = "ERROR_TRUNCATED_VIDEO"
+
+# Tail check: how much is demuxed at the end of a video, and how far its last
+# packet may stop short of the announced duration. Both sit two orders of
+# magnitude above the noise -- a sound file ends within a frame of its
+# announced duration, and an MPEG-TS duration is an estimate drifting by up to
+# a second.
+TAIL_WINDOW_SECONDS = 2.0
+TAIL_TOLERANCE_SECONDS = 1.0
 
 
 class NoVideoStream(RuntimeError):
@@ -89,41 +98,48 @@ class PythonVideoRaptor:
         else:
             if task.need_info:
                 try:
-                    ret.info = cls._get_info_from_container(container, filename.path)
+                    # The thumbnail frame, when one is coming, provides the
+                    # rotation, so the info pass need not decode its own frame.
+                    ret.info = cls._get_info_from_container(
+                        container, filename.path, read_rotation=not task.thumb_path
+                    )
                 except Exception as exc:
                     ret.error_info = cls._exc_to_err(exc)
             if task.thumb_path and not ret.error_info:
                 try:
-                    ret.thumbnail = cls._thumb_from_container(
+                    ret.thumbnail, rotation = cls._thumb_from_container(
                         container, task.thumb_path
                     )
                 except Exception as exc:
                     traceback.print_tb(exc.__traceback__)
                     print(f"{type(exc).__name__}:", exc, file=sys.stderr)
                     ret.error_thumbnail = cls._exc_to_err(exc, ERROR_SAVE_THUMBNAIL)
+                    rotation = cls._rotation_or_zero(container)
+                if ret.info is not None:
+                    ret.info.rotation = rotation
         finally:
             if container:
                 container.close()
         return ret
 
     @classmethod
-    def _get_info_from_container(cls, container, filename: str) -> VideoEntry:
+    def _get_info_from_container(
+        cls, container, filename: str, read_rotation: bool = True
+    ) -> VideoEntry:
         video_streams = container.streams.video
         audio_streams = container.streams.audio
         subtitle_streams = container.streams.subtitles
         if not video_streams:
             raise RuntimeError("ERROR_FIND_VIDEO_STREAM")
+        if container.duration is None:
+            # Used to fail as a TypeError on the end seek, which marked the
+            # video unreadable; keep that outcome, say why.
+            raise RuntimeError("ERROR_FIND_DURATION")
         video_stream = video_streams[0]
         acc = audio_streams[0].codec_context if audio_streams else None
-        video_stream.codec_context.skip_frame = "NONKEY"
 
-        end_reachable = False
-        rotation = 0  # stays 0 when the end seek yields no frame to read it from
-        container.seek(offset=container.duration - 1)
-        for frame in container.decode(video_stream):
-            end_reachable = True
-            rotation = _display_rotation(frame)
-            break
+        rotation = cls._rotation_from_first_frame(container) if read_rotation else 0
+        complete = cls._tail_reaches_end(container, video_stream)
 
         # An undefined SAR reads back as None; it means square pixels.
         sar = video_stream.sample_aspect_ratio
@@ -165,7 +181,7 @@ class PythonVideoRaptor:
                 if subtitle_stream.language is not None
             ],
             meta_title=container.metadata.get("title", ""),
-            errors=([] if end_reachable else ["ERROR_SEEK_END_VIDEO"]),
+            errors=([] if complete else [ERROR_TRUNCATED_VIDEO]),
             channels=acc.channels if acc else 0,
             sample_rate=acc.sample_rate if acc else 0,
             audio_bit_rate=(acc.bit_rate or 0) if acc else 0,
@@ -175,17 +191,76 @@ class PythonVideoRaptor:
         )
 
     @classmethod
-    def _thumb_from_container(cls, container, thumb_path: str, thumb_size=300) -> str:
+    def _rotation_from_first_frame(cls, container) -> int:
+        """Display rotation, read from the first decodable frame.
+
+        Every frame carries the same display matrix, so which one is read does
+        not matter -- only that one is. PyAV exposes no getter for it on the
+        stream, hence the decoding.
+        """
+        video_stream = container.streams.video[0]
+        container.seek(container.start_time or 0)
+        for frame in container.decode(video_stream):
+            return _display_rotation(frame)
+        return 0
+
+    @classmethod
+    def _rotation_or_zero(cls, container) -> int:
+        """Same, but for the fallback path: a failed thumbnail leaves a
+        container whose decoder may well fail again, and a missing rotation
+        must not turn into a missing video."""
+        try:
+            return cls._rotation_from_first_frame(container)
+        except Exception:
+            logger.debug("Could not read display rotation", exc_info=True)
+            return 0
+
+    @classmethod
+    def _tail_reaches_end(cls, container, video_stream) -> bool:
+        """Do the video packets run up to the duration the container announces?
+
+        This catches a file whose data stops early, an interrupted download
+        typically. Demuxing only, so it costs a couple of milliseconds; decoding
+        the tail would also catch damaged data, but takes about a second per
+        video and belongs to an explicit check, not to collect.
+
+        Note an MPEG-TS carries no declared duration -- ffmpeg derives it from
+        the file itself -- so a truncated one is simply a shorter valid file,
+        and no test can tell.
+        """
+        if container.duration is None:
+            return True  # nothing announced, nothing to check against
+        start = container.start_time or 0
+        end = start + container.duration
+        window = int(TAIL_WINDOW_SECONDS * av.time_base)
+        try:
+            container.seek(max(start, end - window))
+            # PTS are not monotonic with B-frames: keep the max, not the last.
+            last_pts = max(
+                (
+                    packet.pts
+                    for packet in container.demux(video_stream)
+                    if packet.pts is not None
+                ),
+                default=None,
+            )
+        except Exception:
+            logger.debug("Demuxing the tail failed", exc_info=True)
+            return False
+        if last_pts is None:
+            return False
+        gap = end / av.time_base - float(last_pts * video_stream.time_base)
+        return gap <= TAIL_TOLERANCE_SECONDS
+
+    @classmethod
+    def _thumb_from_container(
+        cls, container, thumb_path: str, thumb_size=300
+    ) -> tuple[str, int]:
+        """Save the middle-of-video thumbnail; return it with its rotation."""
         _video_streams = container.streams.video
         if not _video_streams:
             raise NoVideoStream()
         video_stream = _video_streams[0]
-        # Reset skip_frame to its default: this container (and its decoder) may be
-        # reused right after _get_info_from_container(), which sets skip_frame="NONKEY".
-        # A leftover "NONKEY" combined with the backward seek below makes
-        # avcodec_send_packet() raise InvalidDataError on some videos (GOP-dependent).
-        # The backward seek already guarantees a keyframe, so "NONKEY" is useless here.
-        video_stream.codec_context.skip_frame = "DEFAULT"
 
         start = video_stream.start_time or 0
         if video_stream.duration is not None:
@@ -216,13 +291,14 @@ class PythonVideoRaptor:
 
         if chosen is None:
             raise NoFrameFoundInMiddleOfVideo()
+        rotation = _display_rotation(chosen)
         image: Image.Image = chosen.to_image()
         image = cls._to_display_geometry(
-            image, video_stream.sample_aspect_ratio, _display_rotation(chosen)
+            image, video_stream.sample_aspect_ratio, rotation
         )
         image.thumbnail((thumb_size, thumb_size))
         image.save(thumb_path, format="JPEG")
-        return thumb_path
+        return thumb_path, rotation
 
     @classmethod
     def _to_display_geometry(cls, image: Image.Image, sar, rotation: int):
