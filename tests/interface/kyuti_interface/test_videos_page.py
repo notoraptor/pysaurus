@@ -8,8 +8,9 @@ from pathlib import Path
 
 from PySide6.QtCore import QEvent, QPointF, Qt
 from PySide6.QtGui import QFocusEvent, QMouseEvent
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
+from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 from pysaurus.interface.kyuti.widgets.left_click_menu import LeftClickMenu
 
@@ -784,6 +785,44 @@ class TestVideosPageContextMenu:
         assert "Generalize title" in submenus
         assert "Generalize property" in submenus
         assert submenus["Generalize title"] == ["File title"]
+
+    def test_generalize_title_targets_the_default_property(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        mock_context.set_groups(
+            field="similarity_id",
+            is_property=False,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
+        )
+        mock_context.set_database_settings(
+            DatabaseSettings(generalize_title_property="genre")
+        )
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+
+        items = [
+            t for t in self._submenus(page, 3, monkeypatch)["Generalize title"] if t
+        ]
+        assert items == ["File title → genre", "Choose property..."]
+
+    def test_generalize_title_with_a_target_skips_the_dialog(
+        self, qtbot, mock_context, mock_database, monkeypatch
+    ):
+        def no_dialog(self):
+            raise AssertionError("the property dialog must not open")
+
+        monkeypatch.setattr(QDialog, "exec", no_dialog)
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+        title = page._get_video_by_id(3).filename.file_title
+
+        page._generalize_title_to_property(3, "file_title", "genre")
+
+        assert title in mock_database.videos_tag_get("genre")[5]
 
 
 class TestVideosPageFileDrag:

@@ -84,6 +84,8 @@ AreYouSureYouWantToDeletePropertyNameThisWillRemoveAllValuesForThisPropertyFromA
 	Cela retirera toutes les valeurs de cette propriété de toutes les vidéos.
 AreYouSureYouWantToQuit_8288c1bb87041abf
 	Êtes-vous sûr de vouloir quitter ?
+AskEachTime_985a18f91e873271
+	(demander à chaque fois)
 Audio_5e1ee8b2642f9f21
 	Audio :
 Audio_a5ebf7b9336e28f9
@@ -116,6 +118,8 @@ Channels_44d502bc3e71fb8d
 	Canaux :
 CheckToSetNameForAllSelectedVideos_c2c87194e7a87a2c
 	Cocher pour définir {name} pour toutes les vidéos sélectionnées
+ChooseProperty_fa030dedde67ef7d
+	Choisir une propriété...
 ClassifierPath_92b466874784457f
 	Chemin du classificateur
 Clean_672072ac7eb4ec6c
@@ -250,6 +254,14 @@ DatabaseFileInventory_38d036a40a388fc4
 	Inventaire des fichiers de la base de données
 DatabaseRenamedToName_5b675f19d283409a
 	Base de données renommée en '{name}'
+DatabaseSettingsDatabaseName_67d6536d8e2f49b
+	Paramètres de la base - {database_name}
+DatabaseSettingsUpdated_730dc11fab8e9c54
+	Paramètres de la base mis à jour
+DatabaseSettings_842226ef8b7208d3
+	&Paramètres de la base de données...
+DatabaseSettings_c1ebed7e75f22e9
+	Paramètres de la base de données
 Database_58ea48b9657c49fa
 	&Base de données
 DateAdded_916a9aa43289cba3
@@ -258,6 +270,8 @@ DateModified_bcdd75e0db1e9714
 	Date de modification :
 Date_fed7987e4f172179
 	Date
+DefaultPropertyForGeneralizedTitles_827fbf61586cdc35
+	Propriété par défaut pour les titres généralisés :
 DefaultValue_18639f57473befd3
 	Valeur par défaut
 Default_ab2a3d4ef1c9d192
@@ -404,6 +418,9 @@ FailedToRenamePropertyError_74d56e11dc532f2e
 	Échec du renommage de la propriété : {error}
 FailedToRenameValueError_47ea68beb6fbd6f8
 	Échec du renommage de la valeur : {error}
+FailedToUpdateDatabaseSettingsError_5013b70e382e2a6a
+	Échec de la mise à jour des paramètres de la base :
+	{error}
 FailedToUpdateFoldersError_ff0c153f3fb07059
 	Échec de la mise à jour des dossiers :
 	{error}
@@ -1039,6 +1056,8 @@ TitleMovedToTrash_7d4b243805b3d88f
 	'{title}' mis à la corbeille
 TitlePermanentlyDeleted_cd8054be7ee23467
 	'{title}' supprimé définitivement
+TitleProperty_8d7370b4da62e08e
+	{title} → {property}
 TitleRemovedFromDatabase_c65935f384a6934
 	'{title}' retiré de la base de données
 Title_faf921506746458d

@@ -24,6 +24,7 @@ from pysaurus.core.notifications import (
     ProfilingStart,
 )
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.interface.api.feature_api import FeatureAPI
 from pysaurus.interface.kyuti.app_context import AppContext
 from tests.utils import get_saurus_sql_database
@@ -44,6 +45,15 @@ def ctx():
 # =========================================================================
 # get_videos
 # =========================================================================
+
+
+class TestDatabaseSettings:
+    def test_set_persists_and_emits_state_changed(self, ctx, qtbot):
+        ctx._api.database.prop_type_add("title_target", "str", "", False)
+        settings = DatabaseSettings(generalize_title_property="title_target")
+        with qtbot.waitSignal(ctx.state_changed, timeout=1000):
+            ctx.set_database_settings(settings)
+        assert ctx.get_database_settings() == settings
 
 
 class TestGetVideos:

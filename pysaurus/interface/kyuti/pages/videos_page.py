@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 from pysaurus.core.classes import Selector
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.core.language import say
+from pysaurus.database.database_settings import can_hold_generalized_titles
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.interface.common.common import FIELD_MAP, Uniconst, format_group_value
 from pysaurus.interface.kyuti.app_context import AppContext
@@ -1654,18 +1655,7 @@ class VideosPage(QWidget):
             # Generalize actions (only when grouped by a similarity field)
             if self._grouped_by_similarity and len(self._videos) > 1:
                 menu.addSeparator()
-                title_menu = menu.addMenu(say("Generalize title"))
-                title_menu.addAction(
-                    say("File title"),
-                    lambda: self._generalize_title_to_property(video_id, "file_title"),
-                )
-                if video.meta_title:
-                    title_menu.addAction(
-                        say("Meta title"),
-                        lambda: self._generalize_title_to_property(
-                            video_id, "meta_title"
-                        ),
-                    )
+                self._add_generalize_title_menu(menu, video)
                 self._add_generalize_property_menu(menu, video)
             if has_sim_actions:
                 menu.addSeparator()
@@ -1835,8 +1825,48 @@ class VideosPage(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             self.ctx.reset_similarity(video_id, field=field)
 
-    def _generalize_title_to_property(self, video_id: int, title_field: str):
-        """Copy a video's title into a property for all other videos in the group."""
+    def _add_generalize_title_menu(self, menu, video):
+        """Add the 'Generalize title' submenu.
+
+        With a default property in the database settings, each title goes
+        straight into it and a nested "Choose property..." keeps the dialog
+        around. Without one, each title opens the dialog.
+        """
+        video_id = video.video_id
+        titles = [("file_title", say("File title"))]
+        if video.meta_title:
+            titles.append(("meta_title", say("Meta title")))
+        default = self.ctx.get_database_settings().generalize_title_property
+        title_menu = menu.addMenu(say("Generalize title"))
+        for field, label in titles:
+            if default:
+                title_menu.addAction(
+                    say("{title} → {property}", title=label, property=default),
+                    lambda f=field: self._generalize_title_to_property(
+                        video_id, f, default
+                    ),
+                )
+            else:
+                title_menu.addAction(
+                    label,
+                    lambda f=field: self._generalize_title_to_property(video_id, f),
+                )
+        if default:
+            title_menu.addSeparator()
+            choose_menu = title_menu.addMenu(say("Choose property..."))
+            for field, label in titles:
+                choose_menu.addAction(
+                    label,
+                    lambda f=field: self._generalize_title_to_property(video_id, f),
+                )
+
+    def _generalize_title_to_property(
+        self, video_id: int, title_field: str, prop_name: str | None = None
+    ):
+        """Copy a video's title into a property for all other videos in the group.
+
+        Without `prop_name`, ask which property to use.
+        """
         video = self._get_video_by_id(video_id)
         if not video:
             return
@@ -1848,10 +1878,34 @@ class VideosPage(QWidget):
             )
             return
 
-        # Get str non-enum properties
-        prop_types = self.ctx.get_prop_types()
+        if prop_name is None:
+            prop_name = self._ask_generalize_title_target(title_value)
+            if prop_name is None:
+                return
+
+        # Copy the title into the property for the WHOLE similarity group (all
+        # pages), not just the current page: resolve "everything in the view
+        # except this video" with a selector, applied backend-side - the same
+        # mechanism as "select all in view".
+        count = self.ctx.apply_on_view(
+            Selector(True, {video_id}).to_dict(),
+            "generalize_properties_for_videos",
+            {prop_name: [title_value]},
+        )
+        self.status_message_requested.emit(
+            say(
+                'Property "{name}" set to "{value}" for {count} video(s)',
+                name=prop_name,
+                value=title_value,
+                count=count or 0,
+            ),
+            5000,
+        )
+
+    def _ask_generalize_title_target(self, title_value: str) -> str | None:
+        """Dialog picking the property a title goes into; None when cancelled."""
         str_props = [
-            p.name for p in prop_types if p.type == "str" and not p.enumeration
+            p.name for p in self.ctx.get_prop_types() if can_hold_generalized_titles(p)
         ]
         if not str_props:
             QMessageBox.information(
@@ -1859,9 +1913,8 @@ class VideosPage(QWidget):
                 say("Generalize Title"),
                 say("No string (non-enum) property available."),
             )
-            return
+            return None
 
-        # Ask user to pick a property via a custom dialog with wrapping text.
         # nb_others counts the whole similarity group (view_count, computed
         # without the selector), not just the current page.
         nb_others = max(0, self._view_count - 1)
@@ -1895,28 +1948,8 @@ class VideosPage(QWidget):
         layout.addLayout(buttons)
 
         if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-
-        prop_name = combo.currentText()
-
-        # Copy the title into the property for the WHOLE similarity group (all
-        # pages), not just the current page: resolve "everything in the view
-        # except this video" with a selector, applied backend-side - the same
-        # mechanism as "select all in view".
-        count = self.ctx.apply_on_view(
-            Selector(True, {video_id}).to_dict(),
-            "generalize_properties_for_videos",
-            {prop_name: [title_value]},
-        )
-        self.status_message_requested.emit(
-            say(
-                'Property "{name}" set to "{value}" for {count} video(s)',
-                name=prop_name,
-                value=title_value,
-                count=count or 0,
-            ),
-            5000,
-        )
+            return None
+        return combo.currentText()
 
     def _add_generalize_property_menu(self, menu, video):
         """Add a 'Generalize property' submenu listing the video's set properties.

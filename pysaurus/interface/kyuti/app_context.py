@@ -22,6 +22,7 @@ from pysaurus.core.notifications import (
     ProfilingEnd,
     ProfilingStart,
 )
+from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.database.saurus.video_mega_group import _compile_source_expression
 from pysaurus.interface.kyuti.kyuti_api import KyutiAPI
 from pysaurus.interface.kyuti.qt_translation import QtStandardTranslations
@@ -351,6 +352,18 @@ class AppContext(QObject):
         """Set the database source folders."""
         if self._ops:
             self._ops.set_folders(folders)
+            self.state_changed.emit()
+
+    def get_database_settings(self) -> DatabaseSettings:
+        """Get the per-database settings (defaults when no database is open)."""
+        if self._database:
+            return self._database.get_settings()
+        return DatabaseSettings()
+
+    def set_database_settings(self, settings: DatabaseSettings) -> None:
+        """Store the per-database settings."""
+        if self._ops:
+            self._ops.set_settings(settings)
             self.state_changed.emit()
 
     def confirm_move(self, src_video_id: int, dst_video_id: int) -> None:

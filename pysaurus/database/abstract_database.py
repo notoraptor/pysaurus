@@ -10,6 +10,7 @@ from pysaurus.core.datestring import Date
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database_algorithms import DatabaseAlgorithms
 from pysaurus.database.database_operations import DatabaseOperations
+from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.database.db_paths import Basename, DatabasePaths
 from pysaurus.database.db_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.dbview.view_context import ViewContext
@@ -96,6 +97,15 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def _set_folders(self, folders: list[AbsolutePath]) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_settings(self) -> DatabaseSettings:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _set_settings(self, settings: DatabaseSettings) -> None:
+        """Store settings as given; DatabaseOperations.set_settings validates."""
         raise NotImplementedError()
 
     @abstractmethod

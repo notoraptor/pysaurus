@@ -27,7 +27,11 @@ from PySide6.QtWidgets import (
 
 from pysaurus.core.language import say
 from pysaurus.core.notifications import End
+from pysaurus.database.database_settings import can_hold_generalized_titles
 from pysaurus.interface.kyuti.app_context import AppContext
+from pysaurus.interface.kyuti.dialogs.database_settings_dialog import (
+    DatabaseSettingsDialog,
+)
 from pysaurus.interface.kyuti.dialogs.edit_folders_dialog import EditFoldersDialog
 from pysaurus.interface.kyuti.dialogs.process_dialog import ProcessDialog
 from pysaurus.interface.kyuti.dialogs.rename_dialog import RenameDialog
@@ -127,6 +131,9 @@ class MainWindow(QMainWindow):
         )
         self._action_edit_folders = self.database_menu.addAction(
             say("&Edit Folders..."), self._on_edit_folders
+        )
+        self._action_db_settings = self.database_menu.addAction(
+            say("Database &Settings..."), self._on_database_settings
         )
         self.database_menu.addSeparator()
         self._action_update_db = self.database_menu.addAction(
@@ -265,6 +272,7 @@ class MainWindow(QMainWindow):
         # Database menu actions
         self._action_rename_db.setText(say("&Rename Database..."))
         self._action_edit_folders.setText(say("&Edit Folders..."))
+        self._action_db_settings.setText(say("Database &Settings..."))
         self._action_update_db.setText(say("&Update Database"))
         self._action_find_similar.setText(say("Find &Similar Videos"))
         self._action_find_reencoded.setText(say("Find Re-&encoded Videos"))
@@ -612,6 +620,7 @@ class MainWindow(QMainWindow):
         # Database menu actions: enabled when a database is open
         self._action_rename_db.setEnabled(has_db)
         self._action_edit_folders.setEnabled(has_db)
+        self._action_db_settings.setEnabled(has_db)
         self._action_update_db.setEnabled(has_db)
         self._action_find_similar.setEnabled(has_db)
         self._action_find_reencoded.setEnabled(has_db)
@@ -717,6 +726,32 @@ class MainWindow(QMainWindow):
                         say("Update Failed"),
                         say("Failed to update folders:\n{error}", error=e),
                     )
+
+    def _on_database_settings(self):
+        """Handle database settings action."""
+        if not self.ctx.has_database():
+            return
+
+        settings = self.ctx.get_database_settings()
+        candidates = [
+            p.name for p in self.ctx.get_prop_types() if can_hold_generalized_titles(p)
+        ]
+        new_settings = DatabaseSettingsDialog.edit_settings(
+            settings=settings,
+            property_names=candidates,
+            database_name=self.ctx.get_database_name(),
+            parent=self,
+        )
+        if new_settings is not None and new_settings != settings:
+            try:
+                self.ctx.set_database_settings(new_settings)
+                self.status_bar.showMessage(say("Database settings updated"), 3000)
+            except Exception as e:
+                QMessageBox.critical(
+                    self,
+                    say("Update Failed"),
+                    say("Failed to update database settings:\n{error}", error=e),
+                )
 
     def _on_close_database(self):
         """Handle close database action."""

@@ -15,6 +15,7 @@ from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.language import say
 from pysaurus.core.notifications import End
+from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.interface.kyuti import main_window as mw_module
 from pysaurus.interface.kyuti.main_window import MainWindow, SessionLogDialog
 from pysaurus.video.video_search_context import VideoSearchContext
@@ -102,6 +103,14 @@ class QMockAppContext(QObject):
 
     def get_prop_types(self, **kwargs) -> list:
         return []
+
+    _settings = DatabaseSettings()
+
+    def get_database_settings(self) -> DatabaseSettings:
+        return self._settings
+
+    def set_database_settings(self, settings: DatabaseSettings) -> None:
+        self._settings = settings
 
     def get_videos(self, page_size, page_number, selector=None):
         if not self._has_database:
@@ -706,6 +715,26 @@ class TestDatabaseMenuActions:
     def test_edit_folders_no_database(self, main_window):
         """Edit folders with no database should do nothing."""
         main_window._on_edit_folders()
+
+    def test_database_settings_no_database(self, main_window):
+        main_window._on_database_settings()
+
+    def test_database_settings_saved(self, main_window, monkeypatch):
+        main_window.ctx._simulate_open("my_db")
+        chosen = DatabaseSettings(generalize_title_property="identifier")
+        monkeypatch.setattr(
+            mw_module.DatabaseSettingsDialog, "edit_settings", lambda **kw: chosen
+        )
+        main_window._on_database_settings()
+        assert main_window.ctx.get_database_settings() == chosen
+
+    def test_database_settings_cancelled(self, main_window, monkeypatch):
+        main_window.ctx._simulate_open("my_db")
+        monkeypatch.setattr(
+            mw_module.DatabaseSettingsDialog, "edit_settings", lambda **kw: None
+        )
+        main_window._on_database_settings()
+        assert main_window.ctx.get_database_settings() == DatabaseSettings()
 
 
 # =============================================================================

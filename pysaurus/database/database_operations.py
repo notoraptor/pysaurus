@@ -18,6 +18,10 @@ from pysaurus.core import functions
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.datestring import Date
 from pysaurus.core.path_tree import PathTree
+from pysaurus.database.database_settings import (
+    DatabaseSettings,
+    can_hold_generalized_titles,
+)
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.properties.property_value_modifier import PropertyValueModifier
 
@@ -58,6 +62,27 @@ class DatabaseOperations:
                     )
         if folders != sorted(self.db.get_folders()):
             self.db._set_folders(folders)
+            self.db.save()
+
+    def set_settings(self, settings: DatabaseSettings) -> None:
+        """Store per-database settings, saving if they changed.
+
+        The generalize-title target must be a non-enumerated string property:
+        the same rule "Generalize title" applies when it asks for one.
+        """
+        name = settings.generalize_title_property
+        if name is not None:
+            prop_types = self.db.get_prop_types(name=name)
+            if not prop_types:
+                raise exceptions.PropertyNotFound(name)
+            (prop_type,) = prop_types
+            if not can_hold_generalized_titles(prop_type):
+                raise exceptions.InvalidDatabaseSetting(
+                    f"Generalize-title target must be a non-enumerated string "
+                    f"property: {name}"
+                )
+        if settings != self.db.get_settings():
+            self.db._set_settings(settings)
             self.db.save()
 
     def count_videos(self, *flags, **forced_flags) -> int:

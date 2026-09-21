@@ -54,6 +54,10 @@ class PropertyNotFound(PysaurusError):
     pass
 
 
+class InvalidDatabaseSetting(PysaurusError):
+    pass
+
+
 class PathAlreadyExists(PysaurusError):
     pass
 

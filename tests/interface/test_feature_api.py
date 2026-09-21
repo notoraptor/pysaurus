@@ -23,6 +23,7 @@ from pysaurus.database.algorithms import miniatures as miniatures_module
 from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.database_algorithms import DatabaseAlgorithms
 from pysaurus.database.database_operations import DatabaseOperations
+from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.interface.api.feature_api import FeatureAPI
 from tests.utils import TEST_HOME_DIR
 
@@ -533,6 +534,16 @@ class TestFeatureAPIDatabase:
         assert set(f.path for f in folders_after) == set(
             f.path for f in current_folders
         )
+
+    def test_database_settings_round_trip(self, feature_api_with_db):
+        """Settings go through the API and clear with the property they name."""
+        api = feature_api_with_db
+        api.__run_feature__("create_prop_type", "title_target", "str", "", False)
+        settings = DatabaseSettings(generalize_title_property="title_target")
+        api.__run_feature__("set_database_settings", settings)
+        assert api.__run_feature__("get_database_settings") == settings
+        api.__run_feature__("remove_prop_type", "title_target")
+        assert api.__run_feature__("get_database_settings") == DatabaseSettings()
 
     def test_rename_database(self, feature_api_with_db):
         """Test renaming database."""

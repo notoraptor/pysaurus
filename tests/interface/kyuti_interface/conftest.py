@@ -17,6 +17,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
 
+from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.dbview.view_context import ViewContext
 from tests.mocks.mock_database import MockDatabase
 
@@ -50,6 +51,7 @@ class MockAppContext:
         self._application = MockApplication()
         self._view = ViewContext()
         self._last_result = None
+        self._settings = DatabaseSettings()
 
     # State
 
@@ -339,6 +341,12 @@ class MockAppContext:
 
     def set_database_folders(self, folders: list[str]) -> None:
         pass
+
+    def get_database_settings(self) -> DatabaseSettings:
+        return self._settings
+
+    def set_database_settings(self, settings: DatabaseSettings) -> None:
+        self._settings = settings
 
 
 @pytest.fixture

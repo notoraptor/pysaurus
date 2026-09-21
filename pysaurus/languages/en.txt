@@ -84,6 +84,8 @@ AreYouSureYouWantToDeletePropertyNameThisWillRemoveAllValuesForThisPropertyFromA
 	This will remove all values for this property from all videos.
 AreYouSureYouWantToQuit_8288c1bb87041abf
 	Are you sure you want to quit?
+AskEachTime_985a18f91e873271
+	(ask each time)
 Audio_5e1ee8b2642f9f21
 	Audio:
 Audio_a5ebf7b9336e28f9
@@ -116,6 +118,8 @@ Channels_44d502bc3e71fb8d
 	Channels:
 CheckToSetNameForAllSelectedVideos_c2c87194e7a87a2c
 	Check to set {name} for all selected videos
+ChooseProperty_fa030dedde67ef7d
+	Choose property...
 ClassifierPath_92b466874784457f
 	Classifier Path
 Clean_672072ac7eb4ec6c
@@ -250,6 +254,14 @@ DatabaseFileInventory_38d036a40a388fc4
 	Database file inventory
 DatabaseRenamedToName_5b675f19d283409a
 	Database renamed to '{name}'
+DatabaseSettingsDatabaseName_67d6536d8e2f49b
+	Database Settings - {database_name}
+DatabaseSettingsUpdated_730dc11fab8e9c54
+	Database settings updated
+DatabaseSettings_842226ef8b7208d3
+	Database &Settings...
+DatabaseSettings_c1ebed7e75f22e9
+	Database Settings
 Database_58ea48b9657c49fa
 	&Database
 DateAdded_916a9aa43289cba3
@@ -258,6 +270,8 @@ DateModified_bcdd75e0db1e9714
 	Date Modified:
 Date_fed7987e4f172179
 	Date
+DefaultPropertyForGeneralizedTitles_827fbf61586cdc35
+	Default property for generalized titles:
 DefaultValue_18639f57473befd3
 	Default value
 Default_ab2a3d4ef1c9d192
@@ -404,6 +418,9 @@ FailedToRenamePropertyError_74d56e11dc532f2e
 	Failed to rename property: {error}
 FailedToRenameValueError_47ea68beb6fbd6f8
 	Failed to rename value: {error}
+FailedToUpdateDatabaseSettingsError_5013b70e382e2a6a
+	Failed to update database settings:
+	{error}
 FailedToUpdateFoldersError_ff0c153f3fb07059
 	Failed to update folders:
 	{error}
@@ -1039,6 +1056,8 @@ TitleMovedToTrash_7d4b243805b3d88f
 	'{title}' moved to trash
 TitlePermanentlyDeleted_cd8054be7ee23467
 	'{title}' permanently deleted
+TitleProperty_8d7370b4da62e08e
+	{title} → {property}
 TitleRemovedFromDatabase_c65935f384a6934
 	'{title}' removed from database
 Title_faf921506746458d

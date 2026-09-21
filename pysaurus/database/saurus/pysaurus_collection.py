@@ -10,6 +10,7 @@ from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase, Change
+from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.database.db_paths import Basename
 from pysaurus.database.saurus.prop_type_search import prop_type_search
 from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
@@ -147,6 +148,33 @@ class PysaurusCollection(AbstractDatabase):
         self.db.modify_many(
             "INSERT OR IGNORE INTO collection_source (source) VALUES (?)",
             [(path.path,) for path in folders],
+        )
+
+    def get_settings(self) -> DatabaseSettings:
+        row = self.db.query_one(
+            "SELECT p.name AS generalize_title_property "
+            "FROM collection AS c "
+            "LEFT JOIN property AS p ON p.property_id = c.generalize_title_property_id "
+            "WHERE c.collection_id = 0"
+        )
+        return DatabaseSettings(
+            generalize_title_property=row["generalize_title_property"]
+        )
+
+    def _set_settings(self, settings: DatabaseSettings) -> None:
+        property_id = None
+        if settings.generalize_title_property is not None:
+            row = self.db.query_one(
+                "SELECT property_id FROM property WHERE name = ?",
+                [settings.generalize_title_property],
+            )
+            if row is None:
+                raise exceptions.PropertyNotFound(settings.generalize_title_property)
+            property_id = row["property_id"]
+        self.db.modify(
+            "UPDATE collection SET generalize_title_property_id = ? "
+            "WHERE collection_id = 0",
+            [property_id],
         )
 
     def videos_tag_get(
