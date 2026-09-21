@@ -123,6 +123,7 @@ FIELD_MAP = FieldMap(
         FieldInfo("bit_depth", "bit depth", GroupPerm.ALL, FieldType.INT),
         FieldInfo("container_format", None, GroupPerm.ALL, FieldType.STR),
         FieldInfo("date", "date modified", GroupPerm.ONLY_MANY, FieldType.SORTABLE),
+        FieldInfo("date_added", "date added", GroupPerm.ONLY_MANY, FieldType.SORTABLE),
         FieldInfo("date_entry_modified", None, GroupPerm.ONLY_MANY, FieldType.SORTABLE),
         FieldInfo("date_entry_opened", None, GroupPerm.ONLY_MANY, FieldType.SORTABLE),
         FieldInfo("day", "day", GroupPerm.ALL, FieldType.STR),

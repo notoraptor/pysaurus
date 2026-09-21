@@ -18,6 +18,7 @@ COMMON_FIELDS = (
     "channels",
     "container_format",
     "date",
+    "date_added",
     "date_entry_modified",
     "date_entry_opened",
     "errors",

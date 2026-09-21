@@ -576,6 +576,7 @@ _FIELD_CONVERTERS: dict[str, Callable] = {
     "byte_rate": FileSize,
     "size": FileSize,
     "date": Date,
+    "date_added": Date,
     "date_entry_modified": Date,
     "date_entry_opened": Date,
     "length": lambda v: Duration(v * 1_000_000),

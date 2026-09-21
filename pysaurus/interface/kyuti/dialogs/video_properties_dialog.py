@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pysaurus.core.datestring import Date
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.language import say
@@ -142,6 +143,10 @@ class VideoPropertiesDialog(QDialog):
         file_layout.addRow(say("Size:"), QLabel(str(FileSize(self.video.file_size))))
         file_layout.addRow(
             say("Date Modified:"), QLabel(str(self.video.date_entry_modified))
+        )
+        date_added = self.video.date_added
+        file_layout.addRow(
+            say("Date Added:"), QLabel(str(Date(date_added)) if date_added else "")
         )
 
         layout.addWidget(file_group)

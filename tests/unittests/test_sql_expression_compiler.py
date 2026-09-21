@@ -258,6 +258,10 @@ class TestDates:
         assert sql == "v.mtime > ?"
         assert len(params) == 1
 
+    def test_date_added_is_its_own_field(self):
+        sql, params = _compile("date_added > 2024-03-15")
+        assert sql == "v.date_added > ?"
+
 
 # ===========================================================================
 # Properties

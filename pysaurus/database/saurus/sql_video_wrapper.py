@@ -43,9 +43,10 @@ class F:
     rotation = 31
     sample_aspect_ratio_den = 32
     sample_aspect_ratio_num = 33
+    date_added = 34
     # Special fields, not from "video" table
-    thumbnail = 34
-    with_thumbnails = 35
+    thumbnail = 35
+    with_thumbnails = 36
 
 
 def get_video_table_fields() -> Iterable[str]:
@@ -251,6 +252,10 @@ class SQLVideoWrapper(VideoPattern):
     @property
     def similarity_id_reencoded(self):
         return self.data[F.similarity_id_reencoded]
+
+    @property
+    def date_added(self) -> float:
+        return self.data[F.date_added]
 
     @property
     def watched(self) -> bool:

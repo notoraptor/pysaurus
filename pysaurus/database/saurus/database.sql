@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS video (
 	is_file INTEGER NOT NULL DEFAULT 0,
 	discarded INTEGER NOT NULL DEFAULT 0,
 	-- mutable
+	-- When the content entered the collection: mtime at insertion, earliest kept on merge.
+	date_added DOUBLE NOT NULL DEFAULT 0.0,
 	date_entry_modified DOUBLE,
 	date_entry_opened DOUBLE,
 	similarity_id INTEGER,
@@ -214,6 +216,7 @@ CREATE INDEX IF NOT EXISTS idx_video_audio_codec ON video(audio_codec);
 CREATE INDEX IF NOT EXISTS idx_video_audio_codec_description ON video(audio_codec_description);
 CREATE INDEX IF NOT EXISTS idx_video_channels ON video(channels);
 CREATE INDEX IF NOT EXISTS idx_video_container_format ON video(container_format);
+CREATE INDEX IF NOT EXISTS idx_video_date_added ON video(date_added);
 CREATE INDEX IF NOT EXISTS idx_video_date_entry_modified ON video(date_entry_modified);
 CREATE INDEX IF NOT EXISTS idx_video_date_entry_opened ON video(date_entry_opened);
 CREATE INDEX IF NOT EXISTS idx_video_device_name ON video(device_name);

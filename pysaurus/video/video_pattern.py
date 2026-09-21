@@ -50,6 +50,11 @@ class VideoPattern(ABC):
 
     @property
     @abstractmethod
+    def date_added(self) -> float:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
     def date_entry_modified(self) -> Date:
         raise NotImplementedError()
 
@@ -410,6 +415,7 @@ class VideoPattern(ABC):
             "channels": self.channels,
             "container_format": str(self.container_format),
             "date": str(self.date),
+            "date_added": str(Date(self.date_added)),
             "date_entry_modified": str(self.date_entry_modified),
             "date_entry_opened": str(self.date_entry_opened),
             # "day": self.day,

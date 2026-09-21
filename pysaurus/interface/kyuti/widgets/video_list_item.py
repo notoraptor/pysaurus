@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pysaurus.core.datestring import Date
 from pysaurus.core.language import say
 from pysaurus.interface.common.common import display_geometry_text
 from pysaurus.interface.kyuti.widgets.flow_layout import FlowLayout
@@ -347,6 +348,16 @@ class VideoListItem(QFrame):
             )
             date_line += (
                 f' | <i style="color: #888;">{say("(opened)")}</i> {date_opened_html}'
+            )
+
+        # Shown only when it tells more than the file date, like the entry dates.
+        date_added = self.video.date_added
+        if date_added and date_added != self.video.mtime:
+            date_added_html = self._highlight_if_diff(
+                "date_added", f'<code style="color: #996600;">{Date(date_added)}</code>'
+            )
+            date_line += (
+                f' | <i style="color: #888;">{say("(added)")}</i> {date_added_html}'
             )
 
         date_label = WrappingLabel(date_line)

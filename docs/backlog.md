@@ -109,10 +109,13 @@ de la barre de menu a été supprimé.
 
 ## P3 — Nouvelles fonctionnalités
 
-### Propriété `date_added`
+### Propriété `date_added` ✅
 
 Enregistrer la date à laquelle une vidéo a été ajoutée à la base de données.
 Distincte de `mtime`, `date_entry_modified` et `date_entry_opened`.
+Colonne `date_added` (schéma v8) : mtime à l'insertion, conservée aux rescans,
+héritée (la plus ancienne) lors d'un move. Champ à part, triable et groupable ;
+`date`, `day` et `year` restent sur le mtime.
 
 ### Recherche inverse (NOT AND, NOT OR)
 

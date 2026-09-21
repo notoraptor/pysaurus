@@ -66,6 +66,7 @@ where_builder.append_query(...)              (video_mega_group)
 | `size` | `v.file_size` | Octets |
 | `length` | `v.length_microseconds` | Colonne générée, microsecondes |
 | `date` | `v.mtime` | Timestamp Unix (float) |
+| `date_added` | `v.date_added` | Timestamp Unix (float) : date d'entrée dans la collection |
 | `date_entry_modified` | `v.date_entry_modified_not_null` | Colonne générée |
 | `date_entry_opened` | `v.date_entry_opened_not_null` | Colonne générée |
 | `frame_rate` | `v.frame_rate` | Colonne générée (`num / den`) |

@@ -48,6 +48,7 @@ class SqlFieldFactory:
                 SqlField.auto("bit_depth"),
                 SqlField.auto("byte_rate"),
                 SqlField.auto("container_format"),
+                SqlField.auto("date_added"),
                 SqlField.auto("day"),
                 SqlField.auto("duration"),
                 SqlField.auto("frame_rate"),

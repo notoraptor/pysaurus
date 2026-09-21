@@ -28,6 +28,8 @@ AddValue_786ecece3b09f995
 	Ajouter une valeur
 Add_d86fd0186b52e59e
 	Ajouter
+Added_91accfeb8b5c52dc
+	(ajout)
 Advanced_8b4555fb47a8a2bb
 	Avancé :
 Advanced_bd7c3d69eb9128fb
@@ -250,6 +252,8 @@ DatabaseRenamedToName_5b675f19d283409a
 	Base de données renommée en '{name}'
 Database_58ea48b9657c49fa
 	&Base de données
+DateAdded_916a9aa43289cba3
+	Date d'ajout :
 DateModified_bcdd75e0db1e9714
 	Date de modification :
 Date_fed7987e4f172179

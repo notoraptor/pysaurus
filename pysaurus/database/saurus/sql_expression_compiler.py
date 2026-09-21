@@ -87,6 +87,7 @@ ATTRIBUTE_SQL_MAP: dict[str, str] = {
     "size": "v.file_size",
     "length": "v.length_microseconds",
     "date": "v.mtime",
+    "date_added": "v.date_added",
     "date_entry_modified": "v.date_entry_modified_not_null",
     "date_entry_opened": "v.date_entry_opened_not_null",
     # Requires LEFT JOIN video_thumbnail (already present in video_mega_group)
@@ -114,6 +115,7 @@ VIDEO_SEARCH_ATTRIBUTES: dict[str, FieldType | SetType] = {
     "channels": FieldType.INT,
     "container_format": FieldType.STR,
     "date": FieldType.DATE,
+    "date_added": FieldType.DATE,
     "date_entry_modified": FieldType.DATE,
     "date_entry_opened": FieldType.DATE,
     "device_name": FieldType.STR,

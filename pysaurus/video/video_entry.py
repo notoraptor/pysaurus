@@ -42,6 +42,7 @@ class VideoEntry:
     audio_languages: Sequence[str] = field(default_factory=list)
     subtitle_languages: Sequence[str] = field(default_factory=list)
     # collection data
+    date_added: float = 0.0  # set once at insertion: mtime unless given
     date_entry_modified: float | None = None  # as Date(this or mtime if None)
     date_entry_opened: float | None = None  # as Date(this or mtime if None)
     similarity_id: int | None = None
@@ -60,10 +61,14 @@ class VideoEntry:
         del output["date_entry_opened"]
         del output["similarity_id"]
         del output["similarity_id_reencoded"]
-        if not for_update:
+        if for_update:
+            del output["date_added"]
+        else:
             del output["video_id"]
         if runtime_info:
             output["mtime"] = runtime_info.mtime
             output["driver_id"] = runtime_info.driver_id
             output["is_file"] = runtime_info.is_file
+        if not for_update and not output["date_added"]:
+            output["date_added"] = output["mtime"]
         return output

@@ -265,12 +265,14 @@ class DatabaseAlgorithms:
             )
         }
         assert all(from_id in from_map for from_id in from_indices)
-        assert set(to_indices) == set(
-            row.video_id
+        to_map = {
+            row.video_id: row
             for row in self.db.get_videos(
-                include=["video_id"], where={"video_id": to_indices, "found": True}
+                include=["video_id", "date_added"],
+                where={"video_id": to_indices, "found": True},
             )
-        )
+        }
+        assert set(to_indices) == set(to_map)
         # Refuse merges that would corrupt a unique property: carrying the source
         # value onto a destination that already holds a *different* value for a
         # multiple=False property would stack two values on it (and crash on the
@@ -312,8 +314,22 @@ class DatabaseAlgorithms:
                     for from_id, to_id in moves
                 },
             )
+            self.db.videos_set_field(
+                "date_added",
+                {
+                    to_id: self._earliest(
+                        from_map[from_id].date_added, to_map[to_id].date_added
+                    )
+                    for from_id, to_id in moves
+                },
+            )
             for from_id in from_indices:
                 self.db.video_entry_del(from_id)
+
+    @staticmethod
+    def _earliest(*dates: float) -> float:
+        """Earliest known date; 0.0 stands for unknown and never wins."""
+        return min((date for date in dates if date > 0), default=0.0)
 
     def _refuse_unique_property_conflicts(
         self, moves: list[tuple[int, int]], from_map: dict
