@@ -152,13 +152,17 @@ class PysaurusCollection(AbstractDatabase):
 
     def get_settings(self) -> DatabaseSettings:
         row = self.db.query_one(
-            "SELECT p.name AS generalize_title_property "
+            "SELECT p.name AS generalize_title_property, "
+            "c.copy_overwrites_unique_properties "
             "FROM collection AS c "
             "LEFT JOIN property AS p ON p.property_id = c.generalize_title_property_id "
             "WHERE c.collection_id = 0"
         )
         return DatabaseSettings(
-            generalize_title_property=row["generalize_title_property"]
+            generalize_title_property=row["generalize_title_property"],
+            copy_overwrites_unique_properties=bool(
+                row["copy_overwrites_unique_properties"]
+            ),
         )
 
     def _set_settings(self, settings: DatabaseSettings) -> None:
@@ -172,9 +176,9 @@ class PysaurusCollection(AbstractDatabase):
                 raise exceptions.PropertyNotFound(settings.generalize_title_property)
             property_id = row["property_id"]
         self.db.modify(
-            "UPDATE collection SET generalize_title_property_id = ? "
-            "WHERE collection_id = 0",
-            [property_id],
+            "UPDATE collection SET generalize_title_property_id = ?, "
+            "copy_overwrites_unique_properties = ? WHERE collection_id = 0",
+            [property_id, int(settings.copy_overwrites_unique_properties)],
         )
 
     def videos_tag_get(

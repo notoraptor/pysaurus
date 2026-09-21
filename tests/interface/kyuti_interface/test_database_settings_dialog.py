@@ -1,4 +1,5 @@
-"""DatabaseSettingsDialog: an "ask each time" entry, then the candidates."""
+"""DatabaseSettingsDialog: an "ask each time" entry, then the candidates,
+and the copy-overwrite flag."""
 
 from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.interface.kyuti.dialogs.database_settings_dialog import (
@@ -34,4 +35,14 @@ def test_unknown_default_falls_back_to_ask_each_time(qtbot):
         DatabaseSettings(generalize_title_property="gone"), ["a"]
     )
     qtbot.addWidget(dialog)
+    assert dialog.get_settings() == DatabaseSettings()
+
+
+def test_overwrite_flag_is_shown_and_returned(qtbot):
+    dialog = DatabaseSettingsDialog(
+        DatabaseSettings(copy_overwrites_unique_properties=True), []
+    )
+    qtbot.addWidget(dialog)
+    assert dialog._overwrite_check.isChecked()
+    dialog._overwrite_check.setChecked(False)
     assert dialog.get_settings() == DatabaseSettings()

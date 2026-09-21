@@ -29,7 +29,10 @@ from PySide6.QtWidgets import (
 from pysaurus.core.classes import Selector
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES, VIDEO_DEFAULT_SORTING
 from pysaurus.core.language import say
-from pysaurus.database.database_settings import can_hold_generalized_titles
+from pysaurus.database.database_settings import (
+    can_accumulate_titles,
+    can_hold_generalized_titles,
+)
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.interface.common.common import FIELD_MAP, Uniconst, format_group_value
 from pysaurus.interface.kyuti.app_context import AppContext
@@ -1657,6 +1660,7 @@ class VideosPage(QWidget):
                 menu.addSeparator()
                 self._add_generalize_title_menu(menu, video)
                 self._add_generalize_property_menu(menu, video)
+                self._add_copy_similarity_infos_menu(menu, video)
             if has_sim_actions:
                 menu.addSeparator()
 
@@ -2055,6 +2059,95 @@ class VideosPage(QWidget):
             QMessageBox.StandardButton.No,
         )
         return reply == QMessageBox.StandardButton.Yes
+
+    def _add_copy_similarity_infos_menu(self, menu, video):
+        """Add the 'Copy similarity infos to' submenu, one entry per other video.
+
+        The candidates are the rest of the group across every page, so they
+        come from the view rather than from the current page.
+        """
+        video_id = video.video_id
+        others = [i for i in self.ctx.get_all_view_ids() if i != video_id]
+        if not others:
+            return
+        # Both calls walk the same view in the same order: ids and names line up.
+        filenames = self.ctx.query_on_view(
+            Selector(False, set(others)).to_dict(), "get_video_filenames"
+        )
+        copy_menu = menu.addMenu(say("Copy similarity infos to"))
+        for dst_id, filename in zip(others, filenames or ()):
+            copy_menu.addAction(
+                str(filename),
+                lambda d=dst_id, t=filename.file_title: self._copy_similarity_infos(
+                    video_id, d, t
+                ),
+            )
+
+    def _copy_similarity_infos(
+        self, src_video_id: int, dst_video_id: int, dst_title: str
+    ):
+        """Copy a video's similarity infos onto another video of its group.
+
+        Titles need the generalize-title property to be multiple; otherwise
+        offer to copy everything else.
+        """
+        name = self.ctx.get_database_settings().generalize_title_property
+        prop_type = next((p for p in self.ctx.get_prop_types() if p.name == name), None)
+        if prop_type is None:
+            problem = say(
+                "No property is configured for generalized titles, "
+                "so the titles cannot be copied."
+            )
+        elif not can_accumulate_titles(prop_type):
+            problem = say(
+                'Property "{name}" holds a single value, '
+                "so the titles cannot be stacked into it.",
+                name=name,
+            )
+        else:
+            problem = None
+        with_titles = problem is None
+        if problem is not None:
+            reply = QMessageBox.question(
+                self,
+                say("Copy similarity infos"),
+                say("{problem}\n\nCopy the rest anyway?", problem=problem),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+        report = self.ctx.copy_similarity_infos(
+            src_video_id, dst_video_id, with_titles=with_titles
+        )
+        if report is not None:
+            self.status_message_requested.emit(
+                self._describe_similarity_copy(report, dst_title), 5000
+            )
+
+    @staticmethod
+    def _describe_similarity_copy(report, dst_title: str) -> str:
+        """One status line: what landed on the destination, what was kept."""
+        parts = []
+        if report.properties:
+            parts.append(say("{count} property(ies)", count=len(report.properties)))
+        if report.titles:
+            parts.append(say("{count} title(s)", count=len(report.titles)))
+        if report.watched:
+            parts.append(say("watched"))
+        if report.date_added:
+            parts.append(say("date added"))
+        if parts:
+            message = say(
+                "Copied to {title}: {what}", title=dst_title, what=", ".join(parts)
+            )
+        else:
+            message = say("Nothing new to copy to {title}", title=dst_title)
+        if report.kept:
+            message += " " + say(
+                "Kept destination values for: {props}", props=", ".join(report.kept)
+            )
+        return message
 
     def _confirm_move(self, src_video_id: int, dst_video_id: int):
         """Confirm a video move (transfer metadata from source to destination)."""

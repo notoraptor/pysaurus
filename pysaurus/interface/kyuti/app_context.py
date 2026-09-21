@@ -22,6 +22,7 @@ from pysaurus.core.notifications import (
     ProfilingEnd,
     ProfilingStart,
 )
+from pysaurus.database.database_algorithms import SimilarityCopyReport
 from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.database.saurus.video_mega_group import _compile_source_expression
 from pysaurus.interface.kyuti.kyuti_api import KyutiAPI
@@ -379,6 +380,18 @@ class AppContext(QObject):
             self.state_changed.emit()
             return result
         return 0
+
+    def copy_similarity_infos(
+        self, src_video_id: int, dst_video_id: int, *, with_titles: bool = True
+    ) -> SimilarityCopyReport | None:
+        """Copy src's properties, titles, watched and date_added onto dst."""
+        if self._algos:
+            report = self._algos.copy_similarity_infos(
+                src_video_id, dst_video_id, with_titles
+            )
+            self.state_changed.emit()
+            return report
+        return None
 
     # =========================================================================
     # Classifier operations

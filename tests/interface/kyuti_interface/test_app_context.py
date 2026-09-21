@@ -56,6 +56,22 @@ class TestDatabaseSettings:
         assert ctx.get_database_settings() == settings
 
 
+class TestCopySimilarityInfos:
+    def test_copies_and_emits_state_changed(self, ctx, qtbot):
+        db = ctx._api.database
+        db.prop_type_add("m", "str", "", True)
+        src, dst = [v.video_id for v in db.get_videos(include=["video_id"])][:2]
+        db.videos_tag_set("m", {src: ["a"]})
+        with qtbot.waitSignal(ctx.state_changed, timeout=1000):
+            report = ctx.copy_similarity_infos(src, dst, with_titles=False)
+        assert report.properties == ["m"]
+        assert db.videos_tag_get("m", indices=[dst])[dst] == ["a"]
+
+    def test_returns_none_without_database(self, ctx):
+        ctx._api.database = None
+        assert ctx.copy_similarity_infos(1, 2) is None
+
+
 class TestGetVideos:
     def test_returns_search_context(self, ctx):
         result = ctx.get_videos(page_size=10, page_number=0)

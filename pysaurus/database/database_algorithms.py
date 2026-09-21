@@ -9,6 +9,7 @@ This class contains algorithms that:
 
 import logging
 import tempfile
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Collection, Container, Sequence
 
 from pysaurus.application import exceptions
@@ -23,6 +24,7 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.algorithms.folder_scan import FolderScanner, FolderScanResult
 from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
+from pysaurus.database.database_settings import DatabaseSettings, can_accumulate_titles
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_runtime_info import VideoRuntimeInfo
@@ -31,6 +33,17 @@ if TYPE_CHECKING:
     from pysaurus.database.abstract_database import AbstractDatabase
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(slots=True)
+class SimilarityCopyReport:
+    """What "Copy similarity infos" changed on the destination video."""
+
+    properties: list[str] = field(default_factory=list)  # gained source values
+    kept: list[str] = field(default_factory=list)  # unique ones left as they were
+    titles: list[str] = field(default_factory=list)  # stacked into the title property
+    watched: bool = False  # newly marked as watched
+    date_added: bool = False  # took the source's earlier date
 
 
 class DatabaseAlgorithms:
@@ -330,6 +343,98 @@ class DatabaseAlgorithms:
     def _earliest(*dates: float) -> float:
         """Earliest known date; 0.0 stands for unknown and never wins."""
         return min((date for date in dates if date > 0), default=0.0)
+
+    def copy_similarity_infos(
+        self, from_id: int, to_id: int, with_titles: bool = True
+    ) -> SimilarityCopyReport:
+        """Carry one video's collection data onto a similar one, deleting nothing.
+
+        Properties merge as a move does, except that a unique property valued
+        differently on both sides keeps the destination's value unless the
+        database setting says to overwrite. With `with_titles`, the source's
+        file and meta titles are stacked into the generalize-title property,
+        which must be multiple. `watched` never turns off, `date_added` keeps
+        the earliest date and `date_entry_opened` the latest.
+        """
+        if from_id == to_id:
+            raise ValueError("Cannot copy a video's infos onto itself")
+        settings = self.db.get_settings()
+        title_prop = self._title_stack_property(settings) if with_titles else None
+        rows = {
+            row.video_id: row
+            for row in self.db.get_videos(
+                include=(
+                    "video_id",
+                    "filename",
+                    "meta_title",
+                    "watched",
+                    "date_added",
+                    "date_entry_opened",
+                    "properties",
+                ),
+                where={"video_id": [from_id, to_id]},
+            )
+        }
+        src, dst = rows[from_id], rows[to_id]
+        unique = {pt.name for pt in self.db.get_prop_types() if not pt.multiple}
+        report = SimilarityCopyReport()
+        fields: list[str] = []
+        with self.db.to_save():
+            for name, values in src.properties.items():
+                dst_values = set(dst.properties.get(name, ()))
+                if not values or not (set(values) - dst_values):
+                    continue
+                if name in unique and dst_values:
+                    if not settings.copy_overwrites_unique_properties:
+                        report.kept.append(name)
+                        continue
+                    action = self.db.action.REPLACE
+                else:
+                    action = self.db.action.ADD
+                self.db.videos_tag_set(name, {to_id: values}, action=action)
+                report.properties.append(name)
+            if title_prop:
+                known = set(dst.properties.get(title_prop, ())) | set(
+                    src.properties.get(title_prop, ())
+                )
+                titles = []
+                for title in (src.file_title, src.meta_title):
+                    if title and title not in known:
+                        titles.append(title)
+                        known.add(title)
+                if titles:
+                    self.db.videos_tag_set(
+                        title_prop, {to_id: titles}, action=self.db.action.ADD
+                    )
+                    report.titles = titles
+            if src.watched and not dst.watched:
+                self.db.videos_set_field("watched", {to_id: True})
+                report.watched = True
+                fields.append("watched")
+            date_added = self._earliest(src.date_added, dst.date_added)
+            if date_added != dst.date_added:
+                self.db.videos_set_field("date_added", {to_id: date_added})
+                report.date_added = True
+                fields.append("date_added")
+            if src.date_entry_opened.time > dst.date_entry_opened.time:
+                self.db.videos_set_field(
+                    "date_entry_opened", {to_id: src.date_entry_opened.time}
+                )
+                fields.append("date_entry_opened")
+            if fields:
+                self.db._notify_fields_modified(fields)
+            props = report.properties + ([title_prop] if report.titles else [])
+            if props:
+                self.db._notify_fields_modified(props, is_property=True)
+        return report
+
+    def _title_stack_property(self, settings: DatabaseSettings) -> str:
+        """The property titles stack into: the generalize-title one, multiple."""
+        name = settings.generalize_title_property
+        prop_types = self.db.get_prop_types(name=name) if name else []
+        if name is None or not prop_types or not can_accumulate_titles(prop_types[0]):
+            raise exceptions.NoTitleProperty(name)
+        return name
 
     def _refuse_unique_property_conflicts(
         self, moves: list[tuple[int, int]], from_map: dict

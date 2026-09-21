@@ -10,6 +10,7 @@ from PySide6.QtCore import QEvent, QPointF, Qt
 from PySide6.QtGui import QFocusEvent, QMouseEvent
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
+from pysaurus.database.database_algorithms import SimilarityCopyReport
 from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 from pysaurus.interface.kyuti.widgets.left_click_menu import LeftClickMenu
@@ -823,6 +824,111 @@ class TestVideosPageContextMenu:
         page._generalize_title_to_property(3, "file_title", "genre")
 
         assert title in mock_database.videos_tag_get("genre")[5]
+
+
+class TestVideosPageCopySimilarityInfos:
+    """The "Copy similarity infos to" submenu lists the rest of the group and,
+    without a multiple title property, offers to copy everything but the titles.
+    """
+
+    def _grouped_page(self, qtbot, mock_context):
+        mock_context.set_groups(
+            field="similarity_id",
+            is_property=False,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
+        )
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+        return page
+
+    def _patch_question(self, monkeypatch, answer, asked):
+        def question(*args, **kwargs):
+            asked.append(args[2])
+            return answer
+
+        monkeypatch.setattr(
+            "pysaurus.interface.kyuti.pages.videos_page.QMessageBox.question", question
+        )
+
+    def test_submenu_lists_the_other_videos_of_the_view(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._grouped_page(qtbot, mock_context)
+        others = [i for i in mock_context.get_all_view_ids() if i != 3]
+        assert others
+
+        submenus = TestVideosPageContextMenu._submenus(self, page, 3, monkeypatch)
+
+        assert submenus["Copy similarity infos to"] == [
+            str(mock_context.get_video_by_id(i).filename) for i in others
+        ]
+
+    def test_without_title_property_declining_copies_nothing(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._grouped_page(qtbot, mock_context)
+        asked = []
+        self._patch_question(monkeypatch, QMessageBox.StandardButton.No, asked)
+
+        page._copy_similarity_infos(3, 4, "movie2")
+
+        assert len(asked) == 1
+        assert mock_context.copied == []
+
+    def test_without_title_property_accepting_copies_the_rest(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._grouped_page(qtbot, mock_context)
+        self._patch_question(monkeypatch, QMessageBox.StandardButton.Yes, [])
+
+        page._copy_similarity_infos(3, 4, "movie2")
+
+        assert mock_context.copied == [(3, 4, False)]
+
+    def test_single_valued_title_property_is_refused_by_name(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        # "rating" is single-valued in the mock data.
+        mock_context.set_database_settings(
+            DatabaseSettings(generalize_title_property="rating")
+        )
+        page = self._grouped_page(qtbot, mock_context)
+        asked = []
+        self._patch_question(monkeypatch, QMessageBox.StandardButton.No, asked)
+
+        page._copy_similarity_infos(3, 4, "movie2")
+
+        assert len(asked) == 1 and "rating" in asked[0]
+        assert mock_context.copied == []
+
+    def test_multiple_title_property_copies_without_asking(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        # "genre" is a multiple string property in the mock data.
+        mock_context.set_database_settings(
+            DatabaseSettings(generalize_title_property="genre")
+        )
+        page = self._grouped_page(qtbot, mock_context)
+        self._patch_question(monkeypatch, QMessageBox.StandardButton.No, [])
+        messages = []
+        page.status_message_requested.connect(lambda m, t: messages.append(m))
+
+        page._copy_similarity_infos(3, 4, "movie2")
+
+        assert mock_context.copied == [(3, 4, True)]
+        assert messages == ["Copied to movie2: 1 property(ies), watched"]
+
+    def test_status_line_reports_kept_values_and_nothing_new(self):
+        describe = VideosPage._describe_similarity_copy
+        report = SimilarityCopyReport(kept=["u"])
+        assert describe(report, "x") == (
+            "Nothing new to copy to x Kept destination values for: u"
+        )
+        report = SimilarityCopyReport(titles=["a", "b"], date_added=True)
+        assert describe(report, "x") == "Copied to x: 2 title(s), date added"
 
 
 class TestVideosPageFileDrag:

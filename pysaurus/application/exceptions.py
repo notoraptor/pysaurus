@@ -58,6 +58,12 @@ class InvalidDatabaseSetting(PysaurusError):
     pass
 
 
+class NoTitleProperty(PysaurusError):
+    """No multiple string property is configured to stack titles into."""
+
+    pass
+
+
 class PathAlreadyExists(PysaurusError):
     pass
 

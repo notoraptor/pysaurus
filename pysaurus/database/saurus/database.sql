@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS collection (
 	date_updated DOUBLE,
 	-- Settings. A property reference follows renames and clears itself on deletion.
 	generalize_title_property_id INTEGER REFERENCES property(property_id) ON DELETE SET NULL,
+	copy_overwrites_unique_properties INTEGER NOT NULL DEFAULT 0,
 	-- Try to prevent having more than 1 row.
 	CHECK (collection_id = 0)
 );

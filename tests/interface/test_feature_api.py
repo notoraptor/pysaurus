@@ -545,6 +545,17 @@ class TestFeatureAPIDatabase:
         api.__run_feature__("remove_prop_type", "title_target")
         assert api.__run_feature__("get_database_settings") == DatabaseSettings()
 
+    def test_copy_similarity_infos_returns_the_report(self, feature_api_with_db):
+        api = feature_api_with_db
+        api.__run_feature__("create_prop_type", "m", "str", "", True)
+        src, dst = [v.video_id for v in api.database.get_videos(include=["video_id"])][
+            :2
+        ]
+        api.database.videos_tag_set("m", {src: ["a"]})
+        report = api.__run_feature__("copy_similarity_infos", src, dst, False)
+        assert report.properties == ["m"]
+        assert api.database.videos_tag_get("m", indices=[dst])[dst] == ["a"]
+
     def test_rename_database(self, feature_api_with_db):
         """Test renaming database."""
         api = feature_api_with_db

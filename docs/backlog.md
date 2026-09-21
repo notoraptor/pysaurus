@@ -117,6 +117,17 @@ Colonne `date_added` (schéma v8) : mtime à l'insertion, conservée aux rescans
 héritée (la plus ancienne) lors d'un move. Champ à part, triable et groupable ;
 `date`, `day` et `year` restent sur le mtime.
 
+### Copier les infos de similarité ✅
+
+Menu contextuel « Copy similarity infos to » dans un groupe de similarité :
+copie sur une autre vidéo du groupe toutes les propriétés, les titres (fichier
+et méta) empilés dans la propriété de généralisation (réglage de la base, doit
+être multiple), `watched` (jamais désactivé), `date_added` (la plus ancienne)
+et `date_entry_opened` (la plus récente). Rien n'est supprimé. Une propriété
+unique déjà valuée sur la destination est conservée, sauf si le réglage
+« écraser les propriétés à valeur unique » (schéma v10) est activé.
+Brique de la future action « remplacer l'original par le ré-encodé ».
+
 ### Recherche inverse (NOT AND, NOT OR)
 
 Ajouter la négation des modes de recherche existants :

@@ -17,6 +17,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
 
+from pysaurus.database.database_algorithms import SimilarityCopyReport
 from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.dbview.view_context import ViewContext
 from tests.mocks.mock_database import MockDatabase
@@ -52,6 +53,7 @@ class MockAppContext:
         self._view = ViewContext()
         self._last_result = None
         self._settings = DatabaseSettings()
+        self.copied: list[tuple[int, int, bool]] = []
 
     # State
 
@@ -328,6 +330,12 @@ class MockAppContext:
 
     def confirm_move(self, src_video_id: int, dst_video_id: int) -> None:
         pass
+
+    def copy_similarity_infos(
+        self, src_video_id: int, dst_video_id: int, *, with_titles: bool = True
+    ) -> SimilarityCopyReport:
+        self.copied.append((src_video_id, dst_video_id, with_titles))
+        return SimilarityCopyReport(properties=["genre"], watched=True)
 
     def rename_database(self, new_name: str) -> None:
         if self._database:

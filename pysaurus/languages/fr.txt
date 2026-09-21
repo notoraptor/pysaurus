@@ -192,12 +192,18 @@ ConvertToMultipleValues_c0a03dc9462634a7
 	Convertir en valeurs multiples
 ConvertToSingleValue_f4ae599bc4ad33f4
 	Convertir en valeur unique
+CopiedToTitleWhat_f5a916558a14f2d8
+	Copié vers {title} : {what}
 CopyBTitleBIntoPropertyForCountOtherVideoS_18417d01fa6aac01
 	Copier <b>{title}</b> dans la propriété pour {count} autre(s) vidéo(s) :
 CopyFilePath_5b1d27ebea18d101
 	Copier le chemin du fichier
 CopyFileTitle_59216abb20252086
 	Copier le titre du fichier
+CopySimilarityInfosTo_8a56b2d11581deff
+	Copier les infos de similarité vers
+CopySimilarityInfos_4d5b48b14e19e244
+	Copier les infos de similarité
 CopyTitle_ef89980224aea5b4
 	Copier le titre
 CopyValue_ca1406f065261ba1
@@ -218,10 +224,14 @@ CountMore_3653cc0a049eba47
 	… (+{count} autres)
 CountOtherFilesSize_8b0780cdae4e9425
 	{count} autres fichiers ({size})
+CountPropertyIes_5e1280edf45ba5bd
+	{count} propriété(s)
 CountSelected_b15d1c0400d35e9d
 	{count} sélectionnée(s)
 CountSources_17b2497302c11220
 	{count} sources
+CountTitleS_87ab2c0405d033f0
+	{count} titre(s)
 CountUnknownVideos_7c9330fb255dd764
 	{count} vidéos inconnues
 CountValueSWillBeRemoved_f09a6ca7c12ed842
@@ -266,6 +276,8 @@ Database_58ea48b9657c49fa
 	&Base de données
 DateAdded_916a9aa43289cba3
 	Date d'ajout :
+DateAdded_a539fa68c076dec3
+	date d'ajout
 DateModified_bcdd75e0db1e9714
 	Date de modification :
 Date_fed7987e4f172179
@@ -556,6 +568,8 @@ InvalidEnumerationValueForTypePropTypeValue_fd477024cb7ac6a0
 	Valeur d'énumération invalide pour le type {prop_type} : {value}
 InvalidValueForTypePropTypeValue_c32df512838e20ed
 	Valeur invalide pour le type {prop_type} : {value}
+KeptDestinationValuesForProps_cf1d7d1d6649a97e
+	Valeurs de la destination conservées pour : {props}
 Language_c9b2abbb5447bff
 	&Langue
 LastGroup_e2e13091b918e83c
@@ -658,6 +672,8 @@ NoPropertiesDefined_79a2f2adaa66508f
 	(aucune propriété définie)
 NoProperties_3dbf791f0485b0ab
 	Aucune propriété
+NoPropertyIsConfiguredForGeneralizedTitlesSoTheTitlesCannotBeCopied_35bafe0a12875835
+	Aucune propriété n'est configurée pour les titres généralisés : les titres ne peuvent pas être copiés.
 NoRedundantValueFound_bad621bf93c1b24a
 	Aucune valeur redondante trouvée.
 NoSelection_4effb87af82a0776
@@ -688,6 +704,8 @@ NotFound_f38b8a623dcf0c3c
 	INTROUVABLE
 NotSet_5f1a0162ba74d300
 	Non défini
+NothingNewToCopyToTitle_a78b92e40af726ef
+	Rien de nouveau à copier vers {title}
 NumpyImagesComparison_913b9ae4ae91effb
 	Comparaison d'images Numpy
 Ok_8323907b4eae9fb
@@ -725,6 +743,8 @@ OsError_27fb234f2511c0f1
 	Erreur système
 Others_66741785e8efeb28
 	Autres
+OverwriteSingleValuedPropertiesWhenCopyingSimilarityInfos_e7e66c1f924a0ae6
+	Écraser les propriétés à valeur unique lors de la copie des infos de similarité
 PageCurrentTotal_c45ee8b52882590a
 	Page {current}/{total}
 PageSize_eb94aa40282346fb
@@ -756,6 +776,10 @@ PreviousGroupUpArrow_a3a88716f67d4bec
 	Groupe précédent (Flèche haut)
 PreviousPageLeftArrow_36b97351dd898578
 	Page précédente (Flèche gauche)
+ProblemCopyTheRestAnyway_c804fa49ed09fc64
+	{problem}
+	
+	Copier quand même le reste ?
 PropertiesTitle_2807f8f0c9b2163f
 	Propriétés - {title}
 Properties_4a36bd9181ff5e9c
@@ -770,6 +794,8 @@ PropertyNameCreatedSuccessfully_112d61171bd2bc8a
 	Propriété '{name}' créée avec succès.
 PropertyNameFilledWithTerms_11f0e3a694f9dfa2
 	Propriété '{name}' remplie avec les termes.
+PropertyNameHoldsASingleValueSoTheTitlesCannotBeStackedIntoIt_42a14a3c7c1b969f
+	La propriété "{name}" n'accepte qu'une seule valeur : les titres ne peuvent pas y être empilés.
 PropertyNameSetToValueForCountVideoS_ec36192e62c1429a
 	Propriété "{name}" définie à "{value}" pour {count} vidéo(s)
 PropertyName_56e14868b02b4deb
@@ -1149,6 +1175,8 @@ View_d4f6bdb2dba870fa
 	&Affichage
 Watched_16565a9d7afc02ed
 	Vu
+Watched_a84efad8e52ea00d
+	vue
 WhenCheckedShowConfirmationDialogBeforeDeletingEntriesNotFound_89412382292a39f8
 	Si coché, afficher une boîte de confirmation avant de supprimer les entrées non trouvées
 WithThumbnails_88c2766413208194

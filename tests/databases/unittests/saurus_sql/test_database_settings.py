@@ -44,6 +44,13 @@ def test_only_a_non_enumerated_string_property_is_accepted(db, definition):
     assert db.get_settings().generalize_title_property is None
 
 
+def test_overwrite_flag_round_trip(db):
+    db.ops.set_settings(DatabaseSettings(copy_overwrites_unique_properties=True))
+    assert db.get_settings().copy_overwrites_unique_properties is True
+    db.ops.set_settings(DatabaseSettings())
+    assert db.get_settings().copy_overwrites_unique_properties is False
+
+
 def test_setting_follows_a_rename(db):
     db.prop_type_add("before", "str", "", False)
     _target(db, "before")

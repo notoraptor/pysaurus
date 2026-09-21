@@ -1,6 +1,7 @@
 """Dialog for the settings stored in a database."""
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -47,6 +48,11 @@ class DatabaseSettingsDialog(QDialog):
         form.addRow(
             say("Default property for generalized titles:"), self._generalize_combo
         )
+        self._overwrite_check = QCheckBox(
+            say("Overwrite single-valued properties when copying similarity infos")
+        )
+        self._overwrite_check.setChecked(settings.copy_overwrites_unique_properties)
+        form.addRow(self._overwrite_check)
         layout.addLayout(form)
 
         buttons = QDialogButtonBox(
@@ -58,7 +64,8 @@ class DatabaseSettingsDialog(QDialog):
 
     def get_settings(self) -> DatabaseSettings:
         return DatabaseSettings(
-            generalize_title_property=self._generalize_combo.currentData()
+            generalize_title_property=self._generalize_combo.currentData(),
+            copy_overwrites_unique_properties=self._overwrite_check.isChecked(),
         )
 
     @classmethod
