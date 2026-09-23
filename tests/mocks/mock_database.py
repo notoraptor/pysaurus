@@ -14,6 +14,7 @@ from pysaurus.application import exceptions
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
+from pysaurus.core.functions import string_to_pieces
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.dbview.view_tools import GroupDef
 from pysaurus.properties.properties import PropType
@@ -480,6 +481,25 @@ class MockDatabase:
                             props[name] = list(values)
             return len(video_ids)
 
+        elif fn_name == "set_watched_for_videos":
+            (watched,) = fn_args
+            changed = 0
+            for video in self._videos:
+                if video["video_id"] in video_ids and video["watched"] != watched:
+                    video["watched"] = watched
+                    changed += 1
+            return changed
+
+        elif fn_name == "toggle_watched_for_videos":
+            for video in self._videos:
+                if video["video_id"] in video_ids:
+                    video["watched"] = not video["watched"]
+            return len(video_ids)
+
+        elif fn_name == "find_redundant_property_values":
+            (use_full_path,) = fn_args
+            return self.find_redundant_property_values(video_ids, use_full_path)
+
         return {"applied": True, "fn_name": fn_name}
 
     def _get_video(self, video_id: int) -> dict | None:
@@ -647,6 +667,48 @@ class MockDatabase:
                 props[name] = [val for val in props[name] if val not in values_set]
                 if not props[name]:
                     del props[name]
+
+    def find_redundant_property_values(self, video_ids, use_full_path: bool) -> dict:
+        """{video_id: {property: [values]}} whose words all appear in the file
+        title (or full path) or in the meta title. Plain word-set containment:
+        the real algorithm also wants the words contiguous."""
+        text_props = [pt.name for pt in self.get_prop_types() if pt.type == "str"]
+        output = {}
+        for video in self._videos:
+            if video["video_id"] not in video_ids:
+                continue
+            path = AbsolutePath(video["filename"])
+            haystacks = [
+                set(string_to_pieces(str(path) if use_full_path else path.file_title)),
+                set(string_to_pieces(video.get("meta_title", ""))),
+            ]
+            redundant = {}
+            for name in text_props:
+                found = []
+                for value in video.get("properties", {}).get(name, []):
+                    pieces = set(string_to_pieces(str(value)))
+                    if pieces and any(pieces <= hay for hay in haystacks):
+                        found.append(value)
+                if found:
+                    redundant[name] = found
+            if redundant:
+                output[video["video_id"]] = redundant
+        return output
+
+    def delete_property_values_for_videos(self, removals: dict) -> int:
+        """Remove {video_id: {property: [values]}}; return the removed count."""
+        removed = 0
+        for video_id, by_prop in removals.items():
+            video = self._get_video(video_id)
+            if video is None:
+                continue
+            props = video.setdefault("properties", {})
+            for name, values in by_prop.items():
+                current = props.get(name, [])
+                kept = [v for v in current if v not in values]
+                removed += len(current) - len(kept)
+                props[name] = kept
+        return removed
 
     def replace_property_values(
         self, name: str, old_values: list, new_value: object

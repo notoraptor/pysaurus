@@ -514,7 +514,7 @@ class TestSetPropertyForVideos:
 
 
 class TestWatchOperations:
-    """Test mark_as_watched and mark_as_read methods."""
+    """Test mark_as_watched, mark_as_read and the batch watched operations."""
 
     def test_mark_as_watched(self, db):
         video_id = db.get_videos(include=["video_id"])[0].video_id
@@ -533,6 +533,35 @@ class TestWatchOperations:
 
         result2 = db.ops.mark_as_read(video_id)
         assert result2 == initial
+
+    def test_toggle_watched_many_flips_and_counts(self, db):
+        ids = [v.video_id for v in db.get_videos(include=["video_id"])[:3]]
+        before = self._watched(db, ids)
+
+        assert db.ops.toggle_watched_many(set(ids)) == 3
+
+        assert self._watched(db, ids) == {vid: not w for vid, w in before.items()}
+        assert db.ops.toggle_watched_many(set()) == 0
+
+    def test_set_watched_for_videos_counts_only_changes(self, db):
+        ids = [v.video_id for v in db.get_videos(include=["video_id"])[:3]]
+        db.ops.set_watched_for_videos(ids, False)
+
+        assert db.ops.set_watched_for_videos(ids[:2], True) == 2
+        assert self._watched(db, ids) == {ids[0]: True, ids[1]: True, ids[2]: False}
+        assert db.ops.set_watched_for_videos(ids, True) == 1
+        assert db.ops.set_watched_for_videos(ids, True) == 0
+        assert db.ops.set_watched_for_videos(ids, False) == 3
+        assert db.ops.set_watched_for_videos([], True) == 0
+
+    @staticmethod
+    def _watched(db, ids) -> dict[int, bool]:
+        return {
+            v.video_id: bool(v.watched)
+            for v in db.get_videos(
+                include=["video_id", "watched"], where={"video_id": ids}
+            )
+        }
 
 
 # =============================================================================

@@ -137,14 +137,32 @@ class DatabaseOperations:
         (row,) = self.db.get_videos(where={"video_id": video_id})
         return row.watched
 
-    def toggle_watched_many(self, video_ids: set[int]) -> None:
+    def toggle_watched_many(self, video_ids: Collection[int]) -> int:
         """Toggle watched status for multiple videos in a single batch."""
         if not video_ids:
-            return
-        rows = self.db.get_videos(where={"video_id": video_ids})
+            return 0
+        rows = self.db.get_videos(
+            include=["video_id", "watched"], where={"video_id": video_ids}
+        )
         changes = {row.video_id: not row.watched for row in rows}
         self.db.videos_set_field("watched", changes)
         self.db._notify_fields_modified(["watched"])
+        return len(changes)
+
+    def set_watched_for_videos(self, video_ids: Collection[int], watched: bool) -> int:
+        """Set the watched flag on many videos in one save; return how many changed."""
+        if not video_ids:
+            return 0
+        rows = self.db.get_videos(
+            include=["video_id", "watched"], where={"video_id": video_ids}
+        )
+        changes = {
+            row.video_id: watched for row in rows if bool(row.watched) != watched
+        }
+        if changes:
+            self.db.videos_set_field("watched", changes)
+            self.db._notify_fields_modified(["watched"])
+        return len(changes)
 
     def delete_video(self, video_id: int) -> AbsolutePath:
         """Delete video file and database entry."""

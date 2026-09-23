@@ -138,6 +138,15 @@ absent. La copie précède le retrait, donc un échec du retrait ne perd rien.
 Si la destination a conservé ses valeurs uniques, une question avant le retrait,
 car celles de l'original disparaîtraient avec lui.
 
+### Actions de sélection : état vu et valeurs redondantes ✅
+
+Le menu de sélection regroupe « Toggle », « Mark as Watched » et « Mark as Unwatched »
+dans un sous-menu « Set Watched », et propose « Remove redundant values… » sur toute la
+sélection : résumé par propriété, choix chemin complet ou titre seul, sans épargne valeur
+par valeur (l'action unitaire reste pour ça). Toutes ces actions passent par le sélecteur
+et `apply_on_view`, donc couvrent la sélection entière ; « Toggle Watched » n'agissait
+auparavant que sur la page courante.
+
 ### Recherche inverse (NOT AND, NOT OR)
 
 Ajouter la négation des modes de recherche existants :

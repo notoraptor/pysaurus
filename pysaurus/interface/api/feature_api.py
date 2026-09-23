@@ -155,11 +155,17 @@ class FeatureAPI:
             self.view, Selector.parse_dict(selector)
         )
         ops = Ops(self.database)
+        algos = Algo(self.database)
         callable_methods = {
             "count_property_values": ops.count_property_for_videos,
             "edit_property_for_videos": ops.update_property_for_videos,
+            "find_redundant_property_values": lambda ids, use_full_path: (
+                algos.find_redundant_property_values(ids, use_full_path=use_full_path)
+            ),
             "generalize_properties_for_videos": ops.generalize_properties_for_videos,
             "get_video_filenames": ops.get_video_filenames,
+            "set_watched_for_videos": ops.set_watched_for_videos,
+            "toggle_watched_for_videos": ops.toggle_watched_many,
         }
         return callable_methods[db_fn_name](video_indices, *db_fn_args)
 

@@ -236,8 +236,14 @@ CountTitleS_87ab2c0405d033f0
 	{count} titre(s)
 CountUnknownVideos_7c9330fb255dd764
 	{count} vidéos inconnues
+CountValueSWillBeRemovedFromVideosVideoS_7d38d911affd60eb
+	{count} valeur(s) seront supprimées de {videos} vidéo(s).
 CountValueSWillBeRemoved_f09a6ca7c12ed842
 	{count} valeur(s) seront supprimées.
+CountVideoSMarkedAsUnwatched_88cb515f5447fff0
+	{count} vidéo(s) marquée(s) comme non vue(s)
+CountVideoSMarkedAsWatched_967fea174f27decb
+	{count} vidéo(s) marquée(s) comme vue(s)
 CountVideoSRemovedFromDatabase_cbf87f024b1082ba
 	{count} vidéo(s) retirée(s) de la base de données
 CountVideosSizeDuration_cedc7f3c42eeac6d
@@ -584,6 +590,10 @@ ManageTheSourcesFoldersAndFilesForThisDatabase_b5417329326deeb7
 	Gérer les sources (dossiers et fichiers) de cette base de données :
 ManageValues_a845ff0d2a8be24c
 	Gérer les valeurs...
+MarkAsUnwatched_5f524d488c2ef31b
+	Marquer comme non vue
+MarkAsWatched_9f664973e867495c
+	Marquer comme vue
 MarkThisVideoAsHavingNoSimilarMatchesTheVideoWillBeExcludedFromFutureSimilaritySearches_6a82468d504db49d
 	Marquer cette vidéo comme n'ayant aucune correspondance similaire ?
 	
@@ -641,6 +651,8 @@ Multiple_8b3991d0d469d359
 	Multiple
 NA_d843e7186b2dd265
 	N/A
+NameCountValueS_75034d3262ee28e2
+	{name} : {count} valeur(s)
 Name_a837fb7e1e05ced4
 	Nom
 Name_dcef2b4d03de7206
@@ -680,6 +692,8 @@ NoProperties_3dbf791f0485b0ab
 	Aucune propriété
 NoPropertyIsConfiguredForGeneralizedTitlesSoTheTitlesCannotBeCopied_35bafe0a12875835
 	Aucune propriété n'est configurée pour les titres généralisés : les titres ne peuvent pas être copiés.
+NoPropertySelected_e785797e5fbaa728
+	Aucune propriété sélectionnée.
 NoRedundantValueFound_bad621bf93c1b24a
 	Aucune valeur redondante trouvée.
 NoSelection_4effb87af82a0776
@@ -790,6 +804,8 @@ ProblemCopyTheRestAnyway_c804fa49ed09fc64
 	Copier quand même le reste ?
 PropertiesTitle_2807f8f0c9b2163f
 	Propriétés - {title}
+PropertiesToClean_9e21711956080bba
+	Propriétés à nettoyer
 Properties_4a36bd9181ff5e9c
 	Propriétés...
 Properties_91696bb346248f12
@@ -880,6 +896,8 @@ Remove_e71387556151e3d1
 	Retirer
 RemovedCountRedundantValueSFromProps_1088be0d6d6b731a
 	{count} valeur(s) redondante(s) supprimée(s) dans {props}
+RemovedCountRedundantValueSFromVideosVideoS_37c7be00ee914931
+	{count} valeur(s) redondante(s) supprimée(s) de {videos} vidéo(s)
 RemovedFromDatabase_7ab715a20967c34c
 	retirée de la base
 RenameAValueMergesIfTargetExists_98c61ed40f3b34d3
@@ -1029,6 +1047,8 @@ SetPropertiesForCountSelectedVideosCheckTheBoxNextToAPropertyToApplyTheChange_93
 	Cochez la case à côté d'une propriété pour appliquer le changement.
 SetSorting_b3821ff535d168bb
 	Définir le tri
+SetWatched_281c8b590956a30d
+	Définir l'état vu
 ShowGroupsWithOnlyOneVideo_b7bad910947902e1
 	Afficher les groupes n'ayant qu'une seule vidéo
 ShowOnlySelected_5bcb4df72924f9d3
@@ -1121,6 +1141,8 @@ ToggleDirection_56aa30f4c8de121a
 	Inverser la direction
 ToggleWatched_dd6fe6ed5ef44557
 	Basculer l'état vu
+Toggle_fded2380dfb9c3c1
+	Basculer
 TotalSize_d1fdda6ac1d84e14
 	Taille totale
 TotalValuesUniqueValuesTotalUsagesTotalUsages_62d62bb05326545c
@@ -1176,6 +1198,8 @@ ValueFps_f59a7f3a7220674d
 	{value} fps
 ValueNew_b7da364620732e87
 	{value} (nouvelle)
+ValuesAlreadyCarriedByAVideoSOwnTitlesWillBeRemovedFromTheCountSelectedVideoSUntickA..._5d8b38894cd51de
+	Les valeurs déjà portées par les titres d'une vidéo seront supprimées des {count} vidéo(s) sélectionnée(s). Décochez une propriété pour ne pas y toucher ; pour épargner des valeurs une à une, passez plutôt par l'action de chaque vidéo.
 ValuesClickToSelectRightClickForActions_3601320b80e01cc
 	Valeurs (cliquer pour sélectionner, clic droit pour les actions) :
 ValuesPropName_3216a5abac8cfd0d
@@ -1198,6 +1222,8 @@ Videos_bdb27e5d914ef991
 	Vidéos
 View_d4f6bdb2dba870fa
 	&Affichage
+WatchedStatusToggledForCountVideoS_cb33c8cb375a4988
+	État vu basculé pour {count} vidéo(s)
 Watched_16565a9d7afc02ed
 	Vu
 Watched_a84efad8e52ea00d

@@ -39,6 +39,9 @@ from pysaurus.interface.kyuti.app_context import AppContext
 from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
     BatchEditPropertyDialog,
 )
+from pysaurus.interface.kyuti.dialogs.batch_redundant_values_dialog import (
+    BatchRedundantValuesDialog,
+)
 from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
 from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
 from pysaurus.interface.kyuti.dialogs.redundant_values_dialog import (
@@ -273,9 +276,15 @@ class VideosPage(QWidget):
         action_show.setEnabled(has_selection or self._show_only_selected)
         action_show.triggered.connect(self._toggle_show_only_selected)
         menu.addSeparator()
-        action_toggle = menu.addAction(say("Toggle Watched"))
-        action_toggle.setEnabled(has_selection)
-        action_toggle.triggered.connect(self._on_toggle_watched_selection)
+        watched_submenu = menu.addMenu(say("Set Watched"))
+        watched_submenu.setEnabled(has_selection)
+        watched_submenu.addAction(say("Toggle"), self._on_toggle_watched_selection)
+        watched_submenu.addAction(
+            say("Mark as Watched"), lambda: self._set_watched_selection(True)
+        )
+        watched_submenu.addAction(
+            say("Mark as Unwatched"), lambda: self._set_watched_selection(False)
+        )
 
         # Edit Properties as a submenu listing each property
         edit_submenu = menu.addMenu(say("Edit Properties"))
@@ -292,6 +301,10 @@ class VideosPage(QWidget):
             else:
                 no_props = edit_submenu.addAction(say("(no properties defined)"))
                 no_props.setEnabled(False)
+
+        action_clean = menu.addAction(say("Remove redundant values..."))
+        action_clean.setEnabled(has_selection)
+        action_clean.triggered.connect(self._remove_redundant_values_from_selection)
 
         menu.exec(
             self.btn_selection_settings.mapToGlobal(
@@ -2300,12 +2313,67 @@ class VideosPage(QWidget):
         """Toggle the watched status of a video."""
         self.ctx.toggle_watched(video_id)
 
+    def _apply_on_selection(self, operation: str, *args):
+        """Run a selection operation backend-side on the whole selection (all
+        pages), or return None when there is nothing to act on."""
+        if not self.ctx.has_database() or not self._selector.size_from(
+            self._view_count
+        ):
+            return None
+        return self.ctx.apply_on_view(self._selector.to_dict(), operation, *args)
+
     def _on_toggle_watched_selection(self):
-        """Toggle watched status for all selected videos."""
-        video_ids = self._selected_video_ids
-        if not video_ids:
+        """Toggle the watched status of every selected video."""
+        count = self._apply_on_selection("toggle_watched_for_videos")
+        if count is not None:
+            self.status_message_requested.emit(
+                say("Watched status toggled for {count} video(s)", count=count), 5000
+            )
+
+    def _set_watched_selection(self, watched: bool):
+        """Mark every selected video as watched, or as unwatched."""
+        count = self._apply_on_selection("set_watched_for_videos", watched)
+        if count is None:
             return
-        self.ctx.toggle_watched_many(video_ids)
+        if watched:
+            message = say("{count} video(s) marked as watched", count=count)
+        else:
+            message = say("{count} video(s) marked as unwatched", count=count)
+        self.status_message_requested.emit(message, 5000)
+
+    def _remove_redundant_values_from_selection(self):
+        """Drop, from every selected video, the property values its own titles
+        already carry."""
+        nb_videos = self._selector.size_from(self._view_count)
+        if not self.ctx.has_database() or not nb_videos:
+            return
+        selector_dict = self._selector.to_dict()
+        in_path = self.ctx.query_on_view(
+            selector_dict, "find_redundant_property_values", True
+        )
+        # Matching the path finds at least as much as matching the title.
+        if not in_path:
+            QMessageBox.information(
+                self, say("Remove redundant values"), say("No redundant value found.")
+            )
+            return
+        in_title = self.ctx.query_on_view(
+            selector_dict, "find_redundant_property_values", False
+        )
+        removals = BatchRedundantValuesDialog.ask(
+            nb_videos, in_path, in_title or {}, self
+        )
+        if not removals:
+            return
+        count = self.ctx.delete_property_values_for_videos(removals)
+        self.status_message_requested.emit(
+            say(
+                "Removed {count} redundant value(s) from {videos} video(s)",
+                count=count,
+                videos=len(removals),
+            ),
+            5000,
+        )
 
     def _move_video(self, video_id: int):
         """Move a video file to a different folder."""

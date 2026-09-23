@@ -682,6 +682,63 @@ class TestFeatureAPIProvider:
         assert baseline > 0
         assert excluding_first == baseline - 1
 
+    def test_apply_on_view_sets_and_toggles_watched(self, feature_api_with_db):
+        """set_watched_for_videos and toggle_watched_for_videos act on the
+        selection and return how many videos changed."""
+        api = feature_api_with_db
+        ids = [v.video_id for v in api.database.get_videos()[:2]]
+        selector = {"all": False, "include": ids, "exclude": []}
+
+        def run(operation, *args):
+            return api.__run_feature__("apply_on_view", selector, operation, *args)
+
+        def watched():
+            return {
+                v.video_id: bool(v.watched)
+                for v in api.database.get_videos(where={"video_id": ids})
+            }
+
+        run("set_watched_for_videos", False)
+        assert run("set_watched_for_videos", True) == 2
+        assert watched() == {vid: True for vid in ids}
+        assert run("set_watched_for_videos", True) == 0
+        assert run("toggle_watched_for_videos") == 2
+        assert watched() == {vid: False for vid in ids}
+
+    def test_apply_on_view_finds_redundant_values_in_the_selection(
+        self, feature_api_with_db
+    ):
+        """find_redundant_property_values takes the path switch positionally and
+        only inspects the selected videos."""
+        api = feature_api_with_db
+        api.database.prop_type_add("tag", "str", "", True)
+        first, second = api.database.get_videos()[:2]
+        folder = first.filename.get_directory().title
+        api.database.videos_tag_set(
+            "tag",
+            {
+                first.video_id: [first.file_title, folder, "elsewhere"],
+                second.video_id: [second.file_title],
+            },
+        )
+        selector = {"all": False, "include": [first.video_id], "exclude": []}
+
+        def find(use_full_path):
+            found = api.__run_feature__(
+                "apply_on_view",
+                selector,
+                "find_redundant_property_values",
+                use_full_path,
+            )
+            return {
+                vid: {p: sorted(v) for p, v in d.items()} for vid, d in found.items()
+            }
+
+        assert find(True) == {
+            first.video_id: {"tag": sorted([first.file_title, folder])}
+        }
+        assert find(False) == {first.video_id: {"tag": [first.file_title]}}
+
     def test_apply_on_view_generalizes_to_the_whole_view(self, feature_api_with_db):
         """generalize_properties_for_videos writes one video's values onto every
         other video the selector resolves to (here: the whole view minus the

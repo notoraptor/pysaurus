@@ -250,6 +250,11 @@ class MockAppContext:
         if self._database and self._database.algos:
             self._database.algos.delete_property_values(prop_name, values)
 
+    def delete_property_values_for_videos(self, removals) -> int:
+        if self._database and self._database.algos:
+            return self._database.algos.delete_property_values_for_videos(removals)
+        return 0
+
     def replace_property_values(self, prop_name, old_values, new_value) -> bool:
         if self._database and self._database.algos:
             return self._database.algos.replace_property_values(

@@ -1247,3 +1247,203 @@ class TestVideosPageFileDrag:
         page._clear_selection()
 
         assert page.drag_hint_label.isHidden()
+
+
+class TestVideosPageSelectionMenu:
+    """The selection menu acts on the whole selection, every page included."""
+
+    def _page(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.page_size = 1
+        page.refresh()
+        assert len(page._videos) == 1
+        return page
+
+    def _menu(self, page, monkeypatch):
+        captured = {}
+        monkeypatch.setattr(
+            LeftClickMenu,
+            "exec",
+            lambda self, *a, **k: captured.setdefault("menu", self),
+        )
+        page._on_selection_menu()
+        return captured["menu"]
+
+    @staticmethod
+    def _messages(page):
+        messages = []
+        page.status_message_requested.connect(lambda text, _ms: messages.append(text))
+        return messages
+
+    @staticmethod
+    def _watched(mock_database):
+        return {v["video_id"]: v["watched"] for v in mock_database._videos}
+
+    @staticmethod
+    def _genre(mock_database, video_id=1):
+        video = next(v for v in mock_database._videos if v["video_id"] == video_id)
+        return video["properties"]["genre"]
+
+    def _patch_dialog(self, monkeypatch, mode, asked):
+        def ask(nb_videos, in_path, in_title, parent=None):
+            asked.append((nb_videos, in_path, in_title))
+            return {"path": in_path, "title": in_title, None: None}[mode]
+
+        monkeypatch.setattr(
+            "pysaurus.interface.kyuti.pages.videos_page.BatchRedundantValuesDialog.ask",
+            ask,
+        )
+
+    def test_menu_groups_watched_actions_and_offers_the_cleanup(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._page(qtbot, mock_context)
+        page._select_all_in_view()
+        menu = self._menu(page, monkeypatch)
+        actions = [a for a in menu.actions() if not a.isSeparator()]
+        assert [a.text() for a in actions] == [
+            "Show Only Selected\tCtrl+Shift+D",
+            "Set Watched",
+            "Edit Properties",
+            "Remove redundant values...",
+        ]
+        assert [a.text() for a in actions[1].menu().actions()] == [
+            "Toggle",
+            "Mark as Watched",
+            "Mark as Unwatched",
+        ]
+        assert all(a.isEnabled() for a in actions[1:])
+
+    def test_menu_actions_are_disabled_without_selection(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._page(qtbot, mock_context)
+        menu = self._menu(page, monkeypatch)
+        by_text = {a.text(): a for a in menu.actions()}
+        assert not by_text["Set Watched"].isEnabled()
+        assert not by_text["Edit Properties"].isEnabled()
+        assert not by_text["Remove redundant values..."].isEnabled()
+
+    def test_mark_as_watched_reaches_selected_videos_beyond_the_page(
+        self, qtbot, mock_context, mock_database
+    ):
+        page = self._page(qtbot, mock_context)
+        page._selector.include(1)
+        page._selector.include(3)
+        messages = self._messages(page)
+
+        page._set_watched_selection(True)
+
+        watched = self._watched(mock_database)
+        assert watched[1] and watched[3] and not watched[5]
+        assert messages == ["2 video(s) marked as watched"]
+
+    def test_mark_as_unwatched_counts_only_changes(
+        self, qtbot, mock_context, mock_database
+    ):
+        page = self._page(qtbot, mock_context)
+        page._select_all_in_view()
+        messages = self._messages(page)
+
+        page._set_watched_selection(False)
+
+        assert not any(self._watched(mock_database).values())
+        assert messages == ["2 video(s) marked as unwatched"]
+
+    def test_toggle_flips_the_whole_selection(self, qtbot, mock_context, mock_database):
+        page = self._page(qtbot, mock_context)
+        before = self._watched(mock_database)
+        page._select_all_in_view()
+        messages = self._messages(page)
+
+        page._on_toggle_watched_selection()
+
+        assert self._watched(mock_database) == {v: not w for v, w in before.items()}
+        assert messages == ["Watched status toggled for 5 video(s)"]
+
+    def test_without_selection_nothing_happens(
+        self, qtbot, mock_context, mock_database, monkeypatch
+    ):
+        page = self._page(qtbot, mock_context)
+        before = self._watched(mock_database)
+        messages = self._messages(page)
+        asked = []
+        self._patch_dialog(monkeypatch, "path", asked)
+
+        page._set_watched_selection(True)
+        page._on_toggle_watched_selection()
+        page._remove_redundant_values_from_selection()
+
+        assert self._watched(mock_database) == before
+        assert messages == []
+        assert asked == []
+
+    def test_cleanup_removes_what_the_path_mode_found(
+        self, qtbot, mock_context, mock_database, monkeypatch
+    ):
+        # "video1" is the file title; "videos" is only in the parent folder.
+        self._genre(mock_database).extend(["video1", "videos"])
+        page = self._page(qtbot, mock_context)
+        page._selector.include(1)
+        page._selector.include(3)
+        asked = []
+        self._patch_dialog(monkeypatch, "path", asked)
+        messages = self._messages(page)
+
+        page._remove_redundant_values_from_selection()
+
+        assert asked == [
+            (2, {1: {"genre": ["video1", "videos"]}}, {1: {"genre": ["video1"]}})
+        ]
+        assert self._genre(mock_database) == ["action", "comedy"]
+        assert messages == ["Removed 2 redundant value(s) from 1 video(s)"]
+
+    def test_cleanup_in_title_mode_spares_folder_words(
+        self, qtbot, mock_context, mock_database, monkeypatch
+    ):
+        self._genre(mock_database).extend(["video1", "videos"])
+        page = self._page(qtbot, mock_context)
+        page._selector.include(1)
+        self._patch_dialog(monkeypatch, "title", [])
+        messages = self._messages(page)
+
+        page._remove_redundant_values_from_selection()
+
+        assert self._genre(mock_database) == ["action", "comedy", "videos"]
+        assert messages == ["Removed 1 redundant value(s) from 1 video(s)"]
+
+    def test_cancelling_the_cleanup_keeps_everything(
+        self, qtbot, mock_context, mock_database, monkeypatch
+    ):
+        self._genre(mock_database).extend(["video1", "videos"])
+        page = self._page(qtbot, mock_context)
+        page._selector.include(1)
+        self._patch_dialog(monkeypatch, None, [])
+        messages = self._messages(page)
+
+        page._remove_redundant_values_from_selection()
+
+        assert self._genre(mock_database) == ["action", "comedy", "video1", "videos"]
+        assert messages == []
+
+    def test_cleanup_informs_when_nothing_is_found(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._page(qtbot, mock_context)
+        page._selector.include(1)
+        page._selector.include(3)
+        asked = []
+        self._patch_dialog(monkeypatch, "path", asked)
+        infos = []
+        monkeypatch.setattr(
+            "pysaurus.interface.kyuti.pages.videos_page.QMessageBox.information",
+            lambda parent, title, text: infos.append((title, text)),
+        )
+        messages = self._messages(page)
+
+        page._remove_redundant_values_from_selection()
+
+        assert infos == [("Remove redundant values", "No redundant value found.")]
+        assert asked == []
+        assert messages == []
