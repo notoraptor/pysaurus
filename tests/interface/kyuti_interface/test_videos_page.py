@@ -6,6 +6,7 @@ Tests the main video browsing page with mock database.
 
 from pathlib import Path
 
+import pytest
 from PySide6.QtCore import QEvent, QPointF, Qt
 from PySide6.QtGui import QFocusEvent, QMouseEvent
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
@@ -921,14 +922,173 @@ class TestVideosPageCopySimilarityInfos:
         assert mock_context.copied == [(3, 4, True)]
         assert messages == ["Copied to movie2: 1 property(ies), watched"]
 
-    def test_status_line_reports_kept_values_and_nothing_new(self):
-        describe = VideosPage._describe_similarity_copy
+    def test_summary_reports_kept_values_and_nothing_new(self):
+        summary = VideosPage._copy_summary
         report = SimilarityCopyReport(kept=["u"])
-        assert describe(report, "x") == (
-            "Nothing new to copy to x Kept destination values for: u"
-        )
+        assert summary(report) == "nothing new. Kept destination values for: u"
         report = SimilarityCopyReport(titles=["a", "b"], date_added=True)
-        assert describe(report, "x") == "Copied to x: 2 title(s), date added"
+        assert summary(report) == "2 title(s), date added"
+
+
+class TestVideosPageReplaceWith:
+    """ "Replace with" copies onto a partner, then removes the original the way
+    the dialog said; unique values the destination kept get a last question."""
+
+    def _page(self, qtbot, mock_context, title_property="genre"):
+        if title_property:
+            mock_context.set_database_settings(
+                DatabaseSettings(generalize_title_property=title_property)
+            )
+        mock_context.set_groups(
+            field="similarity_id",
+            is_property=False,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
+        )
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+        return page
+
+    def _patch_dialog(self, monkeypatch, mode, asked=None):
+        def ask(video, dst_title, note=None, parent=None):
+            if asked is not None:
+                asked.append((video.video_id, dst_title, note))
+            return mode
+
+        monkeypatch.setattr(
+            "pysaurus.interface.kyuti.pages.videos_page.ReplaceVideoDialog.ask", ask
+        )
+
+    def _patch_question(self, monkeypatch, answer):
+        monkeypatch.setattr(
+            "pysaurus.interface.kyuti.pages.videos_page.QMessageBox.question",
+            lambda *a, **k: answer,
+        )
+
+    def _record_removals(self, monkeypatch, mock_context):
+        removed = []
+        for name, mode in (
+            ("trash_video", "trash"),
+            ("delete_video_file", "delete"),
+            ("delete_video_entry", "entry"),
+        ):
+            monkeypatch.setattr(
+                mock_context, name, lambda vid, m=mode: removed.append((m, vid))
+            )
+        return removed
+
+    def test_submenu_lists_the_partners(self, qtbot, mock_context, monkeypatch):
+        page = self._page(qtbot, mock_context)
+        submenus = TestVideosPageContextMenu._submenus(self, page, 3, monkeypatch)
+        assert submenus["Replace with"] == submenus["Copy similarity infos to"]
+
+    @pytest.mark.parametrize(
+        "mode,removed_word",
+        [
+            ("trash", "moved to trash"),
+            ("delete", "permanently deleted"),
+            ("entry", "removed from database"),
+        ],
+    )
+    def test_copies_then_removes_as_the_dialog_said(
+        self, qtbot, mock_context, monkeypatch, mode, removed_word
+    ):
+        page = self._page(qtbot, mock_context)
+        self._patch_dialog(monkeypatch, mode)
+        removed = self._record_removals(monkeypatch, mock_context)
+        messages = []
+        page.status_message_requested.connect(lambda m, t: messages.append(m))
+
+        page._replace_video(3, 4, "movie2")
+
+        assert mock_context.copied == [(3, 4, True)]
+        assert removed == [(mode, 3)]
+        assert messages == [
+            f"'movie1' replaced with 'movie2' and {removed_word}: "
+            "1 property(ies), watched"
+        ]
+
+    def test_cancelling_the_dialog_does_nothing(self, qtbot, mock_context, monkeypatch):
+        page = self._page(qtbot, mock_context)
+        self._patch_dialog(monkeypatch, None)
+        removed = self._record_removals(monkeypatch, mock_context)
+
+        page._replace_video(3, 4, "movie2")
+
+        assert mock_context.copied == []
+        assert removed == []
+
+    def test_without_title_property_the_dialog_carries_the_note(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._page(qtbot, mock_context, title_property=None)
+        asked = []
+        self._patch_dialog(monkeypatch, "trash", asked)
+        removed = self._record_removals(monkeypatch, mock_context)
+
+        page._replace_video(3, 4, "movie2")
+
+        assert asked == [(3, "movie2", asked[0][2])] and asked[0][2]
+        assert mock_context.copied == [(3, 4, False)]
+        assert removed == [("trash", 3)]
+
+    def test_kept_values_refused_keeps_the_original(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._page(qtbot, mock_context)
+        mock_context.copy_report = SimilarityCopyReport(kept=["rating"])
+        self._patch_dialog(monkeypatch, "trash")
+        self._patch_question(monkeypatch, QMessageBox.StandardButton.No)
+        removed = self._record_removals(monkeypatch, mock_context)
+        messages = []
+        page.status_message_requested.connect(lambda m, t: messages.append(m))
+
+        page._replace_video(3, 4, "movie2")
+
+        assert mock_context.copied == [(3, 4, True)]
+        assert removed == []
+        assert messages == [
+            "Copied to movie2: nothing new. Kept destination values for: rating"
+        ]
+
+    def test_kept_values_accepted_removes_the_original(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._page(qtbot, mock_context)
+        mock_context.copy_report = SimilarityCopyReport(kept=["rating"])
+        self._patch_dialog(monkeypatch, "delete")
+        self._patch_question(monkeypatch, QMessageBox.StandardButton.Yes)
+        removed = self._record_removals(monkeypatch, mock_context)
+
+        page._replace_video(3, 4, "movie2")
+
+        assert removed == [("delete", 3)]
+
+    def test_failed_removal_keeps_the_copy_and_warns(
+        self, qtbot, mock_context, monkeypatch
+    ):
+        page = self._page(qtbot, mock_context)
+        self._patch_dialog(monkeypatch, "trash")
+
+        def failing(vid):
+            raise OSError("locked")
+
+        monkeypatch.setattr(mock_context, "trash_video", failing)
+        warnings = []
+        monkeypatch.setattr(
+            "pysaurus.interface.kyuti.pages.videos_page.QMessageBox.warning",
+            lambda *a, **k: warnings.append(a[2]),
+        )
+        messages = []
+        page.status_message_requested.connect(lambda m, t: messages.append(m))
+
+        page._replace_video(3, 4, "movie2")
+
+        assert mock_context.copied == [(3, 4, True)]
+        assert len(warnings) == 1 and "locked" in warnings[0]
+        assert messages == []
 
 
 class TestVideosPageFileDrag:

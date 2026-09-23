@@ -14,6 +14,45 @@ from pysaurus.core.language import say
 from pysaurus.video.video_pattern import VideoPattern
 
 
+def video_header(video: VideoPattern) -> QHBoxLayout:
+    """A row with the video's thumbnail and its full path, selectable."""
+    top = QHBoxLayout()
+
+    thumb_label = QLabel()
+    thumb_label.setFixedSize(160, 90)
+    thumb_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    thumb_label.setStyleSheet(
+        "background-color: #e0e0e0; border: 1px solid #ccc; border-radius: 2px;"
+    )
+    thumb_data = video.thumbnail
+    if thumb_data:
+        pixmap = QPixmap()
+        if pixmap.loadFromData(thumb_data):
+            scaled = pixmap.scaled(
+                160,
+                90,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            thumb_label.setPixmap(scaled)
+        else:
+            thumb_label.setText(say("No preview"))
+    else:
+        thumb_label.setText(say("No preview"))
+    top.addWidget(thumb_label)
+
+    path_label = QLabel(str(video.filename))
+    path_label.setWordWrap(True)
+    path_label.setFont(QFont("Consolas, Courier New, monospace", 9))
+    path_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+    path_label.setStyleSheet(
+        "padding: 4px;"
+        "background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 3px;"
+    )
+    top.addWidget(path_label, 1)
+    return top
+
+
 class VideoConfirmDialog(QDialog):
     """Confirmation dialog showing video thumbnail and full file path."""
 
@@ -23,46 +62,7 @@ class VideoConfirmDialog(QDialog):
         self.setMinimumWidth(450)
 
         layout = QVBoxLayout(self)
-
-        # Top row: thumbnail + file path
-        top = QHBoxLayout()
-
-        # Thumbnail
-        thumb_label = QLabel()
-        thumb_label.setFixedSize(160, 90)
-        thumb_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        thumb_label.setStyleSheet(
-            "background-color: #e0e0e0; border: 1px solid #ccc; border-radius: 2px;"
-        )
-        thumb_data = video.thumbnail
-        if thumb_data:
-            pixmap = QPixmap()
-            if pixmap.loadFromData(thumb_data):
-                scaled = pixmap.scaled(
-                    160,
-                    90,
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-                thumb_label.setPixmap(scaled)
-            else:
-                thumb_label.setText(say("No preview"))
-        else:
-            thumb_label.setText(say("No preview"))
-        top.addWidget(thumb_label)
-
-        # File path in monospace
-        path_label = QLabel(str(video.filename))
-        path_label.setWordWrap(True)
-        path_label.setFont(QFont("Consolas, Courier New, monospace", 9))
-        path_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        path_label.setStyleSheet(
-            "padding: 4px;"
-            "background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 3px;"
-        )
-        top.addWidget(path_label, 1)
-
-        layout.addLayout(top)
+        layout.addLayout(video_header(video))
 
         # Message
         msg_label = QLabel(message)

@@ -44,6 +44,7 @@ from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
 from pysaurus.interface.kyuti.dialogs.redundant_values_dialog import (
     RedundantValuesDialog,
 )
+from pysaurus.interface.kyuti.dialogs.replace_video_dialog import ReplaceVideoDialog
 from pysaurus.interface.kyuti.dialogs.sorting_dialog import SortingDialog
 from pysaurus.interface.kyuti.dialogs.sources_dialog import SourcesDialog
 from pysaurus.interface.kyuti.dialogs.video_confirm_dialog import VideoConfirmDialog
@@ -1660,7 +1661,19 @@ class VideosPage(QWidget):
                 menu.addSeparator()
                 self._add_generalize_title_menu(menu, video)
                 self._add_generalize_property_menu(menu, video)
-                self._add_copy_similarity_infos_menu(menu, video)
+                partners = self._group_partners(video_id)
+                self._add_partners_menu(
+                    menu,
+                    say("Copy similarity infos to"),
+                    partners,
+                    lambda d, t: self._copy_similarity_infos(video_id, d, t),
+                )
+                self._add_partners_menu(
+                    menu,
+                    say("Replace with"),
+                    partners,
+                    lambda d, t: self._replace_video(video_id, d, t),
+                )
             if has_sim_actions:
                 menu.addSeparator()
 
@@ -2060,28 +2073,46 @@ class VideosPage(QWidget):
         )
         return reply == QMessageBox.StandardButton.Yes
 
-    def _add_copy_similarity_infos_menu(self, menu, video):
-        """Add the 'Copy similarity infos to' submenu, one entry per other video.
+    def _group_partners(self, video_id: int):
+        """The other videos of the group as (id, filename), across every page.
 
-        The candidates are the rest of the group across every page, so they
-        come from the view rather than from the current page.
+        Both calls walk the same view in the same order: ids and names line up.
         """
-        video_id = video.video_id
         others = [i for i in self.ctx.get_all_view_ids() if i != video_id]
         if not others:
-            return
-        # Both calls walk the same view in the same order: ids and names line up.
+            return []
         filenames = self.ctx.query_on_view(
             Selector(False, set(others)).to_dict(), "get_video_filenames"
         )
-        copy_menu = menu.addMenu(say("Copy similarity infos to"))
-        for dst_id, filename in zip(others, filenames or ()):
-            copy_menu.addAction(
-                str(filename),
-                lambda d=dst_id, t=filename.file_title: self._copy_similarity_infos(
-                    video_id, d, t
-                ),
+        return list(zip(others, filenames or ()))
+
+    @staticmethod
+    def _add_partners_menu(menu, label: str, partners, handler) -> None:
+        """A submenu with one entry per partner, calling handler(id, file title)."""
+        if not partners:
+            return
+        submenu = menu.addMenu(label)
+        for dst_id, filename in partners:
+            submenu.addAction(
+                str(filename), lambda d=dst_id, t=filename.file_title: handler(d, t)
             )
+
+    def _title_copy_problem(self) -> str | None:
+        """Why titles cannot be copied right now, or None when they can."""
+        name = self.ctx.get_database_settings().generalize_title_property
+        prop_type = next((p for p in self.ctx.get_prop_types() if p.name == name), None)
+        if prop_type is None:
+            return say(
+                "No property is configured for generalized titles, "
+                "so the titles cannot be copied."
+            )
+        if not can_accumulate_titles(prop_type):
+            return say(
+                'Property "{name}" holds a single value, '
+                "so the titles cannot be stacked into it.",
+                name=name,
+            )
+        return None
 
     def _copy_similarity_infos(
         self, src_video_id: int, dst_video_id: int, dst_title: str
@@ -2091,22 +2122,7 @@ class VideosPage(QWidget):
         Titles need the generalize-title property to be multiple; otherwise
         offer to copy everything else.
         """
-        name = self.ctx.get_database_settings().generalize_title_property
-        prop_type = next((p for p in self.ctx.get_prop_types() if p.name == name), None)
-        if prop_type is None:
-            problem = say(
-                "No property is configured for generalized titles, "
-                "so the titles cannot be copied."
-            )
-        elif not can_accumulate_titles(prop_type):
-            problem = say(
-                'Property "{name}" holds a single value, '
-                "so the titles cannot be stacked into it.",
-                name=name,
-            )
-        else:
-            problem = None
-        with_titles = problem is None
+        problem = self._title_copy_problem()
         if problem is not None:
             reply = QMessageBox.question(
                 self,
@@ -2118,16 +2134,95 @@ class VideosPage(QWidget):
             if reply != QMessageBox.StandardButton.Yes:
                 return
         report = self.ctx.copy_similarity_infos(
-            src_video_id, dst_video_id, with_titles=with_titles
+            src_video_id, dst_video_id, with_titles=problem is None
         )
         if report is not None:
             self.status_message_requested.emit(
-                self._describe_similarity_copy(report, dst_title), 5000
+                say(
+                    "Copied to {title}: {summary}",
+                    title=dst_title,
+                    summary=self._copy_summary(report),
+                ),
+                5000,
             )
 
+    def _replace_video(self, src_video_id: int, dst_video_id: int, dst_title: str):
+        """Copy a video's similarity infos onto a partner, then remove the video.
+
+        The copy comes first, so a failed removal loses nothing. Unique values
+        the destination kept would vanish with the original: ask before that.
+        """
+        src = self.ctx.get_video_by_id(src_video_id)
+        if not src:
+            return
+        problem = self._title_copy_problem()
+        mode = ReplaceVideoDialog.ask(src, dst_title, problem, self)
+        if mode is None:
+            return
+        report = self.ctx.copy_similarity_infos(
+            src_video_id, dst_video_id, with_titles=problem is None
+        )
+        if report is None:
+            return
+        summary = self._copy_summary(report)
+        if report.kept:
+            reply = QMessageBox.question(
+                self,
+                say("Replace Video"),
+                say(
+                    "'{target}' kept its own values for: {props}\n"
+                    "The values of '{title}' will be lost with it.\n\n"
+                    "Remove '{title}' anyway?",
+                    target=dst_title,
+                    props=", ".join(report.kept),
+                    title=src.title,
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                self.status_message_requested.emit(
+                    say(
+                        "Copied to {title}: {summary}", title=dst_title, summary=summary
+                    ),
+                    5000,
+                )
+                return
+        try:
+            if mode == "trash":
+                self.ctx.trash_video(src_video_id)
+                removed = say("moved to trash")
+            elif mode == "delete":
+                self.ctx.delete_video_file(src_video_id)
+                removed = say("permanently deleted")
+            else:
+                self.ctx.delete_video_entry(src_video_id)
+                removed = say("removed from database")
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                say("Error"),
+                say(
+                    "Infos copied, but the original could not be removed: {error}",
+                    error=e,
+                ),
+            )
+            return
+        self._purge_video_from_selection(src_video_id)
+        self.status_message_requested.emit(
+            say(
+                "'{title}' replaced with '{target}' and {removed}: {summary}",
+                title=src.title,
+                target=dst_title,
+                removed=removed,
+                summary=summary,
+            ),
+            5000,
+        )
+
     @staticmethod
-    def _describe_similarity_copy(report, dst_title: str) -> str:
-        """One status line: what landed on the destination, what was kept."""
+    def _copy_summary(report) -> str:
+        """What landed on the destination, and what it kept."""
         parts = []
         if report.properties:
             parts.append(say("{count} property(ies)", count=len(report.properties)))
@@ -2137,17 +2232,12 @@ class VideosPage(QWidget):
             parts.append(say("watched"))
         if report.date_added:
             parts.append(say("date added"))
-        if parts:
-            message = say(
-                "Copied to {title}: {what}", title=dst_title, what=", ".join(parts)
-            )
-        else:
-            message = say("Nothing new to copy to {title}", title=dst_title)
+        summary = ", ".join(parts) if parts else say("nothing new")
         if report.kept:
-            message += " " + say(
+            summary += ". " + say(
                 "Kept destination values for: {props}", props=", ".join(report.kept)
             )
-        return message
+        return summary
 
     def _confirm_move(self, src_video_id: int, dst_video_id: int):
         """Confirm a video move (transfer metadata from source to destination)."""

@@ -192,8 +192,8 @@ ConvertToMultipleValues_c0a03dc9462634a7
 	Convert to Multiple Values
 ConvertToSingleValue_f4ae599bc4ad33f4
 	Convert to Single Value
-CopiedToTitleWhat_f5a916558a14f2d8
-	Copied to {title}: {what}
+CopiedToTitleSummary_a8ffe5c168b3a9d4
+	Copied to {title}: {summary}
 CopyBTitleBIntoPropertyForCountOtherVideoS_18417d01fa6aac01
 	Copy <b>{title}</b> into property for {count} other video(s):
 CopyFilePath_5b1d27ebea18d101
@@ -204,6 +204,8 @@ CopySimilarityInfosTo_8a56b2d11581deff
 	Copy similarity infos to
 CopySimilarityInfos_4d5b48b14e19e244
 	Copy similarity infos
+CopyThisVideoSPropertiesTitlesWatchedStatusAndDateAddedToTargetThenRemoveIt_26c6d1de2844bd4
+	Copy this video's properties, titles, watched status and date added to '{target}', then remove it.
 CopyTitle_ef89980224aea5b4
 	Copy Title
 CopyValue_ca1406f065261ba1
@@ -562,6 +564,8 @@ IndexedSize_c3e03c49849a6294
 	Indexed (size)
 Info_d3acbd7e36ad7e89
 	Info
+InfosCopiedButTheOriginalCouldNotBeRemovedError_cba2d64e3f719e8e
+	Infos copied, but the original could not be removed: {error}
 InvalidDefaultValueForTypePropType_e2fc4b825a69c45
 	Invalid default value for type {prop_type}.
 InvalidEnumerationValueForTypePropTypeValue_fd477024cb7ac6a0
@@ -623,6 +627,8 @@ MoveVideo_317b44ceb7e919d3
 	Move Video
 Move_b37c3b7e2524ded2
 	Move
+MovedToTrash_cdf7e1331c6175d7
+	moved to trash
 MovedValuesForCountVideosFromNameToTargetName_c2fba9e915a37a77
 	Moved values for {count} videos from '{name}' to '{target_name}'.
 MovingVideo_8161147827c2f39a
@@ -704,8 +710,8 @@ NotFound_f38b8a623dcf0c3c
 	NOT FOUND
 NotSet_5f1a0162ba74d300
 	Not set
-NothingNewToCopyToTitle_a78b92e40af726ef
-	Nothing new to copy to {title}
+NothingNew_b8d1b2aea44f130a
+	nothing new
 NumpyImagesComparison_913b9ae4ae91effb
 	Numpy images comparison
 Ok_8323907b4eae9fb
@@ -758,6 +764,8 @@ PermanentlyDeleteThisVideoThisActionCannotBeUndoneTheFileWillBeDeletedFromDisk_b
 	
 	This action cannot be undone!
 	The file will be deleted from disk.
+PermanentlyDeleted_b6f3efe5323b6cff
+	permanently deleted
 PlaylistOpenedFilename_8275214988e84cc5
 	Playlist opened: {filename}
 PleaseAddAtLeastOneSource_6ea16b47d090bdad
@@ -848,6 +856,8 @@ RemoveAll_8695474f05264dac
 	← Remove All
 RemoveCountSources_21c3fb5674af07f5
 	Remove {count} sources?
+RemoveEntry_a80fd6045c88912d
+	Remove entry
 RemoveFromPathUnstack_b782d4a2c426ee68
 	Remove from path (unstack)
 RemoveGroupingCtrlShiftG_2fbf421e92589e09
@@ -870,6 +880,8 @@ Remove_e71387556151e3d1
 	Remove
 RemovedCountRedundantValueSFromProps_1088be0d6d6b731a
 	Removed {count} redundant value(s) from {props}
+RemovedFromDatabase_7ab715a20967c34c
+	removed from database
 RenameAValueMergesIfTargetExists_98c61ed40f3b34d3
 	Rename a value (merges if target exists)
 RenameDatabaseName_11b5b3a289fede87
@@ -890,6 +902,10 @@ RenameVideo_1fc0f7cfa01c8de6
 	Rename Video
 Rename_5b5a4713822c71f3
 	Rename...
+ReplaceVideo_b8760f5f781aeda2
+	Replace Video
+ReplaceWith_f2f17fe19e012bf1
+	Replace with
 RescanFoldersAndUpdateTheDatabaseThisMayTakeAWhileDependingOnTheNumberOfVideos_353d4fdf110d961
 	Rescan folders and update the database?
 	
@@ -1061,10 +1077,17 @@ Subtitles_dc91a773f834306a
 	Subtitles:
 Success_5225c5937fb8fa36
 	Success
+TargetKeptItsOwnValuesForPropsTheValuesOfTitleWillBeLostWithItRemoveTitleAnyway_14c75b4889b438bf
+	'{target}' kept its own values for: {props}
+	The values of '{title}' will be lost with it.
+	
+	Remove '{title}' anyway?
 TheDatabaseHasNoSourcesAreYouSureYouWantToContinue_bb03a8ca9519b65a
 	The database has no sources.
 	
 	Are you sure you want to continue?
+TheFileIsAlreadyMissingOnlyTheDatabaseEntryGoes_7ca56492305faac8
+	The file is already missing: only the database entry goes.
 ThisFolderIsAlreadyInTheListFolder_7a63e23a39c23b15
 	This folder is already in the list:
 	{folder}
@@ -1086,6 +1109,8 @@ TitleProperty_8d7370b4da62e08e
 	{title} → {property}
 TitleRemovedFromDatabase_c65935f384a6934
 	'{title}' removed from database
+TitleReplacedWithTargetAndRemovedSummary_3c1c61b23ba79227
+	'{title}' replaced with '{target}' and {removed}: {summary}
 Title_faf921506746458d
 	Title:
 ToAdd_b8d3927f966050df

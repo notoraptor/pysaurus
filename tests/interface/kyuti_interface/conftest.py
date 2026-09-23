@@ -54,6 +54,7 @@ class MockAppContext:
         self._last_result = None
         self._settings = DatabaseSettings()
         self.copied: list[tuple[int, int, bool]] = []
+        self.copy_report = SimilarityCopyReport(properties=["genre"], watched=True)
 
     # State
 
@@ -335,7 +336,7 @@ class MockAppContext:
         self, src_video_id: int, dst_video_id: int, *, with_titles: bool = True
     ) -> SimilarityCopyReport:
         self.copied.append((src_video_id, dst_video_id, with_titles))
-        return SimilarityCopyReport(properties=["genre"], watched=True)
+        return self.copy_report
 
     def rename_database(self, new_name: str) -> None:
         if self._database:

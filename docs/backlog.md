@@ -126,7 +126,17 @@ et méta) empilés dans la propriété de généralisation (réglage de la base,
 et `date_entry_opened` (la plus récente). Rien n'est supprimé. Une propriété
 unique déjà valuée sur la destination est conservée, sauf si le réglage
 « écraser les propriétés à valeur unique » (schéma v10) est activé.
-Brique de la future action « remplacer l'original par le ré-encodé ».
+
+### Remplacer l'original par le ré-encodé ✅
+
+Menu contextuel « Replace with », même sous-menu que la copie : copie les infos
+de similarité vers la vidéo choisie, puis retire la vidéo cliquée. Composition
+côté Kyuti des méthodes de façade existantes, sans backend nouveau. Un seul
+dialogue (vignette, chemin) avec le mode de retrait : corbeille par défaut,
+suppression définitive, ou simple retrait de l'entrée si le fichier est déjà
+absent. La copie précède le retrait, donc un échec du retrait ne perd rien.
+Si la destination a conservé ses valeurs uniques, une question avant le retrait,
+car celles de l'original disparaîtraient avec lui.
 
 ### Recherche inverse (NOT AND, NOT OR)
 

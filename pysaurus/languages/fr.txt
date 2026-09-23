@@ -192,8 +192,8 @@ ConvertToMultipleValues_c0a03dc9462634a7
 	Convertir en valeurs multiples
 ConvertToSingleValue_f4ae599bc4ad33f4
 	Convertir en valeur unique
-CopiedToTitleWhat_f5a916558a14f2d8
-	Copié vers {title} : {what}
+CopiedToTitleSummary_a8ffe5c168b3a9d4
+	Copié vers {title} : {summary}
 CopyBTitleBIntoPropertyForCountOtherVideoS_18417d01fa6aac01
 	Copier <b>{title}</b> dans la propriété pour {count} autre(s) vidéo(s) :
 CopyFilePath_5b1d27ebea18d101
@@ -204,6 +204,8 @@ CopySimilarityInfosTo_8a56b2d11581deff
 	Copier les infos de similarité vers
 CopySimilarityInfos_4d5b48b14e19e244
 	Copier les infos de similarité
+CopyThisVideoSPropertiesTitlesWatchedStatusAndDateAddedToTargetThenRemoveIt_26c6d1de2844bd4
+	Copier les propriétés, les titres, le statut vu et la date d'ajout de cette vidéo vers '{target}', puis la retirer.
 CopyTitle_ef89980224aea5b4
 	Copier le titre
 CopyValue_ca1406f065261ba1
@@ -562,6 +564,8 @@ IndexedSize_c3e03c49849a6294
 	Indexées (taille)
 Info_d3acbd7e36ad7e89
 	Info
+InfosCopiedButTheOriginalCouldNotBeRemovedError_cba2d64e3f719e8e
+	Infos copiées, mais l'original n'a pas pu être retiré : {error}
 InvalidDefaultValueForTypePropType_e2fc4b825a69c45
 	Valeur par défaut invalide pour le type {prop_type}.
 InvalidEnumerationValueForTypePropTypeValue_fd477024cb7ac6a0
@@ -623,6 +627,8 @@ MoveVideo_317b44ceb7e919d3
 	Déplacer la vidéo
 Move_b37c3b7e2524ded2
 	Déplacement
+MovedToTrash_cdf7e1331c6175d7
+	mise à la corbeille
 MovedValuesForCountVideosFromNameToTargetName_c2fba9e915a37a77
 	Valeurs de {count} vidéos déplacées de '{name}' vers '{target_name}'.
 MovingVideo_8161147827c2f39a
@@ -704,8 +710,8 @@ NotFound_f38b8a623dcf0c3c
 	INTROUVABLE
 NotSet_5f1a0162ba74d300
 	Non défini
-NothingNewToCopyToTitle_a78b92e40af726ef
-	Rien de nouveau à copier vers {title}
+NothingNew_b8d1b2aea44f130a
+	rien de nouveau
 NumpyImagesComparison_913b9ae4ae91effb
 	Comparaison d'images Numpy
 Ok_8323907b4eae9fb
@@ -758,6 +764,8 @@ PermanentlyDeleteThisVideoThisActionCannotBeUndoneTheFileWillBeDeletedFromDisk_b
 	
 	Cette action ne peut pas être annulée !
 	Le fichier sera supprimé du disque.
+PermanentlyDeleted_b6f3efe5323b6cff
+	supprimée définitivement
 PlaylistOpenedFilename_8275214988e84cc5
 	Liste de lecture ouverte : {filename}
 PleaseAddAtLeastOneSource_6ea16b47d090bdad
@@ -848,6 +856,8 @@ RemoveAll_8695474f05264dac
 	← Tout retirer
 RemoveCountSources_21c3fb5674af07f5
 	Retirer {count} sources ?
+RemoveEntry_a80fd6045c88912d
+	Retirer l'entrée
 RemoveFromPathUnstack_b782d4a2c426ee68
 	Retirer du chemin (dépiler)
 RemoveGroupingCtrlShiftG_2fbf421e92589e09
@@ -870,6 +880,8 @@ Remove_e71387556151e3d1
 	Retirer
 RemovedCountRedundantValueSFromProps_1088be0d6d6b731a
 	{count} valeur(s) redondante(s) supprimée(s) dans {props}
+RemovedFromDatabase_7ab715a20967c34c
+	retirée de la base
 RenameAValueMergesIfTargetExists_98c61ed40f3b34d3
 	Renommer une valeur (fusionne si la cible existe)
 RenameDatabaseName_11b5b3a289fede87
@@ -890,6 +902,10 @@ RenameVideo_1fc0f7cfa01c8de6
 	Renommer la vidéo
 Rename_5b5a4713822c71f3
 	Renommer...
+ReplaceVideo_b8760f5f781aeda2
+	Remplacer la vidéo
+ReplaceWith_f2f17fe19e012bf1
+	Remplacer par
 RescanFoldersAndUpdateTheDatabaseThisMayTakeAWhileDependingOnTheNumberOfVideos_353d4fdf110d961
 	Réanalyser les dossiers et mettre à jour la base de données ?
 	
@@ -1061,10 +1077,17 @@ Subtitles_dc91a773f834306a
 	Sous-titres :
 Success_5225c5937fb8fa36
 	Succès
+TargetKeptItsOwnValuesForPropsTheValuesOfTitleWillBeLostWithItRemoveTitleAnyway_14c75b4889b438bf
+	'{target}' a gardé ses propres valeurs pour : {props}
+	Celles de '{title}' seront perdues avec elle.
+	
+	Retirer quand même '{title}' ?
 TheDatabaseHasNoSourcesAreYouSureYouWantToContinue_bb03a8ca9519b65a
 	La base de données n'a aucune source.
 	
 	Êtes-vous sûr de vouloir continuer ?
+TheFileIsAlreadyMissingOnlyTheDatabaseEntryGoes_7ca56492305faac8
+	Le fichier est déjà absent : seule l'entrée de la base sera retirée.
 ThisFolderIsAlreadyInTheListFolder_7a63e23a39c23b15
 	Ce dossier est déjà dans la liste :
 	{folder}
@@ -1086,6 +1109,8 @@ TitleProperty_8d7370b4da62e08e
 	{title} → {property}
 TitleRemovedFromDatabase_c65935f384a6934
 	'{title}' retiré de la base de données
+TitleReplacedWithTargetAndRemovedSummary_3c1c61b23ba79227
+	'{title}' remplacée par '{target}' et {removed} : {summary}
 Title_faf921506746458d
 	Titre :
 ToAdd_b8d3927f966050df
