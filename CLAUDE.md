@@ -21,8 +21,9 @@ uv run -m pysaurus
 # Run CLI (benchmark/debug console, configured via .pysaurus.yaml)
 uv run -m pysaurus.interface.console.run --db <name>
 
-# Run all tests
-uv run pytest
+# Run all tests (pass `tests`: there is no `testpaths`, so a bare `uv run pytest`
+# also collects wip/ (~150 tests) and any local ignored/ scripts)
+uv run pytest tests
 
 # Run a single test file
 uv run pytest tests/unittests/test_example.py
@@ -30,17 +31,17 @@ uv run pytest tests/unittests/test_example.py
 # Run a single test
 uv run pytest tests/unittests/test_example.py::test_function_name
 
-# Run tests in parallel
-uv run pytest -n auto
+# Run tests in parallel (~2200 tests, ~1.5 min with -n 4)
+uv run pytest tests -n 4
 
 # Lint and format
 uv run ruff check .
 uv run ruff format .
 
-# Type check (full project, all packages)
+# Type check (full project, all packages — noisy: wip/ and kyuti/ report ~450 diagnostics)
 uv run ty check
 
-# Type check (subset used by CI — excludes kyuti/)
+# Type check (subset checked by `poe check` — excludes kyuti/, wip/ and tests/; there is no CI)
 uv run poe typecheck
 
 # Run all checks (format + lint + i18n extraction + typecheck subset)
@@ -73,9 +74,14 @@ Single top-level package **`pysaurus/`** containing all application code, includ
 ### Database Layer
 
 Layered separation of concerns:
-- **`database/abstract_database.py`** — abstract interface (~35 methods)
+- **`database/abstract_database.py`** — abstract interface (~45 methods, 32 abstract)
 - **`database/database_operations.py`** — high-level CRUD operations (accessed via `db.ops`)
-- **`database/database_algorithms.py`** — batch processing: update, miniatures, moves (accessed via `db.algos`)
+- **`database/database_algorithms.py`** — batch processing: update, miniatures, moves, copy similarity infos, redundant property values (accessed via `db.algos`)
+- **`database/algorithms/`** — `folder_scan.py` (one thread per mount point), `videos.py` (collect/update), `miniatures.py`
+- **`database/features/`** — `db_similar_videos.py`, `db_similar_reencoded.py` (similarity detection entry points)
+- **`database/database_settings.py`** — `DatabaseSettings` dataclass: per-database settings stored as typed columns on the `collection` row (`generalize_title_property`, `copy_overwrites_unique_properties`), read/written via `db.get_settings()` / `_set_settings()`
+- **`database/saved_search.py`** — `SavedSearch(expression, name)`: searchexp expressions remembered per database (`saved_search` table), exposed in the Kyuti *View → Saved Searches* menu
+- **`database/db_video_server.py`** — Flask server bound to `127.0.0.1`, streams a video by id for VLC (no authentication)
 
 Single backend implementation:
 - **`database/saurus/pysaurus_collection.py`** — SQLite implementation (uses `skullite` wrapper)
@@ -85,9 +91,13 @@ Single backend implementation:
 
 - **`pysaurus_collection.py`** — implements `AbstractDatabase` with SQLite
 - **`pysaurus_connection.py`** — extends `Skullite` (from `skullite` package), loads schema from `database.sql`
-- **`video_mega_group.py` / `video_mega_search.py`** — SQL query builders for grouping and search
+- **`video_mega_group.py` / `video_mega_search.py`** — SQL query builders for grouping, search and view position (`video_mega_position`, used by *Go to duration*)
+- **`sql_expression_compiler.py`** — compiles a `searchexp` IR into `(sql_where, params)`; see `docs/pysaurus_with_searchexp.md`
+- **`migrations/`** — versioned schema migrations `m0002` … `m0011`, registry `MIGRATIONS: {target_version: migrate(db)}`, `LATEST_VERSION = max(MIGRATIONS)`. The schema version is the `collection.version` column (not `PRAGMA user_version`); `PysaurusConnection` runs pending migrations on open. Every schema change = new `m00NN_*.py` + edit of `database.sql`.
+
 Key schema notes (`database/saurus/database.sql`):
-- `video` table uses **virtual generated columns** (e.g., `readable`, `found`, `length_seconds`, `byte_rate`, `day`, `year`)
+- Tables: `collection` (+ settings columns), `collection_source`, `saved_search`, `video`, `video_error`, `video_language`, `property`, `property_enumeration`, `video_property_value`, `video_thumbnail` (thumbnail BLOBs), FTS5 `video_text`
+- `video` table uses **virtual generated columns** (e.g., `readable`, `found`, `length_seconds`, `byte_rate`, `day`, `year`) and **stored** ones for `extension` / `file_title`; `date_added` (v8) is distinct from `mtime`
 - `video_text` is an **FTS5 virtual table** for full-text search with triggers to stay in sync
 - Property value triggers are managed manually in Python (not SQL triggers) for batch performance
 
@@ -117,8 +127,8 @@ Proxy subclasses and their targets:
 | `FromApp` | `api.application` | `Application` methods |
 | `FromOps` | `DatabaseOperations(api.database)` | CRUD via `db.ops` |
 | `FromAlgo` | `DatabaseAlgorithms(api.database)` | Batch processing via `db.algos` |
-| `FromTk` | `filedial` module | File dialog calls |
-| `FromPyperclip` | `pyperclip` module | Clipboard operations |
+| `FromTk` | `filedial` module | File dialog calls (`select_directory`, `select_file`) — registered in `GuiAPI` but no active frontend calls them (Kyuti uses Qt dialogs, videroid uses `videre.Dialog`) |
+| `FromPyperclip` | `pyperclip` module | `clipboard` feature — same: Kyuti uses `QApplication.clipboard()` directly |
 
 - **`FeatureAPI`** — base API class exposing 50+ features via these proxies. Owns a `ViewContext` (`self.view`) for view state management, with explicit view methods (set_sources, set_search, set_sort, set_groups, etc.).
 - **`GuiAPI`** — extends `FeatureAPI` with Flask video server (`ServerLauncher`), thread management, VLC integration, and an abstract `_notify()` method each frontend implements.
@@ -135,6 +145,8 @@ Python backend sends typed `Notification` objects — `DatabaseReady`, `Done`, e
 ### GUI
 
 PySide6 is the only active GUI, and within it only the **list view** is active. Legacy interfaces (Flask, pywebview, qtwebview, React web frontend) and the legacy PySide6 grid view (`VideoCard` thumbnails) have been moved to `wip/pysaurus_interfaces/` and are no longer part of the active codebase.
+
+`interface/videroid/` (~5k lines, run via `run_with_videroid.py`) is an experimental second frontend built on `videre`; it is kept in the `poe typecheck` subset and has its own tests in `tests/interface/videroid_interface/`, but `__main__.py` only launches Kyuti.
 
 A complete audit of the Kyuti interface is a planned next step: goal, how to render Kyuti widgets to images from a session, and the plan are in `docs/kyuti_ui_audit.md`.
 
@@ -211,6 +223,13 @@ Kyuti is the mature PySide6/Qt GUI frontend. All calls go through the **`AppCont
 
 - The video list uses a **`QListWidget` + `setItemWidget`** pattern (`videos_page.py::_display_list_view`), not a `QVBoxLayout` inside a `QScrollArea`. Refresh runs as a slot-by-slot diff (replace existing slots, append new, take extras) so the list never goes through an empty-content state — the scroll position is preserved natively by Qt across refreshes, including when the window is in background (e.g. an external player has just stolen focus). Cell heights are set via `_set_size_hint()` using `heightForWidth(viewport_width)` because `WrappingLabel.sizeHint()` is plafonned at 400px wide.
 
+## Docs (`docs/`)
+
+- `review.md` — July 2026 review of the core (everything outside `interface/`): verdict, fixed items, and the remaining dead-code / architecture list (two notification buses, `Text`, `GroupArray`, `HTMLStripper`, …). Check it before purging or re-reviewing.
+- `competitive-analysis.md` — positioning vs Plex/Jellyfin/Stash/Hydrus (July 2026), publish-or-not decision, MCP server idea.
+- `backlog.md` — prioritized backlog; `state_contracts.md` — which backend state each feature mutates and what the UI must refresh.
+- `kyuti_ui_audit.md` — planned Kyuti audit and how to render widgets to PNG from a session; `pysaurus_with_searchexp.md` — searchexp integration; `about_filecopier.md`.
+
 ## Code Style
 
 - **Formatter/Linter**: Ruff (`skip-magic-trailing-comma = true`)
@@ -225,6 +244,6 @@ Kyuti is the mature PySide6/Qt GUI frontend. All calls go through the **`AppCont
   - **Saurus SQL, test_database** (small): `fake_saurus_database` and `mem_saurus_database` — both in-memory copies built from a **read-only** (`immutable=1`) open of the shared on-disk DB (`tests/utils.py::get_saurus_sql_database`), so concurrent xdist workers never write to the fixture file; identical for SQL since every fixture is an in-memory copy, so there is no separate read-only/writable pair
   - **Saurus SQL, example_db_in_pysaurus** (90 videos with properties): `example_saurus_database` and `example_saurus_database_memory` — both in-memory copies (same read-only-source mechanism); the two names are kept only to signal read-only vs write-test intent
 - SQL fixtures do not need `tmp_path` — in-memory SQLite is used directly
-- Two test databases in `tests/home_dir_test/.Pysaurus/databases/`: `test_database` (small) and `example_db_in_pysaurus` (90 videos with properties)
+- Two test databases in `tests/home_dir_test/.Pysaurus/databases/`: `test_database` (small) and `example_db_in_pysaurus` (90 videos with properties). On disk they sit at schema version 10 (`collection.version`); pending migrations run on the in-memory copy at open, so a new migration does not require regenerating them (regenerate only when a test needs the new columns populated).
 - Qt tests use `QT_QPA_PLATFORM=offscreen` (set in `tests/interface/kyuti_interface/conftest.py`)
 - `pyfakefs` for filesystem mocking, `pytest-qt` for Qt tests, `pytest-xdist` for parallel runs
