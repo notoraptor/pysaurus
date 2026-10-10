@@ -136,6 +136,8 @@ Python backend sends typed `Notification` objects — `DatabaseReady`, `Done`, e
 
 PySide6 is the only active GUI, and within it only the **list view** is active. Legacy interfaces (Flask, pywebview, qtwebview, React web frontend) and the legacy PySide6 grid view (`VideoCard` thumbnails) have been moved to `wip/pysaurus_interfaces/` and are no longer part of the active codebase.
 
+A complete audit of the Kyuti interface is a planned next step: goal, how to render Kyuti widgets to images from a session, and the plan are in `docs/kyuti_ui_audit.md`.
+
 ### Expression Search (external `searchexp` package, at `../searchexp`)
 
 Standalone parser for structured search expressions (e.g. `width > 1080 and "eng" in audio_languages`). Lives in its own repo (`../searchexp`, editable dep) — no references to `VideoPattern` or database internals.
