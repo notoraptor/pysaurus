@@ -209,9 +209,17 @@ class MockAppContext:
         if self._database:
             self._view.set_search(text, cond)
 
+    def get_sorting(self) -> list[str]:
+        return list(self._view.sorting)
+
     def set_sorting(self, sorting) -> None:
         if self._database:
             self._view.set_sort(sorting)
+
+    def get_view_position(self, field, value, selector=None):
+        if not self._database:
+            return None
+        return self._database.get_view_position(self._view, field, value, selector)
 
     def get_random_video_id(self):
         if not self._database:

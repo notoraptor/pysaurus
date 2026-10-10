@@ -164,6 +164,9 @@ class MainWindow(QMainWindow):
         self._action_random_video = self.view_menu.addAction(
             say("&Random Video (Ctrl+O)"), self.videos_page._on_random_video
         )
+        self._action_go_to_duration = self.view_menu.addAction(
+            say("Go to &Duration... (Ctrl+J)"), self.videos_page._on_go_to_duration
+        )
         self._action_generate_playlist = self.view_menu.addAction(
             say("&Generate Playlist (Ctrl+L)"), self.videos_page._on_playlist
         )
@@ -286,6 +289,7 @@ class MainWindow(QMainWindow):
         self._action_quit.setText(say("&Quit"))
         # View menu actions
         self._action_random_video.setText(say("&Random Video (Ctrl+O)"))
+        self._action_go_to_duration.setText(say("Go to &Duration... (Ctrl+J)"))
         self._action_generate_playlist.setText(say("&Generate Playlist (Ctrl+L)"))
         self._action_refresh_view.setText(say("Re&fresh View (Ctrl+R)"))
         # Page selector radios

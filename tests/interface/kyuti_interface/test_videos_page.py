@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from pysaurus.database.database_algorithms import SimilarityCopyReport
 from pysaurus.database.database_settings import DatabaseSettings
+from pysaurus.interface.kyuti.dialogs.goto_duration_dialog import GoToDurationDialog
 from pysaurus.interface.kyuti.pages.videos_page import VideosPage
 from pysaurus.interface.kyuti.widgets.left_click_menu import LeftClickMenu
 
@@ -1447,3 +1448,76 @@ class TestVideosPageSelectionMenu:
         assert infos == [("Remove redundant values", "No redundant value found.")]
         assert asked == []
         assert messages == []
+
+
+class TestVideosPageGoToDuration:
+    """Ctrl+J asks for a duration, forces a length sort if needed, then lands
+    on the page and row of the nearest video."""
+
+    def _page(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.page_size = 2
+        page.refresh()
+        return page
+
+    def _answer(self, monkeypatch, seconds, asked):
+        def fake_get_seconds(force_sorting, parent=None):
+            asked["force_sorting"] = force_sorting
+            return seconds
+
+        monkeypatch.setattr(
+            GoToDurationDialog, "get_seconds", staticmethod(fake_get_seconds)
+        )
+
+    def test_cancel_changes_nothing(self, qtbot, mock_context, monkeypatch):
+        self._answer(monkeypatch, None, {})
+        page = self._page(qtbot, mock_context)
+        sorting = mock_context.get_sorting()
+
+        page._on_go_to_duration()
+
+        assert mock_context.get_sorting() == sorting
+        assert page.page_number == 0
+
+    def test_forces_length_sorting_then_jumps(self, qtbot, mock_context, monkeypatch):
+        asked = {}
+        self._answer(monkeypatch, 5400.0, asked)
+        monkeypatch.setattr(
+            mock_context, "get_view_position", lambda field, value, selector=None: 3
+        )
+        page = self._page(qtbot, mock_context)
+        scrolled = []
+        monkeypatch.setattr(
+            page.list_widget,
+            "scrollToItem",
+            lambda item, hint: scrolled.append(page.list_widget.row(item)),
+        )
+
+        page._on_go_to_duration()
+
+        assert asked["force_sorting"] is True
+        assert mock_context.get_sorting() == ["+length"]
+        assert page.page_number == 1
+        assert scrolled == [1]
+
+    def test_keeps_a_length_first_sorting(self, qtbot, mock_context, monkeypatch):
+        asked = {}
+        self._answer(monkeypatch, 5400.0, asked)
+        mock_context.set_sorting(["-length", "+title"])
+        page = self._page(qtbot, mock_context)
+
+        page._on_go_to_duration()
+
+        assert asked["force_sorting"] is False
+        assert mock_context.get_sorting() == ["-length", "+title"]
+
+    def test_uses_the_mock_positions(self, qtbot, mock_context, monkeypatch):
+        # Mock lengths in view: 3600, 5400, 6000, 7200 seconds.
+        self._answer(monkeypatch, 5900.0, {})
+        mock_context.set_sorting(["+length"])
+        page = self._page(qtbot, mock_context)
+
+        page._on_go_to_duration()
+
+        assert page.page_number == 1

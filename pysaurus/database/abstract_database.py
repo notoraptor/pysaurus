@@ -210,6 +210,22 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_view_position(
+        self,
+        view: ViewContext,
+        field: str,
+        value: float,
+        selector: Selector | None = None,
+    ) -> int | None:
+        """Return the 0-based index, in the sorted view, of the video whose
+        `field` is nearest to `value`: the first of the equal-nearest run when
+        the view is sorted by `field` ascending, the last when descending.
+        None if the view is empty. `field` must be the first sorting key of
+        the view (ValueError otherwise).
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def videos_get_terms(self) -> dict[int, list[str]]:
         raise NotImplementedError()
 

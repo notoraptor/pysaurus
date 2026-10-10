@@ -23,6 +23,7 @@ from pysaurus.database.saurus.video_mega_group import (
     _compile_source_expression,
     video_mega_group,
     video_mega_ids,
+    video_mega_position,
 )
 from pysaurus.database.saurus.video_mega_search import (
     video_mega_count,
@@ -124,6 +125,27 @@ class PysaurusCollection(AbstractDatabase):
             group=view.group,
             search=view.search,
             selector=selector,
+        )
+
+    def get_view_position(
+        self,
+        view: ViewContext,
+        field: str,
+        value: float,
+        selector: Selector | None = None,
+    ) -> int | None:
+        return video_mega_position(
+            self.db,
+            sources=view.sources,
+            source_expression=view.source_expression,
+            grouping=view.grouping,
+            classifier=view.classifier,
+            group=view.group,
+            search=view.search,
+            sorting=view.sorting,
+            selector=selector,
+            field=field,
+            value=value,
         )
 
     def _set_date(self, date: Date):

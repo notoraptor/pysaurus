@@ -506,6 +506,8 @@ FoldersHaveBeenUpdatedDoYouWantToScanForNewVideosNow_d27348292fd024ed
 	Voulez-vous rechercher de nouvelles vidéos maintenant ?
 FoldersUpdated_964291c6aee3ca9d
 	Dossiers mis à jour
+FormatXhYmZsEachPartOptionalMmSsOrHMmSs_44566a9f5025c7d9
+	Format : XhYmZs (chaque partie facultative), MM:SS ou H:MM:SS.
 Found_1d941eff01a21ffb
 	Trouvé :
 Found_a879d08f97d696bb
@@ -532,6 +534,12 @@ GeneratePlaylistCtrlL_e558d17081447c15
 	&Générer une liste de lecture (Ctrl+L)
 GeneratingMiniatures_8110d724ea222712
 	Génération des miniatures.
+GoToDurationCtrlJ_d1b00d12fb6e19bb
+	Aller à la &durée... (Ctrl+J)
+GoToDuration_e098c5c89d088236
+	Aller à la durée
+GoToNearestDuration_203feb19b3849e02
+	Aller à la durée la plus proche :
 GoToPage_1d4742f8eca55c57
 	Aller à la page
 GoToPage_900125061e6c5b8f
@@ -1128,6 +1136,8 @@ TheDatabaseHasNoSourcesAreYouSureYouWantToContinue_bb03a8ca9519b65a
 	Êtes-vous sûr de vouloir continuer ?
 TheFileIsAlreadyMissingOnlyTheDatabaseEntryGoes_7ca56492305faac8
 	Le fichier est déjà absent : seule l'entrée de la base sera retirée.
+TheViewIsNotSortedByLengthItWillBeSortedByLengthAscendingReplacingTheCurrentSorting_eac892f5334e58d2
+	La vue n'est pas triée par durée : elle sera triée par durée (croissante), ce qui remplacera le tri actuel.
 ThisFolderIsAlreadyInTheListFolder_7a63e23a39c23b15
 	Ce dossier est déjà dans la liste :
 	{folder}

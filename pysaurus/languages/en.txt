@@ -506,6 +506,8 @@ FoldersHaveBeenUpdatedDoYouWantToScanForNewVideosNow_d27348292fd024ed
 	Do you want to scan for new videos now?
 FoldersUpdated_964291c6aee3ca9d
 	Folders updated
+FormatXhYmZsEachPartOptionalMmSsOrHMmSs_44566a9f5025c7d9
+	Format: XhYmZs (each part optional), MM:SS or H:MM:SS.
 Found_1d941eff01a21ffb
 	Found:
 Found_a879d08f97d696bb
@@ -532,6 +534,12 @@ GeneratePlaylistCtrlL_e558d17081447c15
 	&Generate Playlist (Ctrl+L)
 GeneratingMiniatures_8110d724ea222712
 	Generating miniatures.
+GoToDurationCtrlJ_d1b00d12fb6e19bb
+	Go to &Duration... (Ctrl+J)
+GoToDuration_e098c5c89d088236
+	Go to Duration
+GoToNearestDuration_203feb19b3849e02
+	Go to nearest duration:
 GoToPage_1d4742f8eca55c57
 	Go to Page
 GoToPage_900125061e6c5b8f
@@ -1128,6 +1136,8 @@ TheDatabaseHasNoSourcesAreYouSureYouWantToContinue_bb03a8ca9519b65a
 	Are you sure you want to continue?
 TheFileIsAlreadyMissingOnlyTheDatabaseEntryGoes_7ca56492305faac8
 	The file is already missing: only the database entry goes.
+TheViewIsNotSortedByLengthItWillBeSortedByLengthAscendingReplacingTheCurrentSorting_eac892f5334e58d2
+	The view is not sorted by length: it will be sorted by length (ascending), replacing the current sorting.
 ThisFolderIsAlreadyInTheListFolder_7a63e23a39c23b15
 	This folder is already in the list:
 	{folder}

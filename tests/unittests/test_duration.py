@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 
-from pysaurus.core.duration import Duration
+from pysaurus.core.duration import Duration, parse_duration
 
 
 class TestDurationInitialization:
@@ -471,3 +471,59 @@ class TestEdgeCases:
         d = Duration(value)
         assert isinstance(d.t, int)
         assert d.t == round(value)
+
+
+class TestParseDuration:
+    @pytest.mark.parametrize(
+        "text, seconds",
+        [
+            ("1h30m15s", 5415),
+            ("90m", 5400),
+            ("45s", 45),
+            ("2h", 7200),
+            ("1h15s", 3615),
+            (" 1h 30m ", 5400),
+            ("1H30M", 5400),
+            ("0s", 0),
+            ("3600s", 3600),
+            ("1h59m59s", 7199),
+            ("05:30", 330),
+            ("00:00", 0),
+            ("90:00", 5400),
+            ("1:30:15", 5415),
+            ("01:30:15", 5415),
+            (" 12:00:00 ", 43200),
+        ],
+    )
+    def test_valid_text(self, text, seconds):
+        assert parse_duration(text) == Duration(seconds * 1_000_000)
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "",
+            "   ",
+            "abc",
+            "1h30",
+            "30",
+            "1m2h",
+            "1.5h",
+            "-1h",
+            "1h30m15s!",
+            # A unit below the highest one must stay under 60.
+            "2m3600s",
+            "1h90m",
+            "1h3600s",
+            "0h90m",
+            "12:75",
+            "1:90:00",
+            # Colon format: exactly two digits for minutes and seconds.
+            "1:30",
+            "1:2:03",
+            "123:00:00",
+            "1:30:",
+            "12:00:00:00",
+        ],
+    )
+    def test_invalid_text(self, text):
+        assert parse_duration(text) is None

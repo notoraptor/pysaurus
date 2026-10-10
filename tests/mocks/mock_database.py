@@ -397,6 +397,25 @@ class MockDatabase:
                     stats[val] = stats.get(val, 0) + 1
         return stats
 
+    def get_view_position(self, view, field, value, selector=None) -> int | None:
+        """Like AbstractDatabase.get_view_position, for field "length" only."""
+        video_sorting = VideoSorting(view.sorting)
+        if not video_sorting.fields or video_sorting.fields[0] != field:
+            raise ValueError(f"View is not sorted by {field}")
+        assert field == "length"
+        videos = self._filter_videos(view.sources, view.search)
+        if selector is not None:
+            videos = [v for v in videos if selector.contains(v["video_id"])]
+        lengths = sorted(
+            v.get("duration", 0) / (v.get("duration_time_base") or 1) for v in videos
+        )
+        if not lengths:
+            return None
+        nearest = min(lengths, key=lambda length: (abs(length - value), length < value))
+        if video_sorting.reverse[0]:
+            return len(lengths) - lengths.index(nearest) - 1
+        return lengths.index(nearest)
+
     def get_view_video_ids(self, view, selector=None) -> list[int]:
         """Return every video_id matching the given view (and optional
         selector), like AbstractDatabase.get_view_video_ids."""

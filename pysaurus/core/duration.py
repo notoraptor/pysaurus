@@ -1,5 +1,32 @@
+import re
 from datetime import timedelta
 from typing import Self
+
+_UNITS_TEXT = re.compile(
+    r"^\s*(?:(\d+)\s*h)?\s*(?:(\d+)\s*m)?\s*(?:(\d+)\s*s)?\s*$", re.IGNORECASE
+)
+_COLON_TEXT = re.compile(r"^\s*(?:(\d{1,2}):)?(\d{2}):(\d{2})\s*$")
+
+
+def parse_duration(text: str) -> "Duration | None":
+    """Parse "XhYmZs" (each part optional, at least one), "MM:SS" or
+    "[H]H:MM:SS" into a Duration. The highest unit given is unbounded; every
+    unit below it must stay under 60 ("90m" is fine, "1h90m" is not)."""
+    match = _UNITS_TEXT.match(text)
+    if not match or not any(match.groups()):
+        match = _COLON_TEXT.match(text)
+        if not match:
+            return None
+    parts = [None if group is None else int(group) for group in match.groups()]
+    has_higher = False
+    for value in parts:
+        if value is None:
+            continue
+        if has_higher and value >= 60:
+            return None
+        has_higher = True
+    hours, minutes, seconds = (value or 0 for value in parts)
+    return Duration((hours * 3600 + minutes * 60 + seconds) * Duration.S)
 
 
 class Duration:

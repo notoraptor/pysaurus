@@ -42,6 +42,7 @@ from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
 from pysaurus.interface.kyuti.dialogs.batch_redundant_values_dialog import (
     BatchRedundantValuesDialog,
 )
+from pysaurus.interface.kyuti.dialogs.goto_duration_dialog import GoToDurationDialog
 from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
 from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
 from pysaurus.interface.kyuti.dialogs.redundant_values_dialog import (
@@ -236,6 +237,10 @@ class VideosPage(QWidget):
         # Ctrl+P - Manage properties
         shortcut_properties = QShortcut(QKeySequence("Ctrl+P"), self)
         shortcut_properties.activated.connect(self._go_to_properties)
+
+        # Ctrl+J - Jump to nearest duration
+        shortcut_duration = QShortcut(QKeySequence("Ctrl+J"), self)
+        shortcut_duration.activated.connect(self._on_go_to_duration)
 
     def _focus_search(self):
         """Focus the search input."""
@@ -2938,6 +2943,33 @@ class VideosPage(QWidget):
             self.page_number = page
             self.refresh()
             self._reset_scroll_to_top()
+
+    def _on_go_to_duration(self):
+        """Jump to the video whose length is nearest to a typed duration."""
+        if not self.ctx.has_database():
+            return
+        sorting = VideoSorting(self.ctx.get_sorting())
+        force_sorting = not sorting.fields or sorting.fields[0] != "length"
+        seconds = GoToDurationDialog.get_seconds(force_sorting, parent=self)
+        if seconds is None:
+            return
+        if force_sorting:
+            self.page_number = 0
+            self.ctx.set_sorting(["+length"])
+        selector = self._selector if self._show_only_selected else None
+        index = self.ctx.get_view_position("length", seconds, selector)
+        if index is None:
+            return
+        self.page_number = index // self.page_size
+        self.refresh()
+        self._scroll_to_row(index % self.page_size)
+
+    def _scroll_to_row(self, row: int):
+        item = self.list_widget.item(row)
+        if item is not None:
+            self.list_widget.scrollToItem(
+                item, QAbstractItemView.ScrollHint.PositionAtTop
+            )
 
     def _go_first(self):
         """Go to first page."""

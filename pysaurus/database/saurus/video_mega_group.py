@@ -259,6 +259,71 @@ def video_mega_ids(
         return [row[0] for row in sql_db.query(*query_maker.to_sql())]
 
 
+def video_mega_position(
+    sql_db: PysaurusConnection,
+    *,
+    sources: Sequence[list[str]] = (),
+    source_expression: str | None = None,
+    grouping: GroupDef = GroupDef(),
+    classifier: Sequence[str] = (),
+    group=0,
+    search: SearchDef = SearchDef(),
+    sorting: Sequence[str] = (),
+    selector: Selector | None = None,
+    field: str,
+    value: float,
+) -> int | None:
+    """Return the 0-based index, in the sorted view, of the video whose `field`
+    is nearest to `value`: the first of the equal-nearest run when the view is
+    sorted by `field` ascending, the last when descending. None if the view
+    is empty. On a tie between a lower and an upper neighbour, the upper wins.
+
+    `field` must be the first sorting key of the view (ValueError otherwise).
+    """
+    video_sorting = VideoSorting(sorting)
+    if not video_sorting.fields or video_sorting.fields[0] != field:
+        raise ValueError(f"View is not sorted by {field}")
+    reverse = video_sorting.reverse[0]
+
+    query_maker, _, _ = _build_view_where(
+        sql_db,
+        sources=sources,
+        source_expression=source_expression,
+        grouping=grouping,
+        classifier=classifier,
+        group=group,
+        search=search,
+    )
+    field_video_id = query_maker.get_main_table().get_alias_field("video_id")
+    if selector is not None:
+        select_query, select_params = selector.to_sql(field_video_id)
+        query_maker.where.append_query(select_query, *select_params)
+    column = SqlFieldFactory().get_field(field)
+
+    def aggregate(function: str, condition: str | None = None, *params):
+        maker = query_maker.copy()
+        maker.set_field(f"{function}({column})")
+        if condition:
+            maker.where.append_query(f"{column} {condition}", *params)
+        (row,) = sql_db.query_all(*maker.to_sql())
+        return row[0]
+
+    upper = aggregate("MIN", ">= ?", value)
+    lower = aggregate("MAX", "< ?", value)
+    if upper is None and lower is None:
+        return None
+    if upper is None:
+        nearest = lower
+    elif lower is None or upper - value <= value - lower:
+        nearest = upper
+    else:
+        nearest = lower
+
+    if reverse:
+        return aggregate("COUNT", ">= ?", nearest) - 1
+    return aggregate("COUNT", "< ?", nearest)
+
+
 def _compute_results_and_stats(
     db: PysaurusConnection,
     context: VideoSearchContext,

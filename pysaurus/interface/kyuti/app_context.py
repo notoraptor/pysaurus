@@ -686,11 +686,22 @@ class AppContext(QObject):
             self._api.set_search(text, cond)
             self.state_changed.emit()
 
+    def get_sorting(self) -> list[str]:
+        """Return the current sorting ("+field" / "-field" strings)."""
+        return list(self._view.sorting)
+
     def set_sorting(self, sorting) -> None:
         """Set the sorting order."""
         if self._database:
             self._api.set_sorting(sorting)
             self.state_changed.emit()
+
+    def get_view_position(self, field: str, value: float, selector=None) -> int | None:
+        """Index, in the sorted view, of the video whose `field` is nearest to
+        `value` (see AbstractDatabase.get_view_position)."""
+        if not self._database:
+            return None
+        return self._database.get_view_position(self._view, field, value, selector)
 
     def open_random_video(self) -> str | None:
         """Choose a random video, open it, and update the search to show it.
