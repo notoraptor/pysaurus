@@ -16,6 +16,7 @@ from pysaurus.core.file_size import FileSize
 from pysaurus.core.language import say
 from pysaurus.core.notifications import End
 from pysaurus.database.database_settings import DatabaseSettings
+from pysaurus.database.saved_search import SavedSearch
 from pysaurus.interface.kyuti import main_window as mw_module
 from pysaurus.interface.kyuti.main_window import MainWindow, SessionLogDialog
 from pysaurus.video.video_search_context import VideoSearchContext
@@ -98,8 +99,17 @@ class QMockAppContext(QObject):
     def set_language(self, code: str) -> None:
         pass
 
+    _source_expression: str | None = None
+    _saved_searches: list[SavedSearch] = []
+
     def get_source_expression(self) -> str | None:
-        return None
+        return self._source_expression
+
+    def set_source_expression(self, expression: str | None) -> None:
+        self._source_expression = expression
+
+    def get_saved_searches(self) -> list[SavedSearch]:
+        return list(self._saved_searches)
 
     def get_prop_types(self, **kwargs) -> list:
         return []
@@ -735,6 +745,59 @@ class TestDatabaseMenuActions:
         )
         main_window._on_database_settings()
         assert main_window.ctx.get_database_settings() == DatabaseSettings()
+
+
+# =============================================================================
+# Saved searches submenu
+# =============================================================================
+
+
+class TestSavedSearchesMenu:
+    def _fill(self, main_window, searches, current=None):
+        main_window.ctx._simulate_open("my_db")
+        main_window.ctx._saved_searches = searches
+        main_window.ctx._source_expression = current
+        main_window._fill_saved_searches_menu()
+        return main_window.saved_searches_menu.actions()
+
+    def test_lists_searches_and_checks_the_active_one(self, main_window):
+        actions = self._fill(
+            main_window,
+            [SavedSearch("width > 100", "wide"), SavedSearch("height > 100")],
+            current="height > 100",
+        )
+        assert [a.text() for a in actions[:2]] == ["wide", "height > 100"]
+        assert [a.isChecked() for a in actions[:2]] == [False, True]
+        assert actions[0].toolTip() == "wide: width > 100"
+        assert actions[1].toolTip() == "height > 100"
+        assert actions[2].isSeparator()
+        assert actions[3].text() == "&Edit... (Ctrl+E)"
+
+    def test_without_searches_shows_a_disabled_entry(self, main_window):
+        actions = self._fill(main_window, [])
+        assert actions[0].text() == "(no saved search)"
+        assert not actions[0].isEnabled()
+        assert actions[-1].text() == "&Edit... (Ctrl+E)"
+
+    def test_triggering_an_entry_applies_it_from_the_first_page(self, main_window):
+        actions = self._fill(main_window, [SavedSearch("width > 100", "wide")])
+        main_window.videos_page.page_number = 3
+        actions[0].trigger()
+        assert main_window.ctx.get_source_expression() == "width > 100"
+        assert main_window.videos_page.page_number == 0
+
+    def test_edit_opens_the_sources_dialog_on_the_advanced_tab(
+        self, main_window, monkeypatch
+    ):
+        tabs = []
+        monkeypatch.setattr(
+            main_window.videos_page,
+            "_open_sources_dialog",
+            lambda start_tab=0: tabs.append(start_tab),
+        )
+        actions = self._fill(main_window, [])
+        actions[-1].trigger()
+        assert tabs == [1]
 
 
 # =============================================================================

@@ -13,6 +13,7 @@ from pysaurus.database.database_operations import DatabaseOperations
 from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.database.db_paths import Basename, DatabasePaths
 from pysaurus.database.db_utils import DatabaseSaved, DatabaseToSaveContext
+from pysaurus.database.saved_search import SavedSearch
 from pysaurus.dbview.view_context import ViewContext
 from pysaurus.properties.properties import PropRawType, PropType, PropUnitType
 from pysaurus.video.video_entry import VideoEntry
@@ -106,6 +107,25 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def _set_settings(self, settings: DatabaseSettings) -> None:
         """Store settings as given; DatabaseOperations.set_settings validates."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_saved_searches(self) -> list[SavedSearch]:
+        """Named ones first, alphabetically, then the others by expression."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _save_search(self, search: SavedSearch) -> None:
+        """Insert, or rename a known expression; DatabaseOperations.save_search validates."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _delete_saved_search(self, expression: str) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def validate_source_expression(self, expression: str) -> None:
+        """Raise InvalidSourceExpression unless the expression compiles."""
         raise NotImplementedError()
 
     @abstractmethod

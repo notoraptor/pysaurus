@@ -40,6 +40,7 @@ from pysaurus.interface.kyuti.pages.files_page import FilesPage
 from pysaurus.interface.kyuti.pages.process_page import ProcessPage
 from pysaurus.interface.kyuti.pages.properties_page import PropertiesPage
 from pysaurus.interface.kyuti.pages.videos_page import VideosPage
+from pysaurus.interface.kyuti.utils.text import elide, saved_search_tooltip
 
 
 class SessionLogDialog(QDialog):
@@ -166,6 +167,10 @@ class MainWindow(QMainWindow):
         self._action_generate_playlist = self.view_menu.addAction(
             say("&Generate Playlist (Ctrl+L)"), self.videos_page._on_playlist
         )
+        self.saved_searches_menu = self.view_menu.addMenu(say("&Saved Searches"))
+        self.saved_searches_menu.setToolTipsVisible(True)
+        self.saved_searches_menu.aboutToShow.connect(self._fill_saved_searches_menu)
+        self.saved_searches_menu.triggered.connect(self._on_saved_search_action)
         self.view_menu.addSeparator()
         self._action_refresh_view = self.view_menu.addAction(
             say("Re&fresh View (Ctrl+R)"), self.videos_page.refresh
@@ -656,6 +661,30 @@ class MainWindow(QMainWindow):
         Deprecated: Use _update_menu_state() instead.
         """
         self._update_menu_state()
+
+    def _fill_saved_searches_menu(self):
+        """Rebuild the submenu: one checkable action per saved search, then Edit."""
+        menu = self.saved_searches_menu
+        menu.clear()
+        current = self.ctx.get_source_expression()
+        searches = self.ctx.get_saved_searches()
+        for search in searches:
+            action = menu.addAction(elide(search.label))
+            action.setToolTip(saved_search_tooltip(search))
+            action.setData(search.expression)
+            action.setCheckable(True)
+            action.setChecked(search.expression == current)
+        if not searches:
+            menu.addAction(say("(no saved search)")).setEnabled(False)
+        menu.addSeparator()
+        menu.addAction(
+            say("&Edit... (Ctrl+E)"), self.videos_page._on_edit_source_expression
+        )
+
+    def _on_saved_search_action(self, action: QAction):
+        expression = action.data()
+        if expression:
+            self.videos_page.apply_saved_search(expression)
 
     # =========================================================================
     # Database menu actions

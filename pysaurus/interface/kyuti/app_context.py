@@ -7,10 +7,8 @@ Wraps KyutiAPI and provides Qt signals for backend notifications.
 import os
 
 from PySide6.QtCore import QObject, Qt, Signal, Slot
-from searchexp.errors import ExpressionError
 from send2trash import send2trash
 
-from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core import language
 from pysaurus.core.job_notifications import JobStep, JobToDo
 from pysaurus.core.notifications import (
@@ -24,7 +22,7 @@ from pysaurus.core.notifications import (
 )
 from pysaurus.database.database_algorithms import SimilarityCopyReport
 from pysaurus.database.database_settings import DatabaseSettings
-from pysaurus.database.saurus.video_mega_group import _compile_source_expression
+from pysaurus.database.saved_search import SavedSearch
 from pysaurus.interface.kyuti.kyuti_api import KyutiAPI
 from pysaurus.interface.kyuti.qt_translation import QtStandardTranslations
 from pysaurus.properties.properties import PropType
@@ -367,6 +365,26 @@ class AppContext(QObject):
             self._ops.set_settings(settings)
             self.state_changed.emit()
 
+    def get_saved_searches(self) -> list[SavedSearch]:
+        if self._database:
+            return self._database.get_saved_searches()
+        return []
+
+    def save_search(
+        self, expression: str, name: str | None = None
+    ) -> SavedSearch | None:
+        """Remember an expression under an optional name; re-saving renames it."""
+        if self._ops:
+            search = self._ops.save_search(expression, name)
+            self.state_changed.emit()
+            return search
+        return None
+
+    def delete_saved_search(self, expression: str) -> None:
+        if self._ops:
+            self._ops.delete_saved_search(expression)
+            self.state_changed.emit()
+
     def confirm_move(self, src_video_id: int, dst_video_id: int) -> None:
         """Confirm a video move (transfer metadata from src to dst, delete src)."""
         if self._ops:
@@ -632,17 +650,13 @@ class AppContext(QObject):
     def set_source_expression(self, expression: str | None) -> None:
         """Set the source expression filter (searchexp mode).
 
-        Validates the expression before storing it. If invalid,
-        raises PysaurusError (caught by the global except hook)
-        without modifying the view state.
+        An invalid expression raises InvalidSourceExpression (caught by the
+        global except hook) without modifying the view state.
         """
         if self._database:
             text = expression.strip() if expression else None
             if text:
-                try:
-                    _compile_source_expression(self._database.db, text)
-                except ExpressionError as exc:
-                    raise PysaurusError(exc.format_message()) from exc
+                self._database.validate_source_expression(text)
             self._view.set_source_expression(text)
             self.state_changed.emit()
 

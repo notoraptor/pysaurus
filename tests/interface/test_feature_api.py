@@ -545,6 +545,13 @@ class TestFeatureAPIDatabase:
         api.__run_feature__("remove_prop_type", "title_target")
         assert api.__run_feature__("get_database_settings") == DatabaseSettings()
 
+    def test_saved_search_round_trip(self, feature_api_with_db):
+        api = feature_api_with_db
+        saved = api.__run_feature__("save_search", "width > 100", "wide")
+        assert api.__run_feature__("get_saved_searches") == [saved]
+        api.__run_feature__("delete_saved_search", "width > 100")
+        assert api.__run_feature__("get_saved_searches") == []
+
     def test_copy_similarity_infos_returns_the_report(self, feature_api_with_db):
         api = feature_api_with_db
         api.__run_feature__("create_prop_type", "m", "str", "", True)

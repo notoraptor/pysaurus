@@ -348,6 +348,8 @@ Duration_7110eeef2b779601
 	Durée :
 EGWidth1080AndFoundAndEngInAudioLanguages_2bec0a6c0e302eff
 	ex. : width > 1080 and found and "eng" in audio_languages
+EditCtrlE_4b4ae6b6c8669b13
+	&Modifier... (Ctrl+E)
 EditDatabaseFolders_fff5c1d1bf75450b
 	Éditer les dossiers de la base de données
 EditFoldersDatabaseName_9e746f465b5b26dc
@@ -653,6 +655,10 @@ NA_d843e7186b2dd265
 	N/A
 NameCountValueS_75034d3262ee28e2
 	{name} : {count} valeur(s)
+NameExpression_7e6b9ca3a094fcbe
+	{name} : {expression}
+NameOptional_bfdd3439e65cbe89
+	Nom (optionnel) :
 Name_a837fb7e1e05ced4
 	Nom
 Name_dcef2b4d03de7206
@@ -696,6 +702,8 @@ NoPropertySelected_e785797e5fbaa728
 	Aucune propriété sélectionnée.
 NoRedundantValueFound_bad621bf93c1b24a
 	Aucune valeur redondante trouvée.
+NoSavedSearch_64b70395c90f40de
+	(aucune recherche enregistrée)
 NoSelection_4effb87af82a0776
 	Aucune sélection
 NoSelection_699c3c68e3ab7c36
@@ -912,6 +920,8 @@ RenameOldValueTo_406620727bfc55cf
 	Renommer '{old_value}' en :
 RenameProperty_161981044184352a
 	Renommer la propriété
+RenameSearch_26a24fca971a55c5
+	Renommer la recherche
 RenameValue_64182fcfc68cbaec
 	Renommer la valeur
 RenameValue_a34b0cb19cd8da7e
@@ -964,8 +974,16 @@ SampleRateHz_d88f4883d0884bd6
 	{sample_rate} Hz
 SampleRate_d7f25b8ab3b08a87
 	Fréquence d'échantillonnage :
+SaveSearch_43ef71003407a8fa
+	Enregistrer la recherche
 SaveThumbnailsToDb_366bc3c6696f832
 	sauvegarde des vignettes en base de données
+Save_84a307f4c53154a8
+	Enregistrer...
+SavedSearches_a4e0adeb40dbd8ae
+	&Recherches enregistrées
+SavedSearches_f5e4ef579b6f1fdc
+	Recherches enregistrées :
 ScanAllFilesInTheDatabaseSourceFoldersThenReviewAndCleanNonVideoFilesThatHaveAccumulatedThereThumbnails..._cadc200e916a2c76
 	Analyser tous les fichiers des dossiers sources de la base de données, puis examiner et nettoyer les fichiers non vidéo qui s'y sont accumulés (vignettes, .nfo, .part, sous-titres, …).
 ScanFolders_def9e99dcc5a81e9
@@ -995,6 +1013,8 @@ SearchVideosCtrlF_dc9dc764b76b8b98
 	Rechercher des vidéos (Ctrl+F)
 Search_e91ceafac99dbb55
 	Recherche
+SelectASavedSearch_2032b553d3a3336
+	(choisir une recherche enregistrée)
 SelectAllVideosInCurrentViewCtrlShiftA_a5f880ac7242a4a4
 	Sélectionner toutes les vidéos de la vue actuelle (Ctrl+Shift+A)
 SelectAllVideosOnCurrentPageCtrlA_789f05606a6c386f

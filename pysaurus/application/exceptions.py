@@ -58,6 +58,14 @@ class InvalidDatabaseSetting(PysaurusError):
     pass
 
 
+class InvalidSourceExpression(PysaurusError):
+    pass
+
+
+class InvalidSavedSearch(PysaurusError):
+    pass
+
+
 class NoTitleProperty(PysaurusError):
     """No multiple string property is configured to stack titles into."""
 

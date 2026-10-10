@@ -1,6 +1,8 @@
 import logging
 from typing import Any, Collection, Iterable, Sequence, cast
 
+from searchexp.errors import ExpressionError
+
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
@@ -17,7 +19,11 @@ from pysaurus.database.saurus.pysaurus_connection import PysaurusConnection
 from pysaurus.database.saurus.saurus_database_algorithms import SaurusDatabaseAlgorithms
 from pysaurus.database.saurus.sql_useful_constants import WRITABLE_FIELDS
 from pysaurus.database.saurus.sql_utils import sql_placeholders
-from pysaurus.database.saurus.video_mega_group import video_mega_group, video_mega_ids
+from pysaurus.database.saurus.video_mega_group import (
+    _compile_source_expression,
+    video_mega_group,
+    video_mega_ids,
+)
 from pysaurus.database.saurus.video_mega_search import (
     video_mega_count,
     video_mega_exists,
@@ -25,6 +31,7 @@ from pysaurus.database.saurus.video_mega_search import (
     video_mega_source_count,
 )
 from pysaurus.database.saurus.video_mega_utils import _chunk_ids, _get_video_moves
+from pysaurus.database.saved_search import SavedSearch
 from pysaurus.dbview.field_stat import FieldStat
 from pysaurus.dbview.view_context import ViewContext
 from pysaurus.properties.properties import PropRawType, PropType, PropUnitType
@@ -180,6 +187,31 @@ class PysaurusCollection(AbstractDatabase):
             "copy_overwrites_unique_properties = ? WHERE collection_id = 0",
             [property_id, int(settings.copy_overwrites_unique_properties)],
         )
+
+    def get_saved_searches(self) -> list[SavedSearch]:
+        return [
+            SavedSearch(expression=row["expression"], name=row["name"])
+            for row in self.db.query_all(
+                "SELECT expression, name FROM saved_search "
+                "ORDER BY name IS NULL, name COLLATE NOCASE, expression"
+            )
+        ]
+
+    def _save_search(self, search: SavedSearch) -> None:
+        self.db.modify(
+            "INSERT INTO saved_search (expression, name) VALUES (?, ?) "
+            "ON CONFLICT (expression) DO UPDATE SET name = excluded.name",
+            [search.expression, search.name],
+        )
+
+    def _delete_saved_search(self, expression: str) -> None:
+        self.db.modify("DELETE FROM saved_search WHERE expression = ?", [expression])
+
+    def validate_source_expression(self, expression: str) -> None:
+        try:
+            _compile_source_expression(self.db, expression)
+        except ExpressionError as exc:
+            raise exceptions.InvalidSourceExpression(exc.format_message()) from exc
 
     def videos_tag_get(
         self, name: str, indices: Sequence[int] = ()

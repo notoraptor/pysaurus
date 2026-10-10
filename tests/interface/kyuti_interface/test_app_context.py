@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 import pytest
 
+from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.job_notifications import JobStep, JobToDo
 from pysaurus.core.notifications import (
@@ -54,6 +55,26 @@ class TestDatabaseSettings:
         with qtbot.waitSignal(ctx.state_changed, timeout=1000):
             ctx.set_database_settings(settings)
         assert ctx.get_database_settings() == settings
+
+
+class TestSavedSearches:
+    def test_save_and_delete_persist_and_emit_state_changed(self, ctx, qtbot):
+        with qtbot.waitSignal(ctx.state_changed, timeout=1000):
+            saved = ctx.save_search("width > 100", "wide")
+        assert ctx.get_saved_searches() == [saved]
+        with qtbot.waitSignal(ctx.state_changed, timeout=1000):
+            ctx.delete_saved_search("width > 100")
+        assert ctx.get_saved_searches() == []
+
+    def test_invalid_expression_is_refused(self, ctx):
+        with pytest.raises(PysaurusError):
+            ctx.save_search("width >")
+        assert ctx.get_saved_searches() == []
+
+    def test_set_source_expression_refuses_invalid(self, ctx):
+        with pytest.raises(PysaurusError):
+            ctx.set_source_expression("width >")
+        assert ctx.get_source_expression() is None
 
 
 class TestCopySimilarityInfos:

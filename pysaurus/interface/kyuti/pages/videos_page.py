@@ -509,7 +509,11 @@ class VideosPage(QWidget):
         sources_layout.addLayout(sources_header)
 
         self.sources_info = QLabel(say("All readable"))
-        self.sources_info.setStyleSheet("color: #555; background: transparent;")
+        self.sources_info.setObjectName("sources_info")
+        # Scoped by id: a bare rule would also style the tooltip.
+        self.sources_info.setStyleSheet(
+            "#sources_info { color: #555; background: transparent; }"
+        )
         self.sources_info.setWordWrap(True)
         self.sources_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sources_layout.addWidget(self.sources_info)
@@ -2642,6 +2646,11 @@ class VideosPage(QWidget):
         """Handle edit source expression shortcut (advanced tab)."""
         self._open_sources_dialog(start_tab=1)
 
+    def apply_saved_search(self, expression: str):
+        """Filter on a saved search, from the first page."""
+        self.page_number = 0
+        self.ctx.set_source_expression(expression)
+
     def _open_sources_dialog(self, start_tab: int = 0):
         """Open the sources dialog on the given tab."""
         current_sources = None
@@ -2652,7 +2661,7 @@ class VideosPage(QWidget):
         current_expression = self.ctx.get_source_expression()
 
         dialog = SourcesDialog(
-            current_sources, current_expression, self, start_tab=start_tab
+            current_sources, current_expression, self, start_tab=start_tab, ctx=self.ctx
         )
         if dialog.exec():
             self.page_number = 0

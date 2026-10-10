@@ -22,6 +22,7 @@ from pysaurus.database.database_settings import (
     DatabaseSettings,
     can_hold_generalized_titles,
 )
+from pysaurus.database.saved_search import SavedSearch
 from pysaurus.properties.properties import PropUnitType
 from pysaurus.properties.property_value_modifier import PropertyValueModifier
 
@@ -84,6 +85,31 @@ class DatabaseOperations:
         if settings != self.db.get_settings():
             self.db._set_settings(settings)
             self.db.save()
+
+    def save_search(self, expression: str, name: str | None = None) -> SavedSearch:
+        """Remember an expression, keyed by its text: saving it again renames it.
+
+        The expression must compile, and a name may label only one expression.
+        """
+        text = expression.strip() if expression else ""
+        if not text:
+            raise exceptions.InvalidSavedSearch("Cannot save an empty expression")
+        self.db.validate_source_expression(text)
+        label = name.strip() if name else ""
+        if label:
+            for other in self.db.get_saved_searches():
+                if other.name == label and other.expression != text:
+                    raise exceptions.InvalidSavedSearch(
+                        f"Name already used by another saved search: {label}"
+                    )
+        search = SavedSearch(expression=text, name=label or None)
+        self.db._save_search(search)
+        self.db.save()
+        return search
+
+    def delete_saved_search(self, expression: str) -> None:
+        self.db._delete_saved_search(expression)
+        self.db.save()
 
     def count_videos(self, *flags, **forced_flags) -> int:
         """Count videos matching given flags."""

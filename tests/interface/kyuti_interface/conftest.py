@@ -19,6 +19,7 @@ import pytest
 
 from pysaurus.database.database_algorithms import SimilarityCopyReport
 from pysaurus.database.database_settings import DatabaseSettings
+from pysaurus.database.saved_search import SavedSearch
 from pysaurus.dbview.view_context import ViewContext
 from tests.mocks.mock_database import MockDatabase
 
@@ -53,6 +54,7 @@ class MockAppContext:
         self._view = ViewContext()
         self._last_result = None
         self._settings = DatabaseSettings()
+        self._saved_searches: list[SavedSearch] = []
         self.copied: list[tuple[int, int, bool]] = []
         self.copy_report = SimilarityCopyReport(properties=["genre"], watched=True)
 
@@ -361,6 +363,20 @@ class MockAppContext:
 
     def set_database_settings(self, settings: DatabaseSettings) -> None:
         self._settings = settings
+
+    def get_saved_searches(self) -> list[SavedSearch]:
+        return list(self._saved_searches)
+
+    def save_search(self, expression: str, name: str | None = None) -> SavedSearch:
+        search = SavedSearch(expression.strip(), (name or "").strip() or None)
+        self.delete_saved_search(search.expression)
+        self._saved_searches.append(search)
+        return search
+
+    def delete_saved_search(self, expression: str) -> None:
+        self._saved_searches = [
+            s for s in self._saved_searches if s.expression != expression
+        ]
 
 
 @pytest.fixture

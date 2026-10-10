@@ -14,6 +14,11 @@ CREATE TABLE IF NOT EXISTS collection (
 CREATE TABLE IF NOT EXISTS collection_source (
 	source TEXT PRIMARY KEY NOT NULL
 );
+CREATE TABLE IF NOT EXISTS saved_search (
+	-- The expression is the identity: saving it again renames it. NULL names are distinct.
+	expression TEXT PRIMARY KEY NOT NULL,
+	name TEXT UNIQUE
+);
 
 CREATE TABLE IF NOT EXISTS video (
 	-- 28 fields
