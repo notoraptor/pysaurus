@@ -12,7 +12,10 @@ Audit réalisé le 2026-10-11. Deux volets :
   `ignored/kyuti_audit/<lang>/` (dossier ignoré par git), puis lues une à une.
 
 Livrable : ce rapport, par page, problèmes classés par gravité, propositions
-concrètes séparées de ce qui relève du goût.
+concrètes séparées de ce qui relève du goût. Les quatre bugs de gravité P0
+trouvés (durée fausse dans l'onglet Info, Entrée qui validait des suppressions,
+Suppr limitée à la page courante, suppression d'une base sans dire ce qui
+disparaît) ont été corrigés le jour même et ne figurent plus ici.
 
 Ce qui n'a **pas** été vérifié : les survols et infobulles, les flux réels
 (mise à jour, similarité, déplacement de fichier), VLC, le glisser-déposer, les
@@ -67,25 +70,21 @@ menu contextuel bien hiérarchisé (actions destructrices en bas, en rouge), les
 confirmations avec vignette et chemin, la page de progression et le dialogue
 de propriétés sont des points forts.
 
-Les faiblesses se regroupent en cinq familles :
+Les faiblesses se regroupent en quatre familles :
 
-1. **Quelques vrais bugs**, peu nombreux mais visibles : durée fausse dans
-   l'onglet Info, « Page 0/1 » sur une vue vide, la touche Suppr qui n'agit
-   pas sur ce que la barre latérale annonce, Entrée qui vaut « Oui » sur
-   plusieurs confirmations destructrices.
-2. **Des affichages bruts** : microsecondes partout, lignes techniques à zéro
-   pour les vidéos illisibles, `Message(message='…')` dans le journal
-   d'activité.
-3. **Rien n'est persistant** côté options (taille de page, confirmation des
+1. **Des affichages bruts** : microsecondes partout, lignes techniques à zéro
+   pour les vidéos illisibles, vue vide muette avec « Page 0/1 »,
+   `Message(message='…')` dans le journal d'activité.
+2. **Rien n'est persistant** côté options (taille de page, confirmation des
    entrées non trouvées).
-4. **Fuites d'internationalisation** : titres de champs, « Readable »,
+3. **Fuites d'internationalisation** : titres de champs, « Readable »,
    « Database ready! » restent en anglais ; la page Fichiers se casse en
    français.
-5. **Dette de code** : `videos_page.py` fait 3 000 lignes, deux fichiers morts,
+4. **Dette de code** : `videos_page.py` fait 3 000 lignes, deux fichiers morts,
    des raccourcis déclarés dans les libellés plutôt que sur les actions.
 
-Échelle de gravité : **P0** bug ou risque de perte ; **P1** gêne réelle à
-l'usage ; **P2** finition et cohérence. Les questions de goût sont à part.
+Échelle de gravité : **P1** gêne réelle à l'usage ; **P2** finition et
+cohérence. Les questions de goût sont à part.
 
 ## Fenêtre principale et menus
 
@@ -125,12 +124,6 @@ l'usage ; **P2** finition et cohérence. Les questions de goût sont à part.
 
 ## Page Bases de données
 
-- **P1 – Suppression sans dire ce qui disparaît.** « Are you sure you want to
-  delete 'x'? » (`databases_page.py:325-333`) alors que
-  `Application.delete_database_from_name` supprime le dossier de la base
-  (`application.py:99-104`). Le message doit dire que le dossier de la base
-  est supprimé et que les vidéos ne le sont pas, et le bouton par défaut doit
-  être Non (voir « Confirmations » plus bas). **Corrigé le 2026-10-11.**
 - **P2 – Formulaire vidé avant de savoir.** `_on_create_clicked` émet le
   signal puis efface nom et sources (`:436-440`) ; si la création échoue, tout
   est à ressaisir.
@@ -197,17 +190,6 @@ l'usage ; **P2** finition et cohérence. Les questions de goût sont à part.
 
 ### Sélection, clavier
 
-- **P0 – Suppr n'agit pas sur la sélection annoncée.** `_delete_selected`
-  (`videos_page.py:374-399`) travaille sur `_selected_video_ids`, qui ne
-  contient que la page courante ; après « ∀ » la barre latérale dit
-  « 90 selected » et Suppr n'en retire que 20. Sans case cochée, la touche
-  retombe sur `_selected_video_id`, la **dernière vidéo cliquée**, et propose
-  « Delete 1 video(s) » pour une vidéo que rien ne signale comme choisie.
-  Proposition : passer par le sélecteur et une opération backend sur la vue
-  (comme « toggle watched » le fait déjà via `apply_on_view`), et ne jamais
-  retomber sur la vidéo cliquée. **Corrigé le 2026-10-11** : Suppr compte et
-  supprime via le sélecteur et `get_all_view_ids()`, et ne fait rien sans
-  case cochée. Entrée est inchangée.
 - **P2 – Entrée.** `_open_selected` (`:362-372`) ouvre la dernière vidéo
   cliquée, ou une vidéo arbitraire de la sélection (`next(iter(set))`).
 - **P2 – Erreur avalée.** `AppContext.open_random_video` attrape toute
@@ -241,14 +223,6 @@ clairs et listent les partenaires par chemin complet.
 
 ## Dialogues de la page Vidéos
 
-- **P0 – Durée fausse dans l'onglet Info.** `Duration(int(video.duration *
-  1_000_000))` (`video_properties_dialog.py:158`) ignore `duration_time_base`
-  et affiche « 75d » pour une vidéo de 6 s. `video.length` fait le calcul
-  correct (`video_pattern.py:283-284`). Dans le même onglet, « Date Modified »
-  montre `date_entry_modified` (`:144-146`), la date de l'entrée, pas celle du
-  fichier affichée dans la liste. **Corrigé le 2026-10-11** : `video.length`,
-  « Date Modified » montre la date du fichier et une ligne « Entry Modified »
-  garde celle de l'entrée.
 - **P1 – Champ par défaut du regroupement.** Le dialogue s'ouvre sur
   « (size and length) », premier titre par ordre alphabétique
   (`grouping_dialog.py:118-128`). Proposer un champ courant (extension, année)
@@ -267,18 +241,12 @@ clairs et listent les partenaires par chemin complet.
 
 ## Confirmations (toutes pages)
 
-- **P0 – Entrée confirme des suppressions.** Les `QMessageBox.question` sans
-  bouton par défaut explicite prennent **Oui** : suppression de vidéos par Suppr
-  (`videos_page.py:382`), suppression d'une base (`databases_page.py:325`),
-  d'une propriété (`properties_page.py:659`), de valeurs de propriété
-  (`property_values_dialog.py:219`), modificateurs sur toutes les valeurs
-  (`:318`), conversion (`properties_page.py:688`), remplissage par termes
-  (`:769`), déplacement de fichier (`videos_page.py:2411`), ignorer ou
-  réinitialiser la similarité (`:1839`, `:1854`). `VideoConfirmDialog`
-  (`video_confirm_dialog.py:77`) et la fermeture de base font l'inverse, à
-  raison. Proposition : un helper unique `ask_yes_no(parent, title, text,
-  default=No)` et l'utiliser partout. **Corrigé le 2026-10-11** : bouton par
-  défaut Non sur les onze sites ; le helper reste à faire.
+- **P2 – Une vingtaine de `QMessageBox.question` quasi identiques.** Chaque
+  site répète titre, texte, `Yes | No` et le bouton par défaut Non
+  (`videos_page.py`, `databases_page.py`, `properties_page.py`,
+  `property_values_dialog.py`, `main_window.py`). Proposition : un helper
+  unique `ask_yes_no(parent, title, text)` avec Non par défaut, pour que la
+  règle ne dépende plus de chaque appel.
 - **P2 – Boîtes « Success ».** La page Propriétés confirme chaque création,
   renommage, conversion, déplacement, remplissage par une boîte modale
   (`properties_page.py:617, 647, 700, 741, 786`) alors que la barre d'état sert
@@ -296,10 +264,6 @@ ignorée), menu Actions par ligne adapté au type.
   `:126-148`) ; ils n'apportent rien.
 - **P2 – Champ d'énumération** affiché, vide et désactivé, pour un type
   booléen ; le masquer avec son libellé.
-- **P2 – Dialogue des valeurs.** Les boutons de modificateurs (Capitalize,
-  Lowercase, Strip, Titlecase, Uppercase) agissent sur **toutes** les valeurs
-  après une seule question ; c'est dit dans la question, mais le bouton par
-  défaut est Oui (voir Confirmations).
 
 ## Page Fichiers
 
@@ -394,15 +358,12 @@ pluriel minimal.
 
 Par ordre de rendement :
 
-1. **P0** (fait le 2026-10-11) : durée de l'onglet Info ; bouton par défaut
-   Non sur les confirmations destructrices ; Suppr sur la sélection réelle ;
-   message de suppression d'une base. Restent de ce palier : le helper de
-   confirmation unique, et Entrée (P2).
-2. **P1 rapides** : durées arrondies ; lignes à zéro masquées ; vue vide
+1. **P1 rapides** : durées arrondies ; lignes à zéro masquées ; vue vide
    avec message et « Page 1/1 » ; journal d'activité lisible ; infobulles sur
    les groupes et largeur de la barre latérale ; page Fichiers en français.
-3. **P1 structurants** : raccourcis sur les `QAction` ; options persistantes ;
+2. **P1 structurants** : raccourcis sur les `QAction` ; options persistantes ;
    découpage de `videos_page.py`.
-4. **P2** : code mort, boîtes « Success », bouton Refresh, numéros de ligne,
-   résumés de la barre latérale, combo et placeholder tronqués, pourcentage
-   dans la barre, constantes de thème, traduction des titres de champ.
+3. **P2** : helper de confirmation unique, code mort, boîtes « Success »,
+   bouton Refresh, numéros de ligne, résumés de la barre latérale, combo et
+   placeholder tronqués, pourcentage dans la barre, constantes de thème,
+   traduction des titres de champ, touche Entrée.
