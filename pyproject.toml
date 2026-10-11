@@ -47,9 +47,9 @@ dev = [
 ]
 
 [tool.uv.sources]
-videre = { path = "../videre", editable = true }
-skullite = { path = "../skullite", editable = true }
-searchexp = { path = "../searchexp", editable = true }
+videre = { git = "https://github.com/ductorex/videre.git", branch = "master" }
+skullite = { git = "https://github.com/ductorex/skullite.git", branch = "master" }
+searchexp = { git = "https://github.com/notoraptor/searchexp.git", branch = "master" }
 
 [build-system]
 requires = ["hatchling"]
