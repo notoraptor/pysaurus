@@ -12,14 +12,32 @@ All_d86fc8186b52d80e
 	Tout
 AreYouSureYouWantToDeleteName_e6921d27f8d1f88a
 	Êtes-vous sûr de vouloir supprimer '{name}' ?
+ClearSearchCtrlShiftF_edc110fb736ca76
+	Effacer la recherche (Ctrl+Shift+F)
+ClearSelectionEscape_178d278875fc6900
+	Effacer la sélection (Échap)
+ConfigureVideoGroupingCtrlG_8900e4f5eb5443ad
+	Configurer le regroupement des vidéos (Ctrl+G)
+ConfigureVideoSortingCtrlShiftS_f1d58c30fd35b76f
+	Configurer le tri des vidéos (Ctrl+Shift+S)
 DismissLabel_feb8fdf19ce9542f
 	Rejeter {label}
+EditCtrlE_4b4ae6b6c8669b13
+	&Modifier... (Ctrl+E)
+EditVideoSourcesCtrlT_1e25b65da34e9d85
+	Éditer les sources des vidéos (Ctrl+T)
 EnumValuesOnePerLine_cd2fc280ad9290a4
 	Valeurs de l'énumération (une par ligne) :
+FirstPageHome_a15d601c1a2ec05c
+	Première page (Début)
 GeneralizeFileTitleIntoProperty_def889ce48f622aa
 	Généraliser le titre du fichier dans une propriété...
 GeneralizeMetaTitleIntoProperty_ee5bf0fa2be16a15
 	Généraliser le méta-titre dans une propriété...
+GeneratePlaylistCtrlL_e558d17081447c15
+	&Générer une liste de lecture (Ctrl+L)
+GoToDurationCtrlJ_d1b00d12fb6e19bb
+	Aller à la &durée... (Ctrl+J)
 IfEnabledOnlyPredefinedValuesCanBeUsedEnterValuesBelowOnePerLine_972634b4a32302bf
 	Si activé, seules des valeurs prédéfinies peuvent être utilisées.
 	Saisissez les valeurs ci-dessous, une par ligne.
@@ -30,13 +48,43 @@ LanguageChangedSomeElementsWillFullyUpdateAfterRestartingPysaurus_aebc685db3ccbc
 	Langue modifiée. Certains éléments ne seront pleinement mis à jour qu'après le redémarrage de Pysaurus.
 Language_b52cf743a80759db
 	Langue
+LastPageEnd_558913873f3de89a
+	Dernière page (Fin)
+NextGroupDownArrow_67d64bc1aa7532ad
+	Groupe suivant (Flèche bas)
+NextPageRightArrow_92eb7d3ad2ab2339
+	Page suivante (Flèche droite)
 Page_96e5bf7e14370d0c
 	Page
+PreviousGroupUpArrow_a3a88716f67d4bec
+	Groupe précédent (Flèche haut)
+PreviousPageLeftArrow_36b97351dd898578
+	Page précédente (Flèche gauche)
+RandomVideoCtrlO_fc449a83cc87bb19
+	Vidéo &aléatoire (Ctrl+O)
+ReFreshViewCtrlR_c6421c4aa3501d44
+	Ra&fraîchir la vue (Ctrl+R)
+ReFreshView_b36db37b8a83e87
+	Ra&fraîchir la vue
+Refresh_d6dc3fb5aef927f6
+	Rafraîchir
+RemoveGroupingCtrlShiftG_2fbf421e92589e09
+	Retirer le regroupement (Ctrl+Shift+G)
 RemoveSelectedValueS_5f87907368fa4759
 	Retirer les valeurs sélectionnées
 RemoveValue_98e8eea6c0a5a2ba
 	Retirer {value}
 ResetLabel_110c73e7b1e8a9b6
 	Réinitialiser {label}
+ResetToDefaultSourcesCtrlShiftT_8155ae59f801cb84
+	Réinitialiser aux sources par défaut (Ctrl+Shift+T)
+SearchCtrlF_f13cd9a9be183bd6
+	Rechercher... (Ctrl+F)
+SearchVideosCtrlF_dc9dc764b76b8b98
+	Rechercher des vidéos (Ctrl+F)
+SelectAllVideosInCurrentViewCtrlShiftA_a5f880ac7242a4a4
+	Sélectionner toutes les vidéos de la vue actuelle (Ctrl+Shift+A)
+SelectAllVideosOnCurrentPageCtrlA_789f05606a6c386f
+	Sélectionner toutes les vidéos de la page actuelle (Ctrl+A)
 StruckThroughValuesAlreadyAppearInThisVideoSFileTitleOrMetaTitleSoRemovingThemLosesNoInformation..._1cd5e6f82fe21312
 	Les valeurs barrées apparaissent déjà dans le titre du fichier ou le méta-titre de cette vidéo : les supprimer ne perd aucune information. Cliquez sur une valeur pour la conserver malgré tout.

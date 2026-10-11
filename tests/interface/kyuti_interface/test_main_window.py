@@ -18,6 +18,9 @@ from pysaurus.core.notifications import End
 from pysaurus.database.database_settings import DatabaseSettings
 from pysaurus.database.saved_search import SavedSearch
 from pysaurus.interface.kyuti import main_window as mw_module
+from pysaurus.interface.kyuti.dialogs.keyboard_shortcuts_dialog import (
+    KeyboardShortcutsDialog,
+)
 from pysaurus.interface.kyuti.main_window import MainWindow, SessionLogDialog
 from pysaurus.video.video_search_context import VideoSearchContext
 
@@ -755,6 +758,8 @@ class TestDatabaseMenuActions:
 class TestSavedSearchesMenu:
     def _fill(self, main_window, searches, current=None):
         main_window.ctx._simulate_open("my_db")
+        # The View menu, hence its Edit entry, only lives on the videos page.
+        main_window.show_videos_page()
         main_window.ctx._saved_searches = searches
         main_window.ctx._source_expression = current
         main_window._fill_saved_searches_menu()
@@ -771,13 +776,13 @@ class TestSavedSearchesMenu:
         assert actions[0].toolTip() == "wide: width > 100"
         assert actions[1].toolTip() == "height > 100"
         assert actions[2].isSeparator()
-        assert actions[3].text() == "&Edit... (Ctrl+E)"
+        assert actions[3].text() == "Edit Source E&xpression..."
 
     def test_without_searches_shows_a_disabled_entry(self, main_window):
         actions = self._fill(main_window, [])
         assert actions[0].text() == "(no saved search)"
         assert not actions[0].isEnabled()
-        assert actions[-1].text() == "&Edit... (Ctrl+E)"
+        assert actions[-1].text() == "Edit Source E&xpression..."
 
     def test_triggering_an_entry_applies_it_from_the_first_page(self, main_window):
         actions = self._fill(main_window, [SavedSearch("width > 100", "wide")])
@@ -825,3 +830,76 @@ class TestCloseEvent:
         event = QCloseEvent()
         MainWindow.closeEvent(main_window, event)
         assert event.isAccepted()
+
+
+# =============================================================================
+# Keyboard shortcuts
+# =============================================================================
+
+
+class TestKeyboardShortcuts:
+    """The videos page actions carry the shortcuts; menus and the dialog
+    reuse them."""
+
+    def test_view_menu_reuses_the_page_actions(self, main_window):
+        videos = main_window.videos_page
+        actions = [a for a in main_window.view_menu.actions() if not a.isSeparator()]
+        assert actions[0] is videos.action_random_video
+        assert actions[2] is videos.action_playlist
+        assert [a.text() for a in actions] == [
+            "&Random Video",
+            "Go to &Duration...",
+            "&Generate Playlist",
+            "&Saved Searches",
+        ]
+        assert actions[0].text() == "&Random Video"
+        assert actions[0].shortcut().toString() == "Ctrl+O"
+
+    def test_page_actions_follow_the_page(self, main_window):
+        action = main_window.videos_page.action_random_video
+        assert not action.isEnabled()
+        main_window.ctx._simulate_open("my_db")
+        main_window.show_videos_page()
+        assert action.isEnabled()
+        main_window.show_properties_page()
+        assert not action.isEnabled()
+
+    def test_dialog_lists_every_page_action(self, qtbot, main_window):
+        videos = main_window.videos_page
+        groups = main_window._shortcut_groups()
+        listed = [action for _, actions in groups for action in actions]
+        page_actions = listed[: len(videos._actions)]
+        assert all(a is b for a, b in zip(page_actions, videos._actions, strict=True))
+
+        dialog = KeyboardShortcutsDialog(groups, main_window)
+        qtbot.addWidget(dialog)
+        tree = dialog.tree
+        rows = [
+            (group.child(j).text(0), group.child(j).text(1))
+            for group in (tree.topLevelItem(i) for i in range(tree.topLevelItemCount()))
+            for j in range(group.childCount())
+        ]
+        assert len(rows) == len(listed)
+        assert ("Random Video", "Ctrl+O") in rows
+        assert all(shortcut for _, shortcut in rows)
+
+    def test_help_menu_opens_the_dialog(self, main_window, monkeypatch):
+        opened = []
+        monkeypatch.setattr(
+            KeyboardShortcutsDialog,
+            "exec",
+            lambda dialog: opened.append(dialog.tree.topLevelItemCount()),
+        )
+        main_window._action_shortcuts.trigger()
+        assert opened == [len(main_window._shortcut_groups())]
+
+    def test_database_menu_shortcuts_are_listed_too(self, main_window):
+        assert main_window._action_update_db.shortcut().toString() == "Ctrl+U"
+        assert main_window._action_close_db.shortcut().toString() == "Ctrl+W"
+        assert main_window._action_quit.shortcut().toString() == "Ctrl+Q"
+        groups = dict(main_window._shortcut_groups())
+        assert groups["Database"] == [
+            main_window._action_update_db,
+            main_window._action_close_db,
+            main_window._action_quit,
+        ]

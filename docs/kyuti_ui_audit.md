@@ -80,22 +80,13 @@ Les faiblesses se regroupent en quatre familles :
 3. **Fuites d'internationalisation** : titres de champs, « Readable »,
    « Database ready! » restent en anglais ; la page Fichiers se casse en
    français.
-4. **Dette de code** : `videos_page.py` fait 3 000 lignes, deux fichiers morts,
-   des raccourcis déclarés dans les libellés plutôt que sur les actions.
+4. **Dette de code** : `videos_page.py` fait 3 000 lignes, deux fichiers morts.
 
 Échelle de gravité : **P1** gêne réelle à l'usage ; **P2** finition et
 cohérence. Les questions de goût sont à part.
 
 ## Fenêtre principale et menus
 
-- **P1 – Raccourcis inscrits dans les libellés.** Le menu Affichage affiche
-  « Random Video (Ctrl+O) » en dur (`main_window.py:164-180`) ; les vrais
-  raccourcis sont des `QShortcut` posés sur la page Vidéos
-  (`videos_page.py:146-243`). Résultat : pas de colonne de raccourcis native,
-  deux sources de vérité, et le menu Base de données n'a aucun raccourci
-  (mise à jour, fermeture). Proposition : des `QAction` avec `setShortcut`,
-  réutilisées par la page, et un ou deux raccourcis sur le menu Base de
-  données (F5 ou Ctrl+U pour la mise à jour).
 - **P1 – Options non persistantes.** Taille de page (`main_window.py:204-218`)
   et « Confirm deletion for entries not found » (`:222-236`) repartent à
   leur défaut à chaque lancement. Proposition : les stocker dans
@@ -258,8 +249,6 @@ Table claire, formulaire de création bien gardé (énumération et multiple
 désactivés pour un booléen, valeur par défaut verrouillée quand elle serait
 ignorée), menu Actions par ligne adapté au type.
 
-- **P2 – Bouton « Refresh »** (`properties_page.py:119-121`) : la page se
-  rafraîchit déjà par `state_changed` ; c'est un vestige.
 - **P2 – Numéros de ligne** de la table affichés (en-tête vertical non masqué,
   `:126-148`) ; ils n'apportent rien.
 - **P2 – Champ d'énumération** affiché, vide et désactivé, pour un type
@@ -361,9 +350,9 @@ Par ordre de rendement :
 1. **P1 rapides** : durées arrondies ; lignes à zéro masquées ; vue vide
    avec message et « Page 1/1 » ; journal d'activité lisible ; infobulles sur
    les groupes et largeur de la barre latérale ; page Fichiers en français.
-2. **P1 structurants** : raccourcis sur les `QAction` ; options persistantes ;
-   découpage de `videos_page.py`.
+2. **P1 structurants** : options persistantes ; découpage de
+   `videos_page.py`.
 3. **P2** : helper de confirmation unique, code mort, boîtes « Success »,
-   bouton Refresh, numéros de ligne, résumés de la barre latérale, combo et
-   placeholder tronqués, pourcentage dans la barre, constantes de thème,
-   traduction des titres de champ, touche Entrée.
+   numéros de ligne, résumés de la barre latérale, combo et placeholder
+   tronqués, pourcentage dans la barre, constantes de thème, traduction des
+   titres de champ, touche Entrée.

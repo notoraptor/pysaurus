@@ -123,6 +123,7 @@ class DatabaseItemWidget(QFrame):
                 name=self.name,
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
             self.open_clicked.emit(self.name, True)

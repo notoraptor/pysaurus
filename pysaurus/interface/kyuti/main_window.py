@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Callable
 
 from PySide6.QtCore import QEvent, Qt
-from PySide6.QtGui import QAction, QActionGroup, QTextCursor
+from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QTextCursor
 from PySide6.QtWidgets import (
     QButtonGroup,
     QDialog,
@@ -33,6 +33,9 @@ from pysaurus.interface.kyuti.dialogs.database_settings_dialog import (
     DatabaseSettingsDialog,
 )
 from pysaurus.interface.kyuti.dialogs.edit_folders_dialog import EditFoldersDialog
+from pysaurus.interface.kyuti.dialogs.keyboard_shortcuts_dialog import (
+    KeyboardShortcutsDialog,
+)
 from pysaurus.interface.kyuti.dialogs.process_dialog import ProcessDialog
 from pysaurus.interface.kyuti.dialogs.rename_dialog import RenameDialog
 from pysaurus.interface.kyuti.pages.databases_page import DatabasesPage
@@ -140,6 +143,7 @@ class MainWindow(QMainWindow):
         self._action_update_db = self.database_menu.addAction(
             say("&Update Database"), self.videos_page._on_update_database
         )
+        self._action_update_db.setShortcut(QKeySequence("Ctrl+U"))
         self.database_menu.addSeparator()
         self._action_find_similar = self.database_menu.addAction(
             say("Find &Similar Videos"), self.videos_page._on_find_similar
@@ -151,33 +155,26 @@ class MainWindow(QMainWindow):
         self._action_close_db = self.database_menu.addAction(
             say("&Close Database"), self._on_close_database
         )
+        self._action_close_db.setShortcut(QKeySequence("Ctrl+W"))
         self.database_menu.addSeparator()
         self._action_session_log = self.database_menu.addAction(
             say("Session &Log..."), self._show_session_log
         )
         self._action_quit = self.database_menu.addAction(say("&Quit"), self.close)
+        self._action_quit.setShortcut(QKeySequence("Ctrl+Q"))
 
-        # View menu
+        # View menu: the videos page owns these actions, shortcuts included.
         self.view_menu = QMenu(say("&View"), self)
         menu_bar.addMenu(self.view_menu)
 
-        self._action_random_video = self.view_menu.addAction(
-            say("&Random Video (Ctrl+O)"), self.videos_page._on_random_video
-        )
-        self._action_go_to_duration = self.view_menu.addAction(
-            say("Go to &Duration... (Ctrl+J)"), self.videos_page._on_go_to_duration
-        )
-        self._action_generate_playlist = self.view_menu.addAction(
-            say("&Generate Playlist (Ctrl+L)"), self.videos_page._on_playlist
-        )
+        videos = self.videos_page
+        self.view_menu.addAction(videos.action_random_video)
+        self.view_menu.addAction(videos.action_go_to_duration)
+        self.view_menu.addAction(videos.action_playlist)
         self.saved_searches_menu = self.view_menu.addMenu(say("&Saved Searches"))
         self.saved_searches_menu.setToolTipsVisible(True)
         self.saved_searches_menu.aboutToShow.connect(self._fill_saved_searches_menu)
         self.saved_searches_menu.triggered.connect(self._on_saved_search_action)
-        self.view_menu.addSeparator()
-        self._action_refresh_view = self.view_menu.addAction(
-            say("Re&fresh View (Ctrl+R)"), self.videos_page.refresh
-        )
 
         # Page navigation radio buttons (right side of menu bar)
         self._page_selector = QWidget()
@@ -256,6 +253,9 @@ class MainWindow(QMainWindow):
         self.help_menu = QMenu(say("&Help"), self)
         menu_bar.addMenu(self.help_menu)
 
+        self._action_shortcuts = self.help_menu.addAction(
+            say("&Keyboard Shortcuts..."), self._show_shortcuts
+        )
         self._action_about = self.help_menu.addAction(say("&About"), self._show_about)
 
         # Initial state: database menu disabled
@@ -287,11 +287,7 @@ class MainWindow(QMainWindow):
         self._action_close_db.setText(say("&Close Database"))
         self._action_session_log.setText(say("Session &Log..."))
         self._action_quit.setText(say("&Quit"))
-        # View menu actions
-        self._action_random_video.setText(say("&Random Video (Ctrl+O)"))
-        self._action_go_to_duration.setText(say("Go to &Duration... (Ctrl+J)"))
-        self._action_generate_playlist.setText(say("&Generate Playlist (Ctrl+L)"))
-        self._action_refresh_view.setText(say("Re&fresh View (Ctrl+R)"))
+        # View menu actions belong to the videos page, which retranslates them.
         # Page selector radios
         self._radio_videos.setText(say("Videos"))
         self._radio_properties.setText(say("Properties"))
@@ -307,6 +303,7 @@ class MainWindow(QMainWindow):
             )
         )
         # Help menu
+        self._action_shortcuts.setText(say("&Keyboard Shortcuts..."))
         self._action_about.setText(say("&About"))
         # Window title depends on the current page
         self._update_window_title()
@@ -608,6 +605,24 @@ class MainWindow(QMainWindow):
             self._process_page.deleteLater()
             self._process_page = None
 
+    def _shortcut_groups(self):
+        """Every shortcut, grouped: the videos page's first, then any other
+        menu-bar action that carries a key."""
+        groups = self.videos_page.shortcut_groups()
+        listed = {action for _, actions in groups for action in actions}
+        for menu in (self.database_menu, self.view_menu, self.options_menu):
+            actions = [
+                action
+                for action in menu.actions()
+                if not action.shortcut().isEmpty() and action not in listed
+            ]
+            if actions:
+                groups.append((menu.title().replace("&", ""), actions))
+        return groups
+
+    def _show_shortcuts(self):
+        KeyboardShortcutsDialog(self._shortcut_groups(), self).exec()
+
     def _show_about(self):
         """Show about dialog."""
         QMessageBox.about(
@@ -636,8 +651,11 @@ class MainWindow(QMainWindow):
         self._action_close_db.setEnabled(has_db)
         self._action_session_log.setEnabled(has_db)
 
-        # View menu: enabled when on videos page
+        # View menu: enabled when on videos page. Its actions carry the page
+        # shortcuts and are gated themselves: a menu-bar action answers its
+        # key even while the page is hidden.
         self.view_menu.setEnabled(has_db and on_videos_page)
+        self.videos_page.set_actions_enabled(has_db and on_videos_page)
 
         # Options menu is reachable without an open database (so the Language
         # submenu — an app-global setting — can be changed from the home page),
@@ -681,9 +699,7 @@ class MainWindow(QMainWindow):
         if not searches:
             menu.addAction(say("(no saved search)")).setEnabled(False)
         menu.addSeparator()
-        menu.addAction(
-            say("&Edit... (Ctrl+E)"), self.videos_page._on_edit_source_expression
-        )
+        menu.addAction(self.videos_page.action_edit_expression)
 
     def _on_saved_search_action(self, action: QAction):
         expression = action.data()

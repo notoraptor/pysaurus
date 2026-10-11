@@ -67,6 +67,9 @@ from pysaurus.interface.kyuti.dialogs.fill_property_dialog import FillPropertyDi
 from pysaurus.interface.kyuti.dialogs.goto_duration_dialog import GoToDurationDialog
 from pysaurus.interface.kyuti.dialogs.goto_page_dialog import GoToPageDialog
 from pysaurus.interface.kyuti.dialogs.grouping_dialog import GroupingDialog
+from pysaurus.interface.kyuti.dialogs.keyboard_shortcuts_dialog import (
+    KeyboardShortcutsDialog,
+)
 from pysaurus.interface.kyuti.dialogs.move_values_dialog import MoveValuesDialog
 from pysaurus.interface.kyuti.dialogs.process_dialog import ProcessDialog
 from pysaurus.interface.kyuti.dialogs.property_values_dialog import PropertyValuesDialog
@@ -629,6 +632,10 @@ class Capture:
         with patch.object(QDialog, "exec", fake_exec):
             page._view_count = 4
             page._ask_generalize_title_target("Some title")
+        self.snap_dialog(
+            KeyboardShortcutsDialog(self.window._shortcut_groups(), parent),
+            "67_keyboard_shortcuts",
+        )
 
     def capture_properties_page(self) -> None:
         self.window.show_properties_page()

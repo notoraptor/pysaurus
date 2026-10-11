@@ -1304,7 +1304,7 @@ class TestVideosPageSelectionMenu:
         menu = self._menu(page, monkeypatch)
         actions = [a for a in menu.actions() if not a.isSeparator()]
         assert [a.text() for a in actions] == [
-            "Show Only Selected\tCtrl+Shift+D",
+            "Show Only Selected",
             "Set Watched",
             "Edit Properties",
             "Remove redundant values...",
@@ -1521,3 +1521,64 @@ class TestVideosPageGoToDuration:
         page._on_go_to_duration()
 
         assert page.page_number == 1
+
+
+class TestPageActions:
+    """Keyboard shortcuts are QActions of the page."""
+
+    def test_action_drives_the_page(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.page_size = 2
+        page.refresh()
+        page.action_next_page.trigger()
+        assert page.page_number == 1
+
+    def test_show_only_selected_follows_the_selection(self, qtbot, mock_context):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+        action = page.action_show_only_selected
+        assert not action.isEnabled()
+
+        page._select_all_in_view()
+        assert action.isEnabled()
+        assert not action.isChecked()
+
+        action.trigger()
+        assert page._show_only_selected
+        assert action.isChecked()
+
+        page._clear_selection()
+        assert not page._show_only_selected
+        assert not action.isChecked()
+        assert not action.isEnabled()
+
+
+class TestProcessConfirmations:
+    """Launching a long process asks first, and Enter alone does not launch."""
+
+    def test_default_button_is_no(self, qtbot, mock_context, monkeypatch):
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        asked = []
+        monkeypatch.setattr(
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: (
+                asked.append(args[4]) or QMessageBox.StandardButton.No
+            ),
+        )
+        launched = []
+        page.update_database_requested.connect(lambda: launched.append("update"))
+        page.find_similar_requested.connect(lambda: launched.append("similar"))
+        page.find_similar_reencoded_requested.connect(
+            lambda: launched.append("reencoded")
+        )
+
+        page._on_update_database()
+        page._on_find_similar()
+        page._on_find_reencoded()
+
+        assert asked == [QMessageBox.StandardButton.No] * 3
+        assert launched == []

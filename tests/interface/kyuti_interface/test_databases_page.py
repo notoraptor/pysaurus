@@ -272,3 +272,24 @@ class TestDatabaseDeletion:
 
         assert "test_database" not in mock_context.get_database_names()
         assert len(page._db_widgets) == 1
+
+
+class TestOpenAndUpdate:
+    def test_update_asks_with_no_as_default(self, qtbot, monkeypatch):
+        widget = DatabaseItemWidget("test_db")
+        qtbot.addWidget(widget)
+        asked = []
+        monkeypatch.setattr(
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: (
+                asked.append(args[4]) or QMessageBox.StandardButton.No
+            ),
+        )
+        opened = []
+        widget.open_clicked.connect(lambda name, update: opened.append(update))
+
+        widget._on_update()
+
+        assert asked == [QMessageBox.StandardButton.No]
+        assert opened == []

@@ -115,11 +115,6 @@ class PropertiesPage(QWidget):
         self._existing_props_label = QLabel("<b>" + say("Existing Properties") + "</b>")
         header.addWidget(self._existing_props_label)
         header.addStretch()
-
-        self.btn_refresh = QPushButton(say("Refresh"))
-        self.btn_refresh.clicked.connect(self.refresh)
-        header.addWidget(self.btn_refresh)
-
         layout.addLayout(header)
 
         # Properties table
@@ -272,7 +267,6 @@ class PropertiesPage(QWidget):
         self._title_label.setText("<b>" + say("Property Management") + "</b>")
         # Existing-properties panel
         self._existing_props_label.setText("<b>" + say("Existing Properties") + "</b>")
-        self.btn_refresh.setText(say("Refresh"))
         self.props_table.setHorizontalHeaderLabels(
             [
                 say("Name"),

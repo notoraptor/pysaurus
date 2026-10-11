@@ -4,6 +4,8 @@ AboutPysaurus_d9dbfc63612f91f0
 	À propos de Pysaurus
 About_2e48ec56391750f8
 	À &propos
+Action_589cfd059b07aca7
+	Action
 Actions_744b2f6cfba0a278
 	Actions :
 Actions_9a6e97866e0a5fb6
@@ -124,10 +126,14 @@ Clean_672072ac7eb4ec6c
 	Nettoyer
 ClearGrouping_f45dccb00f5a0387
 	Effacer le regroupement
-ClearSearchCtrlShiftF_edc110fb736ca76
-	Effacer la recherche (Ctrl+Shift+F)
-ClearSelectionEscape_178d278875fc6900
-	Effacer la sélection (Échap)
+ClearSearch_981130af607b6e64
+	Effacer la recherche
+ClearSearch_d2fd519f2422acc4
+	Effacer la recherche
+ClearSelection_2a8c528a773d9a4a
+	Effacer la sélection
+ClearSelection_7cbdea322f28b02a
+	Effacer la sélection
 Clear_672072ac7eb4ec70
 	Effacer
 ClickContinueToProceed_b5b1cca61be91d77
@@ -158,10 +164,10 @@ ConcatenatePath_2102e936a9eb06cd
 	Concaténer le chemin
 ConcatenateValuesIntoOne_12d1c68c2bd99b38
 	Concaténer les valeurs en une seule
-ConfigureVideoGroupingCtrlG_8900e4f5eb5443ad
-	Configurer le regroupement des vidéos (Ctrl+G)
-ConfigureVideoSortingCtrlShiftS_f1d58c30fd35b76f
-	Configurer le tri des vidéos (Ctrl+Shift+S)
+ConfigureVideoGrouping_9227db3cad4e9f81
+	Configurer le regroupement des vidéos
+ConfigureVideoSorting_53465e82ccc3bd2
+	Configurer le tri des vidéos
 ConfirmAllUniqueMoves_2b5e7cfc43dbded5
 	Confirmer tous les déplacements uniques
 ConfirmAllUniqueMoves_b195ed24f3ecf675
@@ -320,6 +326,8 @@ DeletePermanently_64bee5acd769e30b
 	Supprimer définitivement
 DeleteProperty_f725a2c4b4c350c7
 	Supprimer la propriété
+DeleteSelectedFromDatabase_314f616bc3dcd0f4
+	Supprimer la sélection de la base de données
 DeleteSelected_112170a1ac562ef
 	Supprimer la sélection
 DeleteThisVideoFromTheDatabaseTheFileWillNotBeDeletedFromDisk_32ee2c568226cb4
@@ -350,8 +358,6 @@ Duration_7110eeef2b779601
 	Durée :
 EGWidth1080AndFoundAndEngInAudioLanguages_2bec0a6c0e302eff
 	ex. : width > 1080 and found and "eng" in audio_languages
-EditCtrlE_4b4ae6b6c8669b13
-	&Modifier... (Ctrl+E)
 EditDatabaseFolders_fff5c1d1bf75450b
 	Éditer les dossiers de la base de données
 EditFoldersDatabaseName_9e746f465b5b26dc
@@ -364,8 +370,12 @@ EditPropertiesCountVideos_9e64587522a2afc4
 	Éditer les propriétés - {count} vidéos
 EditProperties_4940e800b7da6bd0
 	Éditer les propriétés
-EditVideoSourcesCtrlT_1e25b65da34e9d85
-	Éditer les sources des vidéos (Ctrl+T)
+EditSourceEXpression_25a51bbf10f35998
+	Éditer l'e&xpression des sources...
+EditSources_dcb544ccd7962fdf
+	Éditer les &sources...
+EditVideoSources_a51bcc8a60c9742e
+	Éditer les sources des vidéos
 EmptyFolder_730f259322216e2b
 	(dossier vide)
 EmptyFolders_fc889539220ee093
@@ -486,6 +496,8 @@ FilterByNameValue_2d39a07256baff8b
 	Filtrer par {name} = {value}
 Filter_c499fefb8cc28f43
 	Filtre :
+Filters_c499fefb8cc28f0a
+	Filtres
 FindReEncodedVideos_6d32fcc0162b737e
 	Trouver les vidéos réencodées
 FindReEncodedVideos_cf0344805e9f9664
@@ -502,8 +514,10 @@ FirstEnumerationValue_18e1f3334aa66d3b
 	Première valeur de l'énumération
 FirstGroup_9a47aa25bb582408
 	Premier groupe
-FirstPageHome_a15d601c1a2ec05c
-	Première page (Début)
+FirstPage_a4429d94989a41d6
+	Première page
+FirstPage_ba4bbd9536534e76
+	Première page
 FoldersHaveBeenUpdatedDoYouWantToScanForNewVideosNow_d27348292fd024ed
 	Les dossiers ont été mis à jour.
 	
@@ -534,12 +548,12 @@ GeneralizingWillOverwriteExistingValuesOnTheOtherVideosInThisGroupForPropsContin
 	{props}
 	
 	Continuer ?
-GeneratePlaylistCtrlL_e558d17081447c15
-	&Générer une liste de lecture (Ctrl+L)
+GeneratePlaylist_e3384a464f877746
+	&Générer une liste de lecture
 GeneratingMiniatures_8110d724ea222712
 	Génération des miniatures.
-GoToDurationCtrlJ_d1b00d12fb6e19bb
-	Aller à la &durée... (Ctrl+J)
+GoToDuration_2488ba5d10cfa41a
+	Aller à la &durée...
 GoToDuration_e098c5c89d088236
 	Aller à la durée
 GoToNearestDuration_203feb19b3849e02
@@ -594,12 +608,20 @@ InvalidValueForTypePropTypeValue_c32df512838e20ed
 	Valeur invalide pour le type {prop_type} : {value}
 KeptDestinationValuesForProps_cf1d7d1d6649a97e
 	Valeurs de la destination conservées pour : {props}
+KeyboardShortcuts_8dd9853bb16848bf
+	&Raccourcis clavier...
+KeyboardShortcuts_bbc14d8a8e0af457
+	Raccourcis clavier
 Language_c9b2abbb5447bff
 	&Langue
 LastGroup_e2e13091b918e83c
 	Dernier groupe
-LastPageEnd_558913873f3de89a
-	Dernière page (Fin)
+LastPage_9e8004f942b0f0a
+	Dernière page
+LastPage_f744e04ef9552c6a
+	Dernière page
+ManageProperties_e7016689ded9b6c5
+	Gérer les &propriétés
 ManageTheSourcesFoldersAndFilesForThisDatabase_b5417329326deeb7
 	Gérer les sources (dossiers et fichiers) de cette base de données :
 ManageValues_a845ff0d2a8be24c
@@ -675,6 +697,8 @@ Name_a837fb7e1e05ced4
 	Nom
 Name_dcef2b4d03de7206
 	Nom :
+Navigation_b8d6a7061d68b43b
+	Navigation
 NewDatabaseName_a21ebd16b7464419
 	Nouveau nom de la base de données :
 NewFileTitle_3b5427726c4f4447
@@ -683,10 +707,14 @@ NewValueAlreadyExistsMergeOldValueIntoIt_f74196216ae94e48
 	'{new_value}' existe déjà. Fusionner '{old_value}' avec cette valeur ?
 NewValue_49eeb78ac7c1e7a8
 	Nouvelle valeur :
-NextGroupDownArrow_67d64bc1aa7532ad
-	Groupe suivant (Flèche bas)
-NextPageRightArrow_92eb7d3ad2ab2339
-	Page suivante (Flèche droite)
+NextGroup_c656ef03612a9b9f
+	Groupe suivant
+NextGroup_ed7ef00f5fb7e6bf
+	Groupe suivant
+NextPage_4232f8f056ce745b
+	Page suivante
+NextPage_583c18f0f48780fb
+	Page suivante
 NoCustomPropertiesDefinedCreatePropertiesInThePropertiesPageFirst_8d2d3aa616a89782
 	Aucune propriété personnalisée définie.
 	Créez d'abord des propriétés dans la page Propriétés.
@@ -769,6 +797,8 @@ OpenFolder_e3711165e96327a3
 	Ouvrir le dossier
 OpenInVlc_d41ee53b1cab9af
 	Ouvrir dans VLC
+OpenVideo_b083e0d216746df8
+	Ouvrir la vidéo
 Open_a10ec67e1a6481b1
 	Ouvrir
 Opened_f3ab8448d597db19
@@ -814,10 +844,14 @@ PleaseSelectValuesToDelete_e831f42c3db51d51
 	Veuillez sélectionner des valeurs à supprimer.
 PleaseSelectValuesToMove_201ff9f7a5b631af
 	Veuillez sélectionner des valeurs à déplacer.
-PreviousGroupUpArrow_a3a88716f67d4bec
-	Groupe précédent (Flèche haut)
-PreviousPageLeftArrow_36b97351dd898578
-	Page précédente (Flèche gauche)
+PreviousGroup_1a74a68616054583
+	Groupe précédent
+PreviousGroup_efe6a57a1494d263
+	Groupe précédent
+PreviousPage_92b8cbb4c5b7df3f
+	Page précédente
+PreviousPage_a8c1ebb56370ebdf
+	Page précédente
 ProblemCopyTheRestAnyway_c804fa49ed09fc64
 	{problem}
 	
@@ -866,16 +900,14 @@ Quit_8f60807e10475098
 	Quitter
 Quit_bb7b32b2cd5dc33c
 	&Quitter
-RandomVideoCtrlO_fc449a83cc87bb19
-	Vidéo &aléatoire (Ctrl+O)
+RandomVideo_ae40b5b1875951e5
+	Vidéo &aléatoire
 ReEncodedGroup_272ad0e25bd9d184
 	Groupe de réencodage :
 ReEncodedIdValue_ae092fdaa09ec2f3
 	ID de réencodage : {value}
 ReEncodedNoMatch_241ee1815c34456e
 	Réencodage : (aucune correspondance)
-ReFreshViewCtrlR_c6421c4aa3501d44
-	Ra&fraîchir la vue (Ctrl+R)
 ReadOnlyStatsForVideoFilesUseTheBVideosBPageToManageIndexedVideosAnIUnknownI..._451ad572c7ab989f
 	Statistiques en lecture seule des fichiers vidéo. Utilisez la page <b>Vidéos</b> pour gérer les vidéos indexées. Une vidéo <i>inconnue</i> est physiquement présente sur le disque mais non référencée par la base de données.
 Readable_e2d0c84bec967aa5
@@ -884,8 +916,6 @@ Readable_ff3efe0303b26665
 	Lisible :
 Ready_bb1ff02f46cc14ba
 	Prêt
-Refresh_d6dc3fb5aef927f6
-	Rafraîchir
 RemoveAllValues_160846f8042dc1c2
 	Retirer toutes les valeurs
 RemoveAll_8695474f05264dac
@@ -896,8 +926,10 @@ RemoveEntry_a80fd6045c88912d
 	Retirer l'entrée
 RemoveFromPathUnstack_b782d4a2c426ee68
 	Retirer du chemin (dépiler)
-RemoveGroupingCtrlShiftG_2fbf421e92589e09
-	Retirer le regroupement (Ctrl+Shift+G)
+RemoveGrouping_78ee6a1eff80e008
+	Retirer le regroupement
+RemoveGrouping_fce49f6814910368
+	Retirer le regroupement
 RemoveNameValueFromThisVideo_6faeaf0a85b4387a
 	Retirer la valeur {name} de cette vidéo
 RemoveRedundantValues_65c913ea91255462
@@ -958,10 +990,12 @@ ResetSimilarityStatusForThisVideoTheVideoWillBeReEvaluatedInTheNextSimilaritySea
 	La vidéo sera réévaluée lors de la prochaine recherche de similarité.
 ResetSimilarity_d4672286e4622fab
 	Réinitialiser la similarité
+ResetSources_9b03a2b09aca56a4
+	Réinitialiser les sources
 ResetToDefaultSorting_790563954f3812aa
 	Réinitialiser au tri par défaut
-ResetToDefaultSourcesCtrlShiftT_8155ae59f801cb84
-	Réinitialiser aux sources par défaut (Ctrl+Shift+T)
+ResetToDefaultSources_24fd946b8297700c
+	Réinitialiser aux sources par défaut
 Reset_bae3032f4698869a
 	Réinitialiser
 Resolution_4ce3c6592b7c1bf7
@@ -1004,8 +1038,6 @@ ScanningFolders_37d8180acf667d07
 	Analyse des dossiers
 SearchByVideoId_66884cae567d6338
 	Rechercher par identifiant vidéo
-SearchCtrlF_f13cd9a9be183bd6
-	Rechercher... (Ctrl+F)
 SearchForAllTerms_406e4228c89dfc38
 	Rechercher tous les termes
 SearchForAnyTerm_cf5c562cd0a250ac
@@ -1021,16 +1053,22 @@ SearchForVisuallySimilarVideosThisMayTakeAWhileDependingOnTheNumberOfVideos_9c9c
 	Rechercher des vidéos visuellement similaires ?
 	
 	Cela peut prendre du temps selon le nombre de vidéos.
-SearchVideosCtrlF_dc9dc764b76b8b98
-	Rechercher des vidéos (Ctrl+F)
+SearchVideos_9adec015c35640c7
+	Rechercher des vidéos
+Search_766a9ad089688129
+	Rechercher...
 Search_e91ceafac99dbb55
 	Recherche
 SelectASavedSearch_2032b553d3a3336
 	(choisir une recherche enregistrée)
-SelectAllVideosInCurrentViewCtrlShiftA_a5f880ac7242a4a4
-	Sélectionner toutes les vidéos de la vue actuelle (Ctrl+Shift+A)
-SelectAllVideosOnCurrentPageCtrlA_789f05606a6c386f
-	Sélectionner toutes les vidéos de la page actuelle (Ctrl+A)
+SelectAllInView_f0b5dc35a3344034
+	Tout sélectionner dans la vue
+SelectAllOnPage_926ebc0763a1954
+	Tout sélectionner sur la page
+SelectAllVideosInCurrentView_766f41b420172289
+	Sélectionner toutes les vidéos de la vue actuelle
+SelectAllVideosOnCurrentPage_dc8c46ae49c5c749
+	Sélectionner toutes les vidéos de la page actuelle
 SelectAll_17340da0bf9a8c4
 	Tout sélectionner
 SelectAtLeastOneFileFirst_6b95f2b2ad409fbd
@@ -1074,13 +1112,19 @@ SessionStartedTime_a0cae67329f98ea7
 	Session démarrée : {time}
 SetGrouping_aebc69547ebc4b2e
 	Définir le regroupement
+SetGrouping_bd06ed854590a344
+	Définir le re&groupement...
 SetPropertiesForCountSelectedVideosCheckTheBoxNextToAPropertyToApplyTheChange_935f9f558c8eb139
 	Définir les propriétés de {count} vidéos sélectionnées.
 	Cochez la case à côté d'une propriété pour appliquer le changement.
+SetSoRting_55fb9a4a5a9c0ef3
+	Définir le t&ri...
 SetSorting_b3821ff535d168bb
 	Définir le tri
 SetWatched_281c8b590956a30d
 	Définir l'état vu
+Shortcut_33b88ea77b7d9d3f
+	Raccourci
 ShowGroupsWithOnlyOneVideo_b7bad910947902e1
 	Afficher les groupes n'ayant qu'une seule vidéo
 ShowOnlySelected_5bcb4df72924f9d3

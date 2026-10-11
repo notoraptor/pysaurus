@@ -5,7 +5,7 @@ Videos page for browsing and managing videos.
 from html import escape
 
 from PySide6.QtCore import QEvent, QMimeData, QSize, Qt, QUrl, Signal
-from PySide6.QtGui import QCursor, QDrag, QKeySequence, QShortcut
+from PySide6.QtGui import QAction, QCursor, QDrag, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -116,8 +116,10 @@ class VideosPage(QWidget):
         self._search_mode: str = "and"  # Current search mode
         self._active_search_text: str = ""  # Text of the currently active search
         self._drag_origin = None  # Left-press position, until a drag starts
+        self._actions: list[QAction] = []
+        self._actions_enabled = True
+        self._setup_actions()
         self._setup_ui()
-        self._setup_shortcuts()
 
     def _setup_ui(self):
         """Set up the UI components."""
@@ -143,104 +145,149 @@ class VideosPage(QWidget):
         bottom_bar = self._create_bottom_bar()
         layout.addWidget(bottom_bar)
 
-    def _setup_shortcuts(self):
-        """Set up keyboard shortcuts."""
-        # Ctrl+G - Grouping
-        shortcut_grouping = QShortcut(QKeySequence("Ctrl+G"), self)
-        shortcut_grouping.activated.connect(self._on_set_grouping)
+    def _setup_actions(self):
+        """One QAction per keyboard shortcut: the key, the menu entry (for the
+        main window) and the shortcuts dialog all come from the same object."""
+        make = self._make_action
+        # Filters
+        self.action_sources = make("Ctrl+T", self._on_edit_sources)
+        self.action_edit_expression = make("Ctrl+E", self._on_edit_source_expression)
+        self.action_reset_sources = make("Ctrl+Shift+T", self._clear_sources)
+        self.action_grouping = make("Ctrl+G", self._on_set_grouping)
+        self.action_reset_grouping = make("Ctrl+Shift+G", self._clear_grouping)
+        self.action_sorting = make("Ctrl+Shift+S", self._on_set_sorting)
+        self.action_focus_search = make("Ctrl+F", self._focus_search)
+        self.action_reset_search = make("Ctrl+Shift+F", self._clear_search)
+        # Navigation
+        self.action_first_page = make(Qt.Key.Key_Home, self._go_first)
+        self.action_prev_page = make(Qt.Key.Key_Left, self._go_prev)
+        self.action_next_page = make(Qt.Key.Key_Right, self._go_next)
+        self.action_last_page = make(Qt.Key.Key_End, self._go_last)
+        self.action_prev_group = make(Qt.Key.Key_Up, self._go_prev_group)
+        self.action_next_group = make(Qt.Key.Key_Down, self._go_next_group)
+        self.action_go_to_duration = make("Ctrl+J", self._on_go_to_duration)
+        self.action_properties_page = make("Ctrl+P", self._go_to_properties)
+        # Selection
+        self.action_select_page = make("Ctrl+A", self._select_all)
+        self.action_select_view = make("Ctrl+Shift+A", self._select_all_in_view)
+        self.action_clear_selection = make(Qt.Key.Key_Escape, self._clear_selection)
+        self.action_show_only_selected = make(
+            "Ctrl+Shift+D", self._toggle_show_only_selected, checkable=True
+        )
+        # Videos
+        self.action_open_selected = make(Qt.Key.Key_Return, self._open_selected)
+        self.action_delete_selected = make(Qt.Key.Key_Delete, self._delete_selected)
+        self.action_random_video = make("Ctrl+O", self._on_random_video)
+        self.action_playlist = make("Ctrl+L", self._on_playlist)
+        self._retranslate_actions()
 
-        # Ctrl+F - Search (focus on search input)
-        shortcut_search = QShortcut(QKeySequence("Ctrl+F"), self)
-        shortcut_search.activated.connect(self._focus_search)
+    def _make_action(self, key, slot, checkable: bool = False) -> QAction:
+        action = QAction(self)
+        action.setShortcut(QKeySequence(key))
+        action.setCheckable(checkable)
+        action.triggered.connect(slot)
+        self.addAction(action)
+        self._actions.append(action)
+        return action
 
-        # Ctrl+S - Sorting
-        shortcut_sorting = QShortcut(QKeySequence("Ctrl+Shift+S"), self)
-        shortcut_sorting.activated.connect(self._on_set_sorting)
+    def _retranslate_actions(self):
+        self.action_sources.setText(say("Edit &Sources..."))
+        self.action_edit_expression.setText(say("Edit Source E&xpression..."))
+        self.action_reset_sources.setText(say("Reset Sources"))
+        self.action_grouping.setText(say("Set &Grouping..."))
+        self.action_reset_grouping.setText(say("Remove Grouping"))
+        self.action_sorting.setText(say("Set So&rting..."))
+        self.action_focus_search.setText(say("Search"))
+        self.action_reset_search.setText(say("Clear Search"))
+        self.action_first_page.setText(say("First Page"))
+        self.action_prev_page.setText(say("Previous Page"))
+        self.action_next_page.setText(say("Next Page"))
+        self.action_last_page.setText(say("Last Page"))
+        self.action_prev_group.setText(say("Previous Group"))
+        self.action_next_group.setText(say("Next Group"))
+        self.action_go_to_duration.setText(say("Go to &Duration..."))
+        self.action_properties_page.setText(say("Manage &Properties"))
+        self.action_select_page.setText(say("Select All on Page"))
+        self.action_select_view.setText(say("Select All in View"))
+        self.action_clear_selection.setText(say("Clear Selection"))
+        self.action_show_only_selected.setText(say("Show Only Selected"))
+        self.action_open_selected.setText(say("Open Video"))
+        self.action_delete_selected.setText(say("Delete Selected from Database"))
+        self.action_random_video.setText(say("&Random Video"))
+        self.action_playlist.setText(say("&Generate Playlist"))
 
-        # Ctrl+T - Sources
-        shortcut_sources = QShortcut(QKeySequence("Ctrl+T"), self)
-        shortcut_sources.activated.connect(self._on_edit_sources)
+    def shortcut_groups(self) -> list[tuple[str, list[QAction]]]:
+        """The page's shortcuts in display order, for the shortcuts dialog."""
+        return [
+            (
+                say("Filters"),
+                [
+                    self.action_sources,
+                    self.action_edit_expression,
+                    self.action_reset_sources,
+                    self.action_grouping,
+                    self.action_reset_grouping,
+                    self.action_sorting,
+                    self.action_focus_search,
+                    self.action_reset_search,
+                ],
+            ),
+            (
+                say("Navigation"),
+                [
+                    self.action_first_page,
+                    self.action_prev_page,
+                    self.action_next_page,
+                    self.action_last_page,
+                    self.action_prev_group,
+                    self.action_next_group,
+                    self.action_go_to_duration,
+                    self.action_properties_page,
+                ],
+            ),
+            (
+                say("Selection"),
+                [
+                    self.action_select_page,
+                    self.action_select_view,
+                    self.action_clear_selection,
+                    self.action_show_only_selected,
+                ],
+            ),
+            (
+                say("Videos"),
+                [
+                    self.action_open_selected,
+                    self.action_delete_selected,
+                    self.action_random_video,
+                    self.action_playlist,
+                ],
+            ),
+        ]
 
-        # Ctrl+O - Random video
-        shortcut_random = QShortcut(QKeySequence("Ctrl+O"), self)
-        shortcut_random.activated.connect(self._on_random_video)
+    def set_actions_enabled(self, enabled: bool) -> None:
+        """Gate every action, menu entries and keys alike. An action placed in
+        a menu-bar menu answers its key whatever page is shown, so the page
+        cannot rely on being hidden."""
+        self._actions_enabled = enabled
+        for action in self._actions:
+            action.setEnabled(enabled)
+        self._sync_show_only_selected_action()
 
-        # Ctrl+R - Refresh
-        shortcut_refresh = QShortcut(QKeySequence("Ctrl+R"), self)
-        shortcut_refresh.activated.connect(self.refresh)
+    def _sync_show_only_selected_action(self) -> None:
+        """Checked while active; usable only with a selection to show."""
+        has_selection = self._selector.size_from(self._view_count) > 0
+        action = self.action_show_only_selected
+        action.setEnabled(
+            self._actions_enabled and (has_selection or self._show_only_selected)
+        )
+        action.setChecked(self._show_only_selected)
 
-        # Left/Right - Page navigation
-        shortcut_prev_page = QShortcut(QKeySequence(Qt.Key.Key_Left), self)
-        shortcut_prev_page.activated.connect(self._go_prev)
-
-        shortcut_next_page = QShortcut(QKeySequence(Qt.Key.Key_Right), self)
-        shortcut_next_page.activated.connect(self._go_next)
-
-        # Up/Down - Group navigation
-        shortcut_prev_group = QShortcut(QKeySequence(Qt.Key.Key_Up), self)
-        shortcut_prev_group.activated.connect(self._go_prev_group)
-
-        shortcut_next_group = QShortcut(QKeySequence(Qt.Key.Key_Down), self)
-        shortcut_next_group.activated.connect(self._go_next_group)
-
-        # Ctrl+A - Select all (current page)
-        shortcut_select_all = QShortcut(QKeySequence("Ctrl+A"), self)
-        shortcut_select_all.activated.connect(self._select_all)
-
-        # Ctrl+Shift+A - Select all in view
-        shortcut_select_all_view = QShortcut(QKeySequence("Ctrl+Shift+A"), self)
-        shortcut_select_all_view.activated.connect(self._select_all_in_view)
-
-        # Escape - Clear selection
-        shortcut_escape = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
-        shortcut_escape.activated.connect(self._clear_selection)
-
-        # Ctrl+Shift+D - Toggle show only selected
-        shortcut_show_selected = QShortcut(QKeySequence("Ctrl+Shift+D"), self)
-        shortcut_show_selected.activated.connect(self._toggle_show_only_selected)
-
-        # Enter - Open selected video
-        shortcut_enter = QShortcut(QKeySequence(Qt.Key.Key_Return), self)
-        shortcut_enter.activated.connect(self._open_selected)
-
-        # Delete - Delete selected
-        shortcut_delete = QShortcut(QKeySequence(Qt.Key.Key_Delete), self)
-        shortcut_delete.activated.connect(self._delete_selected)
-
-        # Ctrl+L - Play list
-        shortcut_playlist = QShortcut(QKeySequence("Ctrl+L"), self)
-        shortcut_playlist.activated.connect(self._on_playlist)
-
-        # Home/End - First/Last page
-        shortcut_home = QShortcut(QKeySequence(Qt.Key.Key_Home), self)
-        shortcut_home.activated.connect(self._go_first)
-
-        shortcut_end = QShortcut(QKeySequence(Qt.Key.Key_End), self)
-        shortcut_end.activated.connect(self._go_last)
-
-        # Ctrl+E - Sources (advanced/expression)
-        shortcut_expression = QShortcut(QKeySequence("Ctrl+E"), self)
-        shortcut_expression.activated.connect(self._on_edit_source_expression)
-
-        # Ctrl+Shift+T - Reset sources
-        shortcut_reset_sources = QShortcut(QKeySequence("Ctrl+Shift+T"), self)
-        shortcut_reset_sources.activated.connect(self._clear_sources)
-
-        # Ctrl+Shift+G - Reset grouping
-        shortcut_reset_grouping = QShortcut(QKeySequence("Ctrl+Shift+G"), self)
-        shortcut_reset_grouping.activated.connect(self._clear_grouping)
-
-        # Ctrl+Shift+F - Reset search
-        shortcut_reset_search = QShortcut(QKeySequence("Ctrl+Shift+F"), self)
-        shortcut_reset_search.activated.connect(self._clear_search)
-
-        # Ctrl+P - Manage properties
-        shortcut_properties = QShortcut(QKeySequence("Ctrl+P"), self)
-        shortcut_properties.activated.connect(self._go_to_properties)
-
-        # Ctrl+J - Jump to nearest duration
-        shortcut_duration = QShortcut(QKeySequence("Ctrl+J"), self)
-        shortcut_duration.activated.connect(self._on_go_to_duration)
+    @staticmethod
+    def _with_shortcut(text: str, action: QAction) -> str:
+        """A tooltip that names the key of the action it duplicates."""
+        key = action.shortcut().toString(QKeySequence.SequenceFormat.NativeText)
+        return f"{text} ({key})"
 
     def _focus_search(self):
         """Focus the search input."""
@@ -275,11 +322,7 @@ class VideosPage(QWidget):
         has_selection = count > 0
 
         menu = LeftClickMenu(self)
-        action_show = menu.addAction(say("Show Only Selected") + "\tCtrl+Shift+D")
-        action_show.setCheckable(True)
-        action_show.setChecked(self._show_only_selected)
-        action_show.setEnabled(has_selection or self._show_only_selected)
-        action_show.triggered.connect(self._toggle_show_only_selected)
+        menu.addAction(self.action_show_only_selected)
         menu.addSeparator()
         watched_submenu = menu.addMenu(say("Set Watched"))
         watched_submenu.setEnabled(has_selection)
@@ -358,6 +401,7 @@ class VideosPage(QWidget):
             )
         self.btn_selection_clear.setEnabled(has_selection)
         self.drag_hint_label.setVisible(has_selection)
+        self._sync_show_only_selected_action()
 
     def _open_selected(self):
         """Open the selected video(s)."""
@@ -506,14 +550,18 @@ class VideosPage(QWidget):
         sources_header.addStretch()
         self.btn_sources = QPushButton("⚙")
         self.btn_sources.setObjectName("settingsBtn")
-        self.btn_sources.setToolTip(say("Edit video sources (Ctrl+T)"))
+        self.btn_sources.setToolTip(
+            self._with_shortcut(say("Edit video sources"), self.action_sources)
+        )
         self.btn_sources.setFixedWidth(28)
         self.btn_sources.clicked.connect(self._on_edit_sources)
         sources_header.addWidget(self.btn_sources)
         self.btn_sources_clear = QPushButton("✕")
         self.btn_sources_clear.setObjectName("clearBtn")
         self.btn_sources_clear.setToolTip(
-            say("Reset to default sources (Ctrl+Shift+T)")
+            self._with_shortcut(
+                say("Reset to default sources"), self.action_reset_sources
+            )
         )
         self.btn_sources_clear.setFixedWidth(28)
         self.btn_sources_clear.clicked.connect(self._clear_sources)
@@ -543,13 +591,17 @@ class VideosPage(QWidget):
         grouping_header.addStretch()
         self.btn_grouping = QPushButton("⚙")
         self.btn_grouping.setObjectName("settingsBtn")
-        self.btn_grouping.setToolTip(say("Configure video grouping (Ctrl+G)"))
+        self.btn_grouping.setToolTip(
+            self._with_shortcut(say("Configure video grouping"), self.action_grouping)
+        )
         self.btn_grouping.setFixedWidth(28)
         self.btn_grouping.clicked.connect(self._on_set_grouping)
         grouping_header.addWidget(self.btn_grouping)
         self.btn_grouping_clear = QPushButton("✕")
         self.btn_grouping_clear.setObjectName("clearBtn")
-        self.btn_grouping_clear.setToolTip(say("Remove grouping (Ctrl+Shift+G)"))
+        self.btn_grouping_clear.setToolTip(
+            self._with_shortcut(say("Remove grouping"), self.action_reset_grouping)
+        )
         self.btn_grouping_clear.setFixedWidth(28)
         self.btn_grouping_clear.clicked.connect(self._clear_grouping)
         grouping_header.addWidget(self.btn_grouping_clear)
@@ -626,15 +678,21 @@ class VideosPage(QWidget):
         search_header.addStretch()
         self.btn_search_clear = QPushButton("✕")
         self.btn_search_clear.setObjectName("clearBtn")
-        self.btn_search_clear.setToolTip(say("Clear search (Ctrl+Shift+F)"))
+        self.btn_search_clear.setToolTip(
+            self._with_shortcut(say("Clear search"), self.action_reset_search)
+        )
         self.btn_search_clear.setFixedWidth(28)
         self.btn_search_clear.clicked.connect(self._clear_search)
         search_header.addWidget(self.btn_search_clear)
         search_layout.addLayout(search_header)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText(say("Search... (Ctrl+F)"))
-        self.search_input.setToolTip(say("Search videos (Ctrl+F)"))
+        self.search_input.setPlaceholderText(
+            self._with_shortcut(say("Search..."), self.action_focus_search)
+        )
+        self.search_input.setToolTip(
+            self._with_shortcut(say("Search videos"), self.action_focus_search)
+        )
         self.search_input.returnPressed.connect(self._on_search)
         self.search_input.textChanged.connect(self._on_search_text_changed)
         search_layout.addWidget(self.search_input)
@@ -678,7 +736,9 @@ class VideosPage(QWidget):
         sorting_header.addStretch()
         self.btn_sorting = QPushButton("⚙")
         self.btn_sorting.setObjectName("settingsBtn")
-        self.btn_sorting.setToolTip(say("Configure video sorting (Ctrl+Shift+S)"))
+        self.btn_sorting.setToolTip(
+            self._with_shortcut(say("Configure video sorting"), self.action_sorting)
+        )
         self.btn_sorting.setFixedWidth(28)
         self.btn_sorting.clicked.connect(self._on_set_sorting)
         sorting_header.addWidget(self.btn_sorting)
@@ -711,14 +771,18 @@ class VideosPage(QWidget):
         self.btn_select_page = QPushButton("𝄛")
         self.btn_select_page.setObjectName("selectBtn")
         self.btn_select_page.setToolTip(
-            say("Select all videos on current page (Ctrl+A)")
+            self._with_shortcut(
+                say("Select all videos on current page"), self.action_select_page
+            )
         )
         self.btn_select_page.clicked.connect(self._select_all)
         selection_header.addWidget(self.btn_select_page)
         self.btn_select_all = QPushButton("∀")
         self.btn_select_all.setObjectName("selectBtn")
         self.btn_select_all.setToolTip(
-            say("Select all videos in current view (Ctrl+Shift+A)")
+            self._with_shortcut(
+                say("Select all videos in current view"), self.action_select_view
+            )
         )
         self.btn_select_all.clicked.connect(self._select_all_in_view)
         selection_header.addWidget(self.btn_select_all)
@@ -730,7 +794,9 @@ class VideosPage(QWidget):
         selection_header.addWidget(self.btn_selection_settings)
         self.btn_selection_clear = QPushButton("✕")
         self.btn_selection_clear.setObjectName("clearBtn")
-        self.btn_selection_clear.setToolTip(say("Clear selection (Escape)"))
+        self.btn_selection_clear.setToolTip(
+            self._with_shortcut(say("Clear selection"), self.action_clear_selection)
+        )
         self.btn_selection_clear.setFixedWidth(28)
         self.btn_selection_clear.setEnabled(False)
         self.btn_selection_clear.clicked.connect(self._clear_selection)
@@ -803,7 +869,9 @@ class VideosPage(QWidget):
 
         self.btn_prev_group = QPushButton("<")
         self.btn_prev_group.setFixedWidth(28)
-        self.btn_prev_group.setToolTip(say("Previous group (Up arrow)"))
+        self.btn_prev_group.setToolTip(
+            self._with_shortcut(say("Previous group"), self.action_prev_group)
+        )
         self.btn_prev_group.setStyleSheet(nav_btn_style)
         self.btn_prev_group.clicked.connect(self._go_prev_group)
         groups_nav.addWidget(self.btn_prev_group)
@@ -814,7 +882,9 @@ class VideosPage(QWidget):
 
         self.btn_next_group = QPushButton(">")
         self.btn_next_group.setFixedWidth(28)
-        self.btn_next_group.setToolTip(say("Next group (Down arrow)"))
+        self.btn_next_group.setToolTip(
+            self._with_shortcut(say("Next group"), self.action_next_group)
+        )
         self.btn_next_group.setStyleSheet(nav_btn_style)
         self.btn_next_group.clicked.connect(self._go_next_group)
         groups_nav.addWidget(self.btn_next_group)
@@ -932,13 +1002,17 @@ class VideosPage(QWidget):
         # Pagination controls
         self.btn_first = QPushButton("<<")
         self.btn_first.setFixedSize(32, 24)
-        self.btn_first.setToolTip(say("First page (Home)"))
+        self.btn_first.setToolTip(
+            self._with_shortcut(say("First page"), self.action_first_page)
+        )
         self.btn_first.clicked.connect(self._go_first)
         layout.addWidget(self.btn_first)
 
         self.btn_prev = QPushButton("<")
         self.btn_prev.setFixedSize(32, 24)
-        self.btn_prev.setToolTip(say("Previous page (Left arrow)"))
+        self.btn_prev.setToolTip(
+            self._with_shortcut(say("Previous page"), self.action_prev_page)
+        )
         self.btn_prev.clicked.connect(self._go_prev)
         layout.addWidget(self.btn_prev)
 
@@ -958,13 +1032,17 @@ class VideosPage(QWidget):
 
         self.btn_next = QPushButton(">")
         self.btn_next.setFixedSize(32, 24)
-        self.btn_next.setToolTip(say("Next page (Right arrow)"))
+        self.btn_next.setToolTip(
+            self._with_shortcut(say("Next page"), self.action_next_page)
+        )
         self.btn_next.clicked.connect(self._go_next)
         layout.addWidget(self.btn_next)
 
         self.btn_last = QPushButton(">>")
         self.btn_last.setFixedSize(32, 24)
-        self.btn_last.setToolTip(say("Last page (End)"))
+        self.btn_last.setToolTip(
+            self._with_shortcut(say("Last page"), self.action_last_page)
+        )
         self.btn_last.clicked.connect(self._go_last)
         layout.addWidget(self.btn_last)
 
@@ -983,16 +1061,25 @@ class VideosPage(QWidget):
         indicator, stats, groups list) is retranslated on its own by refresh()
         via the state_changed signal.
         """
+        self._retranslate_actions()
         # Sources section
         self._sources_label.setText(say("Sources"))
-        self.btn_sources.setToolTip(say("Edit video sources (Ctrl+T)"))
+        self.btn_sources.setToolTip(
+            self._with_shortcut(say("Edit video sources"), self.action_sources)
+        )
         self.btn_sources_clear.setToolTip(
-            say("Reset to default sources (Ctrl+Shift+T)")
+            self._with_shortcut(
+                say("Reset to default sources"), self.action_reset_sources
+            )
         )
         # Grouping section
         self._grouping_label.setText(say("Grouping"))
-        self.btn_grouping.setToolTip(say("Configure video grouping (Ctrl+G)"))
-        self.btn_grouping_clear.setToolTip(say("Remove grouping (Ctrl+Shift+G)"))
+        self.btn_grouping.setToolTip(
+            self._with_shortcut(say("Configure video grouping"), self.action_grouping)
+        )
+        self.btn_grouping_clear.setToolTip(
+            self._with_shortcut(say("Remove grouping"), self.action_reset_grouping)
+        )
         self.btn_confirm_unique_moves.setText(say("Confirm all unique moves"))
         self.btn_confirm_unique_moves.setToolTip(
             say("Automatically confirm all moves with a single destination")
@@ -1007,9 +1094,15 @@ class VideosPage(QWidget):
         )
         # Search section
         self._search_label.setText(say("Search"))
-        self.btn_search_clear.setToolTip(say("Clear search (Ctrl+Shift+F)"))
-        self.search_input.setPlaceholderText(say("Search... (Ctrl+F)"))
-        self.search_input.setToolTip(say("Search videos (Ctrl+F)"))
+        self.btn_search_clear.setToolTip(
+            self._with_shortcut(say("Clear search"), self.action_reset_search)
+        )
+        self.search_input.setPlaceholderText(
+            self._with_shortcut(say("Search..."), self.action_focus_search)
+        )
+        self.search_input.setToolTip(
+            self._with_shortcut(say("Search videos"), self.action_focus_search)
+        )
         self.btn_search_and.setText(say("AND"))
         self.btn_search_and.setToolTip(say("Search for all terms"))
         self.btn_search_or.setText(say("OR"))
@@ -1020,18 +1113,26 @@ class VideosPage(QWidget):
         self.btn_search_id.setToolTip(say("Search by video ID"))
         # Sorting section
         self._sorting_label.setText(say("Sorting"))
-        self.btn_sorting.setToolTip(say("Configure video sorting (Ctrl+Shift+S)"))
+        self.btn_sorting.setToolTip(
+            self._with_shortcut(say("Configure video sorting"), self.action_sorting)
+        )
         self.btn_sorting_clear.setToolTip(say("Reset to default sorting"))
         # Selection section
         self._selection_header_label.setText(say("Selection"))
         self.btn_selection_settings.setToolTip(say("Selection actions"))
-        self.btn_selection_clear.setToolTip(say("Clear selection (Escape)"))
+        self.btn_selection_clear.setToolTip(
+            self._with_shortcut(say("Clear selection"), self.action_clear_selection)
+        )
         self.drag_hint_label.setText(say("Drag it into another program"))
         self.btn_select_page.setToolTip(
-            say("Select all videos on current page (Ctrl+A)")
+            self._with_shortcut(
+                say("Select all videos on current page"), self.action_select_page
+            )
         )
         self.btn_select_all.setToolTip(
-            say("Select all videos in current view (Ctrl+Shift+A)")
+            self._with_shortcut(
+                say("Select all videos in current view"), self.action_select_view
+            )
         )
         # Groups panel
         self._groups_title.setText(say("Groups"))
@@ -1039,15 +1140,27 @@ class VideosPage(QWidget):
             say("Add current group to classifier path")
         )
         self.btn_first_group.setToolTip(say("First group"))
-        self.btn_prev_group.setToolTip(say("Previous group (Up arrow)"))
-        self.btn_next_group.setToolTip(say("Next group (Down arrow)"))
+        self.btn_prev_group.setToolTip(
+            self._with_shortcut(say("Previous group"), self.action_prev_group)
+        )
+        self.btn_next_group.setToolTip(
+            self._with_shortcut(say("Next group"), self.action_next_group)
+        )
         self.btn_last_group.setToolTip(say("Last group"))
         # Pagination bar
-        self.btn_first.setToolTip(say("First page (Home)"))
-        self.btn_prev.setToolTip(say("Previous page (Left arrow)"))
+        self.btn_first.setToolTip(
+            self._with_shortcut(say("First page"), self.action_first_page)
+        )
+        self.btn_prev.setToolTip(
+            self._with_shortcut(say("Previous page"), self.action_prev_page)
+        )
         self.page_button.setToolTip(say("Click to go to a specific page"))
-        self.btn_next.setToolTip(say("Next page (Right arrow)"))
-        self.btn_last.setToolTip(say("Last page (End)"))
+        self.btn_next.setToolTip(
+            self._with_shortcut(say("Next page"), self.action_next_page)
+        )
+        self.btn_last.setToolTip(
+            self._with_shortcut(say("Last page"), self.action_last_page)
+        )
 
     def changeEvent(self, event):
         """Qt posts LanguageChange to every widget when a QTranslator is
@@ -2812,6 +2925,7 @@ class VideosPage(QWidget):
                 "This may take a while depending on the number of videos."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
             self.update_database_requested.emit()
@@ -2826,6 +2940,7 @@ class VideosPage(QWidget):
                 "This may take a while depending on the number of videos."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
             self.find_similar_requested.emit()
@@ -2841,6 +2956,7 @@ class VideosPage(QWidget):
                 "that may be re-encodings of the same source."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
             self.find_similar_reencoded_requested.emit()
