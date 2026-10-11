@@ -372,12 +372,13 @@ class VideosPage(QWidget):
             self._open_video(video_id)
 
     def _delete_selected(self):
-        """Delete the selected video(s) from the database."""
-        if not self._selected_video_ids and not self._selected_video_id:
-            return
+        """Delete every selected video (all pages) from the database.
 
-        video_ids = self._selected_video_ids or {self._selected_video_id}
-        count = len(video_ids)
+        Only checked videos count: a merely clicked one is not a selection.
+        """
+        count = self._selector.size_from(self._view_count)
+        if not count or not self.ctx.has_database():
+            return
 
         reply = QMessageBox.question(
             self,
@@ -388,15 +389,21 @@ class VideosPage(QWidget):
                 count=count,
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
 
-        if reply == QMessageBox.StandardButton.Yes:
-            if self.ctx.has_database():
-                self.ctx.delete_video_entries(video_ids)
-                self.status_message_requested.emit(
-                    say("{count} video(s) removed from database", count=count), 5000
-                )
-                self._clear_selection()
+        video_ids = [
+            video_id
+            for video_id in self.ctx.get_all_view_ids()
+            if self._selector.contains(video_id)
+        ]
+        self.ctx.delete_video_entries(video_ids)
+        self.status_message_requested.emit(
+            say("{count} video(s) removed from database", count=len(video_ids)), 5000
+        )
+        self._clear_selection()
 
     def _on_playlist(self):
         """Generate and open a playlist of the current view."""
@@ -1844,6 +1851,7 @@ class VideosPage(QWidget):
                 "The video will be excluded from future similarity searches."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -1859,6 +1867,7 @@ class VideosPage(QWidget):
                 "The video will be re-evaluated in the next similarity search."
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -2417,6 +2426,7 @@ class VideosPage(QWidget):
                 directory=directory,
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:

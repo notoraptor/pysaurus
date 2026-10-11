@@ -148,7 +148,7 @@ PySide6 is the only active GUI, and within it only the **list view** is active. 
 
 `interface/videroid/` (~5k lines, run via `run_with_videroid.py`) is an experimental second frontend built on `videre`; it is kept in the `poe typecheck` subset and has its own tests in `tests/interface/videroid_interface/`, but `__main__.py` only launches Kyuti.
 
-A complete audit of the Kyuti interface is a planned next step: goal, how to render Kyuti widgets to images from a session, and the plan are in `docs/kyuti_ui_audit.md`.
+A complete audit of the Kyuti interface (code + 83 captures per language) was done on 2026-10-11: report by page with severities in `docs/kyuti_ui_audit.md`. `uv run -m pysaurus.scripts.capture_kyuti [--lang fr]` regenerates the captures into `ignored/kyuti_audit/<lang>/` from the test database (never a real one).
 
 ### Expression Search (external `searchexp` package, at `../searchexp`)
 
@@ -228,7 +228,7 @@ Kyuti is the mature PySide6/Qt GUI frontend. All calls go through the **`AppCont
 - `review.md` — July 2026 review of the core (everything outside `interface/`): verdict, fixed items, and the remaining dead-code / architecture list (two notification buses, `Text`, `GroupArray`, `HTMLStripper`, …). Check it before purging or re-reviewing.
 - `competitive-analysis.md` — positioning vs Plex/Jellyfin/Stash/Hydrus (July 2026), publish-or-not decision, MCP server idea.
 - `backlog.md` — prioritized backlog; `state_contracts.md` — which backend state each feature mutates and what the UI must refresh.
-- `kyuti_ui_audit.md` — planned Kyuti audit and how to render widgets to PNG from a session; `pysaurus_with_searchexp.md` — searchexp integration; `about_filecopier.md`.
+- `kyuti_ui_audit.md` — Kyuti UI audit (2026-10-11): findings per page with severities, proposed plan, and the capture recipe behind `pysaurus/scripts/capture_kyuti.py`; `pysaurus_with_searchexp.md` — searchexp integration; `about_filecopier.md`.
 
 ## Code Style
 

@@ -343,6 +343,16 @@ class TestVideoPropertiesDialog:
         assert tabs is not None
         assert tabs.count() == 2
 
+    def test_info_tab_shows_video_length(self, qtbot, sample_video, mock_context):
+        """The duration is video.length, which accounts for the time base."""
+        sample_video._data["length"] = "1h 00m"
+        prop_types = mock_context.get_prop_types()
+        dialog = VideoPropertiesDialog(sample_video, prop_types, mock_context)
+        qtbot.addWidget(dialog)
+
+        texts = [label.text() for label in dialog.findChildren(QLabel)]
+        assert "1h 00m" in texts
+
     def test_dialog_loads_properties(self, qtbot, sample_video, mock_context):
         """Test that dialog loads video properties."""
         prop_types = mock_context.get_prop_types()

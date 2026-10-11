@@ -325,8 +325,14 @@ class DatabasesPage(QWidget):
         reply = QMessageBox.question(
             self,
             say("Delete Database"),
-            say("Are you sure you want to delete '{name}'?", name=name),
+            say(
+                "Delete database '{name}'?\n\n"
+                "Its folder (index, thumbnails, properties) will be permanently "
+                "deleted. The video files themselves are not touched.",
+                name=name,
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
             self.ctx.delete_database_by_name(name)

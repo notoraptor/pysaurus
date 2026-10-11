@@ -6,6 +6,7 @@ Tests:
 - Property modifications (batch edit)
 """
 
+import pytest
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from pysaurus.interface.kyuti.dialogs.batch_edit_property_dialog import (
@@ -349,6 +350,48 @@ class TestVideoDeletion:
 
         # All videos should still exist
         assert len(mock_context._database._videos) == 5
+
+    def test_delete_selected_covers_every_page(self, qtbot, mock_context, monkeypatch):
+        """Delete acts on the whole selection, not only on the current page,
+        and the confirmation defaults to No."""
+        mock_context._database._videos = make_video_dicts(5)
+
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.page_size = 2
+        page.refresh()
+        page._select_all_in_view()
+
+        asked = []
+        monkeypatch.setattr(
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: (
+                asked.append(args) or QMessageBox.StandardButton.Yes
+            ),
+        )
+        page._delete_selected()
+
+        assert mock_context._database._videos == []
+        assert asked[0][4] == QMessageBox.StandardButton.No
+
+    def test_clicked_video_is_not_a_selection(self, qtbot, mock_context, monkeypatch):
+        """Without a checked box, Delete does nothing: a click is not a selection."""
+        mock_context._database._videos = make_video_dicts(3)
+
+        page = VideosPage(mock_context)
+        qtbot.addWidget(page)
+        page.refresh()
+        page._on_video_clicked(2)
+
+        monkeypatch.setattr(
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: pytest.fail("no confirmation expected"),
+        )
+        page._delete_selected()
+
+        assert len(mock_context._database._videos) == 3
 
 
 class TestVideoPropertyWidget:

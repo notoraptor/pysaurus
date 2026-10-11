@@ -665,6 +665,7 @@ class PropertiesPage(QWidget):
                 name=name,
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -692,6 +693,7 @@ class PropertiesPage(QWidget):
             + "\n\n"
             + note,
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -776,6 +778,7 @@ class PropertiesPage(QWidget):
                     + "\n\n"
                     + note,
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
                 )
 
                 if reply == QMessageBox.StandardButton.Yes:

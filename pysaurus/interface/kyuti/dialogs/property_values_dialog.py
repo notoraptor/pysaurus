@@ -225,6 +225,7 @@ class PropertyValuesDialog(QDialog):
                 count=count,
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -300,6 +301,7 @@ class PropertyValuesDialog(QDialog):
                     old_value=old_value,
                 ),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
             )
             if reply != QMessageBox.StandardButton.Yes:
                 return
@@ -325,6 +327,7 @@ class PropertyValuesDialog(QDialog):
                 prop_name=self.prop_name,
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:

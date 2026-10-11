@@ -10,6 +10,8 @@ Add_503d44e1a8be8d97
 	Ajouter ↑
 All_d86fc8186b52d80e
 	Tout
+AreYouSureYouWantToDeleteName_e6921d27f8d1f88a
+	Êtes-vous sûr de vouloir supprimer '{name}' ?
 DismissLabel_feb8fdf19ce9542f
 	Rejeter {label}
 EnumValuesOnePerLine_cd2fc280ad9290a4

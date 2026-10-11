@@ -76,8 +76,6 @@ ApplyToAllValues_8c04c051203c35b3
 	Appliquer à toutes les valeurs :
 Apply_7a740db91ac3feeb
 	Appliquer
-AreYouSureYouWantToDeleteName_e6921d27f8d1f88a
-	Êtes-vous sûr de vouloir supprimer '{name}' ?
 AreYouSureYouWantToDeletePropertyNameThisWillRemoveAllValuesForThisPropertyFromAllVideos_28174a1e99b648f7
 	Êtes-vous sûr de vouloir supprimer la propriété '{name}' ?
 	
@@ -306,6 +304,10 @@ DeleteCountVideoSFromTheDatabaseFilesWillNotBeDeletedFromDisk_fd2f78014a2280e9
 	Supprimer {count} vidéo(s) de la base de données ?
 	
 	(Les fichiers ne seront PAS supprimés du disque)
+DeleteDatabaseNameItsFolderIndexThumbnailsPropertiesWillBePermanentlyDeletedTheVideoFilesThemselvesAreNotTouched_bfecc8377f0d8c6b
+	Supprimer la base de données « {name} » ?
+	
+	Son dossier (index, vignettes, propriétés) sera supprimé définitivement. Les fichiers vidéo eux-mêmes ne sont pas touchés.
 DeleteDatabase_758542920e0976d3
 	Supprimer la base de données
 DeleteDatabase_f37c04f2c057e773
@@ -382,6 +384,8 @@ EnterNewValue_f7f79b91fc10146
 	Saisir la nouvelle valeur...
 EnterValue_375e8356bd51eb14
 	Saisir une valeur...
+EntryModified_60ce0d764071c512
+	Entrée modifiée :
 Entry_960e72a88d48ae8a
 	(entrée)
 EnumValuesCommaSeparated_3089d84fd2a8c932

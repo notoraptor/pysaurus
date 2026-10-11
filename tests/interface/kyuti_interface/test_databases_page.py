@@ -239,3 +239,36 @@ class TestDatabasesPageRefresh:
         page.refresh()
 
         assert len(page._db_widgets) == initial_count + 1
+
+
+class TestDatabaseDeletion:
+    """Deleting a database from the page."""
+
+    def test_delete_asks_with_no_as_default(self, qtbot, mock_context, monkeypatch):
+        page = DatabasesPage(mock_context)
+        qtbot.addWidget(page)
+
+        asked = []
+        monkeypatch.setattr(
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: asked.append(args) or QMessageBox.StandardButton.No,
+        )
+        page._on_db_delete("test_database")
+
+        assert asked[0][4] == QMessageBox.StandardButton.No
+        assert "test_database" in mock_context.get_database_names()
+
+    def test_delete_removes_database(self, qtbot, mock_context, monkeypatch):
+        page = DatabasesPage(mock_context)
+        qtbot.addWidget(page)
+
+        monkeypatch.setattr(
+            QMessageBox,
+            "question",
+            lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+        )
+        page._on_db_delete("test_database")
+
+        assert "test_database" not in mock_context.get_database_names()
+        assert len(page._db_widgets) == 1

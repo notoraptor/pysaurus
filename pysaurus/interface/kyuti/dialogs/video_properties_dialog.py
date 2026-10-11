@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
 )
 
 from pysaurus.core.datestring import Date
-from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.language import say
 from pysaurus.interface.common.common import display_geometry_text
@@ -141,8 +140,9 @@ class VideoPropertiesDialog(QDialog):
         file_layout.addRow(say("Title:"), QLabel(str(self.video.title)))
         file_layout.addRow(say("Filename:"), QLabel(str(self.video.filename)))
         file_layout.addRow(say("Size:"), QLabel(str(FileSize(self.video.file_size))))
+        file_layout.addRow(say("Date Modified:"), QLabel(str(self.video.date)))
         file_layout.addRow(
-            say("Date Modified:"), QLabel(str(self.video.date_entry_modified))
+            say("Entry Modified:"), QLabel(str(self.video.date_entry_modified))
         )
         date_added = self.video.date_added
         file_layout.addRow(
@@ -155,8 +155,7 @@ class VideoPropertiesDialog(QDialog):
         video_group = QGroupBox(say("Video"))
         video_layout = QFormLayout(video_group)
 
-        duration = Duration(int(self.video.duration * 1_000_000))
-        video_layout.addRow(say("Duration:"), QLabel(str(duration)))
+        video_layout.addRow(say("Duration:"), QLabel(str(self.video.length)))
         resolution = f"{self.video.width}x{self.video.height}"
         display_geometry = display_geometry_text(self.video)
         if display_geometry:
