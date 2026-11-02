@@ -34,6 +34,7 @@ class VideoEntry:
     width: int = 0
     # table columns: runtime frozen data
     mtime: float = 0.0
+    mtime_utc_offset: int | None = None
     driver_id: str | None = None
     is_file: bool = False
     discarded: float = False
@@ -67,6 +68,7 @@ class VideoEntry:
             del output["video_id"]
         if runtime_info:
             output["mtime"] = runtime_info.mtime
+            output["mtime_utc_offset"] = runtime_info.mtime_utc_offset
             output["driver_id"] = runtime_info.driver_id
             output["is_file"] = runtime_info.is_file
         if not for_update and not output["date_added"]:

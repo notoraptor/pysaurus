@@ -5,7 +5,6 @@ from typing import Iterable
 from pysaurus.core import notifications
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.constants import THUMBNAIL_EXTENSION, VIDEO_SUPPORTED_EXTENSIONS
-from pysaurus.core.fs_utils import correct_mtime
 from pysaurus.core.informer import Information
 from pysaurus.core.job_notifications import AbstractNotifier
 from pysaurus.core.language import say
@@ -48,7 +47,8 @@ class Videos:
                     for info in files:
                         paths[info.path] = VideoRuntimeInfo(
                             size=info.size,
-                            mtime=correct_mtime(info.mtime, info.path.path),
+                            mtime=info.mtime,
+                            mtime_utc_offset=info.utc_offset,
                             driver_id=info.driver_id,
                             is_file=True,
                         )

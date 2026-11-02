@@ -44,9 +44,10 @@ class F:
     sample_aspect_ratio_den = 32
     sample_aspect_ratio_num = 33
     date_added = 34
+    mtime_utc_offset = 35
     # Special fields, not from "video" table
-    thumbnail = 35
-    with_thumbnails = 36
+    thumbnail = 36
+    with_thumbnails = 37
 
 
 def get_video_table_fields() -> Iterable[str]:
@@ -226,6 +227,10 @@ class SQLVideoWrapper(VideoPattern):
     @property
     def mtime(self):
         return self.data[F.mtime]
+
+    @property
+    def mtime_utc_offset(self) -> int | None:
+        return self.data[F.mtime_utc_offset]
 
     @property
     def driver_id(self):

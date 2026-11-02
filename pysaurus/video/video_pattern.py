@@ -50,6 +50,11 @@ class VideoPattern(ABC):
 
     @property
     @abstractmethod
+    def mtime_utc_offset(self) -> int | None:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
     def date_added(self) -> float:
         raise NotImplementedError()
 

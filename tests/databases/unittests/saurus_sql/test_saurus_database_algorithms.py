@@ -19,12 +19,36 @@ def _get_runtime_info(db) -> dict[AbsolutePath, VideoRuntimeInfo]:
     """Build a runtime info dict from all videos in db (simulates disk scan)."""
     result = {}
     for v in db.get_videos(
-        include=["filename", "file_size", "mtime", "driver_id"], where={"found": True}
+        include=["filename", "file_size", "mtime", "mtime_utc_offset", "driver_id"],
+        where={"found": True},
     ):
         result[v.filename] = VideoRuntimeInfo(
-            size=v.file_size, mtime=v.mtime, driver_id=v.driver_id, is_file=True
+            size=v.file_size,
+            mtime=v.mtime,
+            mtime_utc_offset=v.mtime_utc_offset,
+            driver_id=v.driver_id,
+            is_file=True,
         )
     return result
+
+
+SUMMER = -14400  # EDT
+WINTER = -18000  # EST
+
+
+def _save_stamp(db, path: AbsolutePath, mtime: float, offset: int | None) -> None:
+    db.db.modify(
+        "UPDATE video SET mtime = ?, mtime_utc_offset = ? WHERE filename = ?",
+        [mtime, offset, path.path],
+    )
+
+
+def _saved_stamp(db, path: AbsolutePath) -> tuple:
+    return tuple(
+        db.db.query_one(
+            "SELECT mtime, mtime_utc_offset FROM video WHERE filename = ?", [path.path]
+        )
+    )
 
 
 # =========================================================================
@@ -175,6 +199,57 @@ class TestFindVideoPathsForUpdate:
         )
 
         assert base_result == sql_result
+
+
+class TestMtimeDrift:
+    """A FAT-style volume reports an untouched file one hour off after a DST
+    change; the row's recorded offset tells that drift from a real change."""
+
+    @pytest.fixture(params=[DatabaseAlgorithms, SaurusDatabaseAlgorithms])
+    def algos(self, request, mem_saurus_database):
+        return request.param(mem_saurus_database)
+
+    @staticmethod
+    def _one_file(algos, saved_mtime, saved_offset, disk_mtime, disk_offset=WINTER):
+        file_paths = _get_runtime_info(algos.db)
+        target, info = next(iter(file_paths.items()))
+        _save_stamp(algos.db, target, saved_mtime, saved_offset)
+        file_paths[target] = VideoRuntimeInfo(
+            size=info.size,
+            mtime=disk_mtime,
+            mtime_utc_offset=disk_offset,
+            driver_id=info.driver_id,
+            is_file=True,
+        )
+        return target, file_paths
+
+    def test_drift_matching_the_offset_change_is_not_an_update(self, algos):
+        target, file_paths = self._one_file(algos, 1000.0, SUMMER, 4600.0)
+        assert target not in algos._find_video_paths_for_update(file_paths)
+        assert _saved_stamp(algos.db, target) == (1000.0, SUMMER)
+
+    def test_one_hour_without_offset_change_is_an_update(self, algos):
+        target, file_paths = self._one_file(algos, 1000.0, WINTER, 4600.0)
+        assert target in algos._find_video_paths_for_update(file_paths)
+
+    def test_stable_file_across_offset_change_is_not_an_update(self, algos):
+        target, file_paths = self._one_file(algos, 1000.0, SUMMER, 1000.0)
+        assert target not in algos._find_video_paths_for_update(file_paths)
+
+    def test_legacy_row_is_matched_with_slack_then_stamped(self, algos):
+        target, file_paths = self._one_file(algos, 1000.0, None, 4600.0)
+        assert target not in algos._find_video_paths_for_update(file_paths)
+        assert _saved_stamp(algos.db, target) == (4600.0, WINTER)
+
+    def test_legacy_row_equal_reading_is_stamped(self, algos):
+        target, file_paths = self._one_file(algos, 1000.0, None, 1000.0)
+        assert target not in algos._find_video_paths_for_update(file_paths)
+        assert _saved_stamp(algos.db, target) == (1000.0, WINTER)
+
+    def test_legacy_row_beyond_slack_is_an_update_and_kept(self, algos):
+        target, file_paths = self._one_file(algos, 1000.0, None, 1001.0)
+        assert target in algos._find_video_paths_for_update(file_paths)
+        assert _saved_stamp(algos.db, target) == (1000.0, None)
 
 
 # =========================================================================

@@ -29,6 +29,7 @@ files found) because the total folder count is unknown until the scan ends.
 import logging
 import os
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Iterable
@@ -52,6 +53,7 @@ class FileInfo:
     size: int
     mtime: float = 0.0
     driver_id: str | None = None
+    utc_offset: int | None = None
 
 
 @dataclass(slots=True)
@@ -191,7 +193,12 @@ class FolderScanner:
                                 stat = entry.stat(follow_symlinks=follow)
                                 by_ext.setdefault(ext, []).append(
                                     FileInfo(
-                                        path, ext, stat.st_size, stat.st_mtime, mount
+                                        path,
+                                        ext,
+                                        stat.st_size,
+                                        stat.st_mtime,
+                                        mount,
+                                        time.localtime().tm_gmtoff,
                                     )
                                 )
                                 local_files += 1
@@ -253,7 +260,9 @@ class FolderScanner:
         except OSError as exc:
             logger.debug("Skipping file %s: %s", path, exc)
             return None
-        return FileInfo(path, ext, stat.st_size, stat.st_mtime, mount)
+        return FileInfo(
+            path, ext, stat.st_size, stat.st_mtime, mount, time.localtime().tm_gmtoff
+        )
 
     def _emit_progress_loop(
         self, counters: "_ScanCounters", stop: threading.Event

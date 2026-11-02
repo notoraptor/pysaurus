@@ -10,7 +10,7 @@ This class contains algorithms that:
 import logging
 import tempfile
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Collection, Container, Sequence
+from typing import TYPE_CHECKING, Collection, Container, NamedTuple, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -44,6 +44,36 @@ class SimilarityCopyReport:
     titles: list[str] = field(default_factory=list)  # stacked into the title property
     watched: bool = False  # newly marked as watched
     date_added: bool = False  # took the source's earlier date
+
+
+class FileStamp(NamedTuple):
+    """What a row remembers of its file, to tell a changed file from a drift."""
+
+    video_id: int
+    mtime: float
+    mtime_utc_offset: int | None
+    file_size: int
+
+
+def match_file_stamps(
+    file_paths: dict[AbsolutePath, VideoRuntimeInfo], stamps: dict[str, FileStamp]
+) -> tuple[list[AbsolutePath], dict[int, tuple[float, int]]]:
+    """Split a disk scan into files to (re)process and legacy rows to stamp.
+
+    A row saved without its UTC offset is matched with an hour of slack, then
+    stamped with this reading so the slack never applies to it again.
+    """
+    to_update: list[AbsolutePath] = []
+    to_stamp: dict[int, tuple[float, int]] = {}
+    for path, info in file_paths.items():
+        stamp = stamps.get(path.path)
+        if stamp is None or not info.is_same_file(
+            stamp.mtime, stamp.mtime_utc_offset, stamp.file_size
+        ):
+            to_update.append(path)
+        elif stamp.mtime_utc_offset is None and info.mtime_utc_offset is not None:
+            to_stamp[stamp.video_id] = (info.mtime, info.mtime_utc_offset)
+    return sorted(to_update), to_stamp
 
 
 class DatabaseAlgorithms:
@@ -162,17 +192,34 @@ class DatabaseAlgorithms:
     def _find_video_paths_for_update(
         self, file_paths: dict[AbsolutePath, VideoRuntimeInfo]
     ) -> list[AbsolutePath]:
-        return sorted(
-            file_name
-            for file_name, file_info in file_paths.items()
-            if not self.db.get_videos(
-                include=(),
-                where={
-                    "filename": file_name,
-                    "mtime": file_info.mtime,
-                    "file_size": file_info.size,
-                },
+        to_update, to_stamp = match_file_stamps(file_paths, self._load_file_stamps())
+        if to_stamp:
+            self._stamp_mtimes(to_stamp)
+        return to_update
+
+    def _load_file_stamps(self) -> dict[str, FileStamp]:
+        return {
+            video.filename.path: FileStamp(
+                video.video_id, video.mtime, video.mtime_utc_offset, video.file_size
             )
+            for video in self.db.get_videos(
+                include=[
+                    "video_id",
+                    "filename",
+                    "mtime",
+                    "mtime_utc_offset",
+                    "file_size",
+                ]
+            )
+        }
+
+    def _stamp_mtimes(self, stamps: dict[int, tuple[float, int]]) -> None:
+        self.db.videos_set_field(
+            "mtime", {video_id: mtime for video_id, (mtime, _) in stamps.items()}
+        )
+        self.db.videos_set_field(
+            "mtime_utc_offset",
+            {video_id: offset for video_id, (_, offset) in stamps.items()},
         )
 
     def _get_collectable_missing_thumbnails(self) -> list[AbsolutePath]:

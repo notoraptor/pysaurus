@@ -93,11 +93,11 @@ Single backend implementation:
 - **`pysaurus_connection.py`** — extends `Skullite` (from `skullite` package), loads schema from `database.sql`
 - **`video_mega_group.py` / `video_mega_search.py`** — SQL query builders for grouping, search and view position (`video_mega_position`, used by *Go to duration*)
 - **`sql_expression_compiler.py`** — compiles a `searchexp` IR into `(sql_where, params)`; see `docs/pysaurus_with_searchexp.md`
-- **`migrations/`** — versioned schema migrations `m0002` … `m0011`, registry `MIGRATIONS: {target_version: migrate(db)}`, `LATEST_VERSION = max(MIGRATIONS)`. The schema version is the `collection.version` column (not `PRAGMA user_version`); `PysaurusConnection` runs pending migrations on open. Every schema change = new `m00NN_*.py` + edit of `database.sql`.
+- **`migrations/`** — versioned schema migrations `m0002` … `m0012`, registry `MIGRATIONS: {target_version: migrate(db)}`, `LATEST_VERSION = max(MIGRATIONS)`. The schema version is the `collection.version` column (not `PRAGMA user_version`); `PysaurusConnection` runs pending migrations on open. Every schema change = new `m00NN_*.py` + edit of `database.sql`.
 
 Key schema notes (`database/saurus/database.sql`):
 - Tables: `collection` (+ settings columns), `collection_source`, `saved_search`, `video`, `video_error`, `video_language`, `property`, `property_enumeration`, `video_property_value`, `video_thumbnail` (thumbnail BLOBs), FTS5 `video_text`
-- `video` table uses **virtual generated columns** (e.g., `readable`, `found`, `length_seconds`, `byte_rate`, `day`, `year`) and **stored** ones for `extension` / `file_title`; `date_added` (v8) is distinct from `mtime`
+- `video` table uses **virtual generated columns** (e.g., `readable`, `found`, `length_seconds`, `byte_rate`, `day`, `year`) and **stored** ones for `extension` / `file_title`; `date_added` (v8) is distinct from `mtime`; `mtime_utc_offset` (v12) is the local UTC offset when `mtime` was read, so the update can tell a FAT/exFAT DST drift from a real change (`VideoRuntimeInfo.is_same_file`)
 - `video_text` is an **FTS5 virtual table** for full-text search with triggers to stay in sync
 - Property value triggers are managed manually in Python (not SQL triggers) for batch performance
 

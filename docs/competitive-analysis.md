@@ -22,12 +22,12 @@ Ce document absorbe aussi `docs/strategic-direction.md` (mars 2026, supprimé), 
 | **Similarité** | Détection par similarité d'image (NumPy, cosinus, seuil 88%) + détection de réencodages (durée, titre). Traitement parallèle |
 | **Miniatures** | Extraction automatique du frame central, stockage en base (BLOB), génération parallèle |
 | **Lecture** | Intégration VLC, ouverture avec lecteur système |
-| **Opérations fichiers** | Renommer, déplacer, supprimer, mettre à la corbeille, ouvrir le dossier, correction mtime FAT/exFAT |
+| **Opérations fichiers** | Renommer, déplacer, supprimer, mettre à la corbeille, ouvrir le dossier |
 | **Multi-base** | Collections indépendantes avec métadonnées, propriétés et similarités séparées |
 | **Export** | Playlist XSPF, copie chemins dans le presse-papier |
 | **GUI** | PySide6 (native Qt) : interface `kyuti`, vue liste. Frontends legacy (web, pywebview, vue grille) archivés dans `wip/` |
 | **i18n** | Anglais / français (catalogue chargé au démarrage, changement de langue à chaud) |
-| **CLI** | Console interactive (Python Fire) : 22 commandes (update, search, groupby, stats, repair FTS, fix_mtime, etc.) |
+| **CLI** | Console interactive (Python Fire) : 21 commandes (update, search, groupby, stats, repair FTS, should_update, etc.) |
 | **Architecture** | SQLite (via skullite), FTS5, colonnes virtuelles, traitement parallèle, profilage intégré |
 | **Licence** | Non publiée (projet personnel). `LICENSE` est un modèle MIT non édité (« Copyright (c) 2018 The Python Packaging Authority ») |
 | **Prix** | Gratuit |

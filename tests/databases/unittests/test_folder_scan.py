@@ -3,6 +3,7 @@ Tests for FolderScanner (shared scan engine: files page + database update).
 """
 
 import os
+import time
 
 import pytest
 
@@ -350,6 +351,7 @@ class TestRuntimeMetadata:
         result = scanner.scan()
         (info,) = result.videos_unknown["mp4"]
         assert info.mtime == os.path.getmtime(str(tree / "v1.mp4"))
+        assert info.utc_offset == time.localtime().tm_gmtoff
         assert info.driver_id == AbsolutePath.ensure(str(tree)).get_mount_point()
 
 

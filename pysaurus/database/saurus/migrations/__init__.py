@@ -25,6 +25,7 @@ from pysaurus.database.saurus.migrations import (
     m0009_database_settings,
     m0010_copy_overwrites_unique,
     m0011_saved_search,
+    m0012_mtime_utc_offset,
 )
 
 # Registry: target_version -> migrate(db) function.
@@ -40,6 +41,7 @@ MIGRATIONS: dict[int, Callable[[Skullite], None]] = {
     9: m0009_database_settings.migrate,
     10: m0010_copy_overwrites_unique.migrate,
     11: m0011_saved_search.migrate,
+    12: m0012_mtime_utc_offset.migrate,
 }
 
 LATEST_VERSION: int = max(MIGRATIONS)

@@ -51,6 +51,8 @@ CREATE TABLE IF NOT EXISTS video (
 	width INTEGER NOT NULL DEFAULT 0,
 	-- runtime
 	mtime DOUBLE NOT NULL DEFAULT 0.0,
+	-- Local UTC offset (seconds) in effect when mtime was read; NULL on rows saved before v12.
+	mtime_utc_offset INTEGER,
 	driver_id TEXT,
 	is_file INTEGER NOT NULL DEFAULT 0,
 	discarded INTEGER NOT NULL DEFAULT 0,

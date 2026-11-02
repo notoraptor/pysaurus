@@ -1,8 +1,7 @@
 from typing import TYPE_CHECKING, Collection, Container, cast
 
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.database.database_algorithms import DatabaseAlgorithms
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
+from pysaurus.database.database_algorithms import DatabaseAlgorithms, FileStamp
 
 if TYPE_CHECKING:
     from pysaurus.database.saurus.pysaurus_collection import PysaurusCollection
@@ -40,19 +39,20 @@ class SaurusDatabaseAlgorithms(DatabaseAlgorithms):
                 if (path := AbsolutePath(row[0])) not in done
             ]
 
-    def _find_video_paths_for_update(
-        self, file_paths: dict[AbsolutePath, VideoRuntimeInfo]
-    ) -> list[AbsolutePath]:
+    def _load_file_stamps(self) -> dict[str, FileStamp]:
         db = cast("PysaurusCollection", self.db).db
-        # Load all (filename, mtime, file_size) from DB in one query.
         with db:
-            existing = {
-                row[0]: (row[1], row[2])
-                for row in db.query("SELECT filename, mtime, file_size FROM video")
+            return {
+                row[0]: FileStamp(row[1], row[2], row[3], row[4])
+                for row in db.query(
+                    "SELECT filename, video_id, mtime, mtime_utc_offset, file_size "
+                    "FROM video"
+                )
             }
-        # Compare in memory: file needs update if not in DB or any field changed
-        return sorted(
-            file_name
-            for file_name, file_info in file_paths.items()
-            if existing.get(file_name.path) != (file_info.mtime, file_info.size)
+
+    def _stamp_mtimes(self, stamps: dict[int, tuple[float, int]]) -> None:
+        db = cast("PysaurusCollection", self.db).db
+        db.modify_many(
+            "UPDATE video SET mtime = ?, mtime_utc_offset = ? WHERE video_id = ?",
+            ((mtime, offset, video_id) for video_id, (mtime, offset) in stamps.items()),
         )

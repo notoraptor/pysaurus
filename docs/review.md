@@ -30,7 +30,7 @@ cœur ; ce qui reste relève de la consolidation post-migration.
   `F`). Le compilateur searchexp→SQL (`sql_expression_compiler.py`) est propre, y compris le XOR qui
   duplique correctement ses paramètres. Chunking `SQLITE_LIMIT_VARIABLE_NUMBER` systématique.
 - **Modules de très bonne facture**, docstrings expliquant les *décisions* : `folder_scan.py`
-  (un thread par point de montage, argumenté), `fs_utils.py` (correction mtime FAT/DST),
+  (un thread par point de montage, argumenté), `fs_utils.py` (préfixes Windows, normalisation des points de montage),
   `semantic_text.py` (tri naturel + exposants/indices Unicode, alternative natsort documentée),
   `universal_datetime/udt.py` (docstring bilingue, choix de conception), les migrations.
 - **Logique métier des « moves » mûre** : détection par window functions, refus de merge en cas de

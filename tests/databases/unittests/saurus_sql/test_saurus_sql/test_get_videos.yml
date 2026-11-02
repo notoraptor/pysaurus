@@ -41,6 +41,7 @@
   move_id: None
   moves: []
   mtime: 1695770574.0
+  mtime_utc_offset: None
   not_found: false
   properties:
     category:
@@ -149,6 +150,7 @@
   move_id: None
   moves: []
   mtime: 1695770586.0
+  mtime_utc_offset: None
   not_found: true
   properties:
     category:
